@@ -34,7 +34,7 @@ from src.models.profile import Profile, UserRole
 from src.routers import cinema_trips as trips_router
 from src.routers import needs_you as needs_you_router
 from src.services import reminders
-from src.services.cinema_trips import trips, words
+from src.services.cinema_trips import words
 from src.services.cinemas import films as cinema_films
 from src.services.cinemas.venues import BY_SLUG
 from src.services.notifications import get_or_create_preferences
@@ -211,8 +211,13 @@ async def showing(
 class Programme:
     """The worked example's programme: Wild Horse Nine at two cinemas, and another film."""
 
-    def __init__(self, monday: CinemaScreening, tuesday: CinemaScreening, early: CinemaScreening,
-                 other: CinemaScreening) -> None:
+    def __init__(
+        self,
+        monday: CinemaScreening,
+        tuesday: CinemaScreening,
+        early: CinemaScreening,
+        other: CinemaScreening,
+    ) -> None:
         self.monday = monday  # Mon 9 Nov 20:10, ODEON Glasgow Quay
         self.tuesday = tuesday  # Tue 10 Nov 20:00, Cineworld Glasgow Silverburn
         self.early = early  # Tue 10 Nov 18:00, ODEON Glasgow Quay
@@ -232,20 +237,33 @@ async def programme(db: AsyncSession) -> Programme:
     )
 
 
-async def propose(as_: Call, who: Profile, at: CinemaScreening, *people: Profile,
-                  request: uuid.UUID | None = None) -> dict[str, Any]:
-    response = await as_(who, "post", "/cinema-trips", {
-        "clientRequestId": str(request or uuid.uuid4()),
-        "filmKey": f"tmdb-{WHN}",
-        "showingId": str(at.id),
-        "inviteeIds": [str(p.id) for p in people],
-    })
+async def propose(
+    as_: Call, who: Profile, at: CinemaScreening, *people: Profile, request: uuid.UUID | None = None
+) -> dict[str, Any]:
+    response = await as_(
+        who,
+        "post",
+        "/cinema-trips",
+        {
+            "clientRequestId": str(request or uuid.uuid4()),
+            "filmKey": f"tmdb-{WHN}",
+            "showingId": str(at.id),
+            "inviteeIds": [str(p.id) for p in people],
+        },
+    )
     assert response.status_code == 201, response.text
     return response.json()
 
 
-async def answer(as_: Call, who: Profile, trip: dict[str, Any], reply: str,
-                 at: CinemaScreening | None = None, *, revision: int | None = None) -> Response:
+async def answer(
+    as_: Call,
+    who: Profile,
+    trip: dict[str, Any],
+    reply: str,
+    at: CinemaScreening | None = None,
+    *,
+    revision: int | None = None,
+) -> Response:
     body: dict[str, Any] = {"revision": revision or trip["revision"], "reply": reply}
     if at is not None:
         body["showingId"] = str(at.id)
@@ -326,8 +344,11 @@ async def test_proposing_keeps_the_showing_and_invites_each_person_once(
     assert trip["status"] == "upcoming" and trip["revision"] == 1
     assert trip["filmKey"] == f"tmdb-{WHN}" and trip["filmTitle"] == "Wild Horse Nine"
     assert trip["posterPath"] == f"/{WHN}.jpg"
-    assert trip["proposer"] == {"profileId": str(craig.id), "displayName": craig.display_name,
-                                "isYou": True}
+    assert trip["proposer"] == {
+        "profileId": str(craig.id),
+        "displayName": craig.display_name,
+        "isYou": True,
+    }
     showing = trip["showing"]
     assert showing["showingId"] == str(programme.monday.id)
     assert showing["venueName"] == "ODEON Glasgow Quay"
@@ -340,7 +361,9 @@ async def test_proposing_keeps_the_showing_and_invites_each_person_once(
 
     [invite] = await outbox(db, trip)
     assert (invite.user_id, invite.category, invite.url) == (
-        mark.id, "movie_night", f"/movie-night/trips/{trip['id']}"
+        mark.id,
+        "movie_night",
+        f"/movie-night/trips/{trip['id']}",
     )
     assert invite.title == f"{craig.display_name} invited you to the cinema"
     assert invite.body == f"{LINE} Going, not going, or another time?"
@@ -361,19 +384,28 @@ async def test_a_proposal_needs_people_who_can_be_invited_and_a_time_still_liste
     gone = await person(db, "Gone", active=False)
 
     async def refused(at: CinemaScreening, people: list[uuid.UUID]) -> tuple[int, str]:
-        response = await as_(craig, "post", "/cinema-trips", {
-            "clientRequestId": str(uuid.uuid4()), "filmKey": f"tmdb-{WHN}",
-            "showingId": str(at.id), "inviteeIds": [str(p) for p in people],
-        })
+        response = await as_(
+            craig,
+            "post",
+            "/cinema-trips",
+            {
+                "clientRequestId": str(uuid.uuid4()),
+                "filmKey": f"tmdb-{WHN}",
+                "showingId": str(at.id),
+                "inviteeIds": [str(p) for p in people],
+            },
+        )
         return response.status_code, response.json()["detail"]
 
     assert await refused(programme.monday, []) == (422, "Pick at least one person")
     for nobody in (craig.id, gone.id, uuid.uuid4()):
         assert await refused(programme.monday, [mark.id, nobody]) == (
-            422, "Not everyone named can be invited"
+            422,
+            "Not everyone named can be invited",
         )
     assert await refused(programme.other, [mark.id]) == (
-        422, "That time isn't a showing of this film"
+        422,
+        "That time isn't a showing of this film",
     )
     programme.monday.confirmation = "unconfirmed"
     await db.flush()
@@ -424,29 +456,31 @@ async def test_a_reply_tells_the_proposer_alone_and_the_same_reply_again_changes
 
     no = await answer(as_, mark, trip, "notGoing")
     assert no.status_code == 200 and no.json()["counts"]["notGoing"] == 1
-    assert pushed(await outbox(db, trip), craig, "reply") == sorted([
-        (f"{mark.display_name} is going", LINE), (f"{mark.display_name} can't make it", LINE)
-    ])
+    assert pushed(await outbox(db, trip), craig, "reply") == sorted(
+        [(f"{mark.display_name} is going", LINE), (f"{mark.display_name} can't make it", LINE)]
+    )
     # The proposer has no reply of their own: to drop out, they cancel.
     mine = await answer(as_, craig, trip, "notGoing")
     assert mine.status_code == 403
 
 
 async def test_three_people_on_one_trip_each_see_every_reply_and_the_tally(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark, alex)
     assert (await answer(as_, mark, trip, "going")).status_code == 200
     assert (await answer(as_, alex, trip, "notGoing")).status_code == 200
-    assert to(await outbox(db, trip), craig) == sorted([
-        (f"{mark.display_name} is going", f"{LINE} 2 of 3 going."),
-        (f"{alex.display_name} can't make it", f"{LINE} 2 of 3 going."),
-    ])
+    assert to(await outbox(db, trip), craig) == sorted(
+        [
+            (f"{mark.display_name} is going", f"{LINE} 2 of 3 going."),
+            (f"{alex.display_name} can't make it", f"{LINE} 2 of 3 going."),
+        ]
+    )
     for who in (craig, mark, alex):
         seen = (await as_(who, "get", f"/cinema-trips/{trip['id']}")).json()
         assert {i["displayName"]: i["reply"] for i in seen["invitees"]} == {
-            mark.display_name: "going", alex.display_name: "notGoing"
+            mark.display_name: "going",
+            alex.display_name: "notGoing",
         }
         assert seen["counts"] == {"going": 2, "notGoing": 1, "anotherTime": 0, "invited": 0}
         assert seen["proposer"]["isYou"] is (who is craig)
@@ -460,7 +494,8 @@ async def test_another_time_suggests_a_listed_showing_of_the_same_film(
     assert (same.status_code, same.json()["detail"]) == (422, "That's already the trip's time")
     other = await answer(as_, mark, trip, "anotherTime", programme.other)
     assert (other.status_code, other.json()["detail"]) == (
-        422, "That time isn't a showing of this film"
+        422,
+        "That time isn't a showing of this film",
     )
     suggested = await answer(as_, mark, trip, "anotherTime", programme.tuesday)
     assert suggested.status_code == 200, suggested.text
@@ -469,18 +504,19 @@ async def test_another_time_suggests_a_listed_showing_of_the_same_film(
     assert mine["suggestion"]["showingId"] == str(programme.tuesday.id)
     assert mine["suggestion"]["venueName"] == "Cineworld Glasgow Silverburn"
     assert mine["suggestion"]["flag"] is None
-    assert to(await outbox(db, trip), craig) == [(
-        f"{mark.display_name} suggests another time",
-        f"Wild Horse Nine: {MOVED_TO}, instead of Mon 9 Nov at 20:10. "
-        "Open it to accept or keep your time.",
-    )]
+    assert to(await outbox(db, trip), craig) == [
+        (
+            f"{mark.display_name} suggests another time",
+            f"Wild Horse Nine: {MOVED_TO}, instead of Mon 9 Nov at 20:10. "
+            "Open it to accept or keep your time.",
+        )
+    ]
     needs = (await as_(craig, "get", "/needs-you")).json()["trips"]
     assert [(n["kind"], n["fromName"]) for n in needs] == [("tripSuggestion", mark.display_name)]
 
 
 async def test_two_suggested_times_at_once_then_one_accepted(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark, alex)
     assert (await answer(as_, mark, trip, "anotherTime", programme.tuesday)).status_code == 200
@@ -490,10 +526,17 @@ async def test_two_suggested_times_at_once_then_one_accepted(
     assert seen["counts"]["anotherTime"] == 2
     marks = invitee(seen, mark)
 
-    accepted = await as_(craig, "post", f"/cinema-trips/{trip['id']}/move", {
-        "revision": 1, "showingId": str(programme.tuesday.id),
-        "fromProfileId": str(mark.id), "fromReplyRevision": marks["replyRevision"],
-    })
+    accepted = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {
+            "revision": 1,
+            "showingId": str(programme.tuesday.id),
+            "fromProfileId": str(mark.id),
+            "fromReplyRevision": marks["replyRevision"],
+        },
+    )
     assert accepted.status_code == 200, accepted.text
     moved = accepted.json()
     assert moved["revision"] == 2 and moved["movedAtUtc"] is not None
@@ -506,29 +549,41 @@ async def test_two_suggested_times_at_once_then_one_accepted(
     assert invitee(moved, alex)["suggestion"] is None
 
     rows = await outbox(db, trip)
-    assert pushed(rows, mark, "change") == [(
-        f"{craig.display_name} accepted your time",
-        f"Wild Horse Nine, {MOVED_TO}. You're down as going.",
-    )]
-    assert pushed(rows, alex, "change") == [(
-        "Cinema trip moved: Wild Horse Nine",
-        f"Now {MOVED_TO}, {mark.display_name}'s suggestion. Going or not?",
-    )]
+    assert pushed(rows, mark, "change") == [
+        (
+            f"{craig.display_name} accepted your time",
+            f"Wild Horse Nine, {MOVED_TO}. You're down as going.",
+        )
+    ]
+    assert pushed(rows, alex, "change") == [
+        (
+            "Cinema trip moved: Wild Horse Nine",
+            f"Now {MOVED_TO}, {mark.display_name}'s suggestion. Going or not?",
+        )
+    ]
     assert pushed(rows, craig, "change") == []
     changes = {n.dedupe_key for n in rows if n.dedupe_key.startswith("cinema-trip-change:")}
     assert changes == {f"cinema-trip-change:{trip['id']}:2:{p.id}" for p in (mark, alex)}
 
     # The same accept again, its answer lost: nothing moves, nobody is told twice.
-    again = await as_(craig, "post", f"/cinema-trips/{trip['id']}/move", {
-        "revision": 1, "showingId": str(programme.tuesday.id),
-        "fromProfileId": str(mark.id), "fromReplyRevision": marks["replyRevision"],
-    })
+    again = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {
+            "revision": 1,
+            "showingId": str(programme.tuesday.id),
+            "fromProfileId": str(mark.id),
+            "fromReplyRevision": marks["replyRevision"],
+        },
+    )
     assert again.status_code == 200 and again.json()["revision"] == 2
     assert len(await outbox(db, trip)) == len(rows)
     # A reply made against the old time is refused rather than applied to the new one.
     stale = await answer(as_, alex, trip, "going", revision=1)
     assert (stale.status_code, stale.json()["detail"]) == (
-        409, "The trip has moved. Check the new time and reply again."
+        409,
+        "The trip has moved. Check the new time and reply again.",
     )
 
 
@@ -538,12 +593,20 @@ async def test_a_suggestion_changed_or_withdrawn_since_it_was_shown_cannot_be_ac
     trip = await propose(as_, craig, programme.monday, mark)
     shown = invitee((await answer(as_, mark, trip, "anotherTime", programme.tuesday)).json(), mark)
     assert (await answer(as_, mark, trip, "going")).status_code == 200
-    changed = await as_(craig, "post", f"/cinema-trips/{trip['id']}/move", {
-        "revision": 1, "showingId": str(programme.tuesday.id),
-        "fromProfileId": str(mark.id), "fromReplyRevision": shown["replyRevision"],
-    })
+    changed = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {
+            "revision": 1,
+            "showingId": str(programme.tuesday.id),
+            "fromProfileId": str(mark.id),
+            "fromReplyRevision": shown["replyRevision"],
+        },
+    )
     assert (changed.status_code, changed.json()["detail"]) == (
-        409, f"{mark.display_name} changed their reply"
+        409,
+        f"{mark.display_name} changed their reply",
     )
 
     again = invitee((await answer(as_, mark, trip, "anotherTime", programme.tuesday)).json(), mark)
@@ -551,12 +614,20 @@ async def test_a_suggestion_changed_or_withdrawn_since_it_was_shown_cannot_be_ac
     await db.flush()
     seen = (await as_(craig, "get", f"/cinema-trips/{trip['id']}")).json()
     assert invitee(seen, mark)["suggestion"]["flag"] == "withdrawn"
-    withdrawn = await as_(craig, "post", f"/cinema-trips/{trip['id']}/move", {
-        "revision": 1, "showingId": str(programme.tuesday.id),
-        "fromProfileId": str(mark.id), "fromReplyRevision": again["replyRevision"],
-    })
+    withdrawn = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {
+            "revision": 1,
+            "showingId": str(programme.tuesday.id),
+            "fromProfileId": str(mark.id),
+            "fromReplyRevision": again["replyRevision"],
+        },
+    )
     assert (withdrawn.status_code, withdrawn.json()["detail"]) == (
-        409, "That time is no longer listed"
+        409,
+        "That time is no longer listed",
     )
     stored = await db.get(CinemaTrip, uuid.UUID(trip["id"]))
     assert stored is not None and stored.revision == 1
@@ -570,16 +641,17 @@ async def test_keep_this_time_turns_a_suggestion_down_and_tells_its_suggester(
     body = {"profileId": str(mark.id), "replyRevision": shown["replyRevision"]}
     refused = await as_(mark, "post", f"/cinema-trips/{trip['id']}/keep", body)
     assert (refused.status_code, refused.json()["detail"]) == (
-        403, f"Only {craig.display_name} can change this trip"
+        403,
+        f"Only {craig.display_name} can change this trip",
     )
     kept = await as_(craig, "post", f"/cinema-trips/{trip['id']}/keep", body)
     assert kept.status_code == 200, kept.text
     assert invitee(kept.json(), mark)["reply"] == "invited"
     assert invitee(kept.json(), mark)["suggestion"] is None
     assert kept.json()["revision"] == 1
-    assert pushed(await outbox(db, trip), mark, "keep") == [(
-        f"{craig.display_name} is keeping the original time", f"{LINE} Going or not?"
-    )]
+    assert pushed(await outbox(db, trip), mark, "keep") == [
+        (f"{craig.display_name} is keeping the original time", f"{LINE} Going or not?")
+    ]
     # Pressed again, its answer lost: no change, no second push.
     count = len(await outbox(db, trip))
     again = await as_(craig, "post", f"/cinema-trips/{trip['id']}/keep", body)
@@ -588,43 +660,60 @@ async def test_keep_this_time_turns_a_suggestion_down_and_tells_its_suggester(
 
 
 async def test_the_proposer_moves_the_trip_to_a_time_of_their_own(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark, alex)
     assert (await answer(as_, mark, trip, "going")).status_code == 200
-    by_invitee = await as_(mark, "post", f"/cinema-trips/{trip['id']}/move",
-                           {"revision": 1, "showingId": str(programme.tuesday.id)})
+    by_invitee = await as_(
+        mark,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {"revision": 1, "showingId": str(programme.tuesday.id)},
+    )
     assert by_invitee.status_code == 403
-    same = await as_(craig, "post", f"/cinema-trips/{trip['id']}/move",
-                     {"revision": 1, "showingId": str(programme.monday.id)})
+    same = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {"revision": 1, "showingId": str(programme.monday.id)},
+    )
     assert (same.status_code, same.json()["detail"]) == (422, "That's already the trip's time")
-    moved = await as_(craig, "post", f"/cinema-trips/{trip['id']}/move",
-                      {"revision": 1, "showingId": str(programme.tuesday.id)})
+    moved = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/move",
+        {"revision": 1, "showingId": str(programme.tuesday.id)},
+    )
     assert moved.status_code == 200, moved.text
     assert {i["reply"] for i in moved.json()["invitees"]} == {"invited"}
     rows = await outbox(db, trip)
     for who in (mark, alex):
-        assert pushed(rows, who, "change") == [(
-            "Cinema trip moved: Wild Horse Nine",
-            f"{craig.display_name} moved it to {MOVED_TO}. Going or not?",
-        )]
+        assert pushed(rows, who, "change") == [
+            (
+                "Cinema trip moved: Wild Horse Nine",
+                f"{craig.display_name} moved it to {MOVED_TO}. Going or not?",
+            )
+        ]
     assert to(rows, craig) == [(f"{mark.display_name} is going", f"{LINE} 2 of 3 going.")]
 
 
 async def test_inviting_more_people_later_invites_only_them(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark)
     assert (await answer(as_, mark, trip, "going")).status_code == 200
-    more = await as_(craig, "post", f"/cinema-trips/{trip['id']}/invitees",
-                     {"profileIds": [str(alex.id), str(mark.id)]})
+    more = await as_(
+        craig,
+        "post",
+        f"/cinema-trips/{trip['id']}/invitees",
+        {"profileIds": [str(alex.id), str(mark.id)]},
+    )
     assert more.status_code == 200, more.text
     assert invitee(more.json(), alex)["reply"] == "invited"
     assert invitee(more.json(), mark)["reply"] == "going"
-    again = await as_(craig, "post", f"/cinema-trips/{trip['id']}/invitees",
-                      {"profileIds": [str(alex.id)]})
+    again = await as_(
+        craig, "post", f"/cinema-trips/{trip['id']}/invitees", {"profileIds": [str(alex.id)]}
+    )
     assert again.status_code == 200
     rows = await outbox(db, trip)
     assert [n.dedupe_key for n in rows if n.dedupe_key.startswith("cinema-trip-invite:")] == [
@@ -636,8 +725,7 @@ async def test_inviting_more_people_later_invites_only_them(
 
 
 async def test_a_cancelled_trip_is_frozen_and_everyone_not_saying_no_is_told(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark, alex)
     assert (await answer(as_, mark, trip, "going")).status_code == 200
@@ -646,16 +734,19 @@ async def test_a_cancelled_trip_is_frozen_and_everyone_not_saying_no_is_told(
     assert cancelled.status_code == 200 and cancelled.json()["status"] == "cancelled"
     assert cancelled.json()["showing"]["flag"] is None
     rows = await outbox(db, trip)
-    assert pushed(rows, mark, "cancel") == [(
-        "Cinema trip cancelled",
-        f"{craig.display_name} cancelled Wild Horse Nine on Mon 9 Nov at 20:10, "
-        "ODEON Glasgow Quay.",
-    )]
+    assert pushed(rows, mark, "cancel") == [
+        (
+            "Cinema trip cancelled",
+            f"{craig.display_name} cancelled Wild Horse Nine on Mon 9 Nov at 20:10, "
+            "ODEON Glasgow Quay.",
+        )
+    ]
     assert pushed(rows, alex, "cancel") == []
     # A reply after the cancel is refused; the same reply again changes nothing.
     late = await answer(as_, alex, trip, "going")
     assert (late.status_code, late.json()["detail"]) == (
-        409, f"{craig.display_name} cancelled this trip"
+        409,
+        f"{craig.display_name} cancelled this trip",
     )
     assert (await answer(as_, mark, trip, "going")).status_code == 200
     again = await as_(craig, "post", f"/cinema-trips/{trip['id']}/cancel", {})
@@ -666,8 +757,12 @@ async def test_a_cancelled_trip_is_frozen_and_everyone_not_saying_no_is_told(
 
 
 async def test_a_trip_whose_showing_has_started_is_past_and_frozen(
-    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile,
-    monkeypatch: pytest.MonkeyPatch
+    db: AsyncSession,
+    as_: Call,
+    programme: Programme,
+    craig: Profile,
+    mark: Profile,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark)
     later = datetime(2026, 11, 9, 20, 30)
@@ -727,13 +822,15 @@ async def test_a_trip_still_reads_from_its_snapshot_after_the_clean_up_deletes_i
     db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark)
-    await db.execute(text("DELETE FROM cinema_screenings WHERE id = :id"),
-                     {"id": programme.monday.id})
+    await db.execute(
+        text("DELETE FROM cinema_screenings WHERE id = :id"), {"id": programme.monday.id}
+    )
     db.expunge_all()
     showing = (await as_(mark, "get", f"/cinema-trips/{trip['id']}")).json()["showing"]
     assert showing["showingId"] is None
     assert (showing["venueName"], showing["startsAtUtc"][:16]) == (
-        "ODEON Glasgow Quay", "2026-11-09T20:10"
+        "ODEON Glasgow Quay",
+        "2026-11-09T20:10",
     )
     assert showing["flag"] == "withdrawn" and showing["live"] is None
 
@@ -751,7 +848,9 @@ async def test_needs_you_shows_the_invitation_until_a_reply_then_home_shows_the_
     [item] = needs["trips"]
     assert item["kind"] == "tripInvite" and item["tripId"] == trip["id"]
     assert (item["filmTitle"], item["venueName"], item["proposerName"]) == (
-        "Wild Horse Nine", "ODEON Glasgow Quay", craig.display_name
+        "Wild Horse Nine",
+        "ODEON Glasgow Quay",
+        craig.display_name,
     )
     assert item["startsAtUtc"].startswith("2026-11-09T20:10:00")
     assert needs["nextTrip"] is None  # invited, not going
@@ -787,8 +886,7 @@ async def test_the_movie_night_switch_off_leaves_suppressed_rows_and_the_invitat
 
 
 async def test_the_morning_reminder_goes_once_to_the_proposer_and_everyone_going(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     trip = await propose(as_, craig, programme.monday, mark, alex)
     tomorrow = await propose(as_, craig, programme.tuesday, mark)
@@ -799,19 +897,26 @@ async def test_the_morning_reminder_goes_once_to_the_proposer_and_everyone_going
     again = await reminders.run_reminders(db, now=NOW, seed_seasons=False)
     assert again.cinema_trips == 1 and again.queued == 0
     sent = [n for n in await outbox(db, trip) if n.dedupe_key.startswith("cinema-trip-reminder:")]
-    assert sorted((n.user_id, n.title, n.body) for n in sent) == sorted([
-        (craig.id, "Cinema today: Wild Horse Nine",
-         f"20:10 at ODEON Glasgow Quay, with {mark.display_name}."),
-        (mark.id, "Cinema today: Wild Horse Nine",
-         f"20:10 at ODEON Glasgow Quay, with {craig.display_name}."),
-    ])
+    assert sorted((n.user_id, n.title, n.body) for n in sent) == sorted(
+        [
+            (
+                craig.id,
+                "Cinema today: Wild Horse Nine",
+                f"20:10 at ODEON Glasgow Quay, with {mark.display_name}.",
+            ),
+            (
+                mark.id,
+                "Cinema today: Wild Horse Nine",
+                f"20:10 at ODEON Glasgow Quay, with {craig.display_name}.",
+            ),
+        ]
+    )
     assert {n.status for n in sent} == {"queued"}
     assert [n for n in await outbox(db, tomorrow) if "reminder" in n.dedupe_key] == []
 
 
 async def test_a_reminder_quiet_hours_or_digest_would_hold_past_the_pass_is_written_too_late(
-    db: AsyncSession, as_: Call, programme: Programme,
-    craig: Profile, mark: Profile, alex: Profile
+    db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile, alex: Profile
 ) -> None:
     quiet = await get_or_create_preferences(db, craig.id)
     quiet.quiet_hours_start, quiet.quiet_hours_end = time(22, 0), time(9, 0)
@@ -825,8 +930,11 @@ async def test_a_reminder_quiet_hours_or_digest_would_hold_past_the_pass_is_writ
     for who in (mark, alex):
         assert (await answer(as_, who, trip, "going")).status_code == 200
     await reminders.run_reminders(db, now=NOW, seed_seasons=False)
-    sent = {n.user_id: (n.status, n.suppressed_reason)
-            for n in await outbox(db, trip) if n.dedupe_key.startswith("cinema-trip-reminder:")}
+    sent = {
+        n.user_id: (n.status, n.suppressed_reason)
+        for n in await outbox(db, trip)
+        if n.dedupe_key.startswith("cinema-trip-reminder:")
+    }
     assert sent == {
         craig.id: ("suppressed", "too_late"),
         mark.id: ("suppressed", "too_late"),
@@ -844,8 +952,9 @@ async def test_the_reminder_names_two_others_then_counts_and_says_the_cinema_wit
     programme.monday.confirmation = "withdrawn"
     await db.flush()
     await reminders.run_reminders(db, now=NOW, seed_seasons=False)
-    [mine] = [n for n in await outbox(db, trip)
-              if n.user_id == craig.id and "reminder" in n.dedupe_key]
+    [mine] = [
+        n for n in await outbox(db, trip) if n.user_id == craig.id and "reminder" in n.dedupe_key
+    ]
     first, second = sorted(p.display_name for p in people)[:2]
     assert mine.body == (
         f"20:10 at ODEON Glasgow Quay, with {first}, {second} and 2 others."
@@ -928,20 +1037,34 @@ async def test_072_will_not_drop_a_trip_and_round_trips_when_there_is_none(
     with pytest.raises(Exception, match="downgrade 072 requires owner review"):
         async with db_conn.begin_nested():
             await db_conn.run_sync(_run(migration.downgrade))
-    await db_conn.execute(text("DELETE FROM cinema_trips WHERE proposer_id = :id"),
-                          {"id": proposer})
+    await db_conn.execute(
+        text("DELETE FROM cinema_trips WHERE proposer_id = :id"), {"id": proposer}
+    )
     await db_conn.run_sync(_run(migration.downgrade))
     gone = await db_conn.scalar(text("SELECT to_regclass('cinema_trips')"))
     assert gone is None
     await db_conn.run_sync(_run(migration.upgrade))
-    names = (await db_conn.execute(text(
-        "SELECT indexname FROM pg_indexes WHERE tablename IN ('cinema_trips',"
-        " 'cinema_trip_invitees') ORDER BY 1"
-    ))).scalars().all()
+    names = (
+        (
+            await db_conn.execute(
+                text(
+                    "SELECT indexname FROM pg_indexes WHERE tablename IN ('cinema_trips',"
+                    " 'cinema_trip_invitees') ORDER BY 1"
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
     assert set(names) >= {
-        "ix_cinema_trips_proposer", "ix_cinema_trips_upcoming", "ix_cinema_trips_film",
-        "ix_cinema_trips_showing", "ix_cinema_trip_invitees_profile",
-        "ix_cinema_trip_invitees_suggested", "uq_cinema_trip_request", "uq_cinema_trip_invitee",
+        "ix_cinema_trips_proposer",
+        "ix_cinema_trips_upcoming",
+        "ix_cinema_trips_film",
+        "ix_cinema_trips_showing",
+        "ix_cinema_trip_invitees_profile",
+        "ix_cinema_trip_invitees_suggested",
+        "uq_cinema_trip_request",
+        "uq_cinema_trip_invitee",
     }
 
 
@@ -950,8 +1073,12 @@ async def test_the_tables_hold_their_shape_whatever_the_api_does(db: AsyncSessio
     proposer = await person(db, "Craig")
     guest = await person(db, "Mark")
     row = CinemaTrip(
-        id=uuid.uuid4(), client_request_id=uuid.uuid4(), proposer_id=proposer.id,
-        film_key="tmdb-891621", film_title="Wild Horse Nine", venue_name="ODEON Glasgow Quay",
+        id=uuid.uuid4(),
+        client_request_id=uuid.uuid4(),
+        proposer_id=proposer.id,
+        film_key="tmdb-891621",
+        film_title="Wild Horse Nine",
+        venue_name="ODEON Glasgow Quay",
         starts_utc=datetime(2026, 11, 9, 20, 10),
     )
     db.add(row)
