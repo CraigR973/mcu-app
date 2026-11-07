@@ -215,5 +215,7 @@ class ReminderRunResponse(BaseModel):
     saleEvents: int = Field(ge=0)
     releases: int = Field(ge=0)
     overdueLoans: int = Field(ge=0)
+    #: AC5 (#345): cinema trips whose showing is today, reminded on its morning.
+    cinemaTrips: int = Field(default=0, ge=0)
     queued: int = Field(ge=0)
     delivered: int = Field(ge=0)

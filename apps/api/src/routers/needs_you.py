@@ -39,6 +39,7 @@ from src.models.movie_night import MovieNightParticipant, MovieNightSession, Mov
 from src.models.profile import Profile, UserRole
 from src.routers.movies import Database, location_label
 from src.schemas.needs_you import NeedsYouLoanItem, NeedsYouResponse, NextScreening
+from src.services.cinema_trips import trips
 from src.services.collection_additions import MARK_PROFILE_ID
 from src.services.movie_night.sessions import film_face
 
@@ -188,7 +189,10 @@ async def next_screening(db: AsyncSession, person: Profile) -> NextScreening | N
 @router.get("/needs-you", response_model=NeedsYouResponse)
 async def needs_you(user: CurrentUser, db: Database) -> NeedsYouResponse:
     """What the person signed in can act on now, and their next screening."""
+    now = utcnow()
     return NeedsYouResponse(
         items=await needs_you_items(db, user, today=utc_today()),
         nextScreening=await next_screening(db, user),
+        trips=await trips.needs_you_trips(db, user, now),
+        nextTrip=await trips.next_trip(db, user, now),
     )

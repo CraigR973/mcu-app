@@ -31,6 +31,7 @@ from src.routers import (
     box_sets,
     brand,
     calendar,
+    cinema_trips,
     cinemas,
     collection,
     deals,
@@ -199,6 +200,7 @@ app.include_router(watch_history.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)
 app.include_router(cinemas.router)
+app.include_router(cinema_trips.router)
 app.include_router(wanted.router)
 app.include_router(scraping.router)
 app.include_router(notifications.router)

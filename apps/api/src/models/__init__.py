@@ -27,6 +27,7 @@ from src.models.cinema import (
     CinemaScreening,
     CinemaVenue,
 )
+from src.models.cinema_trip import CinemaTrip, CinemaTripInvitee
 from src.models.collection_add_request import CollectionAddRequest
 from src.models.collection_item import (
     CONDITIONS,
@@ -162,6 +163,8 @@ __all__ = [
     "CinemaFilm",
     "CinemaRefreshRun",
     "CinemaScreening",
+    "CinemaTrip",
+    "CinemaTripInvitee",
     "CinemaVenue",
     "ACTION_TYPES",
     "MESSAGE_ROLES",

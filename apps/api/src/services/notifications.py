@@ -34,6 +34,7 @@ from src.models.notification import (
     DEFERRED_QUIET_HOURS,
     SUPPRESSED_CATEGORY_DISABLED,
     SUPPRESSED_NO_SUBSCRIPTIONS,
+    SUPPRESSED_TOO_LATE,
     Notification,
     NotificationCategory,
     NotificationPreference,
@@ -284,12 +285,17 @@ async def queue_notification(
     url: str | None = None,
     dedupe_key: str | None = None,
     now: datetime | None = None,
+    deliver_by_utc: datetime | None = None,
 ) -> Notification | None:
     """Write one notification to the outbox, applying §6.1's preferences.
 
     Returns ``None`` only when ``dedupe_key`` names a notification that already exists —
     a suppressed one is still a row, and still returned, because "why did I not get that"
     deserves an answer.
+
+    ``deliver_by_utc`` (AC5, #345) is for a push worth nothing later: when quiet hours or
+    digest mode would hold it beyond that instant it is written ``suppressed`` with
+    :data:`SUPPRESSED_TOO_LATE` instead of arriving after the fact.
     """
     now = now or utcnow()
     preference = await get_or_create_preferences(db, user_id)
@@ -314,10 +320,18 @@ async def queue_notification(
         notification.status = NotificationStatus.suppressed.value
         notification.suppressed_reason = SUPPRESSED_CATEGORY_DISABLED
     else:
-        notification.status = NotificationStatus.queued.value
         deliver_after, reason = scheduled_delivery(preference, now)
-        notification.deliver_after_utc = deliver_after
-        notification.deferred_reason = reason
+        if (
+            deliver_by_utc is not None
+            and deliver_after is not None
+            and deliver_after > deliver_by_utc
+        ):
+            notification.status = NotificationStatus.suppressed.value
+            notification.suppressed_reason = SUPPRESSED_TOO_LATE
+        else:
+            notification.status = NotificationStatus.queued.value
+            notification.deliver_after_utc = deliver_after
+            notification.deferred_reason = reason
 
     if dedupe_key is not None:
         # ON CONFLICT DO NOTHING rather than a read-then-write: two reminder passes racing

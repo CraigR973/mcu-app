@@ -3,7 +3,8 @@
 Three senders live here, and between them they close two debts this batch inherited:
 Batch 15 shipped §12.5's lending tracker without its "overdue triggers a push" clause, and
 Batch 9 dropped the onboarding wizard's notifications step, both because push did not
-exist (`DECISIONS.md` #50). It does now.
+exist (`DECISIONS.md` #50). It does now. Since AC5 the pass also queues each cinema trip's
+morning-of reminder (`services.cinema_trips.trips.remind_today`, #345 decision 2).
 
 **Everything is driven by an ``as_of`` date the caller supplies.** That is Batch 37's
 pattern and it is what makes §5.11's acceptance — *"test date set 2 weeks before a seeded
@@ -37,6 +38,7 @@ from src.models.release_calendar import (
     RELEASE_TYPE_LABELS,
     ReleaseCalendarEntry,
 )
+from src.services.cinema_trips.trips import remind_today
 from src.services.notifications import queue_notification
 from src.services.sale_seasons import SALE_EVENT_TYPE, seed_year
 
@@ -57,6 +59,8 @@ class ReminderSummary:
     sale_events: int = 0
     releases: int = 0
     overdue_loans: int = 0
+    #: AC5 (#345, decision 2): trips whose showing is today, reminded on its morning.
+    cinema_trips: int = 0
     seasons_seeded: int = 0
     #: Notifications actually written. Lower than the sum above when a category is off,
     #: because a suppressed notification is still a row but a deduplicated one is not.
@@ -259,6 +263,11 @@ async def run_reminders(
     await notify_upcoming_sales(db, as_of=as_of, now=now, summary=summary)
     await notify_upcoming_releases(db, as_of=as_of, now=now, summary=summary)
     await notify_overdue_loans(db, as_of=as_of, now=now, summary=summary)
+    # AC5: a trip's reminder is about the showing's own day, read from ``now`` rather than
+    # ``as_of``: a catch-up for a missed day must not remind anyone of a film already shown.
+    reminded, written = await remind_today(db, now)
+    summary.cinema_trips += reminded
+    summary.queued += written
 
     logger.info(
         "reminders_run",
@@ -266,6 +275,7 @@ async def run_reminders(
         sale_events=summary.sale_events,
         releases=summary.releases,
         overdue_loans=summary.overdue_loans,
+        cinema_trips=summary.cinema_trips,
         queued=summary.queued,
     )
     return summary

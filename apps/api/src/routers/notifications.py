@@ -498,6 +498,7 @@ async def run_reminder_pass(
         saleEvents=summary.sale_events,
         releases=summary.releases,
         overdueLoans=summary.overdue_loans,
+        cinemaTrips=summary.cinema_trips,
         queued=summary.queued,
         delivered=delivered,
     )

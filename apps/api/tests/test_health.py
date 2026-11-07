@@ -107,6 +107,16 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # AC4 (#341): At the cinema, film first, and one film's every showing.
         "/api/v1/cinemas/films",
         "/api/v1/cinemas/films/{key}",
+        # AC5 (#345): cinema trips, all `CurrentUser` and members only: anyone not on a trip
+        # reads "Trip not found". No guests, and no reply link that works without sign-in.
+        "/api/v1/cinema-trips",
+        "/api/v1/cinema-trips/people",
+        "/api/v1/cinema-trips/{trip_id}",
+        "/api/v1/cinema-trips/{trip_id}/reply",
+        "/api/v1/cinema-trips/{trip_id}/move",
+        "/api/v1/cinema-trips/{trip_id}/keep",
+        "/api/v1/cinema-trips/{trip_id}/invitees",
+        "/api/v1/cinema-trips/{trip_id}/cancel",
         "/api/v1/health/ready",
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",

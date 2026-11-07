@@ -70,6 +70,7 @@ def report(
     print(f"  sale events:     {summary.sale_events}")
     print(f"  releases:        {summary.releases}")
     print(f"  overdue loans:   {summary.overdue_loans}")
+    print(f"  cinema trips:    {summary.cinema_trips}")
     print(f"  seasons seeded:  {summary.seasons_seeded}")
     print(f"  queued:          {summary.queued}")
     print(f"  delivered:       {delivered}" if deliver else "  delivered:       (skipped)")

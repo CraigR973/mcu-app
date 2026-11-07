@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from src.schemas.cinema_trips import ShowingFlag
 from src.schemas.wire import UtcDatetime
 
 #: A count of whole days, never negative.
@@ -51,9 +52,47 @@ class NextScreening(BaseModel):
     matchTitle: str | None = None
 
 
+class NeedsYouTripItem(BaseModel):
+    """A cinema trip only the reader can act on (AC5, #345). The web words it."""
+
+    #: ``tripInvite``: waiting for the reader's reply. ``tripSuggestion``: to the proposer, an
+    #: invitee suggests another time. ``tripWithdrawn``: to the proposer, the cinema no longer
+    #: lists the time as the trip has it.
+    kind: Literal["tripInvite", "tripSuggestion", "tripWithdrawn"]
+    tripId: uuid.UUID
+    filmTitle: str
+    posterPath: str | None
+    venueName: str
+    venueTimezone: str
+    startsAtUtc: UtcDatetime
+    proposerName: str
+    #: Who suggests another time, on a ``tripSuggestion``.
+    fromName: str | None = None
+    #: Why, on a ``tripWithdrawn``: withdrawn (which includes gone, or moved to another time)
+    #: or cancelled.
+    flag: ShowingFlag | None = None
+
+
+class NextTrip(BaseModel):
+    """The reader's next cinema trip they proposed or are going on (AC5, #345)."""
+
+    tripId: uuid.UUID
+    filmTitle: str
+    venueName: str
+    venueTimezone: str
+    startsAtUtc: UtcDatetime
+    #: Everyone else going, the proposer first.
+    withNames: list[str]
+
+
 class NeedsYouResponse(BaseModel):
     #: Most pressing first. Empty when there is nothing to do.
     items: list[NeedsYouLoanItem]
     #: AC2: the next screening the reader is in, planned and not ended; null when none. Home
     #: shows it beside "Needs you" from this one read, so it adds no request.
     nextScreening: NextScreening | None = None
+    #: AC5: cinema trips the reader can act on, soonest showing first. A field of its own, not
+    #: new kinds in ``items``, so a build installed before AC5 still reads this answer.
+    trips: list[NeedsYouTripItem] = Field(default_factory=list)
+    #: AC5: the reader's next trip, for Home's top slot when it is sooner than the screening.
+    nextTrip: NextTrip | None = None

@@ -74,6 +74,9 @@ class NotificationStatus(StrEnum):
 #: that" has an answer — the failure mode Batch 9 refused to ship blind.
 SUPPRESSED_CATEGORY_DISABLED = "category_disabled"
 SUPPRESSED_NO_SUBSCRIPTIONS = "no_subscriptions"
+#: AC5 (#345): a push only worth having by a time — a cinema trip's morning reminder — that
+#: quiet hours or digest mode would have held past it. Written down rather than delivered late.
+SUPPRESSED_TOO_LATE = "too_late"
 
 #: How a held notification is released. Both are *delays*, not refusals.
 DEFERRED_QUIET_HOURS = "quiet_hours"
