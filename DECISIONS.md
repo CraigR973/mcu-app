@@ -7532,3 +7532,24 @@ contemporaneous.
      New this week, exact wording and scheduled-only production evidence. Five new tables,
      two preference columns and migration 073 are authorised. No manual live refresh/push,
      new hosting, credential change or unrelated batch is authorised.
+
+349. **AC6 deployed, not fully accepted; scheduled-only evidence remains open (7 Nov).**
+     PR #136 fast-forwarded `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be` to main after
+     all local gates and all seven exact-commit PR CI jobs (42391299778) passed. Production
+     API/web serve that SHA with full readiness; read-only checks at 16:46 UTC verify 073,
+     both-role grants/defaults, withheld credentials, 278 baseline aliases and 23 baseline
+     identities. No appearances, daily results, claims or cinema outbox rows exist yet.
+     This is deployment evidence, not a positive scheduled digest or phone observation.
+     Keep AC6 unstruck pending its first naturally scheduled qualifying outbox/claim read-back;
+     never create one manually. Craig observes phone receipt and the tap. AC3/AC5 stay separate.
+
+     The approved contract is unchanged. Same-source AC3 fingerprint inheritance keeps an
+     unresolved rollout listing silent when a source rotates its showing key; it does not
+     link identities speculatively. A returned old alias records the fresh listing observation.
+     An already-due digest deferred during new quiet hours retains its elapsed digest target
+     and waits only for quiet hours to end, preventing starvation at the daily morning pass.
+     Committed claims still precede transport, with no uncertain replay; partial programmes,
+     delayed delivery and possible lost pushes remain the explicitly approved limits.
+     The report records every failed gate/regression and correction; no assertion/skip/retry
+     was weakened. Main CI and final handoff exact-SHA CI/parity must also complete before
+     reporting verification complete, without treating deployment as full AC6 acceptance.

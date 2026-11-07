@@ -2,15 +2,28 @@
 
 ## Now
 
-**7 Nov: AC6 implementation in progress on `feat/ac6-cinema-digest`; all eight owner
-recommendations approved (#348).** The saved checkpoint is the build contract. Migration 073
-adds two preferences and five durable digest tables. A scheduled refresh atomically records
-one daily result and each person's filtered outbox row; a committed daily claim precedes
-transport, so an uncertain send is never retried. New this week is in At the cinema.
-Verification is in progress; nothing is deployed or fully accepted yet. Source incompleteness,
-held delivery latency and possible lost sends remain the approved limits. No manual production
-refresh, test digest, trip, hosting or data operation has run. Evidence and failures are recorded
-in `docs/reviews/ac6-implementation-2026-11-07.md`.
+**7 Nov: AC6 deployed, acceptance open (PR #136, `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be`,
+#348, #349).** Cinemas defaults on; Older films only defaults off. Finished scheduled refreshes
+record one atomic London-day result and filtered outbox rows. A committed person/day claim
+precedes one transport attempt per active device; uncertain sends are never replayed. Pushes
+name films and run labels and open At the cinema → New this week. Quiet hours/digest mode
+apply through existing passes, so held messages can arrive the following day. Source
+incompleteness and possible lost sends are the approved limits.
+
+**Verified at 16:46 UTC:** API and web serve `46aaba5`; every readiness field is healthy.
+Migration 073 is live, with 278 silent baseline listings and 23 baseline identities; 0 appearances,
+0 evaluated days, 0 delivery claims and no cinema outbox rows. Both roles can read all five
+new tables and both preference columns; PIN hashes and push credentials remain withheld.
+Craig and Mark each have Cinemas on, Older films only off; Movie night stays on.
+All local gates and all seven exact-commit PR CI jobs pass (42391299778). Main implementation
+CI is run 42392858508. PR #136 is also the verification record for the final documentation
+commit: all seven jobs and API/web SHA parity are required before reporting handoff complete.
+
+**Still unverified:** the first naturally scheduled qualifying digest and real-phone receipt/tap.
+No scheduled AC6 run has happened since deployment. No manual production refresh, test digest
+or trip was created. AC6 stays unstruck and acceptance open; an empty later run cannot close
+positive delivery evidence. The full criterion record, failures and evidence are saved in
+`docs/reviews/ac6-implementation-2026-11-07.md` and PR #136.
 
 **7 Nov: AC5 shipped (PR #135, merge `6384c61c`): cinema trips — invite, reply, suggest another
 time (#345, #346).** Migration 072 adds `cinema_trips` and `cinema_trip_invitees`, both granted to
@@ -22,7 +35,7 @@ morning-of reminder rides the 08:00 UTC pass and is written `too_late` when quie
 mode would hold it past the reminder pass. Trips show on their own page (`/movie-night/trips/<id>`), the
 film page, Movie night (past ones folded), Needs you (first) and Home's top slot.
 
-**Live, read-only after the deploy:** migration 072; both tables empty; both roles have SELECT.
+**AC5 read-back before the AC6 deployment:** migration 072; both tables empty; both roles have SELECT.
 Both people have 0 upcoming/past trips, no Needs you trip items and no next trip. There are 137
 confirmed future Wild Horse Nine showings. **No trip was made in production:** a real one pushes
 Mark's phone, so the first is Craig's to propose (`OWNER-ACTIONS.md`); phone rendering and a trip
@@ -30,8 +43,8 @@ push on a phone are his to observe.
 
 **Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
 
-**Next: finish AC6 verification and its own PR/deployment; scheduled digest evidence follows
-naturally after deployment, and phone receipt remains Craig's observation.**
+**Next: read the first naturally scheduled qualifying AC6 digest without triggering it.
+Phone receipt remains Craig's observation. Stop after AC6; AC3's rerun read-back and AC5's phone/trip observations remain separate.**
 
 ## Next
 
@@ -40,9 +53,10 @@ AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → A
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
 have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
 (AC4 → AC7) is done: AC4 (#341) and AC7 (#343) shipped on 6 Nov. Sitting 4: AC5 shipped on
-7 Nov at Craig's "Approve all 8" (#345, #346); AC6's eight checkpoint recommendations were approved on 7 Nov (#348), and implementation
-is in progress. Onboarding more people needs its own plan; nothing in Group AC
-assumes exactly two people. Existing owner actions remain separate.
+7 Nov at Craig's "Approve all 8" (#345, #346); AC6's eight checkpoint recommendations were
+approved on 7 Nov (#348), and its code deployed in PR #136 (#349). Scheduled-digest evidence
+and real-phone receipt remain open. Onboarding more people needs its own plan; nothing in
+Group AC assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -434,6 +448,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **7 Nov — AC6 deployed; acceptance remains open (#348, #349).** All eight recommendations
+  approved, implemented on its own branch and merged in PR #136 at `46aaba5`. Local API 2,741
+  passed with zero skips, shared 200, web 881, all static/build checks and C90/F89+1/jobs8;
+  seven-job PR CI 42391299778 adds W88+2, only the three documented browser skips. API/web
+  SHA/full readiness and read-only migration 073/grant/baseline checks pass at 16:46 UTC:
+  278 aliases, 23 identities, no appearances/days/claims/cinema outbox. Both people's defaults
+  and Movie night preserved; credential privileges withheld. First natural qualifying digest
+  and phone receipt/tap remain unverified; no manual refresh/push/trip or hosting change.
+  Ledger remains unstruck; PR #136 carries the final handoff exact-SHA verification record.
 
 - **7 Nov — AC6 checkpoint prepared, not implemented (#347).** Saved eight concrete owner
   recommendations in `docs/reviews/ac6-owner-checkpoint-2026-11-07.md`; recorded the approved

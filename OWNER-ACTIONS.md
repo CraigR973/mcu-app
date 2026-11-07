@@ -11,7 +11,7 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Daily cinema digest (AC6) — checkpoint approved 7 Nov (#348); implementation in progress.**
+- **Daily cinema digest (AC6) — deployed 7 Nov (PR #136, `46aaba5`, #348, #349); acceptance open.**
   The agent must wait for genuine scheduled outbox evidence after deployment, without a manual
   refresh or test digest. Real-phone receipt and the tap into New this week remain yours to
   observe when a qualifying digest naturally arrives. AC3's rerun read-back and AC5's first

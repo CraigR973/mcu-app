@@ -128,7 +128,7 @@ flowchart TB
 Who sees a trip: its proposer and invitees only; anyone else reads "Trip not found". Nothing
 assumes two people. No guests, and no reply link that works without sign-in (#335).
 
-## Daily cinema digest — AC6 (branch implementation; deployment pending)
+## Daily cinema digest — AC6 (deployed 7 Nov, PR #136, `46aaba5`; acceptance open)
 
 Approved in #348. Migration 073 keeps identity/listing/appearance history independently of
 programme retention, one evaluated London day and one committed delivery claim per person/day.
@@ -152,7 +152,10 @@ daily result freezes retries. A committed claim survives a crash, so uncertain t
 never replayed; that can lose a push. Partial successful sources count as observed absence,
 not proved complete absence. Held delivery may wait until the following day. No schedule,
 provider, hosting or credential change. AC5's Movie night category and reminder order stay.
-Scheduled production evidence and real-phone receipt remain pending.
+Production migration 073, both roles' grants, credential exclusions and the silent baseline
+(278 listings, 23 identities) were read back at 16:46 UTC. No appearances, evaluated days,
+delivery claims or cinema outbox exist yet. Scheduled production evidence and real-phone
+receipt/tap remain pending; no manual digest or refresh was triggered.
 
 ## Releases, two calendars — AC7
 
