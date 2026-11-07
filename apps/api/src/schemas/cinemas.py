@@ -193,6 +193,17 @@ class CinemaFilmCard(CinemaFilmFacts):
     slots: list[CinemaFilmSlot]
 
 
+class CinemaDigestCard(BaseModel):
+    key: str
+    title: str
+    firstListedAtUtc: UtcDatetime
+    recognisedAtUtc: UtcDatetime
+    isReturn: bool
+    runLabels: list[str]
+    runReasons: list[str]
+    card: CinemaFilmCard | None
+
+
 class CinemaFilmsResponse(BaseModel):
     """Every film and listing still to show in the stored programme's fortnight."""
 
@@ -202,6 +213,7 @@ class CinemaFilmsResponse(BaseModel):
     thisWeekTo: date
     venues: list[ProgrammeVenue]
     films: list[CinemaFilmCard]
+    newThisWeek: list[CinemaDigestCard] = Field(default_factory=list)
     #: Every venue and date checked in full.
     complete: bool
 

@@ -377,6 +377,17 @@ export function PreferencesSection() {
         ))}
       </ul>
 
+      <div className="mt-3 space-y-3 border-t border-border pt-3">
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1"><p className="font-medium">Cinemas</p><p className="text-sm text-muted-foreground">One daily summary of films newly listed at your nine cinemas. No new films means no notification.</p></div>
+          <Toggle label="Cinemas" checked={current.cinemasEnabled === true} disabled={save.isPending || current.cinemasEnabled === undefined || current.cinemasOlderOnly === undefined} onChange={(next) => save.mutate({ cinemasEnabled: next })} />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1"><p className="font-medium">Older films only</p><p className="text-sm text-muted-foreground">Only films with a confirmed Rerun showing. First runs, previews and unclassified runs stay quiet.</p></div>
+          <Toggle label="Older films only" checked={current.cinemasOlderOnly === true} disabled={save.isPending || current.cinemasEnabled !== true || current.cinemasOlderOnly === undefined} onChange={(next) => save.mutate({ cinemasOlderOnly: next })} />
+        </div>
+        {current.cinemasEnabled === undefined || current.cinemasOlderOnly === undefined ? <p role="status" className="text-sm text-muted-foreground">Cinema notification settings are not available yet. Reload when connected.</p> : null}
+      </div>
       <h2 className="mt-6 flex items-center gap-2 text-lg font-semibold">
         <Clock className="h-5 w-5" aria-hidden />
         When
@@ -386,7 +397,7 @@ export function PreferencesSection() {
         <div className="min-w-0 flex-1">
           <p className="font-medium">Daily digest</p>
           <p className="text-sm text-muted-foreground">
-            Hold everything and send one summary a day instead.
+            Hold notifications until your digest time. Cinema updates arrive as their own daily summary; other updates are grouped together.
           </p>
         </div>
         <Toggle
@@ -397,6 +408,7 @@ export function PreferencesSection() {
         />
       </div>
 
+      <p className="mt-2 text-sm text-muted-foreground">Delivery waits for the next notification check after this time; it may arrive the following day.</p>
       {current.digestMode && (
         <label className="mt-2 block text-sm">
           <span className="mb-1 block text-muted-foreground">

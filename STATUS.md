@@ -2,18 +2,15 @@
 
 ## Now
 
-**7 Nov: AC6 owner-checkpoint proposal saved; build approval pending.**
-`docs/reviews/ac6-owner-checkpoint-2026-11-07.md` records eight recommendations, exact preferences,
-wording, migration/history design, rollout, 30-day return interpretation, retry/concurrency
-safety and verification. Craig approved this session's model substitution only (#347).
-Branch `feat/ac6-cinema-digest` contains documentation only; no AC6 code or migration exists.
-Next: Craig approves or changes the eight recommendations before implementation. Main and
-origin/main were clean at `746b23027fc79223ffbc5405e0a2186cca91a265`; exact CI 42379182157 passed
-all seven jobs; production API/web matched, with full readiness. Read-only 7 Nov evidence:
-9 enabled/successfully collected venues, but only Vue has complete dates; 22 linked future
-film identities and 0 rerun showings. The proposal explicitly exposes observed rather than
-proved absence, next-day delivery under holds, and possible lost delivery with strict
-at-most-once sending. No live refresh, push, trip or production write was performed.
+**7 Nov: AC6 implementation in progress on `feat/ac6-cinema-digest`; all eight owner
+recommendations approved (#348).** The saved checkpoint is the build contract. Migration 073
+adds two preferences and five durable digest tables. A scheduled refresh atomically records
+one daily result and each person's filtered outbox row; a committed daily claim precedes
+transport, so an uncertain send is never retried. New this week is in At the cinema.
+Verification is in progress; nothing is deployed or fully accepted yet. Source incompleteness,
+held delivery latency and possible lost sends remain the approved limits. No manual production
+refresh, test digest, trip, hosting or data operation has run. Evidence and failures are recorded
+in `docs/reviews/ac6-implementation-2026-11-07.md`.
 
 **7 Nov: AC5 shipped (PR #135, merge `6384c61c`): cinema trips — invite, reply, suggest another
 time (#345, #346).** Migration 072 adds `cinema_trips` and `cinema_trip_invitees`, both granted to
@@ -33,8 +30,8 @@ push on a phone are his to observe.
 
 **Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
 
-**Next: AC6's saved owner checkpoint awaits Craig's answer** — the model substitution is approved;
-the switch, wording and behaviour proposal still need approval before anything is built.
+**Next: finish AC6 verification and its own PR/deployment; scheduled digest evidence follows
+naturally after deployment, and phone receipt remains Craig's observation.**
 
 ## Next
 
@@ -43,8 +40,8 @@ AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → A
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
 have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
 (AC4 → AC7) is done: AC4 (#341) and AC7 (#343) shipped on 6 Nov. Sitting 4: AC5 shipped on
-7 Nov at Craig's "Approve all 8" (#345, #346); AC6 stops at its owner checkpoint until he
-answers. Onboarding more people needs its own plan; nothing in Group AC
+7 Nov at Craig's "Approve all 8" (#345, #346); AC6's eight checkpoint recommendations were approved on 7 Nov (#348), and implementation
+is in progress. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's

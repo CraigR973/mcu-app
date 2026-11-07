@@ -30,9 +30,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
 from src.models.cinema import CinemaFilm, CinemaScreening
+from src.models.cinema_digest import CinemaDigestAppearance, CinemaDigestFilm
 from src.models.movie import Movie
 from src.schemas.cinemas import (
     AlsoListed,
+    CinemaDigestCard,
     CinemaFilmCard,
     CinemaFilmDetail,
     CinemaFilmFacts,
@@ -257,8 +259,39 @@ async def films(db: AsyncSession, user_id: uuid.UUID) -> CinemaFilmsResponse:
         thisWeekTo=window.dates[WEEK - 1],
         venues=venues,
         films=cards,
+        newThisWeek=await new_this_week(db, cards, window.now),
         complete=all(c.status in ("healthy", "empty") for v in venues for c in v.coverage),
     )
+
+
+async def new_this_week(
+    db: AsyncSession, cards: list[CinemaFilmCard], now: datetime
+) -> list[CinemaDigestCard]:
+    current = {c.key: c for c in cards}
+    rows = (
+        await db.execute(
+            select(CinemaDigestAppearance, CinemaDigestFilm.tmdb_id)
+            .join(CinemaDigestFilm, CinemaDigestFilm.id == CinemaDigestAppearance.film_id)
+            .where(
+                CinemaDigestAppearance.recognised_utc > now - timedelta(days=7),
+                CinemaDigestAppearance.recognised_utc <= now,
+            )
+            .order_by(CinemaDigestAppearance.recognised_utc.desc(), CinemaDigestAppearance.id)
+        )
+    ).all()
+    return [
+        CinemaDigestCard(
+            key=f"tmdb-{identity}",
+            title=a.title,
+            firstListedAtUtc=a.first_listing_utc,
+            recognisedAtUtc=a.recognised_utc,
+            isReturn=a.is_return,
+            runLabels=a.run_labels,
+            runReasons=a.run_reasons,
+            card=current.get(f"tmdb-{identity}"),
+        )
+        for a, identity in rows
+    ]
 
 
 def _parse(key: str) -> re.Match[str]:

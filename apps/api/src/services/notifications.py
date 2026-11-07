@@ -25,7 +25,7 @@ import httpx
 import structlog
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from src.clock import utcnow
 from src.config import settings
@@ -60,6 +60,7 @@ _CATEGORY_COLUMNS: dict[NotificationCategory, str] = {
     NotificationCategory.loans: "loans_enabled",
     NotificationCategory.movie_night: "movie_night_enabled",
     NotificationCategory.collection_additions: "collection_additions_enabled",
+    NotificationCategory.cinemas: "cinemas_enabled",
 }
 
 #: How long a push service should hold an undelivered message. Four hours: long enough for
@@ -506,9 +507,15 @@ async def deliver_pending(
     """
     now = now or utcnow()
     summary = DeliverySummary()
+    # AC6 owns independent committed claims, never the caller's transaction.
+    if isinstance(db.bind, AsyncEngine):
+        from src.services.cinema_digest.delivery import deliver
+
+        summary = await deliver(db.bind, sender, now=now, user_id=user_id)
 
     query = select(Notification).where(
         Notification.status == NotificationStatus.queued.value,
+        Notification.category != NotificationCategory.cinemas.value,
         (Notification.deliver_after_utc.is_(None)) | (Notification.deliver_after_utc <= now),
     )
     if user_id is not None:
@@ -523,7 +530,7 @@ async def deliver_pending(
         .scalars()
         .all()
     )
-    summary.considered = len(due)
+    summary.considered += len(due)
     if not due:
         return summary
 

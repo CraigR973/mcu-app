@@ -11,14 +11,11 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Daily cinema digest (AC6) — approve the saved checkpoint before build.** Eight
-  recommendations in `docs/reviews/ac6-owner-checkpoint-2026-11-07.md`: default-on Cinemas
-  and optional Older films only; silent rollout; identity and 30-day observed-absence rules;
-  daily refresh/retry safety; existing delivery schedules; strict send claims; wording and
-  New this week. Risks: incomplete sources cannot prove absence; held pushes can arrive the
-  following day; a crash can lose an at-most-once push; digest mode keeps a separate cinema
-  summary. Reply “Approve all 8” or change numbered recommendations. The approved model
-  substitution (#347) does not answer this checkpoint. No AC6 implementation exists yet.
+- **Daily cinema digest (AC6) — checkpoint approved 7 Nov (#348); implementation in progress.**
+  The agent must wait for genuine scheduled outbox evidence after deployment, without a manual
+  refresh or test digest. Real-phone receipt and the tap into New this week remain yours to
+  observe when a qualifying digest naturally arrives. AC3's rerun read-back and AC5's first
+  real trip/phone observations stay separate.
 
 - **Cinema trips (AC5, shipped 7 Nov, #346) — on your phone, when there's a film you want to
   see:** At the cinema → the film → **Propose a trip**, pick a time and Mark, **Send

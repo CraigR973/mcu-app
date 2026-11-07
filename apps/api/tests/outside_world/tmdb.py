@@ -94,6 +94,17 @@ def _movie_json(film: Film, appended: set[str]) -> dict[str, object]:
                 }
             ],
         }
+    if "release_dates" in appended:
+        body["release_dates"] = {
+            "results": [
+                {
+                    "iso_3166_1": "GB",
+                    "release_dates": [
+                        {"type": 3, "release_date": film.release_date + "T00:00:00Z", "note": ""}
+                    ],
+                }
+            ]
+        }
     if "videos" in appended:
         body["videos"] = {"results": []}
     if "watch/providers" in appended:

@@ -59,12 +59,11 @@ function cinemasLine(line: CinemaLine, venues: Map<string, ProgrammeVenue>): str
   return venue ? shortVenueName(venue) : '1 cinema'
 }
 
-function FilmCard({ line, venues, today }: { line: CinemaLine; venues: Map<string, ProgrammeVenue>; today: string }) {
+function FilmCardContent({ line, venues, today }: { line: CinemaLine; venues: Map<string, ProgrammeVenue>; today: string }) {
   const { card } = line
   const badge = runBadge(line.run, line.runReason)
   return (
-    <li>
-      <article aria-label={card.title}>
+    <article aria-label={card.title}>
         <Link to={cinemaFilmPath(card.key)} className="group block rounded-md">
           <div className="relative">
             <Poster path={card.posterPath} title={card.title} size="w185" decorative className="aspect-[2/3] w-full rounded-md border border-border object-cover" />
@@ -83,9 +82,12 @@ function FilmCard({ line, venues, today }: { line: CinemaLine; venues: Map<strin
           <p className="mt-0.5 text-xs leading-4 tabular-nums text-foreground">{shortDay(line.next.day, today)} {clock(line.next.at)}</p>
           <p className="text-xs leading-4 text-muted-foreground">{cinemasLine(line, venues)}</p>
         </Link>
-      </article>
-    </li>
+    </article>
   )
+}
+
+function FilmCard(props: { line: CinemaLine; venues: Map<string, ProgrammeVenue>; today: string }) {
+  return <li><FilmCardContent {...props} /></li>
 }
 
 function FilmGrid({ id, title, caption, lines, venues, today }: { id: string; title: string; caption: string; lines: CinemaLine[]; venues: Map<string, ProgrammeVenue>; today: string }) {
@@ -158,6 +160,33 @@ function Horizons({ data }: { data: CinemaFilms }) {
   )
 }
 
+function NewThisWeek({ data, filters, now, venues, today }: { data: CinemaFilms; filters: CinemaFilters; now: number; venues: Map<string, ProgrammeVenue>; today: string }) {
+  if (data.newThisWeek === undefined) return <StatePanel tone="empty" title="New this week" description="New this week is not available in this saved programme. Reload when connected." />
+  const items = data.newThisWeek.filter((item) => Date.parse(item.recognisedAtUtc) > now - 7 * 86400000 && Date.parse(item.recognisedAtUtc) <= now).filter((item) => filters.run === 'all' || (filters.run === 'olderFilm' ? item.runLabels.includes('Rerun') : filters.run === 'newRelease' ? item.runLabels.some((label) => label === 'First run' || label === 'Preview') : item.runLabels.includes('Unclassified')))
+  const lines = cinemaSections({ ...data, films: items.flatMap((item) => item.card ? [item.card] : []) }, filters, now)
+  const current = new Map([...lines.thisWeek, ...lines.comingUp].map((line) => [line.card.key, line]))
+  const shown = items.filter((item) => current.has(item.key) || ((!item.card || !item.card.slots.some((slot) => slot.startsAtUtc.some((at) => Date.parse(at) > now))) && filters.day === null && filters.venueIds === null))
+  return (
+    <section aria-labelledby="cinema-new-this-week" className="space-y-3">
+      <h2 id="cinema-new-this-week" className="section-heading">New this week</h2>
+      <p className="text-sm text-muted-foreground">New programme arrivals and returns after 30 days, added here in the past seven days. Delayed matches show when they were first listed.</p>
+      {shown.length === 0 ? <StatePanel tone="empty" title={filters.run === 'olderFilm' ? 'No newly listed older films this week.' : 'No new films at your cinemas this week.'} description="New films appear after the daily programme check. Unmatched listings and incomplete programmes may hold other films." /> : null}
+      <ul className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-5">
+        {shown.map((item) => {
+          const line = current.get(item.key)
+          const extraLabels = item.runLabels.filter((label) => label !== (line ? runBadge(line.run, line.runReason) : null))
+          return <li key={item.key} className="space-y-1">
+            {line ? <FilmCardContent line={line} venues={venues} today={today} /> : <><p className="text-sm font-semibold">{item.title}</p><p className="text-xs text-muted-foreground">No remaining showings in the saved programme.</p></>}
+            {extraLabels.length ? <p className="text-xs text-muted-foreground">{extraLabels.join(' · ')}</p> : null}
+            {item.isReturn ? <p className="text-xs font-semibold">Back in the programme</p> : null}
+            {londonDate(Date.parse(item.firstListedAtUtc)) !== londonDate(Date.parse(item.recognisedAtUtc)) ? <p className="text-xs text-muted-foreground">First listed {dayAndDate(londonDate(Date.parse(item.firstListedAtUtc)))} · Matched {dayAndDate(londonDate(Date.parse(item.recognisedAtUtc)))}</p> : null}
+          </li>
+        })}
+      </ul>
+    </section>
+  )
+}
+
 /**
  * Movie night's At the cinema view — AC4 (#335, point 3). Film first: what is on this week and
  * what is coming up at the nine, each film once with its poster, run, cinemas and next showing;
@@ -173,6 +202,7 @@ export function AtTheCinema() {
   // The person is in the key, so another person's watch marks are never drawn (AB7).
   const query = useQuery({ queryKey: ['cinema-films', profile?.id], queryFn: fetchCinemaFilms, enabled: Boolean(profile) })
   const data = query.data
+  const newOnly = params.get('view') === 'new-this-week'
   const filters = readFilters(params, data)
   const today = londonDate(now)
   const venues = data?.venues ?? []
@@ -211,6 +241,10 @@ export function AtTheCinema() {
     <section aria-label="At the cinema" className="space-y-6">
       {data ? (
         <div className="space-y-3" aria-label="Filters" role="group">
+          <div role="group" aria-label="Programme view" className="flex flex-wrap gap-2">
+            <button type="button" className={cn(CHIP, !newOnly ? CHIP_ON : CHIP_OFF)} aria-pressed={!newOnly} onClick={() => update((next) => next.delete('view'))}>All films</button>
+            <button type="button" className={cn(CHIP, newOnly ? CHIP_ON : CHIP_OFF)} aria-pressed={newOnly} onClick={() => update((next) => next.set('view', 'new-this-week'))}>New this week</button>
+          </div>
           <div role="group" aria-label="Run" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
             {RUNS.map((run) => (
               <button key={run} type="button" aria-pressed={filters.run === run} onClick={() => setRun(run)} className={cn(CHIP, filters.run === run ? CHIP_ON : CHIP_OFF)}>
@@ -260,14 +294,15 @@ export function AtTheCinema() {
       {data ? (
         <>
           {selected.length === 0 ? <p role="alert" className="text-sm text-destructive">Select at least one cinema.</p> : null}
-          {nothing ? (
+          {nothing && !newOnly ? (
             <StatePanel
               tone="empty"
               title={filters.run === 'all' ? 'Nothing listed for this choice' : filters.run === 'unclassified' ? 'No unclassified showings' : `No ${RELEASE_LABELS[filters.run].toLowerCase()} listed`}
               description="Try another day, run or cinema. Unchecked programmes may hold other films; coverage is below."
             />
           ) : null}
-          {sections ? (
+          {newOnly ? <NewThisWeek data={data} filters={filters} now={now} venues={venueMap} today={today} /> : null}
+          {sections && !newOnly ? (
             <>
               {/* One day picked is one grid of that day's films; otherwise this week, then later. */}
               <FilmGrid

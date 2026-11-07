@@ -1504,6 +1504,8 @@ export const notificationPreferenceSchema = z.object({
   loansEnabled: z.boolean(),
   movieNightEnabled: z.boolean(),
   collectionAdditionsEnabled: z.boolean().optional(),
+  cinemasEnabled: z.boolean().optional(),
+  cinemasOlderOnly: z.boolean().optional(),
   digestMode: z.boolean(),
   digestHourLocal: z.number().int().min(0).max(23),
   quietHoursStart: z.string().nullable(),
@@ -2977,6 +2979,12 @@ export const cinemaFilmsResponseSchema = z.object({
   venues: z.array(cinemaVenueSchema),
   films: z.array(cinemaFilmFactsSchema.extend({ slots: z.array(cinemaFilmSlotSchema) })),
   complete: z.boolean(),
+  newThisWeek: z.array(z.object({
+    key: cinemaFilmKeySchema, title: z.string(),
+    firstListedAtUtc: cinemaUtcSchema, recognisedAtUtc: cinemaUtcSchema,
+    isReturn: z.boolean(), runLabels: z.array(z.string()), runReasons: z.array(z.string()),
+    card: cinemaFilmFactsSchema.extend({ slots: z.array(cinemaFilmSlotSchema) }).nullable(),
+  })).optional(),
 })
 export const cinemaFilmDetailSchema = z.object({
   generatedAtUtc: cinemaUtcSchema,

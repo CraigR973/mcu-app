@@ -51,6 +51,7 @@ class NotificationCategory(StrEnum):
     loans = "loans"
     movie_night = "movie_night"
     collection_additions = "collection_additions"
+    cinemas = "cinemas"
     #: Batch X2: the daily check telling Craig a problem has appeared. No toggle, and only
     #: the admin receives it: switching off the one channel that says push broke would hide
     #: the next failure the way the last seven were hidden.
@@ -188,6 +189,13 @@ class NotificationPreference(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
 
     collection_additions_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
+    )
+
+    cinemas_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    cinemas_older_only: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
     )
 
     #: When on, nothing is delivered as it happens; everything waits for

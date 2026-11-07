@@ -150,3 +150,10 @@ test('a refused IMDb file fails the nightly command without wiping its stored sc
   expect(db.scalar('SELECT imdb_rating::text FROM movies WHERE tmdb_id = 1001')).toBe('6.2')
   expect(db.scalar("SELECT detail->>'imdbError' FROM job_heartbeats WHERE job = 'cron-specs'")).toContain('503')
 })
+
+// AC6 exercises the same scheduled entry point without a browser as well.
+test('the cinema digest names a verified film once across two scheduled runs', async ({ api, db }) => {
+  const { exerciseCinemaDigest } = await import('../support/cinema-digest.ts')
+  const fixture = await exerciseCinemaDigest(await api('Craig'), await api('Mark'), db)
+  await fixture.cleanup()
+})

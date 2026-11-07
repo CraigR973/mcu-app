@@ -2109,6 +2109,8 @@ export async function fetchNotificationPreferences(): Promise<NotificationPrefer
 }
 
 export interface NotificationPreferenceInput {
+  cinemasEnabled?: boolean
+  cinemasOlderOnly?: boolean
   collectionAdditionsEnabled?: boolean
   dealsEnabled?: boolean
   saleEventsEnabled?: boolean
@@ -2167,8 +2169,12 @@ export function notificationStateLabel(notification: NotificationRecord): string
     // AC5 (#345): a cinema trip's morning reminder that quiet hours or digest mode would have
     // held until after the film.
     if (notification.suppressedReason === 'too_late') return 'Not sent — it would have arrived after the showing'
+    if (notification.suppressedReason === 'cinema_digest_coalesced') return 'Included in a later cinema summary'
+    if (notification.suppressedReason === 'cinema_digest_expired') return 'Not sent — no remaining cinema showings'
+    if (notification.suppressedReason === 'cinema_filter_empty') return 'Not sent — no films match your cinema preference'
     return 'Not sent — no devices are registered'
   }
+  if (notification.suppressedReason === 'cinema_delivery_unknown') return 'Delivery uncertain — not retried'
   if (notification.status === 'failed') return 'Could not be delivered'
   if (notification.deferredReason === 'quiet_hours') return 'Waiting — quiet hours'
   if (notification.deferredReason === 'digest') return 'Waiting for your daily digest'

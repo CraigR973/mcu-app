@@ -128,6 +128,32 @@ flowchart TB
 Who sees a trip: its proposer and invitees only; anyone else reads "Trip not found". Nothing
 assumes two people. No guests, and no reply link that works without sign-in (#335).
 
+## Daily cinema digest — AC6 (branch implementation; deployment pending)
+
+Approved in #348. Migration 073 keeps identity/listing/appearance history independently of
+programme retention, one evaluated London day and one committed delivery claim per person/day.
+Preference changes and claims share the profile row lock; an off switch cancels pending rows,
+and a narrower filter permanently excludes pending titles. No source is fetched by a read.
+
+```mermaid
+flowchart TB
+    Refresh[Existing morning refresh<br/>terminal cron outcome, successful venue provenance] --> Day[Atomic daily evaluation<br/>silent baseline · AC3 identity · observed 30-day gap]
+    Day --> History[(Five digest tables<br/>identities · listings · appearances · days · deliveries)]
+    Day --> Outbox[(Existing notifications outbox<br/>Cinemas preferences · one person/day)]
+    Outbox --> Hold[Existing delivery passes<br/>digest time + quiet hours · cinema summary separate]
+    Hold --> Claim[Commit person/day claim first<br/>then one attempt per active device]
+    Claim --> View[Push opens At the cinema<br/>New this week · names + run labels]
+    History --> Read[Existing GET /cinemas/films<br/>additive newThisWeek with shared zod]
+    Read --> View
+```
+
+Failed venues add no appearances; failed/unfinished runs add no daily result. The first usable
+daily result freezes retries. A committed claim survives a crash, so uncertain transport is
+never replayed; that can lose a push. Partial successful sources count as observed absence,
+not proved complete absence. Held delivery may wait until the following day. No schedule,
+provider, hosting or credential change. AC5's Movie night category and reminder order stay.
+Scheduled production evidence and real-phone receipt remain pending.
+
 ## Releases, two calendars — AC7
 
 Releases split into Disc releases and Cinema releases, each its own address and month (#343).

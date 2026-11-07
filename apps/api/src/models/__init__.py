@@ -27,6 +27,13 @@ from src.models.cinema import (
     CinemaScreening,
     CinemaVenue,
 )
+from src.models.cinema_digest import (
+    CinemaDigestAppearance,
+    CinemaDigestDay,
+    CinemaDigestDelivery,
+    CinemaDigestFilm,
+    CinemaDigestListing,
+)
 from src.models.cinema_trip import CinemaTrip, CinemaTripInvitee
 from src.models.collection_add_request import CollectionAddRequest
 from src.models.collection_item import (
@@ -159,6 +166,11 @@ from src.models.wanted import (
 from src.models.watch_log import RATING_MAX, RATING_MIN, WatchLog
 
 __all__ = [
+    "CinemaDigestFilm",
+    "CinemaDigestListing",
+    "CinemaDigestAppearance",
+    "CinemaDigestDay",
+    "CinemaDigestDelivery",
     "CinemaCoverage",
     "CinemaFilm",
     "CinemaRefreshRun",

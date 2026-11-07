@@ -149,3 +149,23 @@ describe('At the cinema, film first (AC4)', () => {
     expect(screen.getByText('Source: CinemaTimes')).toBeTruthy()
   })
 })
+
+it('opens New this week directly, preserves the run filter and distinguishes old answers', async () => {
+  const data = filmsFixture()
+  const card = data.films.find((film) => film.key === 'tmdb-1417')!
+  data.newThisWeek = [{ key: card.key, title: card.title, card, firstListedAtUtc: '2026-11-02T08:00:00Z', recognisedAtUtc: '2026-11-03T08:00:00Z', isReturn: true, runLabels: ['Rerun'], runReasons: ['UK release 1990 · rerun'] }]
+  state.fetch.mockResolvedValue(data)
+  setup('/movie-night/cinema?view=new-this-week&run=olderFilm')
+  const section = await screen.findByRole('region', { name: 'New this week' })
+  expect(within(section).getByRole('article', { name: card.title })).toBeTruthy()
+  expect(within(section).getByText('Back in the programme')).toBeTruthy()
+  expect(screen.queryByRole('region', { name: 'This week' })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'All films' }))
+  expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?run=olderFilm')
+})
+
+it('does not turn a missing New this week field into an empty programme claim', async () => {
+  setup('/movie-night/cinema?view=new-this-week')
+  expect(await screen.findByText('New this week is not available in this saved programme. Reload when connected.')).toBeTruthy()
+  expect(screen.queryByText('No new films at your cinemas this week.')).toBeNull()
+})

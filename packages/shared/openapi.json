@@ -2280,6 +2280,66 @@
     "title": "ChatMessageResponse",
     "type": "object"
    },
+   "CinemaDigestCard": {
+    "properties": {
+     "card": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/CinemaFilmCard"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "firstListedAtUtc": {
+      "title": "Firstlistedatutc",
+      "type": "string"
+     },
+     "isReturn": {
+      "title": "Isreturn",
+      "type": "boolean"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "recognisedAtUtc": {
+      "title": "Recognisedatutc",
+      "type": "string"
+     },
+     "runLabels": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Runlabels",
+      "type": "array"
+     },
+     "runReasons": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Runreasons",
+      "type": "array"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "title",
+     "firstListedAtUtc",
+     "recognisedAtUtc",
+     "isReturn",
+     "runLabels",
+     "runReasons",
+     "card"
+    ],
+    "title": "CinemaDigestCard",
+    "type": "object"
+   },
    "CinemaFilmCard": {
     "properties": {
      "directors": {
@@ -2740,6 +2800,13 @@
      "generatedAtUtc": {
       "title": "Generatedatutc",
       "type": "string"
+     },
+     "newThisWeek": {
+      "items": {
+       "$ref": "#/components/schemas/CinemaDigestCard"
+      },
+      "title": "Newthisweek",
+      "type": "array"
      },
      "thisWeekTo": {
       "format": "date",
@@ -9466,6 +9533,14 @@
    "NotificationPreferenceResponse": {
     "description": "§6.1's toggles as the settings page reads them.",
     "properties": {
+     "cinemasEnabled": {
+      "title": "Cinemasenabled",
+      "type": "boolean"
+     },
+     "cinemasOlderOnly": {
+      "title": "Cinemasolderonly",
+      "type": "boolean"
+     },
      "collectionAdditionsEnabled": {
       "title": "Collectionadditionsenabled",
       "type": "boolean"
@@ -9536,6 +9611,8 @@
      "loansEnabled",
      "movieNightEnabled",
      "collectionAdditionsEnabled",
+     "cinemasEnabled",
+     "cinemasOlderOnly",
      "digestMode",
      "digestHourLocal",
      "quietHoursTimezone"
@@ -9546,6 +9623,28 @@
    "NotificationPreferenceUpdateRequest": {
     "description": "A partial update — every field optional, absent means unchanged.\n\n``quietHours`` is the exception: the two ends move together or not at all, because a\nstart without an end is a window that never closes. The migration's CHECK says the\nsame thing; this says it with a 422 instead of a 500.",
     "properties": {
+     "cinemasEnabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cinemasenabled"
+     },
+     "cinemasOlderOnly": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cinemasolderonly"
+     },
      "clearQuietHours": {
       "default": false,
       "title": "Clearquiethours",

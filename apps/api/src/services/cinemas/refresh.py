@@ -28,6 +28,7 @@ from src.models.cinema import (
 )
 from src.models.profile import Profile, UserRole
 from src.services import heartbeat
+from src.services.cinema_digest.evaluate import evaluate_run, recover
 from src.services.cinemas import identity
 from src.services.cinemas.collect import ADAPTER_VERSION, collect_venue
 from src.services.cinemas.domain import (
@@ -494,6 +495,8 @@ async def _promote_all(
                     },
                 )
             )
+    # AC6 runs after the final outcome commits, still under refresh exclusivity.
+    await evaluate_run(engine, run_id)
     # Heartbeat's helper commits/rolls back its session. Keep that boundary separate
     # so a heartbeat failure cannot undo the already published outcome and retention.
     async with factory() as db:
@@ -540,6 +543,7 @@ async def refresh_due(engine: AsyncEngine) -> dict[str, Any]:
         async with asyncio.timeout(max(0.01, 295 - (time.monotonic() - started))):
             async with exclusive(engine, "cron", scope) as run_id:
                 assert run_id is not None
+                await recover(engine)
                 async with httpx.AsyncClient(
                     timeout=15, headers={"User-Agent": "MCU-private-cinema-programme/1.0"}
                 ) as client:

@@ -27,6 +27,7 @@ from src.models.notification import (
     NotificationStatus,
     PushSubscription,
 )
+from src.models.profile import Profile
 from src.routers.movies import Database
 from src.schemas.notifications import (
     NotificationListResponse,
@@ -52,6 +53,7 @@ from src.services.notifications import (
     deliver_to_subscriptions,
     get_or_create_preferences,
     notification_payload,
+    scheduled_delivery,
 )
 from src.services.push_transport import push_sender as push_sender
 from src.services.push_transport import set_push_sender as set_push_sender
@@ -359,6 +361,8 @@ async def read_preferences(user: CurrentUser, db: Database) -> NotificationPrefe
         loansEnabled=preference.loans_enabled,
         movieNightEnabled=preference.movie_night_enabled,
         collectionAdditionsEnabled=preference.collection_additions_enabled,
+        cinemasEnabled=preference.cinemas_enabled,
+        cinemasOlderOnly=preference.cinemas_older_only,
         digestMode=preference.digest_mode,
         digestHourLocal=preference.digest_hour_local,
         quietHoursStart=preference.quiet_hours_start,
@@ -372,8 +376,17 @@ async def update_preferences(
     payload: NotificationPreferenceUpdateRequest, user: CurrentUser, db: Database
 ) -> NotificationPreferenceResponse:
     """Change some of §6.1's toggles. Absent fields are left alone."""
+    # Serialise preference changes with AC6's committed send claim for this person.
+    await db.execute(select(Profile.id).where(Profile.id == user.id).with_for_update())
     preference = await get_or_create_preferences(db, user.id)
 
+    timing_before = (
+        preference.digest_mode,
+        preference.digest_hour_local,
+        preference.quiet_hours_start,
+        preference.quiet_hours_end,
+        preference.quiet_hours_timezone,
+    )
     for field_name, column in (
         ("dealsEnabled", "deals_enabled"),
         ("saleEventsEnabled", "sale_events_enabled"),
@@ -381,6 +394,8 @@ async def update_preferences(
         ("loansEnabled", "loans_enabled"),
         ("movieNightEnabled", "movie_night_enabled"),
         ("collectionAdditionsEnabled", "collection_additions_enabled"),
+        ("cinemasEnabled", "cinemas_enabled"),
+        ("cinemasOlderOnly", "cinemas_older_only"),
         ("digestMode", "digest_mode"),
         ("digestHourLocal", "digest_hour_local"),
         ("quietHoursTimezone", "quiet_hours_timezone"),
@@ -396,6 +411,29 @@ async def update_preferences(
         preference.quiet_hours_start = payload.quietHoursStart
         preference.quiet_hours_end = payload.quietHoursEnd
 
+    if payload.cinemasEnabled is not None or payload.cinemasOlderOnly is not None:
+        from src.services.cinema_digest.preferences import apply_pending
+
+        await apply_pending(db, user.id, preference)
+    timing_after = (
+        preference.digest_mode,
+        preference.digest_hour_local,
+        preference.quiet_hours_start,
+        preference.quiet_hours_end,
+        preference.quiet_hours_timezone,
+    )
+    if timing_after != timing_before:
+        target, reason = scheduled_delivery(preference, utcnow())
+        for pending in (
+            await db.scalars(
+                select(Notification).where(
+                    Notification.user_id == user.id,
+                    Notification.category == "cinemas",
+                    Notification.status == "queued",
+                )
+            )
+        ).all():
+            pending.deliver_after_utc, pending.deferred_reason = target, reason
     await db.commit()
     await db.refresh(preference)
     return NotificationPreferenceResponse(
@@ -405,6 +443,8 @@ async def update_preferences(
         loansEnabled=preference.loans_enabled,
         movieNightEnabled=preference.movie_night_enabled,
         collectionAdditionsEnabled=preference.collection_additions_enabled,
+        cinemasEnabled=preference.cinemas_enabled,
+        cinemasOlderOnly=preference.cinemas_older_only,
         digestMode=preference.digest_mode,
         digestHourLocal=preference.digest_hour_local,
         quietHoursStart=preference.quiet_hours_start,

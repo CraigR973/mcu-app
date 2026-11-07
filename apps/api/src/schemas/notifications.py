@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 from src.schemas.wire import UtcDatetime
 
 NotificationCategoryName = Literal[
-    "deals", "sale_events", "releases", "loans", "movie_night", "collection_additions"
+    "deals", "sale_events", "releases", "loans", "movie_night", "collection_additions", "cinemas"
 ]
 NotificationStatusName = Literal["queued", "sent", "suppressed", "failed"]
 
@@ -119,6 +119,8 @@ class NotificationPreferenceResponse(BaseModel):
     loansEnabled: bool
     movieNightEnabled: bool
     collectionAdditionsEnabled: bool
+    cinemasEnabled: bool
+    cinemasOlderOnly: bool
     digestMode: bool
     digestHourLocal: int = Field(ge=0, le=23)
     quietHoursStart: time | None = None
@@ -140,6 +142,8 @@ class NotificationPreferenceUpdateRequest(BaseModel):
     loansEnabled: bool | None = None
     movieNightEnabled: bool | None = None
     collectionAdditionsEnabled: bool | None = None
+    cinemasEnabled: bool | None = None
+    cinemasOlderOnly: bool | None = None
     digestMode: bool | None = None
     digestHourLocal: int | None = Field(default=None, ge=0, le=23)
     quietHoursStart: time | None = None
