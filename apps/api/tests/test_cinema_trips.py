@@ -716,10 +716,12 @@ async def test_inviting_more_people_later_invites_only_them(
     )
     assert again.status_code == 200
     rows = await outbox(db, trip)
-    assert [n.dedupe_key for n in rows if n.dedupe_key.startswith("cinema-trip-invite:")] == [
-        f"cinema-trip-invite:{trip['id']}:{mark.id}",
-        f"cinema-trip-invite:{trip['id']}:{alex.id}",
-    ]
+    # One invitation each, Mark's from the proposal and Alex's from the later invite, and none
+    # twice. Both are written at the same fixed instant, so their order is not a fact to test.
+    invites = [n.dedupe_key for n in rows if (n.dedupe_key or "").startswith("cinema-trip-invite:")]
+    assert sorted(invites) == sorted(
+        f"cinema-trip-invite:{trip['id']}:{person.id}" for person in (mark, alex)
+    )
     nobody = await as_(craig, "post", f"/cinema-trips/{trip['id']}/invitees", {"profileIds": []})
     assert (nobody.status_code, nobody.json()["detail"]) == (422, "Pick at least one person")
 
