@@ -1,9 +1,9 @@
 # AC5 — Cinema trips: owner checkpoint
 
 Drafted 7 Nov, 00:30 GMT, for Group AC sitting 4 (#335's go covers the sitting; this checkpoint
-still stops it). **Waiting for Craig's answers. Nothing is built, migrated or deployed.** Main
-was green before the sitting (CI 42280363025, 6 Nov). When Craig answers, the answer is recorded
-as **#345** and the build's own record as **#346**.
+still stops it). **Answered 7 Nov: "Approve all 8" (#345).** The text below is the proposal he
+approved, unchanged; it is the build's contract. Main was green before the sitting (CI
+42280363025, 6 Nov). The build's own record is **#346**.
 
 What AC5 asks for (`docs/phase-batches.md`, AC5): a trip holds its proposer, the chosen showing
 kept as a snapshot, invitees from any active profile in any number, and one reply per invitee:

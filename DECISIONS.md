@@ -7420,3 +7420,25 @@ contemporaneous.
        for one calendar's link would otherwise have rotated, and so broken, the other's. The cost:
        getting links again stops all three, including a link a calendar app already follows,
        which the panel says.
+
+345. **AC5's checkpoint answered: all eight as recommended (7 Nov).**
+     Craig approved the proposal in `docs/reviews/ac5-owner-checkpoint-2026-11-06.md` with
+     "Approve all 8". It is the contract for the build.
+     - **Two tables, migration 072:** `cinema_trips` (proposer, the chosen showing as a snapshot
+       with a nullable link to the live row, a revision that rises on every move, a cancel time)
+       and `cinema_trip_invitees` (one reply each, its own revision, and a suggested time's
+       snapshot). Both granted, guarded, to `mcu_readonly` and `mcu_backup`; neither holds a
+       credential. The downgrade refuses while a trip exists.
+     - **The reminder is the morning of the showing,** in the 08:00 UTC pass. One that quiet
+       hours or digest mode would hold past that pass is written as not sent, `too_late`. A
+       fixed lead before the showing was rejected: it needs a new delivery job, a hosting change.
+     - **A reply pushes only the proposer;** everyone on the trip sees every reply.
+     - **The proposer can move the trip to a time of their own and invite more people later,**
+       and can turn a suggestion down ("Keep this time"), which tells its suggester. Six push
+       wordings, not AC5's five.
+     - **An accepted suggestion makes its suggester Going;** everyone else resets to Invited.
+     - **Needs you also tells the proposer** about a waiting suggestion and a showing the cinema
+       no longer lists, and **Home's top slot shows the next trip** when it is sooner than the
+       next planned movie night.
+     - **The push wording and the Movie night switch's new description** ("Movie nights and
+       cinema trips: invitations, replies, changes and reminders.") stand as written.

@@ -5340,6 +5340,10 @@ an onboarding plan defines something better.
 ### AC5 — Cinema trips: invite, reply, suggest another time 🔴
 
 - **Checkpoint before build:** Craig approves the exact tables, states and push wording.
+- **Checkpoint answered (7 Nov, #345):** all eight as recommended
+  (`docs/reviews/ac5-owner-checkpoint-2026-11-06.md`): the morning-of reminder, reply pushes to
+  the proposer only, the proposer's own move, "Invite more" and "Keep this time", the suggester
+  Going on acceptance, and Needs you and Home's top slot for trips.
 - A trip holds its proposer, the chosen showing (film, cinema, time and booking link, kept
   as a snapshot), invitees picked from any active profile in any number, and one reply per
   invitee: Invited, Going, Not going, or Another time (another showing of the same film).
