@@ -2,6 +2,19 @@
 
 ## Now
 
+**7 Nov: AC6 owner-checkpoint proposal saved; build approval pending.**
+`docs/reviews/ac6-owner-checkpoint-2026-11-07.md` records eight recommendations, exact preferences,
+wording, migration/history design, rollout, 30-day return interpretation, retry/concurrency
+safety and verification. Craig approved this session's model substitution only (#347).
+Branch `feat/ac6-cinema-digest` contains documentation only; no AC6 code or migration exists.
+Next: Craig approves or changes the eight recommendations before implementation. Main and
+origin/main were clean at `746b23027fc79223ffbc5405e0a2186cca91a265`; exact CI 42379182157 passed
+all seven jobs; production API/web matched, with full readiness. Read-only 7 Nov evidence:
+9 enabled/successfully collected venues, but only Vue has complete dates; 22 linked future
+film identities and 0 rerun showings. The proposal explicitly exposes observed rather than
+proved absence, next-day delivery under holds, and possible lost delivery with strict
+at-most-once sending. No live refresh, push, trip or production write was performed.
+
 **7 Nov: AC5 shipped (PR #135, merge `6384c61c`): cinema trips — invite, reply, suggest another
 time (#345, #346).** Migration 072 adds `cinema_trips` and `cinema_trip_invitees`, both granted to
 the read-only and backup roles. A trip is proposed from a time on AC4's film page to anyone
@@ -20,8 +33,8 @@ push on a phone are his to observe.
 
 **Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
 
-**Next: AC6 starts with its own owner checkpoint** — Craig approves the new Cinemas switch and its
-wording before anything is built.
+**Next: AC6's saved owner checkpoint awaits Craig's answer** — the model substitution is approved;
+the switch, wording and behaviour proposal still need approval before anything is built.
 
 ## Next
 
@@ -424,6 +437,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **7 Nov — AC6 checkpoint prepared, not implemented (#347).** Saved eight concrete owner
+  recommendations in `docs/reviews/ac6-owner-checkpoint-2026-11-07.md`; recorded the approved
+  model substitution separately from the still-open build checkpoint. Fetched main, confirmed
+  exact seven-job CI 42379182157 and API/web SHA `746b2302` plus full readiness. Explicitly
+  read-only production aggregates verified migration 072, nine successful venue collections,
+  eight without complete dates, 22 linked future identities and 0 older-film showings.
+  No code, schema, source fetch, hosting or production data change. Full local gate/E2E not
+  run for this documentation-only checkpoint. AC3's post-8-Nov read-back and AC5's phone
+  observations remain separate. Next: Craig's answer, recorded before build.
 
 - **7 Nov — AC5 shipped; close-out completed from the handoff (#345, #346).** PR #135,
   merge `6384c61c`. Exact PR CI 42375136720 and main CI 42376631323: all seven jobs green,

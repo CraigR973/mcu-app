@@ -7509,3 +7509,15 @@ contemporaneous.
      the whole answer, which now carries the two new empty fields; two web page tests' API mocks
      gained the trip read (and the poster helper).
      Shipped 7 Nov: PR #135, merge `6384c61c4aa0528ca5c7152d8ba55d9ce9699d2e`; PR CI 42375136720 and main CI 42376631323, each all seven green; production API and web at `6384c61c`.
+
+347. **AC6 model substitution approved; its build checkpoint remains unanswered (7 Nov).**
+     Craig's attached AC6-only request required resolving the unavailable GPT-5.6 Sol High /
+     Opus 5.5 high selection rather than silently substituting. Asked whether this session's
+     current model could be used for AC6, starting with the proposal only, he replied “approve”.
+     That approves the model substitution; it does not approve the new preference, wording,
+     schema or implementation. No unexposed runtime model variant/effort is inferred.
+     The eight recommendations in `docs/reviews/ac6-owner-checkpoint-2026-11-07.md` are proposed,
+     not settled decisions. They expose observed absence versus complete coverage, held
+     delivery latency, a separate cinema payload in digest mode and the possible lost push
+     required by strict at-most-once send attempts. Record Craig's explicit checkpoint answer
+     before building. AC3's rerun read-back and AC5's real-phone observations remain separate.
