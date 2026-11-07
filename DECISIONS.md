@@ -7553,3 +7553,15 @@ contemporaneous.
      The report records every failed gate/regression and correction; no assertion/skip/retry
      was weakened. Main CI and final handoff exact-SHA CI/parity must also complete before
      reporting verification complete, without treating deployment as full AC6 acceptance.
+
+350. **Separate calendar-readiness repair approved (7 Nov).**
+     After the AC6-only run diagnosed and saved the existing calendar subscription click race,
+     Craig replied “approve” to the separate fix/PR proposal and its full gates (estimated
+     60–90 minutes, chiefly verification). `docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`
+     supplies the proved cause and five-point scope: initial layout readiness using shared
+     queries/native disabled semantics, honest Coming soon loading, deterministic held-response
+     pointer coverage, unchanged three feeds/token rotation and full local/PR/main/deploy gates.
+     This authorises the narrow UI repair on its own fix branch/PR; no production calendar
+     token action, schema, hosting, credentials or live source/data change. No blind retry,
+     force click, skip or relaxed feed assertion. AC6's natural scheduled digest/phone evidence
+     remains open, and AC3/AC5 remain separate.

@@ -36,10 +36,11 @@ The same application source passed earlier PR/main CI; the failure depends on th
 of asynchronous content settlement and pointer-up. No blind rerun, force click, test delay,
 extra retry, skip or relaxed assertion was used to reach green.
 
-## Recommended separate repair, awaiting approval
+## Separate repair approved — 7 Nov (#350)
 
-Craig's request explicitly says **AC6 only**. The necessary repair changes the existing
-calendar page outside AC6, so it needs a new scope decision before implementation.
+Craig replied **“approve”** to the separate calendar repair proposal on 7 Nov; #350 records
+that scope decision before implementation. The AC6-only boundary remains in force for
+anything beyond the following calendar readiness repair.
 
 1. Use a separate `fix/` branch and PR in this checkout, preserving the AC6 implementation.
 2. Gate the calendar subscription button on settlement of the initial layout-producing
@@ -63,3 +64,14 @@ acceptance; AC3's rerun read-back and AC5's phone/trip observations remain separ
 Read-only recheck at **17:20 UTC**: production API/web still serve `196f2d6`, full readiness
 passes, migration/grants/defaults are unchanged, and appearances/days/claims/cinema outbox
 remain zero. No manual production refresh, digest, trip or calendar-subscription action ran.
+
+## Repair acceptance criteria (approved proposal, restated before code)
+
+The five numbered recommendations above are the repair contract. In particular, the button
+must use native disabled semantics until relevant initial layout queries settle; all three
+feed/rotation assertions remain; cached/offline/error states and both calendar views must
+work without duplicate programme reads. A controlled pointer regression must fail on the
+old enabled-during-loading behaviour. Two existing unit cases that click immediately after
+render will now wait for the approved enabled state before their single click; their feed
+assertions remain unchanged. Full gates, exact seven-job PR/main CI and served-SHA/readiness
+are required. No manual live calendar, digest or refresh action is authorised.

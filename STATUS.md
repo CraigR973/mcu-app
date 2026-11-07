@@ -21,7 +21,8 @@ but final CI 42393261032 is red: 6 jobs pass; Firefox loses the existing calenda
 click while late programme content moves the button.** All AC6 browser/job cases pass. Trace
 and deterministic local reproduction prove a 541.5 px move between pointer-down/up and zero
 subscription POSTs. No retry, skip or assertion change was used. The separately scoped
-calendar readiness repair awaits Craig because this request is AC6 only. See
+calendar readiness repair was approved by Craig on 7 Nov (#350) and is in progress on
+`fix/calendar-subscribe-readiness`. See
 `docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md` and PR #136. Do not report verification
 complete. The AC6 feature branch carries this blocker handoff; production main remains `196f2d6`.
 
@@ -49,8 +50,7 @@ push on a phone are his to observe.
 
 **Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
 
-**Next: Craig decides whether to authorise the separate calendar-readiness repair. No repair
-is authorised yet. AC6 still needs its first naturally scheduled qualifying outbox/claim
+**Next: implement and verify the separately approved calendar-readiness repair (#350). AC6 still needs its first naturally scheduled qualifying outbox/claim
 read-back without a manual refresh/push; phone receipt remains Craig's. AC3's rerun read-back
 and AC5's phone/trip observations remain separate.**
 
@@ -456,6 +456,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **7 Nov — separate calendar-readiness repair approved (#350).** Craig replied “approve”
+  to the saved five-point proposal. Own fix branch/PR, native disabled readiness, honest
+  loading, deterministic held-response pointer regression and unchanged feed assertions;
+  full gates and exact production proof required. No live calendar-token/hosting/data change.
 
 - **7 Nov — AC6 final gate blocked; calendar race diagnosed before repair.** Main `196f2d6`
   serves from API/web with full readiness but CI 42393261032 has 6 green jobs and a Firefox
