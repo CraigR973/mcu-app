@@ -11,6 +11,14 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **AC6 final CI blocker — separate calendar repair approval needed (7 Nov).**
+  Final main `196f2d6` has 6 of 7 jobs green: Firefox loses a calendar subscription click
+  when late programme content moves its button by 541.5 px. Cause reproduced; no repair yet.
+  Recommended separate fix/PR: gate the button until initial layout settles and add a held-
+  response pointer regression, preserving all feed assertions; full gates cost 60–90 minutes.
+  The request says AC6 only, so Craig must authorise this additional calendar work. Proposal:
+  `docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`; full online record in PR #136.
+
 - **Daily cinema digest (AC6) — deployed 7 Nov (PR #136, `46aaba5`, #348, #349); acceptance open.**
   The agent must wait for genuine scheduled outbox evidence after deployment, without a manual
   refresh or test digest. Real-phone receipt and the tap into New this week remain yours to

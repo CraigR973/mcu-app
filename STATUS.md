@@ -2,7 +2,7 @@
 
 ## Now
 
-**7 Nov: AC6 deployed, acceptance open (PR #136, `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be`,
+**7 Nov: AC6 deployed, final CI blocked by a proven calendar click race; acceptance open (PR #136, `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be`,
 #348, #349).** Cinemas defaults on; Older films only defaults off. Finished scheduled refreshes
 record one atomic London-day result and filtered outbox rows. A committed person/day claim
 precedes one transport attempt per active device; uncertain sends are never replayed. Pushes
@@ -15,9 +15,15 @@ Migration 073 is live, with 278 silent baseline listings and 23 baseline identit
 0 evaluated days, 0 delivery claims and no cinema outbox rows. Both roles can read all five
 new tables and both preference columns; PIN hashes and push credentials remain withheld.
 Craig and Mark each have Cinemas on, Older films only off; Movie night stays on.
-All local gates and all seven exact-commit PR CI jobs pass (42391299778). Main implementation
-CI is run 42392858508. PR #136 is also the verification record for the final documentation
-commit: all seven jobs and API/web SHA parity are required before reporting handoff complete.
+All local gates and all seven exact-commit PR/main implementation CI jobs pass (42391299778 /
+42392858508). **Final documentation commit `196f2d6` serves from API/web with full readiness,
+but final CI 42393261032 is red: 6 jobs pass; Firefox loses the existing calendar subscription
+click while late programme content moves the button.** All AC6 browser/job cases pass. Trace
+and deterministic local reproduction prove a 541.5 px move between pointer-down/up and zero
+subscription POSTs. No retry, skip or assertion change was used. The separately scoped
+calendar readiness repair awaits Craig because this request is AC6 only. See
+`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md` and PR #136. Do not report verification
+complete. The AC6 feature branch carries this blocker handoff; production main remains `196f2d6`.
 
 **Still unverified:** the first naturally scheduled qualifying digest and real-phone receipt/tap.
 No scheduled AC6 run has happened since deployment. No manual production refresh, test digest
@@ -43,8 +49,10 @@ push on a phone are his to observe.
 
 **Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
 
-**Next: read the first naturally scheduled qualifying AC6 digest without triggering it.
-Phone receipt remains Craig's observation. Stop after AC6; AC3's rerun read-back and AC5's phone/trip observations remain separate.**
+**Next: Craig decides whether to authorise the separate calendar-readiness repair. No repair
+is authorised yet. AC6 still needs its first naturally scheduled qualifying outbox/claim
+read-back without a manual refresh/push; phone receipt remains Craig's. AC3's rerun read-back
+and AC5's phone/trip observations remain separate.**
 
 ## Next
 
@@ -448,6 +456,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **7 Nov — AC6 final gate blocked; calendar race diagnosed before repair.** Main `196f2d6`
+  serves from API/web with full readiness but CI 42393261032 has 6 green jobs and a Firefox
+  failure in existing AC7 calendar subscription. AC6 passes in C/F/W and all 8 job cases pass.
+  Trace shows no subscription POST; programme content replaces loading/empty panels between
+  pointer-down/up. Controlled Firefox reproduction moves the button y=587 → 1128.5 and sends
+  0 POSTs. No blind retry/test delay/skip/assertion change. Saved a separate readiness-fix
+  proposal, cost 60–90 minutes mostly gates; asked Craig because this request is AC6 only.
+  No unrelated application repair or production calendar-token action performed. Handoff
+  on AC6 feature branch; deployment main stays `196f2d6` red until the blocker is addressed.
 
 - **7 Nov — AC6 deployed; acceptance remains open (#348, #349).** All eight recommendations
   approved, implemented on its own branch and merged in PR #136 at `46aaba5`. Local API 2,741

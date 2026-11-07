@@ -165,3 +165,28 @@ AC3's post-8-Nov rerun read-back and AC5's first real trip/phone observations re
 To inspect the feature: **Settings → Notifications → Cinemas / Older films only** and
 **Movie night → At the cinema → New this week**. Before a natural arrival this view is empty;
 existing programme films remain under All films. No test notification is needed or authorised.
+
+
+## Final handoff CI failure — verification remains red
+
+Implementation main CI 42392858508 passed all seven jobs. Final documentation SHA
+`196f2d65df7403cb12bbdb0a84c0be7bd3c1bb68` is served from API/web with full readiness,
+but CI 42393261032 failed Firefox's existing calendar feed-link case. Chromium 90 passed;
+Firefox 88 passed, 1 failed, 1 permitted skip; WebKit 88 passed + 2 permitted skips; jobs 8
+passed. Every AC6 case passed. The trace has zero calendar-subscription POSTs and changing
+programme content between pointer-down/up. A held-response local reproduction proves the
+button moves 541.5 px and loses that click. No blind rerun or gate weakening was used.
+
+The saved cause, evidence and concrete separately scoped repair are in
+`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`. Craig must authorise the calendar
+readiness repair because the request explicitly limits implementation to AC6. It has not
+been implemented. The feature branch carries this blocker handoff; production main remains
+196f2d6. Do not claim the final gate or AC6 acceptance complete. Natural scheduled digest
+and real-phone receipt/tap remain separate pending evidence.
+
+Additional tooling failure: this gh version's PR editor queries retired Projects (classic)
+metadata and failed. GitHub REST updated the same PR description; no code/gate changed.
+
+Read-only recheck at **17:20 UTC**: production API/web still serve `196f2d6`, full readiness
+passes, migration/grants/defaults are unchanged, and appearances/days/claims/cinema outbox
+remain zero. No manual production refresh, digest, trip or calendar-subscription action ran.
