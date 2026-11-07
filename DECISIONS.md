@@ -7442,3 +7442,69 @@ contemporaneous.
        next planned movie night.
      - **The push wording and the Movie night switch's new description** ("Movie nights and
        cinema trips: invitations, replies, changes and reminders.") stand as written.
+
+346. **AC5 built: cinema trips — invite, reply, suggest another time (7 Nov).**
+     Group AC sitting 4's first batch, to the contract Craig approved (#345). Migration 072, two
+     tables, both additive.
+     - **What a trip is.** `cinema_trips` keeps the proposer and the chosen showing as a snapshot
+       (film, cinema, time, screen, formats, booking link) with a nullable link to the live row, a
+       revision that rises on every move, and a cancel time; `cinema_trip_invitees` keeps one reply
+       per invitee with its own revision and a suggested time's snapshot. The proposer is not an
+       invitee and always counts as going. Granted, guarded, to `mcu_readonly` and `mcu_backup`;
+       neither table holds a credential. The downgrade refuses while a trip exists.
+     - **Every write locks the trip's row first** and names the revision it was made against, so
+       two replies at once both land (a two-connection test proves it bites without the lock), a
+       reply made against an old time is refused, and a write's pushes commit with it.
+     - **Routes:** `/api/v1/cinema-trips` (list, propose), `/people`, `/{id}`, and `/{id}/reply`,
+       `/move` (accept a suggestion or the proposer's own time), `/keep`, `/invitees`, `/cancel`.
+       Members only: anyone else reads "Trip not found". Needs you gains `trips` and `nextTrip`;
+       the reminder pass's answer gains `cinemaTrips`. All additive, all defaulted in zod.
+     - **Six push wordings, as approved**, under the Movie night switch, deduplicated by keys
+       that carry the revision they are about. The morning-of reminder rides the existing 08:00
+       UTC pass (`run_reminders`), judged by the cinema's own date; one that quiet hours or digest
+       mode would hold past the pass is written `suppressed`, `too_late`, and Notifications reads
+       "Not sent — it would have arrived after the showing". The switch's description is the
+       approved line; its label stays "Movie night".
+     - **Where trips appear:** a page per trip (`/movie-night/trips/<id>`, the top bar says "Cinema
+       trip"); "Propose a trip" and "Your trips" on AC4's film page; "Cinema trips" below the
+       nights on Movie night, past and cancelled ones folded under "Past trips (n)"; Needs you
+       (an invitation awaiting the reader's reply, and to the proposer a waiting suggestion or a
+       time the cinema no longer lists), trip items first; Home's top slot when the next trip is
+       sooner than the next planned screening.
+
+     **Choices made on Craig's behalf, each open to overrule:**
+     - **"Withdrawn" also covers a showing the programme no longer holds, or now lists at another
+       time.** The flag table names withdrawn, gone and cancelled; a cinema can also move one
+       showing's time under the same source key. The trip says "ODEON Glasgow Quay no longer lists
+       this time" (true either way), hides Check tickets (the link would book the other time), and
+       never follows the row; the proposer may move the trip to that row at its new time.
+     - **The reply tally counts the proposer** ("2 of 3 going." with two invitees, as the
+       checkpoint's example reads) and is added to Going and Not going pushes, not to Another
+       time's, whose sentence ends differently.
+     - **A retry is answered, not refused.** The same reply again changes nothing, even after a
+       move or a cancel (#345's "always"); a retried accept, move or keep returns the trip as it
+       is, with no second push. A proposal's request id is kept per choice of time and people, so
+       a send whose answer was lost, sent again, makes one trip.
+     - **Inviting more names no revision:** it is not about the time. Naming nobody, when proposing
+       or inviting, is refused in words ("Pick at least one person"); one request names at most 50.
+     - **In Needs you a cancelled showing uses the approved line for one no longer listed**
+       ("ODEON Glasgow Quay no longer lists your Wild Horse Nine time"); the trip page says "has
+       cancelled this showing".
+     - **The top slot reads "Next", the film, then "Mon 9 Nov 20:10 at ODEON Glasgow Quay, with
+       Mark"**, with the approved sentence as its accessible name.
+     - **Screen words beyond the approved wording:** "Pick a time", "Who to invite", "Send
+       invitations"; "Who’s going", "Your reply", "Change the trip", "Move to another time",
+       "Invite more", "Suggest this time", "Move the trip" ("Everyone is asked again."), "Every
+       showing of this film"; cancelling asks "Cancel this trip? Everyone still able to go is
+       told." with "Cancel the trip" and "Keep it".
+     - **The admin's Run reminders button runs the trip reminder too**, judged by the moment it is
+       pressed: pressed later on a trip's day, the reminder goes then, still before the film.
+
+     **Found while building:** clearing a suggestion wrote JSON `null`, not SQL NULL, into its
+     formats column, which the table's check rightly refuses; every keep and move would have
+     failed. Fixed in the model (`none_as_null`) and covered by the keep and accept tests. The
+     migration's DDL is frozen, as 071's is (no model import).
+
+     **Tests whose expectations grew, none whose meaning changed:** two Needs you tests compare
+     the whole answer, which now carries the two new empty fields; two web page tests' API mocks
+     gained the trip read (and the poster helper).
