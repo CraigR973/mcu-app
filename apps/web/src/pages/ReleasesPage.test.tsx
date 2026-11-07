@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -65,8 +65,7 @@ function Where() {
   return <output aria-label="Address">{`${location.pathname}${location.search}`}</output>
 }
 
-function setup(address: string) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+function setup(address: string, client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
   render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[address]}>
@@ -78,6 +77,7 @@ function setup(address: string) {
       </MemoryRouter>
     </QueryClientProvider>,
   )
+  return client
 }
 
 const address = () => screen.getByRole('status', { name: 'Address' }).textContent
@@ -96,7 +96,7 @@ beforeEach(() => {
     cinemaPath: '/api/v1/calendar.ics?token=abc&calendar=cinema', createdAt: '2026-11-03T17:00:00Z', replacedPrevious: false,
   })
 })
-afterEach(() => { cleanup(); vi.restoreAllMocks() })
+afterEach(() => { cleanup(); onlineManager.setOnline(true); vi.restoreAllMocks() })
 
 describe('Releases as two calendars (AC7)', () => {
   it('opens on Disc releases: the month’s 4K, Blu-ray and sale dates, and never a cinema date', async () => {
@@ -183,6 +183,7 @@ describe('Releases as two calendars (AC7)', () => {
 
   it('gives a link per calendar and one for both from one press, the calendar on screen first', async () => {
     setup('/calendar/cinema?month=2026-11')
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' }).disabled).toBe(false))
     fireEvent.click(screen.getByRole('button', { name: 'Get my calendar links' }))
     const groups = await screen.findAllByRole('group', { name: /releases|Both calendars/ })
     expect(groups.map((group) => group.getAttribute('aria-labelledby'))).toEqual(['feed-cinema-releases', 'feed-disc-releases', 'feed-both-calendars'])
@@ -197,6 +198,7 @@ describe('Releases as two calendars (AC7)', () => {
   it('shows the one link an API from before AC7 gives', async () => {
     state.subscribe.mockResolvedValue({ path: '/api/v1/calendar.ics?token=abc', discPath: null, cinemaPath: null, createdAt: '2026-11-03T17:00:00Z', replacedPrevious: true })
     setup('/calendar')
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' }).disabled).toBe(false))
     fireEvent.click(screen.getByRole('button', { name: 'Get my calendar links' }))
     const groups = await screen.findAllByRole('group', { name: /releases|Both calendars/ })
     expect(groups.map((group) => group.getAttribute('aria-labelledby'))).toEqual(['feed-both-calendars'])
@@ -216,5 +218,90 @@ describe('Releases as two calendars (AC7)', () => {
     const link = await within(soon).findByRole('link', { name: /A current first run/ })
     expect(link.getAttribute('href')).toBe('/movie-night/cinema/tmdb-2001')
     expect(within(soon).getByText('Somewhere else').closest('a')).toBeNull()
+  })
+})
+
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>(done => { resolve = done })
+  return { promise, resolve }
+}
+
+describe('calendar subscription layout readiness (#350)', () => {
+  it.each([
+    ['cinema', 'month'], ['cinema', 'films'], ['cinema', 'newReleases'],
+    ['disc', 'month'], ['disc', 'calendar'],
+  ] as const)('holds the native button while %s %s is still loading, then one press creates the links', async (view, source) => {
+    const held = deferred<unknown>()
+    state[source].mockReturnValue(held.promise)
+    setup(`/calendar${view === 'cinema' ? '/cinema' : ''}?month=2026-11`)
+    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' })
+    expect(button.disabled).toBe(true)
+    fireEvent.click(button)
+    expect(state.subscribe).not.toHaveBeenCalled()
+    if (source === 'newReleases') {
+      expect(screen.queryByText('Nothing suitable is scheduled')).toBeNull()
+      expect(screen.getByText('Looking up cinema releases')).toBeTruthy()
+    }
+    const value = source === 'month' ? monthOf('2026-11', NOVEMBER)
+      : source === 'films' ? filmsFixture()
+        : source === 'calendar' ? { items: NOVEMBER, total: NOVEMBER.length, refreshedAt: null }
+          : { items: [], basedOnGenres: [] }
+    held.resolve(value)
+    await waitFor(() => expect(button.disabled).toBe(false))
+    fireEvent.click(button)
+    expect(await screen.findAllByRole('group', { name: /releases|Both calendars/ })).toHaveLength(3)
+    expect(state.subscribe).toHaveBeenCalledTimes(1)
+    expect(state.month).toHaveBeenCalledTimes(1)
+    expect(state.calendar).toHaveBeenCalledTimes(view === 'disc' ? 1 : 0)
+    expect(state.newReleases).toHaveBeenCalledTimes(view === 'cinema' ? 1 : 0)
+    expect(state.films).toHaveBeenCalledTimes(view === 'cinema' ? 1 : 0)
+  })
+
+  it.each(['disc', 'cinema'] as const)('settles failed %s programme reads without permanently blocking a subscription', async view => {
+    state.month.mockRejectedValue(new Error('month unavailable'))
+    state.calendar.mockRejectedValue(new Error('disc unavailable'))
+    state.films.mockRejectedValue(new Error('cinemas unavailable'))
+    state.newReleases.mockRejectedValue(new Error('releases unavailable'))
+    setup(`/calendar${view === 'cinema' ? '/cinema' : ''}`)
+    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' })
+    await waitFor(() => expect(screen.getByText('The release calendar is unavailable')).toBeTruthy())
+    await waitFor(() => expect(button.disabled).toBe(false))
+    fireEvent.click(button)
+    expect(await screen.findAllByRole('group', { name: /releases|Both calendars/ })).toHaveLength(3)
+    expect(state.subscribe).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('Nothing suitable is scheduled')).toBeNull()
+  })
+})
+
+
+describe('calendar subscription cache and paused reads (#350)', () => {
+  it.each(['disc', 'cinema'] as const)('keeps the %s cached window and shares one foreground month read after remount', async view => {
+    const route = `/calendar${view === 'cinema' ? '/cinema' : ''}?month=2026-11`
+    const client = setup(route)
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' }).disabled).toBe(false))
+    cleanup()
+    for (const source of ['month', 'calendar', 'films', 'newReleases'] as const) state[source].mockClear()
+    setup(route, client)
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' }).disabled).toBe(false))
+    expect(state.month).toHaveBeenCalledTimes(1)
+    expect(state.films).toHaveBeenCalledTimes(view === 'cinema' ? 1 : 0)
+    expect(state.calendar).not.toHaveBeenCalled()
+    expect(state.newReleases).not.toHaveBeenCalled()
+  })
+
+  it('shows a paused offline cinema programme without a false empty result and settles on reconnect', async () => {
+    onlineManager.setOnline(false)
+    setup('/calendar/cinema?month=2026-11')
+    expect(await screen.findByText('Cinema releases need a connection')).toBeTruthy()
+    expect(screen.queryByText('Nothing suitable is scheduled')).toBeNull()
+    expect(state.month).not.toHaveBeenCalled()
+    expect(state.newReleases).not.toHaveBeenCalled()
+    onlineManager.setOnline(true)
+    expect(await screen.findByText('Nothing suitable is scheduled')).toBeTruthy()
+    await waitFor(() => expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Get my calendar links' }).disabled).toBe(false))
+    expect(state.month).toHaveBeenCalledTimes(1)
+    expect(state.newReleases).toHaveBeenCalledTimes(1)
   })
 })

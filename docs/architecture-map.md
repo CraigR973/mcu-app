@@ -178,6 +178,21 @@ flowchart TB
     List --> Home[Home · Coming to disc<br/>discs only, unchanged]
 ```
 
+### Calendar control readiness — separate repair (#350), implementation in progress
+
+The page and its sections observe the same month/window/cinema query options and cache.
+Get my calendar links uses native disabled/busy semantics while the relevant layout queries
+are pending/fetching. Terminal errors and paused offline reads settle; reconnect/refetch
+holds the control again. Coming soon uses loading/offline/error/empty states honestly.
+The three feed links and single-token rotation stay on the existing endpoint; no extra GET.
+
+```mermaid
+flowchart TB
+    Queries[Shared release queries<br/>month + disc window OR cinema programme + forthcoming films] --> State[Current query state<br/>data loading / settled / offline / error]
+    State --> Button[Native subscription button<br/>disabled while layout can still settle]
+    Button --> Existing[Existing one subscription press<br/>three feed links · one token]
+```
+
 ## AA8, shipped 23 Oct
 
 ```mermaid

@@ -245,3 +245,56 @@ test('One press gives a feed per calendar and one for both; the next press stops
   const old = await feed(`${new URL(bothUrl).origin}${before.path}`)
   expect(old.status).toBe(404)
 })
+
+
+for (const calendar of ['disc', 'cinema'] as const) {
+  for (const theme of ['light', 'dark']) {
+    test(`calendar subscription waits for ${calendar} layout, then one real click creates three feeds — ${theme}`, async ({ signedIn, releases }, testInfo) => {
+      void releases
+      const { page } = await phone(signedIn, 'Craig', theme)
+      let release!: () => void
+      const held = new Promise<void>(resolve => { release = resolve })
+      const paths = calendar === 'cinema'
+        ? ['/api/v1/calendar/month', '/api/v1/discover/new-releases', '/api/v1/cinemas/films']
+        : ['/api/v1/calendar/month', '/api/v1/calendar']
+      const reads = new Map<string, number>()
+      let posts = 0
+      await page.route('**/api/v1/**', async route => {
+        const request = route.request()
+        const path = new URL(request.url()).pathname
+        if (request.method() === 'GET' && paths.includes(path)) {
+          reads.set(path, (reads.get(path) ?? 0) + 1)
+          await held
+        }
+        if (request.method() === 'POST' && path === '/api/v1/calendar/subscribe') posts++
+        await route.continue()
+      })
+      await page.goto(`/calendar${calendar === 'cinema' ? '/cinema' : ''}`)
+      const button = page.getByRole('button', { name: 'Get my calendar links' })
+      await expect(button).toBeDisabled()
+      await expect(page.getByText(calendar === 'cinema' ? 'Looking up cinema releases' : 'Looking up disc releases')).toBeVisible()
+      await expect(page.getByText('Nothing suitable is scheduled')).toHaveCount(0)
+      for (const path of paths) await expect.poll(() => reads.get(path) ?? 0).toBe(1)
+      await button.scrollIntoViewIfNeeded()
+      const before = await button.boundingBox()
+      if (!before) throw new Error('Subscription button has no pointer target')
+      await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2)
+      await page.mouse.down()
+      release()
+      await expect(button).toBeEnabled()
+      await expect(page.getByRole('region', { name: calendar === 'cinema' ? 'Coming soon' : 'Coming to disc' }).getByText(calendar === 'cinema' ? TITLES.showing : TITLES.fourK, { exact: true })).toBeVisible()
+      await page.mouse.up()
+      expect(posts).toBe(0)
+      const after = await button.boundingBox()
+      console.log('CALENDAR-READINESS', JSON.stringify({ calendar, theme, before, after, posts, reads: Object.fromEntries(reads) }))
+      await button.scrollIntoViewIfNeeded()
+      expect(await noSidewaysScroll(page)).toBe(true)
+      await page.screenshot({ path: testInfo.outputPath(`calendar-ready-${calendar}-${theme}-375.png`) })
+      await button.click()
+      await expect(page.getByRole('group', { name: /^(Disc releases|Cinema releases|Both calendars)/ })).toHaveCount(3)
+      expect(posts).toBe(1)
+      expect(await noSidewaysScroll(page)).toBe(true)
+      for (const path of paths) expect(reads.get(path)).toBe(1)
+    })
+  }
+}

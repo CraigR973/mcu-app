@@ -1,13 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
 import { Disc3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CalendarEntry } from '@mcu/shared'
 
 import { PosterCard, Shelf, ShelfLink } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
-import { fetchCalendar } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { DISC_WINDOW_DAYS, isPhysical } from '@/lib/releases'
+import { isPhysical } from '@/lib/releases'
+import { useDiscReleasesQuery } from '@/lib/release-queries'
 import { cn, formatShortDate } from '@/lib/utils'
 
 function monthHeading(iso: string): string {
@@ -56,11 +55,7 @@ function DiscRow({ entry }: { entry: CalendarEntry }) {
  * which hides itself when there is nothing to show, and since W2 is a row of posters.
  */
 export function ComingToDisc({ limit, entries }: { limit?: number; entries?: CalendarEntry[] }) {
-  const query = useQuery({
-    queryKey: ['calendar', DISC_WINDOW_DAYS],
-    queryFn: () => fetchCalendar(DISC_WINDOW_DAYS),
-    staleTime: 10 * 60 * 1000,
-  })
+  const query = useDiscReleasesQuery()
   // AC2: Home passes its own films, already free of any shown higher up the page.
   const discs = entries ?? (query.data?.items ?? []).filter(isPhysical)
   const shown = limit ? discs.slice(0, limit) : discs

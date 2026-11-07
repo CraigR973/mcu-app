@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarDays,
   Check,
@@ -21,9 +21,6 @@ import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import {
   calendarFeedUrl,
-  fetchCalendarMonth,
-  fetchCinemaFilms,
-  fetchNewReleases,
   ingestCalendar,
   posterUrl,
   subscribeToCalendar,
@@ -45,6 +42,7 @@ import {
   type ReleaseCalendar,
 } from '@/lib/releases'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { useCalendarMonthQuery, useCinemaFilmsQuery, useDiscReleasesQuery, useNewReleasesQuery } from '@/lib/release-queries'
 
 function monthKey(date: Date): string {
   return `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -155,22 +153,14 @@ function Entry({ entry, calendar, showing }: { entry: CalendarEntry; calendar: R
  * month and the disc filter live in the address, so a film's page comes back to the same view.
  */
 function MonthView({ calendar, month, onMonth }: { calendar: ReleaseCalendar; month: string; onMonth: (month: string) => void }) {
-  const { profile } = useAuth()
   const [params, setParams] = useSearchParams()
   const [now] = useState(Date.now)
   const types = CALENDAR_TYPES[calendar]
 
-  const monthQuery = useQuery({
-    queryKey: ['calendar-month', month, calendar],
-    queryFn: () => fetchCalendarMonth(month, types),
-  })
+  const monthQuery = useCalendarMonthQuery(month, calendar)
   // The cinema calendar reads which releases are showing from AC4's own read, shared with At
   // the cinema and Home, so opening one after another costs nothing more.
-  const cinemaQuery = useQuery({
-    queryKey: ['cinema-films', profile?.id],
-    queryFn: fetchCinemaFilms,
-    enabled: calendar === 'cinema' && Boolean(profile),
-  })
+  const cinemaQuery = useCinemaFilmsQuery(calendar === 'cinema')
   const showing = calendar === 'cinema' ? showingAtCinemas(cinemaQuery.data, now) : new Map<number, CinemaShowing>()
 
   const held = Object.entries(monthQuery.data?.days ?? {})
@@ -290,16 +280,12 @@ function MonthView({ calendar, month, onMonth }: { calendar: ReleaseCalendar; mo
  * the calendar still visible. A film showing at one of the nine opens its showings there too.
  */
 function ComingSoon() {
-  const { profile } = useAuth()
   const [now] = useState(Date.now)
-  const releasesQuery = useQuery({
-    queryKey: ['new-releases'],
-    queryFn: fetchNewReleases,
-    staleTime: 60 * 60 * 1000,
-  })
-  const cinemaQuery = useQuery({ queryKey: ['cinema-films', profile?.id], queryFn: fetchCinemaFilms, enabled: Boolean(profile) })
+  const releasesQuery = useNewReleasesQuery(true)
+  const cinemaQuery = useCinemaFilmsQuery(true)
   const showing = showingAtCinemas(cinemaQuery.data, now)
   const comingSoon = releasesQuery.data?.items ?? []
+  const state = listState(releasesQuery, comingSoon.length === 0)
 
   return (
     <section className="space-y-3" aria-labelledby="coming-soon-heading">
@@ -315,14 +301,18 @@ function ComingSoon() {
         .
       </p>
 
-      {releasesQuery.isError ? (
+      {state === 'loading' ? (
+        <StatePanel compact tone="loading" title="Looking up cinema releases" />
+      ) : state === 'offline' ? (
+        <StatePanel compact tone="offline" title="Cinema releases need a connection" />
+      ) : state === 'error' ? (
         <StatePanel
           compact
           tone="error"
           title="The release programme is unavailable"
           description={queryErrorMessage(releasesQuery.error, 'Could not load new releases.')}
         />
-      ) : comingSoon.length === 0 ? (
+      ) : state === 'empty' ? (
         <StatePanel
           compact
           tone="empty"
@@ -425,7 +415,7 @@ function feedLinks(data: CalendarSubscription, view: ReleaseCalendar): FeedLink[
  * token a person has, so the next press stops all three, the both-calendars link that a
  * calendar app may already follow among them; asking per calendar would have broken the other.
  */
-function SubscribePanel({ view }: { view: ReleaseCalendar }) {
+function SubscribePanel({ view, layoutPending }: { view: ReleaseCalendar; layoutPending: boolean }) {
   const [copied, setCopied] = useState<string | null>(null)
   const [copyError, setCopyError] = useState(false)
 
@@ -505,10 +495,11 @@ function SubscribePanel({ view }: { view: ReleaseCalendar }) {
         <Button
           type="button"
           size="sm"
-          disabled={subscribe.isPending}
+          disabled={layoutPending || subscribe.isPending}
+          aria-busy={layoutPending || subscribe.isPending}
           onClick={() => subscribe.mutate()}
         >
-          {subscribe.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          {layoutPending || subscribe.isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
           Get my calendar links
         </Button>
       )}
@@ -541,6 +532,15 @@ export default function ReleasesPage({ view = 'disc' }: { view?: ReleaseCalendar
   const [params, setParams] = useSearchParams()
   const chosen = readMonth(params.get('month'))
   const month = chosen ?? monthKey(new Date())
+  const monthQuery = useCalendarMonthQuery(month, view)
+  const cinemaQuery = useCinemaFilmsQuery(view === 'cinema')
+  const releasesQuery = useNewReleasesQuery(view === 'cinema')
+  const discQuery = useDiscReleasesQuery(view === 'disc')
+  const layoutQueries = view === 'disc' ? [monthQuery, discQuery] : [monthQuery, cinemaQuery, releasesQuery]
+  // A late programme can move the button between pointer-down and pointer-up. Observe
+  // shared queries directly, without readiness effects, duplicate fetches or click retries.
+  // A terminal error/paused offline read has settled; reconnect/refetch will hold it again.
+  const layoutPending = layoutQueries.some(query => query.isFetching || (query.isPending && query.fetchStatus !== 'paused'))
 
   function setMonth(next: string) {
     setParams((current) => {
@@ -614,7 +614,7 @@ export default function ReleasesPage({ view = 'disc' }: { view?: ReleaseCalendar
         </>
       )}
 
-      <SubscribePanel view={view} />
+      <SubscribePanel view={view} layoutPending={layoutPending} />
     </div>
   )
 }

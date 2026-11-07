@@ -75,3 +75,29 @@ old enabled-during-loading behaviour. Two existing unit cases that click immedia
 render will now wait for the approved enabled state before their single click; their feed
 assertions remain unchanged. Full gates, exact seven-job PR/main CI and served-SHA/readiness
 are required. No manual live calendar, digest or refresh action is authorised.
+
+## Repair implementation and verification in progress
+
+The approved repair is on `fix/calendar-subscribe-readiness`, independently of the AC6
+feature work. Four shared query hooks preserve the exact keys, enabled scopes and stale
+windows. The page observes the same cache as Month view, Coming soon and Coming to disc,
+deriving readiness during render without an effect/state handshake. Only the relevant
+calendar's queries gate the native subscription button. Pending/fetching holds it; a
+terminal failure or offline pause settles it, and reconnect/refetch holds it again. Coming
+soon now states loading/offline rather than prematurely claiming an empty programme.
+The existing subscription endpoint, three feed URLs and token rotation are untouched.
+
+Five new held-source unit regressions failed on the old enabled-during-loading control
+before implementation (5 failed, 11 passed). After repair, all **19** focused unit cases pass:
+each independent hold, one request per relevant source, terminal errors, paused offline /
+reconnect, cache reuse, and the original feed/navigation assertions. E2E typecheck passes.
+Two existing unit cases wait for the newly approved native enabled state before their one
+click; every feed/order/rotation assertion stays unchanged. No browser assertion, retry,
+skip, timeout or configuration was relaxed.
+
+Four focused Firefox real-pointer cases pass at 375 px, both themes and both calendars.
+Held programme responses arrive between down/up; native disabled state sends no POST, then
+one enabled click creates all three feed groups. The layouts move **393.5 px** for discs
+and **708.5 px** for cinema, and each programme endpoint is read exactly once. No production
+feed/token action runs. Complete local clean-tree gates, browser suites, PR/main CI and
+actual production SHA/readiness still need their final evidence.
