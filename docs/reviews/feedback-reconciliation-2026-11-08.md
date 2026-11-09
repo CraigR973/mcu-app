@@ -4,7 +4,8 @@
 13:55–14:40 GMT. Nothing was changed, committed, pushed or deployed. The Home layout point is
 judged from the layout code, not seen on a phone: production needs Craig's sign-in.
 
-**Update, 9 Nov.** Craig agreed to all six decisions (#355). The review-card build named under
+**Update, 9 Nov.** Craig agreed to all six decisions (#355). Point 9's usage is corrected: one
+night did reach a match (The Exorcist, 11 Oct). The review-card build named under
 Risks shipped on 9 Nov (AD1, PR 138), so point 16 no longer clashes with uncommitted work; it now
 supersedes #351's private visibility for Craig and Mark. Mark's username was saved on 9 Nov
 (#354), so his diary should be current after the first sync, due 10 Nov at 08:00 UTC. The batch
@@ -26,7 +27,7 @@ seven CI jobs and the production check, about 30–60 minutes more.
 | 6. Trip proposal: has each invitee seen it | Names only | ~1.5 h |
 | 7. Why so many listings are unmatched | A lookup backlog, draining | 1–2 h |
 | 8. Select all / none for cinemas | Missing | ~20 min |
-| 9. Movie night screen and flow | 11 nights, 0 matches | design first, then 4–8 h |
+| 9. Movie night screen and flow | 11 nights, 1 match | design first, then 4–8 h |
 | 10. Format update (Contagion) | Works as designed; the form misleads | ~1.5 h |
 | 11. Pricing accuracy | ~11% out where checkable; 36% of the total unchecked | nothing new; AA10c from 25 Nov |
 | 12. Search | Whole words only, no typos, no accents | 3–4 h |
@@ -191,8 +192,13 @@ seven CI jobs and the production check, about 30–60 minutes more.
 
 ### 9. Can the screen and flow be improved?
 
-- **Usage since 10 Sep:** 11 nights, all started by Craig. Two ever had a second person. None
-  reached a match. Six never had a vote. The "Nothing older than" filter has never been used.
+- **Usage since 10 Sep:** 11 nights, all started by Craig. Two ever had a second person.
+  **One reached a match** (corrected 9 Nov; this said none): The Exorcist on 11 Oct, from eight
+  films Craig put forward, 19 minutes after both joined. The night does not show it because a
+  match was only saved on its night from 18 Oct (X12a); the announcement on both votes records
+  it. The other shared night, 22 Sep, dealt 30 random films: Mark added eight and Craig one, with
+  no overlap. Seven nights never had a vote, including the open 6 Nov one. The "Nothing older
+  than" filter has never been used.
   The 6 Nov night is still open with no shortlist.
 - **So yes.** The flow stalls at getting the other person in, and 30 random films is a lot to
   choose from.

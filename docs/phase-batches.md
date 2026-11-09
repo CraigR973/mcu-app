@@ -5817,6 +5817,12 @@ sitting's setting.
   night; the other person's progress without their picks; at the match, where the disc is and
   "Log it for both of you"; closing nights nobody touched), with a recommendation. Made at the
   start of the run; Craig picks; no build before his answer.
+- **Sketch made 9 Nov** (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`, a private design
+  canvas for Craig). Real usage corrected the report: one night did match (The Exorcist, 11 Oct,
+  from eight films Craig put forward). Recommendation: all five, about 8 h, built B, A, D, C, E;
+  the smaller option A, B and D is about 6 h. Two catches the build owns: "in neither diary" is
+  not "unseen", and "Log it for both" must merge with the Letterboxd sync, which skips only
+  viewing ids it already holds. **Waiting for Craig's picks.**
 - The acceptance follows his picks and is written into this entry before the build. Fixed
   whatever he picks: the other person's votes stay hidden until a match (#157) unless he chooses
   otherwise; no push is sent twice; a closed night keeps its history.

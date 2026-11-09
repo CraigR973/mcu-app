@@ -7,8 +7,9 @@ Ten batches in five sittings in `docs/phase-batches.md`, with a phone copy in
 `docs/reviews/group-ae-plan-2026-11-09.md`; the reconciliation is
 `docs/reviews/feedback-reconciliation-2026-11-08.md`. One docs-only commit settled the checkout
 (the 8 Nov reconciliation's record corrections, five 8 Nov reports, this plan), pushed with
-Codex's `b92d710`. Next: AE10's movie night sketch for Craig's picks, then sitting 1
-(AE1 → AE2 → AE3).
+Codex's `b92d710`. AE10's movie night sketch is with Craig for his picks
+(`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`); it corrected the report's usage: one night
+did match (The Exorcist, 11 Oct). Sitting 1 (AE1 → AE2 → AE3) is next.
 
 **9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
 A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
