@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * §3.5's confirmation: "add another copy" or "this is an upgrade".
+ * §3.5's confirmation: "add as a separate copy" or "this is an upgrade".
  *
  * `isUpgrade` is decided by the API against the same format ranking the
  * `best_format_owned` trigger enforces, so the wording here cannot disagree with what
@@ -72,7 +72,7 @@ export default function DuplicatePrompt({ duplicate, onConfirm, onCancel, pendin
             This barcode is already on the{' '}
             <span className="font-medium">{boxed.formats.map((format) => formatLabel(format)).join(' + ')}</span>{' '}
             copy of “{boxed.movieTitle}” ({boxed.locationLabel}). A box holding two formats is one copy: add
-            the format to that copy rather than adding another.{' '}
+            the format to that copy rather than adding a separate copy.{' '}
             <Link to={`/movies/${boxed.movieId}`} className="font-medium text-primary underline-offset-2 hover:underline">
               Open that copy
             </Link>
@@ -101,7 +101,8 @@ export default function DuplicatePrompt({ duplicate, onConfirm, onCancel, pendin
               : 'bg-primary text-primary-foreground'
           }`}
         >
-          Add another copy
+          {/* AE1: a second box on the shelf, which is what this button has always made. */}
+          Add as a separate copy
         </button>
         <button
           type="button"

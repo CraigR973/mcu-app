@@ -38,17 +38,17 @@ describe('DuplicatePrompt', () => {
     const html = markup(owningBluRay)
 
     expect(html).toContain('This is an upgrade')
-    expect(html).toContain('Add another copy')
+    expect(html).toContain('Add as a separate copy')
     expect(html).toContain('You already own this on Blu-ray')
     // §3.5 also asks for the existing formats *and locations*.
     expect(html).toContain('Back 6th')
   })
 
-  it('offers only "another copy" when the format is not an upgrade', () => {
+  it('offers only "a separate copy" when the format is not an upgrade', () => {
     const html = markup({ ...owningBluRay, isUpgrade: false, bestFormatOwned: '4k_uhd' })
 
     expect(html).not.toContain('This is an upgrade')
-    expect(html).toContain('Add another copy')
+    expect(html).toContain('Add as a separate copy')
     expect(html).toContain('already in the collection')
   })
 

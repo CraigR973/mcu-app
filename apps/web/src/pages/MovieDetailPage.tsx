@@ -18,6 +18,7 @@ import {
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
+import { addCopyPath } from '@/lib/copy-formats'
 import { LendButton } from '@/components/collection/LendButton'
 import { MoveCopyPanel } from '@/components/collection/MoveCopyPanel'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
@@ -853,7 +854,7 @@ export default function MovieDetailPage() {
                   </div>
                   {canEdit ? (
                     <Button asChild size="sm">
-                      <Link to="/collection/add"><Plus aria-hidden /> Add a copy</Link>
+                      <Link to={addCopyPath(movie.id)}><Plus aria-hidden /> Add a copy</Link>
                     </Button>
                   ) : null}
                 </div>

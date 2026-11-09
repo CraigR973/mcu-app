@@ -14,7 +14,12 @@ interface Props {
   value: CollectionItemFields
   onChange: (value: CollectionItemFields) => void
   disabled?: boolean
+  /** AE1: a save was tried with no format chosen, so the formats say so. */
+  formatsMissing?: boolean
 }
+
+/** The element a refused save scrolls to, so the person sees what is missing. */
+export const FORMATS_FIELD_ID = 'copy-formats'
 
 /** The section value meaning "somewhere the vocabulary does not cover". */
 const FREE_TEXT = ''
@@ -45,7 +50,7 @@ const selectClass =
  * hold a disc could never offer it. `allSections` is the whole vocabulary; an older cached
  * response without it falls back to the populated ones, as the form did before.
  */
-export default function CopyForm({ value, onChange, disabled }: Props) {
+export default function CopyForm({ value, onChange, disabled, formatsMissing = false }: Props) {
   const facetsQuery = useQuery({ queryKey: ['facets'], queryFn: fetchFacets })
   const populated = facetsQuery.data?.sections ?? []
   const allSections = facetsQuery.data?.allSections ?? []
@@ -78,7 +83,7 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
 
   return (
     <div className="space-y-4">
-      <fieldset>
+      <fieldset id={FORMATS_FIELD_ID} aria-describedby={`${FORMATS_FIELD_ID}-hint`} className="scroll-mt-24">
         <legend className="text-xs font-medium text-muted-foreground">Formats</legend>
         <div className="mt-1.5 flex flex-wrap gap-2">
           {FORMATS.map((format) => {
@@ -101,10 +106,19 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
             )
           })}
         </div>
-        {/* One box can hold several discs, which is why `formats` is an array. */}
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Pick more than one for a combo pack.
-        </p>
+        {/* One box can hold several discs, which is why `formats` is an array. AE1: a new
+            copy starts with none chosen, so nothing is saved as Blu-ray by default. */}
+        {formatsMissing && value.formats.length === 0 ? (
+          <p id={`${FORMATS_FIELD_ID}-hint`} role="alert" className="mt-1.5 text-xs font-semibold text-destructive">
+            Choose a format: 4K UHD, Blu-ray, DVD or Digital.
+          </p>
+        ) : (
+          <p id={`${FORMATS_FIELD_ID}-hint`} className="mt-1.5 text-xs text-muted-foreground">
+            {value.formats.length === 0
+              ? 'Choose the format of this copy.'
+              : 'Pick two discs only when one box holds both, such as a 4K and Blu-ray combo pack.'}
+          </p>
+        )}
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -264,9 +278,10 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
   )
 }
 
-/** A blank disc, for the add form and for resetting the edit form. */
+/** A blank disc, for the add form and for resetting the edit form. AE1: no format until one
+ *  is chosen. It was Blu-ray, which is how Contagion's 4K first saved as a Blu-ray (4 Nov). */
 export const EMPTY_COPY: CollectionItemFields = {
-  formats: ['blu_ray'],
+  formats: [],
   location: null,
   section: null,
   shelf: null,

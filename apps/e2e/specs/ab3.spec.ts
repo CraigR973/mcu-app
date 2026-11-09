@@ -44,6 +44,8 @@ test('AB3 Mark adds through the screen; Craig receives one decrypted push, retri
     await page.getByRole('textbox', { name: 'Search for a film' }).fill(title)
     await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page.getByRole('button', { name: `Add “${title}” by its title` }).click()
+    // AE1: a new copy has no format until one is chosen.
+    await page.getByRole('button', { name: 'Blu-ray', exact: true }).click()
     const request = page.waitForRequest(r => r.url().endsWith('/api/v1/collection') && r.method() === 'POST')
     await page.getByRole('button', { name: `Add “${title}”`, exact: true }).click()
     const submitted = await request

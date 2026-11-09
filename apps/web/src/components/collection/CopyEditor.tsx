@@ -1,18 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Save, Trash2, X } from 'lucide-react'
+import { Loader2, Plus, Save, Trash2, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import CopyForm from '@/components/collection/CopyForm'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import {
+  formatLabel,
   StaleEditError,
   type CollectionCopy,
   type CollectionItemFields,
   type Condition,
 } from '@/lib/api'
+import { addCopyPath, addedDiscFormats, inFormOrder } from '@/lib/copy-formats'
 import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 import { queryErrorMessage } from '@/lib/query-state'
+
+/** "4K UHD", "4K UHD and DVD": the formats named in a sentence, best first. */
+function named(formats: readonly string[]): string {
+  const labels = inFormOrder(formats).map((code) => formatLabel(code) ?? code)
+  return labels.length <= 1 ? (labels[0] ?? '') : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+}
+
+/** Whether anything but the formats differs from the copy as it was opened. */
+function otherFieldsChanged(copy: CollectionCopy, fields: CollectionItemFields): boolean {
+  return JSON.stringify({ ...fieldsFrom(copy), formats: [] }) !== JSON.stringify({ ...fields, formats: [] })
+}
 
 interface Props {
   movieId: string
@@ -54,7 +68,15 @@ export function fieldsFrom(copy: CollectionCopy): CollectionItemFields {
  */
 export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [fields, setFields] = useState<CollectionItemFields>(() => fieldsFrom(copy))
+  // AE1 (#355, point 10): the disc formats a save would add beside another disc. While set,
+  // the footer asks "one box, or a separate copy?" instead of saving.
+  const [askingAbout, setAskingAbout] = useState<string[] | null>(null)
+  const askRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (askingAbout) askRef.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [askingAbout])
   // Batch Y1 (#264): both people can delete now, and only Craig can restore, so one stray
   // tap on a phone must not be enough. The first tap asks; the second deletes.
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -101,6 +123,23 @@ export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
   const pending = save.isPending || remove.isPending
   const error = save.error ?? remove.error
 
+  /** Save, unless the edit puts a second disc in this copy: then ask which is meant first. */
+  function trySave() {
+    const added = addedDiscFormats(copy.formats, fields.formats)
+    if (added.length > 0) {
+      setAskingAbout(added)
+      return
+    }
+    save.mutate()
+  }
+
+  /** "A separate copy": this copy is left as it was, and Add a copy opens for the same film
+   *  with the new format chosen. Nothing is saved here. */
+  function addSeparateCopy(added: readonly string[]) {
+    onClose()
+    navigate(addCopyPath(movieId, added))
+  }
+
   return (
     <Dialog open onClose={onClose} label="Edit this copy" className="sm:max-w-2xl">
       <div className="space-y-5 p-4 sm:p-6">
@@ -122,7 +161,8 @@ export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
           </Button>
         </div>
 
-        <CopyForm value={fields} onChange={setFields} disabled={pending} />
+        {/* Held still while the question below is open, so its answer is about what it names. */}
+        <CopyForm value={fields} onChange={setFields} disabled={pending || askingAbout !== null} />
 
         {error && (
           <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -132,7 +172,42 @@ export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
           </p>
         )}
 
-        {confirmingDelete ? (
+        {askingAbout ? (
+          <div
+            ref={askRef}
+            role="alertdialog"
+            aria-label="One box with both discs, or a separate copy?"
+            className="space-y-3 rounded-md border border-warning/45 bg-warning/10 p-3"
+          >
+            <p className="text-sm font-semibold text-foreground">One box with both discs, or a separate copy?</p>
+            <p className="text-sm text-foreground">
+              One box makes this copy {named(fields.formats)}, a combo pack. A separate copy leaves this one as{' '}
+              {named(copy.formats)} and adds the {named(askingAbout)} as its own copy.
+            </p>
+            {otherFieldsChanged(copy, fields) ? (
+              <p className="text-sm text-muted-foreground">Your other changes here are not kept if you add a separate copy.</p>
+            ) : null}
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button type="button" disabled={pending} onClick={() => save.mutate()} className="w-full sm:w-auto">
+                {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                One box with both discs
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={() => addSeparateCopy(askingAbout)}
+                className="w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4" />
+                A separate copy
+              </Button>
+              <Button type="button" variant="ghost" disabled={pending} onClick={() => setAskingAbout(null)} className="w-full sm:w-auto">
+                Back
+              </Button>
+            </div>
+          </div>
+        ) : confirmingDelete ? (
           <div
             ref={confirmRef}
             role="alertdialog"
@@ -188,7 +263,7 @@ export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
               <Button
                 type="button"
                 disabled={pending || fields.formats.length === 0}
-                onClick={() => save.mutate()}
+                onClick={trySave}
                 className="w-full sm:w-auto"
               >
                 {save.isPending ? (

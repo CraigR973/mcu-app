@@ -231,7 +231,7 @@ describe('MovieDetailPage copy editing for Mark', () => {
 
     expect(await screen.findByRole('button', { name: /Edit copy/ })).not.toBeNull()
     expect(screen.getByRole('button', { name: /Mark damaged/ })).not.toBeNull()
-    expect(screen.getByRole('link', { name: /Add a copy/ }).getAttribute('href')).toBe('/collection/add')
+    expect(screen.getByRole('link', { name: /Add a copy/ }).getAttribute('href')).toBe(`/collection/add?movie=${MOVIE_ID}`)
     expect(screen.queryByText('Value and resale')).toBeNull()
     // Batch X9 made moving a copy to another film Craig's; Batch Y4 (#276) gives it to Mark
     // too, audited as him and undone by Craig from Identify films.

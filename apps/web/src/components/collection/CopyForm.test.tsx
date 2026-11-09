@@ -220,4 +220,35 @@ describe('CopyForm', () => {
   })
 })
 
+// AE1 (#355, point 10): a new copy is never silently a Blu-ray.
+describe('CopyForm formats — AE1', () => {
+  it('starts a new copy with no format chosen, and says to choose one', () => {
+    expect(EMPTY_COPY.formats).toEqual([])
+    const html = markup(EMPTY_COPY)
+    expect(html.match(/aria-pressed="true"/g)).toBeNull()
+    expect(html).toContain('Choose the format of this copy.')
+  })
+
+  it('says what is missing, as an alert, after a save without a format', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <CopyForm value={EMPTY_COPY} onChange={() => {}} formatsMissing />
+      </QueryClientProvider>,
+    )
+    expect(screen.getByRole('alert').textContent).toBe('Choose a format: 4K UHD, Blu-ray, DVD or Digital.')
+  })
+
+  it('drops the alert once a format is chosen, and says two discs means one box', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <CopyForm value={{ ...EMPTY_COPY, formats: ['blu_ray'] }} onChange={() => {}} formatsMissing />
+      </QueryClientProvider>,
+    )
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByText('Pick two discs only when one box holds both, such as a 4K and Blu-ray combo pack.')).not.toBeNull()
+  })
+})
+
 afterEach(() => cleanup())

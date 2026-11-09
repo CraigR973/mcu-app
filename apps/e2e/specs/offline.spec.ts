@@ -85,12 +85,17 @@ test.describe('offline, against an API on another origin', () => {
     await expect(page.getByRole('heading', { name: 'Paper Lantern', level: 1 })).toBeVisible()
     const banner = page.getByTestId('offline-banner')
 
-    /** Choose the film from a TMDB search on the add form and fill in where the disc lives. */
-    async function chooseFilm(title: string, location: string) {
+    /** Choose the film from a TMDB search on the add form. */
+    async function findFilm(title: string) {
       await page.getByRole('tab', { name: 'Search title' }).click()
       await page.getByRole('textbox', { name: 'Search for a film' }).fill(title)
       await page.getByRole('button', { name: 'Search', exact: true }).click()
       await page.getByRole('list', { name: 'Films found' }).getByRole('button', { name: new RegExp(title) }).first().click()
+    }
+
+    /** Say what the disc is and where it lives. AE1: a new copy has no format until one is chosen. */
+    async function describeDisc(location: string) {
+      await page.getByRole('button', { name: 'Blu-ray', exact: true }).click()
       await page.getByRole('combobox', { name: 'Section' }).selectOption({ label: 'Garage' })
       await page.getByRole('textbox', { name: 'Location' }).fill(location)
     }
@@ -147,9 +152,11 @@ test.describe('offline, against an API on another origin', () => {
       expect(await queueState(page)).toBe('[]')
     }
 
-    // A film the catalogue knows: the lost add is read back by its film id.
+    // A film the catalogue knows: the lost add is read back by its film id. Since AE1 the
+    // film's own "Add a copy" opens the form on that film.
     await page.getByRole('link', { name: 'Add a copy' }).click()
-    await chooseFilm('Paper Lantern', 'Garage replay shelf')
+    await expect(page.getByText('A new copy of this film.')).toBeVisible()
+    await describeDisc('Garage replay shelf')
     await addWithItsAnswerLost('Paper Lantern', 1403)
 
     // A film it has never seen (Batch Z1, DECISIONS.md #287): the add names it by its TMDB id
@@ -157,7 +164,8 @@ test.describe('offline, against an API on another origin', () => {
     // good; it is read back through the duplicate check instead.
     expect(copiesOf(1404)).toBe('0')
     await page.goto('/collection/add')
-    await chooseFilm('Paper Kite', 'Garage replay shelf')
+    await findFilm('Paper Kite')
+    await describeDisc('Garage replay shelf')
     await addWithItsAnswerLost('Paper Kite', 1404)
   })
 })

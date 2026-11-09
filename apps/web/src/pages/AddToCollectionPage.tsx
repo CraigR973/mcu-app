@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { Camera, Check, Loader2, Plus, Search, Type } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import BarcodeLookupPanel from '@/components/collection/BarcodeLookupPanel'
-import CopyForm, { EMPTY_COPY } from '@/components/collection/CopyForm'
+import CopyForm, { EMPTY_COPY, FORMATS_FIELD_ID } from '@/components/collection/CopyForm'
 import DuplicatePrompt from '@/components/collection/DuplicatePrompt'
 import MaybeOwnedNotice from '@/components/collection/MaybeOwnedNotice'
 import { Button } from '@/components/ui/button'
@@ -16,14 +16,17 @@ import {
   checkDuplicate,
   confirmBarcode,
   DuplicateItemError,
+  fetchMovie,
   searchTmdb,
   type FilmReference,
   type BarcodeCandidate,
   type CollectionItemFields,
   type DuplicateCheck,
   type DuplicateReason,
+  type MovieDetail,
   type TmdbSearchResult,
 } from '@/lib/api'
+import { formatsFromParams } from '@/lib/copy-formats'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { addOrQueue } from '@/lib/sync'
 
@@ -80,6 +83,20 @@ function chosenByTitle(title: string): ChosenFilm {
   return { title, year: null, posterPath: null, movieId: null, tmdbId: null, tmdbTvId: null, byTitle: true, pick: 'title' }
 }
 
+/** AE1: the film an address names, already in the catalogue. */
+function chosenFromMovie(movie: MovieDetail): ChosenFilm {
+  return {
+    title: movie.title,
+    year: movie.year,
+    posterPath: movie.posterPath,
+    movieId: movie.id,
+    tmdbId: null,
+    tmdbTvId: null,
+    byTitle: false,
+    pick: `movie-${movie.id}`,
+  }
+}
+
 export default function AddToCollectionPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -88,11 +105,30 @@ export default function AddToCollectionPage() {
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [submitted, setSubmitted] = useState('')
-  const [film, setFilm] = useState<ChosenFilm | null>(null)
-  const [fields, setFields] = useState<CollectionItemFields>(EMPTY_COPY)
-  const [duplicate, setDuplicate] = useState<DuplicateCheck | null>(null)
-  // Batch X10: an unidentified owned film this may be. A warning, never a reason to refuse.
-  const [maybeOwned, setMaybeOwned] = useState<DuplicateCheck['maybeOwned']>(null)
+  // AE1 (#355): "A separate copy" on a copy's edit form opens this page for the same film with
+  // the new format chosen, and a film's own "Add a copy" names its film. The address is the
+  // starting point only; "Choose a different film" leaves it behind.
+  const [searchParams] = useSearchParams()
+  const presetMovieId = searchParams.get('movie')
+  const [presetDismissed, setPresetDismissed] = useState(false)
+  const presetActive = presetMovieId !== null && !presetDismissed
+  // The film page's own key and reader, so a film just viewed is already in hand, offline too.
+  const presetQuery = useQuery({
+    queryKey: ['movie', presetMovieId],
+    queryFn: () => fetchMovie(presetMovieId ?? ''),
+    enabled: presetActive,
+  })
+  const [chosen, setChosen] = useState<ChosenFilm | null>(null)
+  const film = chosen ?? (presetActive && presetQuery.data ? chosenFromMovie(presetQuery.data) : null)
+  // AE1: a new copy starts with no format, unless the address names the one to add.
+  const [fields, setFields] = useState<CollectionItemFields>(() => ({
+    ...EMPTY_COPY,
+    formats: formatsFromParams(searchParams.getAll('format')),
+  }))
+  // AE1: a save was tried with no format, so the form says what is missing.
+  const [formatsMissing, setFormatsMissing] = useState(false)
+  // The 409's own answer, for a save that skipped or outran the check below.
+  const [conflict, setConflict] = useState<DuplicateCheck | null>(null)
 
   const searchQuery = useQuery({
     queryKey: ['tmdb-search', submitted],
@@ -107,31 +143,48 @@ export default function AddToCollectionPage() {
     return { tmdbId: chosen.tmdbId ?? 0 }
   }
 
-  async function chooseFilm(chosen: ChosenFilm, barcode: string | null = scannedBarcode) {
-    setFilm(chosen)
-    setDuplicate(null)
-    setMaybeOwned(null)
-    // §3.1 wants the warning *before* saving, so ask as soon as the film is known
-    // rather than letting the save be rejected. The POST enforces it independently.
-    // Batch X10 (#280): the barcode and the title go too, so a box already on a shelf and an
-    // unidentified twin are named, neither of which the film's id can see.
-    try {
-      const check = await checkDuplicate(filmRef(chosen), fields.formats, {
-        barcode,
-        title: chosen.title,
-        year: chosen.year,
-      })
-      if (check.isDuplicate) setDuplicate(check)
-      setMaybeOwned(check.maybeOwned)
-    } catch {
-      // A failed preflight must not block the add — the server-side 409 still holds.
-    }
+  // §3.1 wants the warning *before* saving, so the check asks as soon as the film is known
+  // rather than letting the save be rejected; the POST enforces it independently. Since AE1 it
+  // asks again whenever the formats change: whether a 4K is an upgrade depends on the format
+  // chosen, and a new copy starts with none. Batch X10 (#280): the barcode and the title go
+  // too, so a box already on a shelf and an unidentified twin are named, neither of which the
+  // film's id can see. A failed check does not block the add: the server's 409 still holds.
+  const filmKey = film ? filmRef(film) : null
+  const check = useQuery({
+    queryKey: ['duplicate-check', filmKey, fields.formats, scannedBarcode, film?.title ?? null, film?.year ?? null],
+    queryFn: () => {
+      if (!film) throw new Error('Choose a film first')
+      return checkDuplicate(filmRef(film), fields.formats, { barcode: scannedBarcode, title: film.title, year: film.year })
+    },
+    enabled: film !== null,
+    retry: false,
+    staleTime: 0,
+    // The last answer stays while a new format is asked about, so the prompt does not blink;
+    // never an answer about a different film.
+    placeholderData: (previous, previousQuery) =>
+      JSON.stringify(previousQuery?.queryKey[1] ?? null) === JSON.stringify(filmKey) ? previous : undefined,
+  })
+  const duplicate = conflict ?? (check.data?.isDuplicate ? check.data : null)
+  // Batch X10: an unidentified owned film this may be. A warning, never a reason to refuse.
+  const maybeOwned = check.data?.maybeOwned ?? null
+
+  function chooseFilm(next: ChosenFilm) {
+    setChosen(next)
+    setConflict(null)
   }
 
-  async function chooseBarcode(candidate: BarcodeCandidate, barcode: string) {
+  /** Forget the chosen film, the one the address named included. */
+  function clearFilm() {
+    setChosen(null)
+    setPresetDismissed(true)
+    setConflict(null)
+  }
+
+  /** The panel waits on this; the duplicate check now follows the choice by itself. */
+  function chooseBarcode(candidate: BarcodeCandidate, barcode: string): Promise<void> {
     setScannedBarcode(barcode)
-    // The state above is not read until the next render, so the barcode is passed.
-    await chooseFilm(chosenFromBarcode(candidate), barcode)
+    chooseFilm(chosenFromBarcode(candidate))
+    return Promise.resolve()
   }
 
   const manualChoice = useMutation({
@@ -146,7 +199,10 @@ export default function AddToCollectionPage() {
       })
       return chosen
     },
-    onSuccess: (chosen, { barcode }) => void chooseFilm(chosen, barcode),
+    onSuccess: (picked, { barcode }) => {
+      setScannedBarcode(barcode)
+      chooseFilm(picked)
+    },
   })
 
   function chooseTitle(result: TmdbSearchResult) {
@@ -156,7 +212,7 @@ export default function AddToCollectionPage() {
       manualChoice.mutate({ result, barcode: scannedBarcode })
       return
     }
-    void chooseFilm(chosenFrom(result))
+    chooseFilm(chosenFrom(result))
   }
 
   // The film's local id at the moment the mutation is defined, so `onSuccess` does not
@@ -189,6 +245,9 @@ export default function AddToCollectionPage() {
       void queryClient.invalidateQueries({ queryKey: ['facets'] })
       if (item !== null) {
         void queryClient.invalidateQueries({ queryKey: ['movie-copies', item.movieId] })
+        // The film's own record carries its copy count and best format, and since AE1 this
+        // page reads it too: a copy just added must not leave the film saying one fewer.
+        void queryClient.invalidateQueries({ queryKey: ['movie', item.movieId] })
         navigate(`/movies/${item.movieId}${confirmedAs === 'upgrade' ? '?upgraded=1' : ''}`)
         return
       }
@@ -198,6 +257,7 @@ export default function AddToCollectionPage() {
       const known = chosenMovieId
       if (queued && known !== null) {
         void queryClient.invalidateQueries({ queryKey: ['movie-copies', known] })
+        void queryClient.invalidateQueries({ queryKey: ['movie', known] })
         navigate(`/movies/${known}`)
         return
       }
@@ -208,7 +268,7 @@ export default function AddToCollectionPage() {
       // round, for a save that skipped or outran the preflight check.
       if (error instanceof DuplicateItemError) {
         addAttempt.current = null
-        setDuplicate(error.duplicate)
+        setConflict(error.duplicate)
       }
     },
   })
@@ -218,7 +278,17 @@ export default function AddToCollectionPage() {
   const searchState = listState(searchQuery, results.length === 0 && series.length === 0)
   const searchedFor = searchQuery.data?.query ?? submitted
   const seriesHeading = useRef<HTMLParagraphElement>(null)
-  const canSave = film !== null && fields.formats.length > 0
+  // AE1: the button works with no format chosen, and says what is missing rather than greying out.
+  const canSave = film !== null
+
+  function save() {
+    if (fields.formats.length === 0) {
+      setFormatsMissing(true)
+      document.getElementById(FORMATS_FIELD_ID)?.scrollIntoView?.({ block: 'center' })
+      return
+    }
+    add.mutate(duplicate ? 'another_copy' : undefined)
+  }
 
   return (
     <div className="page-shell-narrow space-y-7">
@@ -226,6 +296,10 @@ export default function AddToCollectionPage() {
 
       <section className="archive-panel space-y-4 p-4 sm:p-6" aria-labelledby="choose-film-heading">
         <div><p className="page-kicker">Step 1</p><h2 id="choose-film-heading" className="section-heading">Which film?</h2></div>
+        {presetActive ? (
+          <PresetFilm query={presetQuery} onFindAnother={clearFilm} />
+        ) : (
+        <>
         <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="How to find the film">
           <button
             type="button"
@@ -236,8 +310,7 @@ export default function AddToCollectionPage() {
             onClick={() => {
               setMethod('barcode')
               setScannedBarcode(null)
-              setFilm(null)
-              setDuplicate(null)
+              clearFilm()
               manualChoice.reset()
             }}
             className={`touch-target inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-colors ${
@@ -259,8 +332,7 @@ export default function AddToCollectionPage() {
               // retains a code for manual resolution.
               setMethod('title')
               setScannedBarcode(null)
-              setFilm(null)
-              setDuplicate(null)
+              clearFilm()
               manualChoice.reset()
             }}
             className={`touch-target inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-colors ${
@@ -280,14 +352,12 @@ export default function AddToCollectionPage() {
                 // Keeping the old film selected here would let its save button attach
                 // the new barcode to the wrong movie while lookup was still pending.
                 setScannedBarcode(barcode)
-                setFilm(null)
-                setDuplicate(null)
+                clearFilm()
               }}
               onConfirmed={chooseBarcode}
               onManualSearch={(barcode) => {
                 setScannedBarcode(barcode)
-                setFilm(null)
-                setDuplicate(null)
+                clearFilm()
                 setMethod('title')
               }}
             />
@@ -402,7 +472,7 @@ export default function AddToCollectionPage() {
                   size="sm"
                   className="mt-2 max-w-full"
                   aria-pressed={film?.pick === 'title'}
-                  onClick={() => void chooseFilm(chosenByTitle(searchedFor))}
+                  onClick={() => chooseFilm(chosenByTitle(searchedFor))}
                 >
                   <Type className="h-4 w-4" />
                   <span className="truncate">Add “{searchedFor}” by its title</span>
@@ -416,6 +486,8 @@ export default function AddToCollectionPage() {
               </p>
             )}
           </div>
+        )}
+        </>
         )}
       </section>
 
@@ -431,16 +503,13 @@ export default function AddToCollectionPage() {
                 setConfirmedAs(reason)
                 add.mutate(reason)
               }}
-              onCancel={() => {
-                setDuplicate(null)
-                setFilm(null)
-              }}
+              onCancel={clearFilm}
             />
           )}
 
           <section className="archive-panel space-y-4 p-4 sm:p-6" aria-labelledby="describe-disc-heading">
             <div><p className="page-kicker">Step 2</p><h2 id="describe-disc-heading" className="section-heading">Which edition, and where does it live?</h2></div>
-            <CopyForm value={fields} onChange={setFields} disabled={add.isPending} />
+            <CopyForm value={fields} onChange={setFields} disabled={add.isPending} formatsMissing={formatsMissing} />
           </section>
 
           {add.isError && !(add.error instanceof DuplicateItemError) && (
@@ -454,7 +523,7 @@ export default function AddToCollectionPage() {
               type="button"
               className="w-full min-w-0 sm:w-auto"
               disabled={!canSave || add.isPending}
-              onClick={() => add.mutate(duplicate ? 'another_copy' : undefined)}
+              onClick={save}
             >
               {add.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -463,7 +532,7 @@ export default function AddToCollectionPage() {
               )}
               <span className="truncate">Add “{film.title}”</span>
             </Button>
-            <Button type="button" className="w-full sm:w-auto" variant="ghost" onClick={() => setFilm(null)}>
+            <Button type="button" className="w-full sm:w-auto" variant="ghost" onClick={clearFilm}>
               Choose a different film
             </Button>
           </div>
@@ -513,5 +582,37 @@ function ResultButton({
         <Check className="h-4 w-4 shrink-0 text-primary" />
       ) : null}
     </button>
+  )
+}
+
+/** AE1: the film the address named, shown in place of the finder until another is chosen. */
+function PresetFilm({ query, onFindAnother }: { query: UseQueryResult<MovieDetail>; onFindAnother: () => void }) {
+  if (query.isError) {
+    return (
+      <div className="space-y-2 rounded-lg border border-border p-3 text-sm">
+        <p role="alert" className="text-destructive">{queryErrorMessage(query.error, 'That film could not be loaded.')}</p>
+        <Button type="button" variant="outline" size="sm" onClick={onFindAnother}>
+          Find the film instead
+        </Button>
+      </div>
+    )
+  }
+  const movie = query.data
+  if (!movie) {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Finding the film…
+      </p>
+    )
+  }
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-primary bg-primary/5 p-3" aria-label="The film">
+      <Poster path={movie.posterPath} title={movie.title} size="w92" decorative className="h-16 w-11 shrink-0 rounded-sm" />
+      <p className="min-w-0 flex-1">
+        <span className="font-medium text-foreground">{movie.title}</span>
+        {movie.year ? <span className="ml-2 text-xs text-muted-foreground">{movie.year}</span> : null}
+        <span className="mt-0.5 block text-xs text-muted-foreground">A new copy of this film.</span>
+      </p>
+    </div>
   )
 }

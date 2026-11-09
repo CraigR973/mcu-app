@@ -22,6 +22,8 @@ test.describe('add via scan', () => {
     await expect(page.getByText('Midnight Ferry', { exact: true })).toBeVisible()
     await page.getByRole('button', { name: 'This is the disc' }).click()
 
+    // AE1: a new copy has no format until one is chosen.
+    await page.getByRole('button', { name: 'Blu-ray', exact: true }).click()
     await page.getByRole('combobox', { name: 'Section' }).selectOption({ label: 'Garage' })
     await page.getByRole('textbox', { name: 'Location' }).fill('Garage top shelf')
     await page.getByRole('button', { name: 'Add “Midnight Ferry”' }).click()
