@@ -2,6 +2,14 @@
 
 ## Now
 
+**9 Nov, 21:10 GMT: Group AE is under way; Craig gave the go on his 8 Nov feedback (#355).**
+Ten batches in five sittings in `docs/phase-batches.md`, with a phone copy in
+`docs/reviews/group-ae-plan-2026-11-09.md`; the reconciliation is
+`docs/reviews/feedback-reconciliation-2026-11-08.md`. One docs-only commit settled the checkout
+(the 8 Nov reconciliation's record corrections, five 8 Nov reports, this plan), pushed with
+Codex's `b92d710`. Next: AE10's movie night sketch for Craig's picks, then sitting 1
+(AE1 → AE2 → AE3).
+
 **9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
 A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
 passed at 18:33:29. Mark remains an active viewer, sync count 0 and active watches 972.
@@ -24,11 +32,53 @@ the next natural run's counts. Existing natural sync lacks the preflight's hard 
 
 Report: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
 
+**Cinema:** the natural 8 Nov refresh completed 08:04 UTC, partial coverage, all nine
+venue observations successful, 29 metadata lookups pending. AC3's owed positive read-back
+is now proved: eight confirmed future Rocky reruns across four ODEONs. AC6 evaluated an
+empty 8 Nov day; at 11:55 GMT appearances/outbox/claims remain 0/0/0. The 7 Nov missed-day
+marker is separate. Keep AC6 unstruck pending a genuine qualifying scheduled digest and
+Craig's phone receipt/tap; no test send. Ramayana, Tabby McTat and The Devils remain for
+cinema identity review. AC5's first real trip and phone observations remain separate.
+
+**Re-pricing:** the 1 Nov AA10b campaign finished with 0 failed/0 remaining pairs. Its
+8 Nov Home read-back was £14,739.54 across 1,473 physical copies: 1,309 priced,
+162 checked-unpriced, 2 unchecked, 61 sales-backed. The two due pairs were later additions.
+Before £16,867.11 covered 1,469 copies; the comparison includes scope and sales-evidence
+changes. No extra Home press is needed. AA10c remains from 25 Nov and evidence-gated.
+
+**Genuine older work:** Mark's Letterboxd username was saved 9 Nov18:33 UTC and he has no sync record;
+Craig's weekly cron is healthy, including 8 Nov. Of 651 saved non-doubtful backfill entries,
+638 viewing IDs are absent (Craig 480, Mark 158); all seven saved watch corrections remain
+on their old films. These are stale-plan comparisons, not approved live-write counts.
+
+**Current owner queues:** one unmatched owned title (Shetland - Series 5), one visible
+doubt (Titanic 1953 versus the disc page's 1997), and 419 disc-spec choices. The three
+Y5 TV-copy moves were completed 17 Oct and remain correct; do not request them again.
+Price charts now have 46 real cron days and three wants with two-shop/two-day history,
+but Dead Man's Shoes still points to the documented wrong 1940 identity. Review that
+association before treating it as the third trustworthy film or starting the chart build.
+
+Positive cinema evidence can be read after
+a later natural run; no new automation was created. Current register:
+`docs/reviews/outstanding-work-reconciled-2026-11-08.md`. Earlier time-qualified reports
+remain unchanged.
+
 ## Next
 
-Await the natural 10 Nov08:00 UTC eligibility slot without triggering a job or Sync now.
-Mark's actual review answers/identity judgements and real-phone acceptance remain his.
-Historical apply/corrections and other batches retain separate scope and approval requirements.
+**Group AC implementation is deployed through AC6 and the separate calendar repair.**
+AC3's post-8-Nov rerun classification read-back is complete. AC6's positive scheduled
+delivery/phone acceptance and AC5's first real trip remain open; these do not authorise
+another implementation batch. Onboarding more people still needs its own plan.
+
+**Remaining active work:** X5's watch-history data checkpoints, current catalogue/spec
+judgements, natural positive cinema delivery evidence, and real-device observations in
+`OWNER-ACTIONS.md`. Group X's implementation, Batch 38, V9 and Z1 are already shipped/built;
+the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
+with the scope caveat in Now. AA10c stays at its separate 25 Nov evidence gate.
+
+**Build backlog:** Batch 21's numerical history gate now passes, but the wanted-film
+identity discrepancy must be settled first. Sale pagination (22c) and email (33–34) stay
+parked/deprioritised. A new build or multi-batch review needs its own scope and go.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -416,6 +466,16 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **9 Nov, 21:10 GMT — Group AE go.** Craig answered "yes codex is done" to the go and the
+  Codex question. One docs-only commit of the outstanding records (8 Nov reconciliation
+  corrections, five 8 Nov reports, #355 and the plan), pushed with `b92d710`; two stray blank
+  lines dropped. AE10's sketch next, then sitting 1.
+- **9 Nov, 19:30 GMT — Craig's 8 Nov feedback: six answers (#355), Group AE drafted.**
+  18 points reconciled read-only on 8 Nov against code at `417471a` and live data; Craig agreed
+  to all six recommendations on 9 Nov. Group AE: ten batches in five sittings, waiting for his
+  go, with one owner stop (the movie night picks) and one live write (enabling the Omniplex).
+  Read-only check: the app's Neon role can create `pg_trgm` and `unaccent`. Uncommitted, beside
+  the 8 Nov reconciliation's edits.
 - **9 Nov, 18:33 GMT — Mark username saved at Craig's explicit request (#354).**
   Guarded exact one-row save of markr973 at 18:33:28 UTC; independent read-only verification
   at 18:33:29 confirms active viewer, zero syncs and 972 active watches. No feed request,

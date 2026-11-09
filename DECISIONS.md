@@ -7637,3 +7637,36 @@ contemporaneous.
      add watches/bare films and its actual outcome remains unproved. Historical backfill,
      corrections, Mark's actual answers/identity judgements and phone acceptance remain
      separate. No further build, hosting change, automation or batch close-out.
+
+355. **Craig's 8 Nov feedback: six answers, and Group AE drafted for his go (9 Nov).**
+     Craig sent 18 points on 8 Nov and asked for them to be reconciled against the code
+     (`docs/reviews/feedback-reconciliation-2026-11-08.md`). On 9 Nov he replied "agree to all
+     of these" to its six recommendations:
+     - **Highlights opens on Recently added.** A new first tab of copies added in the app,
+       newest first, naming who added each and when; Most valuable moves to second. Point 2
+       (Most valuable first) gives way to point 15.
+     - **Needs you is shared by the people who keep the shelves, each item labelled by owner
+       (supersedes the private visibility in #351 and the per-person list in #336, for them).**
+       Craig and Mark see every item for both, their own first. Only the owner acts on their
+       own items, except loan jobs, which both already act on. Answering an assigned review
+       stays the assignee's, and #351's other rules stand. A later onboarded profile still
+       sees only their own.
+     - **The Omniplex on Renfrew Street, Glasgow, becomes a tenth cinema**, beside the nine
+       approved for AB6, read from its CinemaTimes page as the four ODEONs are. It shows only
+       after the existing enable step accepts fresh coverage; this answer is the word for that
+       one enable.
+     - **TMDB lookups get about 120 requests a morning, up from 48 (changes AC3's budget in
+       #335).** TMDB is free and the cap is the app's own, so new films match the morning they
+       appear. Drafted as TMDB's own cap of 120, separate from the unchanged 120-request
+       ceiling on cinema sites.
+     - **Search adds Postgres's `pg_trgm` and `unaccent` extensions** for typos and accents,
+       in a reversible migration. A read-only check on 9 Nov found the app's Neon role able to
+       create both.
+     - **Craig asks Mark** whether he still has the Contagion Blu-ray he deleted on 5 Nov
+       (restore it from Trash if so), and whether King Arthur: Legend of the Sword and Silent
+       Running are each one box holding both discs (`OWNER-ACTIONS.md`).
+     The remaining points are taken as asked, with the report's fixes. Group AE in
+     `docs/phase-batches.md` turns them into ten batches in five sittings, with criteria, order
+     and models; its drafting choices are open to his overrule. Pricing (point 11) needs
+     nothing new: AA10c from 25 Nov answers it. Craig gave the go the same evening ("yes codex
+     is done"), once Codex had finished in the checkout.

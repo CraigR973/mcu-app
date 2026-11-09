@@ -4,10 +4,24 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-05**,
-when Group W was planned (30 added). *Numbers
+Tick a box when evidence establishes completion and say so in `STATUS.md`'s Log.
+Current-state reconciliation: **8 Nov 2026**, from read-only production and audit records.
+Older dated sections retain historical instructions; the current summary below takes precedence.
+
+*Numbers
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
+
+## Ask Mark about three copies — 9 Nov (#355)
+
+From point 10 of the 8 Nov feedback (`docs/reviews/feedback-reconciliation-2026-11-08.md`).
+Nothing is blocked on it, and no agent changes these copies.
+
+- [ ] **Contagion.** Mark added the 4K on 4–5 Nov and deleted the Blu-ray copy on 5 Nov. If he
+      still has the Blu-ray, restore it from Trash; if not, there is nothing to do.
+- [ ] **King Arthur: Legend of the Sword** and **Silent Running** each have one copy carrying
+      both 4K and Blu-ray. Is each one box holding both discs? If either is two separate boxes,
+      split it into two copies in the app.
 
 ## Mark username saved — 9 Nov, 18:33 GMT (#354)
 
@@ -37,7 +51,35 @@ the final stamp is in PR 138. This subsequent username action changes live data,
 The documentation handoff is committed locally without another deployment or batch close-out.
 
 
-## What is left for you, by sitting *(30 Sep)*
+## Current owner work — reconciled 8 Nov
+
+- **Mark review cards deployed (9 Nov, PR 138, #353):** three exact assignments/audits
+  are live, no notification. Mark's real answers and phone acceptance remain open.
+  The bounded preflight succeeded and Craig explicitly authorised the username save,
+  completed 9 Nov18:33 UTC (#354). Await natural sync; no historical apply or further build.
+- **Watch history first:** Mark's username was saved 9 Nov18:33 UTC; no sync exists yet. Craig's weekly
+  cron runs successfully. Saved plans have 638 non-doubtful viewing IDs absent today
+  (Craig 480, Mark 158); all seven proposed watch corrections remain on their old films.
+  Prepare current duplicates/targets and exact scope before approving any live write or
+  provider read; the old 651-row plan is not a current write count.
+- **Small catalogue choices:** Shetland - Series 5 is the sole unmatched owned title;
+  Titanic (1953) is the sole visible doubt, against a 1997 disc page. Disc specs has
+  419 choices. The three Y5 TV-copy moves are already done and must not be repeated.
+- **Price charts:** 46 cron days and three numerical history qualifiers now exist; the
+  documented Dead Man's Shoes 1940/2004 association still needs review. No chart build,
+  identity correction or history rewrite is authorised by this read-back.
+- **Natural/phone acceptance:** AC6's 8 Nov digest evaluated empty, so positive delivery
+  and phone receipt/tap remain open. AC3's eight future Rocky reruns are now read back.
+  AC5's first real trip, genuine Mark-addition/loan pushes and remaining device observations
+  stay separate. Craig's accepted iPhone launch/header/Search checks are complete.
+- **Future/deferred:** AA10c from 25 Nov with sufficient sales evidence; 22c and email
+  remain parked. Backup-key safekeeping and credential/hosting housekeeping remain owner
+  records, not freshly proved failures. No extra AA10b Update values press is needed.
+
+Evidence and prerequisites: `docs/reviews/outstanding-work-reconciled-2026-11-08.md`.
+No implementation, provider request, live write or close-out is included in this reconciliation.
+
+## Checkpoint detail — current read-backs supersede older dated instructions
 
 - **Calendar repair approved and deployed (7 Nov, #350, PR #137, `7c536d9`).**
   Shared-query/native-button readiness fixes the proved lost click. Full local and all seven
@@ -46,11 +88,13 @@ The documentation handoff is committed locally without another deployment or bat
   this repair; no production calendar token was rotated as a test. Natural digest/phone
   observations below remain open.
 
-- **Daily cinema digest (AC6) — deployed 7 Nov (PR #136, `46aaba5`, #348, #349); acceptance open.**
-  The agent must wait for genuine scheduled outbox evidence after deployment, without a manual
-  refresh or test digest. Real-phone receipt and the tap into New this week remain yours to
-  observe when a qualifying digest naturally arrives. AC3's rerun read-back and AC5's first
-  real trip/phone observations stay separate.
+- **Daily cinema digest (AC6) — deployed 7 Nov; positive acceptance open.**
+  First natural refresh completed 8 Nov at 08:04 UTC, partial coverage, all nine venue
+  observations successful. The 8 Nov digest evaluated 0 qualifying appearances; outbox and
+  claims remain 0. Empty-day silence is proved, not positive transport. Wait for a genuine
+  qualifying scheduled message, never a test refresh/send. Receipt and the tap into New
+  this week remain yours. AC3's post-8-Nov classification read-back is now complete:
+  eight future Rocky reruns. AC5's first real trip stays separate.
 
 - **Cinema trips (AC5, shipped 7 Nov, #346) — on your phone, when there's a film you want to
   see:** At the cinema → the film → **Propose a trip**, pick a time and Mark, **Send
@@ -308,12 +352,14 @@ The documentation handoff is committed locally without another deployment or bat
   equality, all existing paths and authentication/behaviour assertions remain intact.
   The gate/CI/close-out continue under the existing sitting-3 authorisation; no sitting 4.
 
-- **Group AA sitting 1, AA10b:** ~~Press Home → Collection value → Update values once.~~
-  **Done 23 Oct:** Craig's first run checked 748 pairs with 0 failures and left 719 due.
-  The scheduled valuation job next runs 1 Nov at 04:00 UTC, then 2 Nov if needed; no
-  second press is needed. When Home says none are due, send its total and priced/sales-backed
-  disc counts to compare with the measured before total, **£16,867.11**. Sitting 2 remains
-  closed until its own go.
+- **Group AA sitting 1, AA10b — scheduled campaign and read-back complete.**
+  Craig started it 23 Oct; the 1 Nov continuation finished 04:13:58 UTC, 724 calls,
+  635 priced pairs, 89 not priced, 0 failed and 0 remaining. The 8 Nov Home read-back
+  is £14,739.54: 1,309 priced / 162 checked-unpriced / 2 unchecked / 61 sales-backed
+  copies across 1,473 physical copies. The two due pairs were later additions; no second
+  press is needed. Before £16,867.11 covered 1,469 copies, so scope/sales changes qualify
+  the difference. Detailed comparison: `docs/reviews/scheduled-cinema-and-repricing-verification-2026-11-08.md`.
+  AA10c remains from 25 Nov and evidence-gated; this is not a new batch close-out.
 - **Group AA sitting 2, AA1:** Craig’s iPhone launch check is resolved through the approved
   AB4 re-add on 31 Oct: cold launch and normal resume both Home. Mark’s iPhone remains
   unverified; no further removal/re-add of Craig’s app is requested.
@@ -330,49 +376,44 @@ The documentation handoff is committed locally without another deployment or bat
   `~/.mcu-secrets/backup-age-key.txt` (the backup's private key) into your password manager.**
   It is the only key that opens the weekly copies, and it exists only on the Mac. To restore,
   follow `docs/restore-runbook.md`.
-- **X5's live data steps, at your word (14 Oct, #269):** (1) the diary backfill, 651 watches
-  (Craig 493, Mark 158), adding about 490 films with no copies; (2) moving 7 of the 15 watches
-  on a namesake; (3) storing Mark's Letterboxd username, `markr973`. The plans are in
-  `.letterboxd-export/` on the Mac. **Yours whenever:** 105 doubtful diary entries
-  (`craig-doubtful.csv`, `mark-doubtful.csv`) and 8 doubtful moves (`repoint.json`), each saying
-  why. Then each of you presses Sync now once. X6 re-prices every disc as a used copy in the runs of 15 and 16 Oct, so
-  Home has no total, then a partial one, until 16 Oct; **Update values** on Admin's Collection
-  value starts sooner if you want it. The backup
-  now runs on GitHub Actions too, so the one look at GitHub's plan you left for now matters
-  more (CI uses about 3,000 minutes a month). You left the other owner steps for now (12 Oct).
-- **15 Oct, Mark's TV series (Y3, item 31):** one sitting at the Mac, about 15 minutes: the
-  series pass (dry run, read its report, apply), then the read-only check for series matched as
-  films; send Mark what is left.
-- **16 Oct, X9's re-check (item 32):** ~~the dry run and the apply~~ **done 16 Oct: 384
-  doubts wait on Identify films, "In doubt".** The taps are yours and, since Y4 (#276),
-  Mark's, from the Archive's "In doubt" filter: keep, pick the right film, or move one copy.
-  **Tell Mark** the filter is there. About 370 are probably right (one "It's right" each); 10 are the review's
-  known wrong copies. Also bin the old copy of King Kong [1976] and of Ghostbusters 2, which
-  Mark re-added on the right films.
+- **X5's live data steps still need a current proposal and Craig's word (#269).**
+  Read back 8 Nov: Mark's username null/no sync; Craig's cron healthy. Of 651 saved
+  non-doubtful viewing IDs, 13 are now present and 638 absent; all seven saved corrections
+  still point to old films. The saved 105 doubtful entries include three IDs now recorded,
+  so deduplicate/revalidate before any renewed review/apply. No old plan or historical count
+  authorises a live write. Plans remain in `.letterboxd-export/`. The feed holds only 50
+  entries; current live feed contents were not fetched. AA10b needs no extra price run.
+- **TV-series work:** the series pass was applied 15 Oct; the three Y5 series-copy moves
+  were applied 17 Oct and their exact copies still occupy the target series. Shetland
+  Series 5 remains unmatched beside the existing Shetland TV identity; its duplicate
+  handling remains your decision. Do not repeat the completed pass or three moves.
+- **X9 catalogue judgement:** the old 384-doubt count is historical. Read back 8 Nov:
+  one visible doubt remains, Titanic (1953) versus the disc page's 1997 evidence. Inspect
+  the actual disc before deciding. Shetland Series 5 is the one unmatched owned title;
+  do not infer that hundreds of old review entries still need taps.
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub
   token. ~~18 eBay sign-in settings and an encryption key~~ **done 3 Oct**, so T8b is
   unblocked.
-- **A phone session (about 15 minutes):** 16b Mark turns notifications on, then a movie night
-  on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
-  Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?"; and
-  (Batch X3, 12 Oct) open the app on each phone and check Settings says "Notifications are on
-  for this device", which the app now mends by itself after a refusal; and (Batch X8, 13 Oct)
-  open a film, then switch on flight mode and open it again: it should open from the phone,
-  which it never did before X8. Then ask the assistant a question and a follow-up (2).
-- **The two queues, whenever:** 166 films on You → Identify films (from 21), then 385 discs on
-  You → Disc specs (20).
+- **Phone observations still recorded as open:** actual barcode scans, dictation, offline
+  film reload, Mark's launch, genuine cinema/loan/addition pushes, and the match update
+  on the other person's already-open iPhone page. Craig's launch/header/Search acceptance
+  is complete. Do not repeat the old Mark re-enable instruction or ask Craig to Sync now
+  merely to prove his already-successful weekly cron. Live assistant/account checks remain
+  normal-use observations, not authority for agent calls or fabricated pushes.
+- **The current queues, read back 8 Nov:** one unmatched title and one visible doubt on
+  You → Identify films; 419 choices on You → Disc specs. Historical counts are not current.
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
   numbers, then **Save deals**.
 - **Group U** (`docs/phase-batches.md`): **20b is done.** Its first half (1 Oct, `548160f`) stopped
   refusals switching shops off; its second half (2 Oct, `abc17d6`) waits the minute a shop asks
   before retrying. **3 Oct: the wait got 2 of 27 refused requests through**, no better than two
   seconds. ~~28, a fixed outbound address~~ **left for now at your word (4 Oct)**, and 22c is
-  parked with it. 21 starts once 3 wants have prices from two shops on two days (2 of 3 on
-  4 Oct): optionally, add a want that both Zavvi and Arrow sell. **T8b
-  is live (4 Oct, `2995b26`): yours is 29, Connect eBay on your own account first, then
-  Mark's**; 38 comes last.
+  parked with it. **8 Nov:** 21 now has three numerical qualifiers; review Dead Man's
+  Shoes' identity/history association before building. No extra want is requested from the
+  obsolete two-of-three forecast. **T8b is live** (4 Oct, `2995b26`); account observations
+  remain item 29. Batch 38 was built 19 Oct, not a future queue item.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): V1, V3, V4, V5, V6 and V8 are
   live and V7 is shelved. **V9 is live (3 Oct, `d1c3bf7`):** Wanted items and film pages show
   "Reviews: Blu-ray.com · AVForums" as links, with Blu-ray.com's scores once read, and Home
@@ -383,9 +424,9 @@ The documentation handoff is committed locally without another deployment or bat
 - **Group W** (`docs/phase-batches.md`, your 5 Oct snags): **W1, W2 and W3 are live (5 Oct).**
   **30:** W1 Search keyboard/top bar confirmed on Craig’s production iPhone through AB4
   on 31 Oct. A real W3 scan on Loans’ **Lend or borrow** remains open.
-- **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
-  waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
-  discs left for about £1.30 (item 20).
+- **Disc specs, 8 Nov:** 419 choices wait for the owner; 0 are not searched and 0 accepted
+  pages await fetching. The old September credit/335-disc cost forecast is historical;
+  no new spending is requested from it. Live provider balance was not queried.
 - **Optional:** AVForums links for owned films too: one Brave search per owned film, about
   1,450 once, roughly £5–6 beyond the free credit (V9, `DECISIONS.md` #241). Say if you want it.
 - **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
@@ -872,41 +913,23 @@ up.
 be **exported explicitly**, as the commands above do. `set -a; source …` truncates it at the
 `&` and the script then fails against `localhost` (`DECISIONS.md` #191).*
 
-### 1j. Press "Sync now" once *(new — Batch S5, 2026-09-15)*
+### 1j. Watch history — Craig's weekly sync runs; Mark's setup remains open
 
-**12 Oct (wave 1 review):** Craig's first sync ran on 11 Oct (50 read, 4 written, all right).
-Mark's username is not stored, and the app lets only him set it; Craig gave it again on 12 Oct
-and X5 stores it at his word. **Mark's Sync now waits for X5** (by 31 Oct), whose year rule
-stops a namesake attaching; his feed stops reaching back past 15 Sep around 10–19 Nov. The cron
-this item calls impossible is X5's weekly sync.
+**Read back 8 Nov:** Craig's stored username is `CraigR973`; his 8 Nov cron completed,
+50 read / 50 already imported / 0 written / no error. Weekly runs also exist on 18 Oct,
+25 Oct and 1 Nov. No extra manual sync is required to prove that cron works.
 
-**One button press, and it is the first time this app has ever talked to Letterboxd.**
-Everything up to it is tested against fixtures and ran unattended; the live fetch did not,
-because `docs/agent-commands/group-start.md` keeps live third-party requests out of
-unattended runs.
+Mark's username is **null** and he has **no sync record**. The known intended username
+`markr973` is not evidence that it was saved. His setup remains an owner data checkpoint.
+Do not write that row or trigger Sync now from this record-reconciliation authority.
 
-- [ ] **Settings → Watch history → Sync now.** Both usernames are already known —
-      `CraigR973` and `markr973` — and both diaries are public. Each of you syncs your own.
+The current X5 proposal must distinguish username setup, historical backfill and the seven
+watch corrections. The saved non-doubtful plans have 638 absent viewing IDs today; revalidate
+identity/duplicates and present exact counts before any apply. The RSS feed holds only
+50 entries; current feed contents were not fetched and no missing span is guessed.
 
-**What to expect.** It reads the 50 most recent viewings and writes the ones it can match.
-If you have already run the S8 import (item **1i**), almost all 50 will come back as
-*already logged* — that is the sync working, not failing.
-
-**What it also settles.** The parser was built from element names measured on 2026-09-14
-across 100 entries, but the exact XML — namespace URIs, nesting — was never captured, so
-the parser deliberately ignores prefixes and falls back to RSS's own `<title>`. **If the
-counts look right, the shape was right.** If the run reports 0 entries read from a feed
-that plainly has entries in it, that is the thing to report back.
-
-**Then keep the habit: at least monthly.** The feed holds **50 entries and no more**.
-Craig's reaches back to January; **Mark's only about eight weeks**, because he watches far
-more. A longer gap loses viewings *silently* — the feed simply stops mentioning them and
-nothing errors. The panel says when it last ran for exactly this reason, and warns when a
-feed comes back full.
-
-*A cron would be better and is not possible yet: both Railway crons have been crashing on
-every scheduled fire since 2026-09-10 (item 1). The sync record already carries a `trigger`
-column that accepts `cron`, so wiring one up afterwards needs no migration.*
+The old statements that both usernames were stored and that weekly cron was impossible
+are superseded. Code already schedules weekly sync for people with stored usernames.
 
 ### 1k. ~~Run the guarded spreadsheet refresh~~ — **DONE 2026-09-18**
 
@@ -1327,17 +1350,11 @@ unless his session was already cleared before the fix.
 first push ever (a match) arrived at 17:45 UTC; this morning's reminders reached both phones.
 Close it when you like. X3 stops a dropped phone going unnoticed again.
 
-**First, Mark must turn notifications back on** (Settings → Notifications on his phone).
-His phone's push registration expired, and the push service reported it gone at 08:04 UTC
-on 24 Sep, so the app deleted it. Until he re-enables, nothing reaches his phone.
+**8 Nov reconciliation:** the old September revocation/re-enable instruction is
+superseded by the recorded October receipt above. Do not treat it as a current device
+failure or repeat an accepted push test without fresh evidence. The remaining separate
+Safari observation is below; no fabricated movie night/push is requested by this audit.
 
-`99b04c0` is live. On your iPhone, open a movie night and tap **Send to Mark**. On Mark's
-Android, a notification should arrive, and tapping it should open that night, not the
-front page. Then both of you tap **Add** on the same film: "It's a match" should arrive on
-both phones. This also closes Batch 11's open 6.2 (a push reaching two real devices).
-**Since V3 (30 Sep) a night is one list:** **Add** is on each film's row (no deck, no swiping),
-**Added** takes your vote back, and tapping a film opens its details in the row. This check is
-V3's last criterion too.
 **Added 19 Oct (Batch 38):** while both phones have the night open, watch whether "It's a match"
 appears on the phone that did **not** tap second, without touching it. The end-to-end suite saw
 that live update on Chromium and Firefox but not under Playwright's WebKit, so only an iPhone can
@@ -1716,7 +1733,12 @@ after Craig read the plan and said go; it never merges titles.
    On each unmatched title he chooses under **TV series**; on a film match he presses
    **Correct match** first. Shetland Series 5 needs a separate duplicate decision.
 
-### 32. Re-check the old paths' identifications — X9 *(new 16 Oct; steps 1–2 done 16 Oct, step 3 is yours)*
+### 32. Re-check the old paths' identifications — X9
+
+**8 Nov current read-back:** the original dry run/apply are historical and complete.
+The visible owned-catalogue queue now has **one doubt, Titanic (1953)**, whose stored
+Blu-ray.com page evidence says 1997. Inspect the disc before choosing. Do not repeat the
+old re-check or use the old 384 count as today's workload. The historical record follows.
 
 **Why:** the review found 30 copies confidently the wrong film, matched by the 8 Sep import's
 old engine and the diary import (CT46-01). X9 (`DECISIONS.md` #275) re-asks T9's identifier,
@@ -1752,19 +1774,10 @@ the Mac. Nothing is identified again by it: each disagreement becomes a doubt yo
    Every disagreement by default; `--verdicts different,series` narrows it. Each copy is
    re-checked first; a film you kept before is left alone.~~ **Done 16 Oct at your word, all
    of them: 384 doubts raised, 0 kept before, 0 changed since the dry run.**
-3. **Yours, and Mark's since Y4 (#276): settle them.** Mark finds them with the Archive's
-   Filters → "In doubt", and settles each on the film page (It's right, Correct match, Move
-   only this copy); you see his under Recently identified, with his name, and can undo any.
-   Yours on You → Identify films, "In doubt": **It's right**, **This is it** on the
-   film it is (a merge says so first), or **Move only this copy** where one copy of a film is
-   right and another is not (French Connection II, Life, Tinker Tailor). Each is undone from
-   "Recently identified". The film page says "Identification in doubt" until then. About 370
-   of the 384 are probably right; two are false alarms (Hitchcock, House of the Flying
-   Daggers). **Ghostbusters 2:** Mark added a Ghostbusters II copy, so bin the old copy
-   rather than "This is it", which would leave two. **King Kong [1976]** has no doubt: its
-   old copy (sheet row 878) sits on King Kong (2005) beside the right 2005 copy (row 877),
-   and Mark added a 1976 copy, so bin row 878's. The two 2005 copies look alike; row 878's
-   location reads "Front 1st shelf", row 877's "Front 1st Shelf".
+3. **Current owner decision:** one visible Titanic doubt remains at the 8 Nov read-back.
+   Use Identify films → In doubt or the film's doubt panel, compare with the actual disc,
+   then keep/correct/move only the affected copy as appropriate. This report chooses none.
+   Older named bin/merge instructions are not current authority to alter copies.
 
 Also from X9: a copy's edition the spec job inferred now reads "Probably …" with where it came
 from; **It is this edition** on the copy (either of you) confirms it.
@@ -1790,13 +1803,11 @@ title. Two steps are yours.
 
    Then the same with `--apply`. It writes only empty rows still the film it read, a hundred
    at a time, so it can be stopped and run again. Expect about 224 noir films (measured 16 Oct).
-2. **Yours or Mark's, in the app: move the three series discs.** Each film page's doubt →
-   **Move only this copy** opens already searched on the sheet's title; tap the series:
-   *Life* (2017) → **Life (2009) · TV series**, BBC's (Attenborough), not the 2007 one;
-   *Tinker Tailor Soldier Spy* (2011) → **(1979) · TV series**; *The Name of the Rose* (1986)
-   → **(2019) · TV series**. Each is undone from Identify films → Recently identified. The
-   same moves are on Identify films' doubt cards: search, then **Move only this copy** under
-   the TV series.
+2. **Complete 17 Oct; verified again 8 Nov.** Audit records show the exact copies moved:
+   Tinker Tailor Soldier Spy 2011 → TV 1979 at 10:16:02; Life 2017 → TV 2009 at 10:16:49;
+   The Name of the Rose 1986 → TV 2019 at 10:17:38 UTC. None is undone and all three
+   copies remain owned on those target series. Do not move the remaining legitimate film
+   copies or repeat these actions. Shetland Series 5 remains a separate decision.
 
 Also from Y5: John Krish's *A Day in the Life* (BFI Blu-ray) can now be added: Add → Search
 title → "Add … by its title". It is filed as not a film, so it stays off "Still to identify".

@@ -1098,6 +1098,16 @@ ledger exists to stop; the model each batch actually needs is in the table above
 criterion, that is recorded *underneath* the quote, never folded into it.
 
 ### Batch 21 — Price history charts 🟢
+**8 Nov reconciliation:** 46 finished real cron days, 0 top-level run errors. Three active
+wanted IDs now have two shops on two scheduled days or more: Castle Freak (101 Films 28,
+Zavvi 19), Dog Soldiers (Second Sight 20, Zavvi 12), Dead Man's Shoes (Second Sight 24,
+Zavvi 19). The old two-want numeric blocker is superseded. **Identity still blocks a
+trustworthy third film:** Dead Man's Shoes remains the 1940 row/TMDB 416920 against the
+review's documented 2004 shop-price association. Review that identity/history scope before
+building. Zavvi's latest retained points are 12 Oct; do not label historical quotes fresh.
+No identity write, provider read or chart implementation ran. Current report:
+`docs/reviews/outstanding-work-reconciled-2026-11-08.md`. Older observations below are dated history.
+
 **Wave 1 review, 12 Oct:** still two wants qualify (Castle Freak; Dead Man's Shoes), and Dog
 Soldiers stays one Second Sight day short while the Shopify shops refuse. **Dead Man's Shoes'
 want sits on the 1940 film while its shop prices are the 2004 film's** (R4, R5): settle it with
@@ -3461,6 +3471,12 @@ snapshot for now on 12 Oct, which is why X4 precedes X5.
 - Tests for any code (the manifest comparison). Gate green.
 
 ### ~~X5 — Watch history: films not owned, the backfill, the year rule~~ 🔴 **shipped 2026-10-14 (`19c9aad`, [#69](https://github.com/CraigR973/mcu-app/pull/69)); its live data steps wait for Craig's word**
+**8 Nov live reconciliation:** Mark's username is null/no sync; Craig's weekly cron is
+healthy. Saved non-doubtful plan IDs: Craig 480 absent/13 present, Mark 158 absent/0 present;
+638 absent total, not an approved write count. All seven proposed watch corrections still
+occupy their old movies. Revalidate current duplicates/targets and present exact source/write
+scope before Craig's decision. The old 651/105/7/8 plan counts below remain historical.
+
 **Acceptance: met in code, in CI and on production's read-only role; three live data steps are
 Craig's** (`OWNER-ACTIONS.md`). The feed attaches by TMDB id only and a film not in the
 catalogue gets a row with no copies, kept out of Home's counts, the movie night deck and the
@@ -4511,10 +4527,10 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | ~~AA6~~ | ~~21: feeling lucky, alone on Home and in a night~~ — **shipped 25 Oct `54dbc07`** ([PR #110](https://github.com/CraigR973/mcu-app/pull/110)) | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | ~~AA7~~ | ~~4: profile pictures~~ — **shipped 26 Oct `e6e5e16`** ([PR #111](https://github.com/CraigR973/mcu-app/pull/111)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA8~~ | ~~1: the artwork in the app~~ — **shipped 23 Oct `6b039bf`** ([PR #104](https://github.com/CraigR973/mcu-app/pull/104)) | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
-| AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| ~~AA9~~ | ~~22: the assistant page, reviewed then rebuilt~~ — **shipped 28 Oct `aecdf8d`, PR #116**; historical summary reconciled 8 Nov | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA10~~ | 23, 24: what a disc really sells for, a design note — **written 21 Oct (`8a33c19`)** | 🔴 | — done | — done |
 | ~~AA10a~~ | ~~23, 24: record used listings and their sales, value on sales~~ — **shipped 22 Oct `eb315c2`** ([PR #100](https://github.com/CraigR973/mcu-app/pull/100)); Craig's first live pass read back: 598 searches, 6,179 active listings, 0 sold yet, 1,399 pairs still due under the daily cap | 🔴 | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High |
-| AA10b | 23, 24: deals and values on the used stand-in figure — **code live 23 Oct `deccd87`** ([PR #101](https://github.com/CraigR973/mcu-app/pull/101)); Craig started the one-time re-price 23 Oct: 748 pairs checked, 0 failed, 719 due. Final Home after total remains the checkpoint after the 1–2 Nov scheduled runs | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA10b | 23, 24: deals and values on the used stand-in — **code live 23 Oct `deccd87`; campaign/read-back verified 8 Nov**. The 1 Nov job finished 0 failed/0 remaining. Home £14,739.54, 1,309 priced/162 checked-unpriced/2 unchecked/61 sales-backed over 1,473 physical copies; two later additions due. Before £16,867.11 was 1,469 copies, scope-qualified; no extra owner press. No new close-out or AA10c. | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA10c | 23: the stand-in settled from recorded sales | 🟢 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA11~~ | ~~25: lend and borrow as it happens — asked for, out, back, shelved~~ — **shipped 26 Oct `b1075ec`; closed out 27 Oct; navigation repairs `30f3607`, `0b4a416`** ([PR #112](https://github.com/CraigR973/mcu-app/pull/112), [PR #114](https://github.com/CraigR973/mcu-app/pull/114)) | **shipped** | ~~Opus 5 · `high`~~ | ~~GPT-5.6 Sol · High~~ |
 
@@ -4717,6 +4733,14 @@ and production checkpoints stay explicit, AB7/AA10c/other sittings unstarted.
   live pass is read back after deploy.
 
 ### AA10b — Deals and values on the used figure 🟡
+**8 Nov read-back:** the scheduled campaign finished 1 Nov with 0 failed/0 remaining.
+Home's 8 Nov snapshot is £14,739.54 over 1,473 physical copies (1,309 priced,
+162 checked-unpriced, 2 unchecked, 61 sales-backed). The two due pairs were later additions;
+no extra owner press is needed. Before £16,867.11 covered 1,469 copies, so this is a
+scope-qualified Home comparison, not a pure re-pricing delta. Evidence:
+`docs/reviews/scheduled-cinema-and-repricing-verification-2026-11-08.md`. No new close-out,
+stand-in switch or AA10c work is performed by this documentation reconciliation.
+
 **No hand check (#290).** The stand-in is the lower quartile of current used Buy It Now asks,
 postage in, until AA10c settles it from recorded sales.
 - Every deal, New included, is judged against the disc's figure (sales when AA10a has them, else
@@ -5227,10 +5251,10 @@ local gate, seven-job CI and a production deploy, and four owner stops.
 |---|---|---|---|
 | ~~AC1~~ | ~~"Needs you" on Home for each person (point 2), 🟡~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 4 Nov: PR #130, merge `57afee172aae2b0c62298f37c023c775641406ad`. `GET /api/v1/needs-you` (no migration) and Home's row for everyone; shelf keepers = admins + `MARK_PROFILE_ID`. Local API 2,632 on Postgres, shared 169, web 772, C71/F70+1 local; PR CI 41858935671 all seven, C71/F70+1/W69+2/jobs6. Live read-only check after deploy: Craig sees 2 to give back and 2 to put back, Mark 2 to ask Craig for and the same 2 to put back. Push and phone rendering not observed. |
 | ~~AC2~~ | ~~Home redesign: one ledger, varied modules, sharper banner (points 1, 8), 🟡~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 5 Nov: PR #131, merge `f7968a719b893b403b25aaceeac5f59ddf76a6ca`. Craig's picks A, T1 and Feeling lucky in the featured film (#337); one ledger, one featured film, three rows and a short Closest to complete list, no film twice; banner T1 58 KB WebP kept on the device. Measured at 375 px: banner 2,057,722 → 60,092 B, layout shift Craig 0.234 → 0.000, Mark 0.219 → 0.012. Local API 2,635, shared 170, web 796, C75/F74+1; PR CI 42001355662 all seven. Changed expectations reported in the PR. Phone rendering is Craig's observation. |
-| ~~AC3~~ | ~~Cinema film identities and first run versus rerun (point 6), 🔴~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 6 Nov: PR #132, merge `22cffef1a91d9a342bc62ab9847635730dad8f0a`. #335's identity rule with Craig's famous-classic rule (#339); runs labelled with their reasons; 48 TMDB requests a run; Craig's review list on Identify films. Dry run 5 Nov: 72 of 96 films linked, 7 to review, 1 unlinked, 16 events. First live run 6 Nov: 16 films linked, 246 showings first run, 1 title to review, 65 lookups queued (to about 10 Nov). **Reruns not yet seen live:** Craig closed AC3 on the dry run's 18 (#340); read back after the 8 Nov run. Local API 2,657, shared 175, web 804, C77/F76+1; PR CI 42046772647 all seven; main CI 42082987196. Phone rendering is Craig's observation. |
+| ~~AC3~~ | ~~Cinema film identities and first run versus rerun (point 6), 🔴~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 6 Nov: PR #132, merge `22cffef1a91d9a342bc62ab9847635730dad8f0a`. #335's identity rule with Craig's famous-classic rule (#339); runs labelled with their reasons; 48 TMDB requests a run; Craig's review list on Identify films. Dry run 5 Nov: 72 of 96 films linked, 7 to review, 1 unlinked, 16 events. First live run 6 Nov: 16 films linked, 246 showings first run, 1 title to review, 65 lookups queued (to about 10 Nov). **Owed read-back complete 8 Nov:** eight confirmed future Rocky reruns across four ODEONs, UK release 1977 · rerun. Metadata 29 pending; remaining source identities/review and phone observations stay separate. Craig's #340 close-out is unchanged. Local API 2,657, shared 175, web 804, C77/F76+1; PR CI 42046772647 all seven; main CI 42082987196. Phone rendering is Craig's observation. |
 | ~~AC4~~ | ~~Movie night's At the cinema view and a page per film (point 3), 🟡~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 6 Nov: PR #133, merge `5804a87b029dc75bad8a2ba2bc8e9b59a50acfb3`. The Cinemas page is Movie night's At the cinema view (`/cinemas` redirects): This week and Coming up film first, each film with poster, run badge, cinemas and next showing; listings not yet matched and events as rows; run, day and cinema filters in the address; cinemas listed only to a date named. A page per film (`/movie-night/cinema/<key>`, stable for a listing once linked) lists every showing by day then cinema, each time a chip with its format that checks tickets under AB7's rule. Past screenings fold; Plan a cinema trip sits beside Start a screening; Home's At the cinema is a poster strip. Two read routes with zod, no migration (#341); a listing gathers its own source's rows of one title (#342). Local API 2,666, shared 183, web 828, C82/F81+1, jobs 6; PR CI 42190841726 all seven (C82/F81+1/W80+2/jobs6); main CI 42192850416. Live read-back after deploy: both people get 16 linked films this week, all with posters, 92 listings not yet matched (1 waiting for Craig's check) and 24 events; GFT and Vue list to 7 Nov, the ODEONs to 12 Nov, the rest the fortnight; Clayface's page has 9 showings, all with ticket links. Changed test expectations are listed in the PR. Phone rendering is Craig's observation. |
 | ~~AC5~~ | ~~Cinema trips: invite, reply, suggest another time (point 4), 🔴~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 7 Nov: PR #135, merge `6384c61c4aa0528ca5c7152d8ba55d9ce9699d2e`. Craig's checkpoint answer "Approve all 8" (#345), built as #346: migration 072 (`cinema_trips`, `cinema_trip_invitees`; guarded grants to both roles; the downgrade refuses while a trip exists). Propose from a time on AC4's film page to anyone active; Going, Not going or Another time; the proposer accepts or keeps a suggestion, moves the trip, invites more and cancels, each write against the trip's revision under a row lock. Six pushes under the Movie night switch, deduplicated by revision; the morning-of reminder in the 08:00 UTC pass, `too_late` when quiet hours or digest mode would hold it. Trips on their own page, the film page, Movie night (past folded), Needs you (trip items first) and Home's top slot. Local API 2,702 on Postgres (no skips), shared 200, web 877, C89/F88+1, jobs 7; PR CI 42375136720 and main CI 42376631323, each all seven green (Chromium 89; Firefox 88 + 1 allowed skip; WebKit 87 + 2 allowed skips; jobs 7). Live read-back after deploy: Migration 072; both tables empty; both roles have SELECT; both people have 0 upcoming/past trips, no Needs you trip items and no next trip; 137 confirmed future Wild Horse Nine showings. Two Needs you tests' whole-answer expectations gained the two new empty fields (reported in the PR). Phone rendering and push receipt are Craig's observation; the first real trip is his to propose. |
-| AC6 | Daily digest of new cinema films (point 7), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | **deployed 7 Nov; acceptance open**, PR #136, `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be` (#348, #349). All eight checkpoint recommendations/model substitution approved. Full local/seven-job PR gates and live 073/both-role grants/defaults/silent baseline pass. The final documentation CI click race was separately approved/repaired in PR #137 (#350), merge `7c536d9c99ebd0102a875f099e4bbc29bbbefc06`: local API2741/shared200/web891/C94/F93+1/jobs8 and exact PR CI42400083769 all seven (C94/F93+1/W92+2/jobs8); API/web/full readiness match 18:43 UTC. Final main/handoff CI/parity stamp in PR #137. **Unstruck:** first naturally scheduled qualifying digest/outbox/claim and phone receipt/tap pending; no manual production refresh/digest/trip/feed action. Full evidence/failures in the AC6 implementation and calendar-repair reports. |
+| AC6 | Daily digest of new cinema films (point 7), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | **deployed 7 Nov; acceptance open**, PR #136, `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be` (#348, #349). All eight checkpoint recommendations/model substitution approved. Full local/seven-job PR gates and live 073/both-role grants/defaults/silent baseline pass. The final documentation CI click race was separately approved/repaired in PR #137 (#350), merge `7c536d9c99ebd0102a875f099e4bbc29bbbefc06`: local API2741/shared200/web891/C94/F93+1/jobs8 and exact PR CI42400083769 all seven (C94/F93+1/W92+2/jobs8); API/web/full readiness match 18:43 UTC. Final main/handoff CI/parity stamp in PR #137. **Unstruck:** first naturally scheduled qualifying digest/outbox/claim and phone receipt/tap pending; no manual production refresh/digest/trip/feed action. Full evidence/failures in the AC6 implementation and calendar-repair reports.  **8 Nov:** natural 08:04 run evaluated empty; 0 appearances/outbox/claims. Positive delivery/phone acceptance stays open. Exact current main/API/web `417471a`, code CI42402887825 all seven and full readiness pass. |
 | ~~AC7~~ | ~~Separate disc and cinema release calendars (point 5), 🟢~~ | ~~Sonnet 5.5 `high` / GPT-5.6 Terra High~~ | **shipped** 6 Nov: PR #134, merge `5e570bca16f06f9d1c1044804173aef716842649`. Releases is two calendars (#343): Disc releases at `/calendar` (Coming to disc, then the month's 4K, Blu-ray and sale dates with All / 4K UHD / Blu-ray / Sale events chips) and Cinema releases at `/calendar/cinema` (the month's UK cinema dates, then Coming soon), the month in the address. A cinema release showing at one of the nine opens its AC4 film page by TMDB id, never a title. The month endpoint's additive `types` filter with zod; feeds per calendar (`calendar=disc|cinema`), the all-types feed unchanged; one press gives all three links on the one token (#344). Refresh from TMDB and Home's Coming to disc unchanged; no migration. Local API 2,675, shared 186, web 843, C86/F85+1, jobs 6; PR CI 42275791028 all seven (C86/F85+1/W84+2/jobs6). Live read-back after deploy: November holds 18 disc dates (6 4K, 9 Blu-ray, 3 sales) and 79 cinema dates; both people get 6 November releases linked to film pages; 87 listings not matched yet, said on the page. No expectation changed; two typed fixtures gained `tmdbId: null`. Phone rendering is Craig's observation. |
 
 *Why those settings.* AC3 is Extra High because it writes identity links and run labels
@@ -5289,6 +5313,14 @@ an onboarding plan defines something better.
   quietly rewritten. Full gate and E2E at 375px and 320px, both themes, both people.
 
 ### AC3 — Cinema films identified, and first runs told from reruns 🔴
+**8 Nov read-back obtained:** eight confirmed future Rocky reruns, TMDB 1366, across
+four ODEONs; stored reason UK release 1977 · rerun. This fulfils the owed positive
+production classification read-back under #340. Morning eligible programme: 1,134 first-run /
+8 rerun / 247 unclassified showings. Metadata reports 29 pending lookups; 27 future
+source-film rows unverified, 9 in review across Ramayana, Tabby McTat and The Devils.
+No mapping repair; phone/filter rendering remains owner observation. Evidence:
+`docs/reviews/scheduled-cinema-follow-up-2026-11-08-1130.md`.
+
 
 - Implements #335's rule, superseding the run rule in #326, #327 and #330.
 - Each programme film is matched to TMDB automatically: by the source's own TMDB or IMDb
@@ -5365,6 +5397,13 @@ an onboarding plan defines something better.
   observation.
 
 ### AC6 — A daily digest of new films at your cinemas 🟡
+**8 Nov read-back:** first natural post-deployment refresh completed 08:04 UTC, partial
+coverage, all nine venue observations successful. The 8 Nov digest evaluated empty;
+appearances/outbox/claims remain 0/0/0 at 11:55 GMT. The separate 7 Nov missed-day marker
+is not a second successful current-day evaluation. Keep AC6 unstruck: positive qualifying
+scheduled delivery and Craig's phone receipt/tap remain unverified. No test send or refresh.
+Current evidence: `docs/reviews/scheduled-cinema-follow-up-2026-11-08-1130.md`.
+
 
 **Deployment, 7 Nov:** PR #136, `46aaba5`; #348 approves all eight recommendations.
 Code/local/PR CI and production migration/grant/baseline evidence pass. **Acceptance remains
@@ -5440,17 +5479,18 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → ~~20b~~ (first half `548160f`, 1 Oct; second half `abc17d6`, 2 Oct, read back 3 Oct) → 22c (parked 4 Oct with `OWNER-ACTIONS.md` 28, #247) → 21 (go given 28 Sep; from 2 Oct at the earliest) → ~~T8b~~ (`2995b26`, 4 Oct) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 | **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
-| — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
+| — | ~~V9~~ · shipped 3 Oct (`d1c3bf7`, PR #30) | top tier · max | top tier · Max | Complete as recorded in the detailed V9 entry. AVForums remains links-only; no new source or score work. |
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 | **X · 1** | ~~X1~~ (`7979e19`) → ~~X2~~ (`857ee8f`) → ~~X3~~ (`adcae0d`) — **done 12 Oct** | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
 | **X · 2** | ~~X7~~ (`aa6946d`) → ~~X8~~ (`e991281`) — **done 13 Oct** | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
 | **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → ~~X6~~ (`51c81ff`, 14 Oct) → ~~checkpoint: his credential steps~~ (storage decided, #257; done by a session at his word, 14 Oct, #268) → ~~X4~~ (`87a734b`, 14 Oct) → ~~X5~~ (`19c9aad`, 14 Oct) | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
-| **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
-| **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
-| **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → ~~AA9~~ (`aecdf8d`) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 5 complete, 28 Oct: AA3 PR #115 (`1c73d90`) and AA9 PR #116 (`aecdf8d`), each with its own review stop, owner picks, build plan and full close-out. Final PR/merge seven-job CI and exact production API/web SHA/full readiness passed. AA9's complete repair record is in its verification report; real-phone/live-AI observations remain open. No sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **X · 4** | ~~X9~~ → ~~X10~~ — shipped 16–18 Oct | top tier · xhigh | top tier · Extra High | Detailed batch records are authoritative; 8 Nov reconciliation: one visible owned-catalogue doubt remains, not an unstarted implementation sitting. |
+| **X · 5** | ~~X11~~ → ~~X12~~ — shipped 18 Oct | mid tier · high | mid tier · High | Complete under #281–284; Batch 38 built 19 Oct (#285). No new implementation sitting. |
+| **Z** | ~~Z1~~ — built 20 Oct (#287) | top tier · high | top tier · High | Four E2E findings were built 20 Oct; the former not-started summary is superseded by its detailed row. No new implementation. |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; campaign/read-back verified 8 Nov) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → ~~AA9~~ (`aecdf8d`) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **by sitting** (Group AA's table) | **Sitting 5 complete, 28 Oct: AA3 PR #115 (`1c73d90`) and AA9 PR #116 (`aecdf8d`), each with its own review stop, owner picks, build plan and full close-out. Final PR/merge seven-job CI and exact production API/web SHA/full readiness passed. AA9's complete repair record is in its verification report; real-phone/live-AI observations remain open. No sitting 6.** AA10b campaign finished 1 Nov, 0 failed/0 remaining; 8 Nov Home read-back £14,739.54 over 1,473 physical copies, 1,309 priced/162 checked-unpriced/2 unchecked/61 sales-backed. Two post-completion additions are due; no extra press. Before £16,867.11 was 1,469 copies, so retain the scope caveat. No new batch close-out; AA10c stays from 25 Nov and evidence-gated. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 | **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: ~~AB3~~ (`5cfa467`) · 3: ~~AB4~~ (`df6824a`) · 4: ~~AB5~~ (`b9f7dd7`, report) · 5: ~~AB6~~ (`72ff0bd`) → ~~AB7~~ (`190906ac`) | By sitting: Group AB table | By sitting: Group AB table | **All five sittings complete; sitting5 complete4Nov under327/330/334.** Sittings1–4 retain AB1/ad2c992, AB2/c187ed7 and separate seeding repair PR120/bf0eb36; AB3/5cfa467 with genuine push receipt still owner acceptance; AB4/df6824a with native production iPhone/header/Search/themes/keyboard and approved cold-launch/re-add accepted; AB5 report PR123/b9f7dd7 accepted313 with feasibility then unproved. Standing334 covers separate prerequisite repairs PR126/127, accepted public-page-first amendment and real all-nine source gates. AB6 PR125/72ff0bd/final354f34c: exact all7 gates/deploy, fresh63GET/all200/1838-row source artifact/three corroborated mappings/import/enable9/roles/core counts/both-profile reads; failed prefixes not spliced. AB7 PR128/bf70319 plus same-branch observed-format fix67d22ec and causal Home readiness190906ac: all ten local/exact manual41753476409 all7/C70/F69+1/W68+2/jobs6/all18 cinema cases, actual both-profile/theme/16-filter production reads and exact API/web/full readiness. Current4–17Nov1,617 future showings/141 groups, New0/Older0/all Unclassified, partial horizons/unknown identity/year/source age explicit. Source fees0/resources unpriced; next scheduled/future access unproved. No new PR, source pass, destructive catalogue/diary write, unrelated hosting change, AA10c or other sitting. Exact final main stamp in PR128. |
-| **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Drafted 4 Nov at Craig's word (#335); all four sittings authorised 4 Nov, in order.** The 4 Nov snags: Home's "Needs you" and redesign, cinema identities and first run versus rerun, Movie night's At the cinema view, cinema trips, the new-film digest and separate calendars. Sittings 1 and 2 are independent; 3 needs 2; 4 needs 3 |
+| **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6 natural evaluation is empty, so positive scheduled delivery/phone acceptance stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
+| **AE** | 1: AE1 → AE2 → AE3 · 2: AE4 → AE5 → AE6 · 3: AE7 · 4: AE8 → AE9 · 5: **checkpoint: Craig's picks from AE10's sketch** → AE10 | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov.** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -5516,3 +5556,268 @@ Acceptance criteria:
 5. Overflow exposes every task; normal loan/trip behaviour remains intact.
 6. Assignment is idempotent, answers are revision-guarded and audited, and review history is preserved.
 7. Migration/grants, full local gate and role-aware browser flows pass; unrun CI/deploy/phone gates stay explicit.
+
+## Group AE — Craig's 8 Nov feedback, drafted 9 Nov
+
+**Drafted 9 Nov from Craig's 18 points and his six answers (#355). Craig gave the go at
+about 21:00 GMT on 9 Nov ("yes codex is done").** The points and their reconciliation against the code are in
+`docs/reviews/feedback-reconciliation-2026-11-08.md`. Ten batches in five sittings: one branch
+and PR per batch with normal verification and automatic close-out (#24), clean `main` between
+batches, sequential, no stacked branches. Point 11 (pricing accuracy) needs no new batch: AA10c
+from 25 Nov answers it. Asking Mark about three copies is Craig's (`OWNER-ACTIONS.md`).
+
+**Before sitting 1 the checkout must be clean** (close-out conditions 3 and 4). At 19:30 GMT on
+9 Nov it held the 8 Nov reconciliation's uncommitted record corrections (`STATUS.md`,
+`OWNER-ACTIONS.md`, this file), five untracked 8 Nov reports, a local docs commit not yet
+pushed (`b92d710`, Mark's username save) and this plan with #355. Once Craig confirmed Codex
+had finished, one docs-only commit settled them, pushed with `b92d710` before sitting 1, and
+two stray blank lines were dropped.
+
+Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra. The strictest
+batch sets its sitting's effort. Resolve an unavailable model with Craig.
+
+| Sitting | Ordered work and checkpoints | Claude Code / Codex |
+|---|---|---|
+| 1 | AE1 → AE2 → AE3 | Opus 5.5 `high` / GPT-5.6 Sol High |
+| 2 | AE4 → AE5 → AE6; AE4's owed enable and read-back the morning after it deploys | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
+| 3 | AE7 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
+| 4 | AE8 → AE9 | Opus 5.5 `high` / GPT-5.6 Sol High |
+| 5 | **checkpoint: Craig picks from AE10's sketch** → AE10 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
+
+The sittings do not depend on each other, so the order is by value: the copy trap Mark has
+already hit, then Home, cinema, search, people, and movie night last because it waits for
+Craig's picks. AE10's sketch is made at the start of the run, so Craig can answer while
+sittings 1–4 run; only sitting 5 waits. Within a sitting the order is fixed: AE3 follows AE2 on
+the same Home page, AE5's view needs AE4's tenth cinema, and AE9 links the names AE8 labels.
+Cost: ten PRs, each with the full local gate, seven-job CI and a production deploy; one owner
+stop (the movie night picks); one live write (enabling the Omniplex, covered by #355).
+
+| Batch | Scope and size | Claude Code / Codex | Status |
+|---|---|---|---|
+| AE1 | A copy's formats: one box or a separate copy (point 10), 🟢 ~1.5 h | Sonnet 5.5 `high` / GPT-5.6 Terra High | drafted |
+| AE2 | Home: the rewatch card, the estimate note, Highlights opens on Recently added (points 1, 2, 15, 17), 🟢 ~2.5 h | Sonnet 5.5 `high` / GPT-5.6 Terra High | drafted |
+| AE3 | Closest to complete names what is missing; a film can be set not to count (point 3), 🟡 ~3 h | Opus 5.5 `high` / GPT-5.6 Sol High | drafted |
+| AE4 | Cinema sources: TMDB's own budget, three title patterns, the Omniplex (points 7, 18), 🔴 3–5 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | drafted |
+| AE5 | The day-by-day cinema view, All / None, folded sections (points 4, 8, 13), 🟡 ~3 h | Opus 5.5 `high` / GPT-5.6 Sol High | drafted |
+| AE6 | Cinema film page: IMDb and Letterboxd; who has seen it when inviting (points 5, 6), 🟡 ~2.5 h | Opus 5.5 `high` / GPT-5.6 Sol High | drafted |
+| AE7 | Search that finds what you mean (point 12), 🔴 3–4 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | drafted |
+| AE8 | Needs you shared, each item labelled by owner (point 16), 🟡 2–3 h | Opus 5.5 `high` / GPT-5.6 Sol High | drafted |
+| AE9 | A page for each person (point 14), 🟡 3–5 h | Opus 5.5 `high` / GPT-5.6 Sol High | drafted |
+| AE10 | Movie night that reaches a match (point 9), 🔴 sketch ~0.5 h, then 4–8 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | drafted; sketch before build |
+
+**About 28–38 hours of agent work**, plus 30–60 minutes of gate per batch (5–10 hours across
+the ten).
+
+*Why those settings.* AE4 is Extra High: it changes what feeds every morning's identity links and
+AC6's pushes, and adds a source; a wrong link mislabels showings silently. AE7 is Extra High: it
+adds two database extensions to production through the boot migration and changes the search
+behind every screen. AE10 is Extra High for several people's state on one night and its pushes,
+as AC5 was. AE3 (a new table) and AE8 (who sees what) are Deep High; AE5, AE6 and AE9 are Deep
+for design judgement, the premium bar. AE1 and AE2 alone need only Standard; they run at their
+sitting's setting.
+
+*Choices made while drafting, open to Craig's overrule.*
+
+- Highlights opens on Recently added on every visit; the last tab picked is not remembered, so
+  new additions are always the first thing seen. Order: Recently added, Most valuable, Most
+  rewatched, Best discs.
+- Closest to complete gets the report's options a and b (name the missing films with a Want
+  button; a per-film "Doesn't count"), not franchise sets or ordering by recent change.
+- "Doesn't count" can be set by either person and undone, and is per set, so the film still
+  counts in other sets.
+- TMDB gets its own cap of 120 requests a run, separate from the unchanged 120-request ceiling on
+  cinema sites, rather than one larger shared ceiling.
+- The date strip opens on Today and keeps the existing all-days view as its last option. Times
+  already past today are hidden.
+- A combo pack stays one copy. "Separate copy" opens Add a copy with the new format chosen and
+  leaves the existing copy alone. A new copy has no default format.
+- Needs you's shared list is for the people who keep the shelves (Craig and Mark); a later
+  onboarded profile still sees only their own.
+- The person page shows photo, films watched this year and in total, the last ten diary entries
+  with ratings, copies they added recently, their wants and their loans. Your own name opens You.
+- Search aliases are a short fixed list in code, reviewed in the PR.
+
+### AE1 — A copy's formats: one box or a separate copy 🟢
+
+- Ticking a second disc format on an existing copy asks "One box with both discs, or a separate
+  copy?" before saving. One box saves the combo as today. Separate copy leaves the existing copy
+  unchanged and opens Add a copy for the same film with the new format chosen.
+- A new copy starts with no format; saving without one says to choose a format. No silent
+  Blu-ray.
+- Digital formats are not disc formats and do not trigger the question.
+- The duplicate prompt ("This is an upgrade" / "Add another copy") keeps its meaning; its words
+  say "separate copy" where that is what they mean.
+- No migration and no change to stored copies. King Arthur: Legend of the Sword and Silent
+  Running stay as they are until Mark answers (`OWNER-ACTIONS.md`).
+- Regress: the combo save, the separate-copy path, a required format on add, the offline queue,
+  375 px in both themes; E2E covers the separate-copy path.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AE2 — Home: the rewatch card, the estimate note, Highlights opens on Recently added 🟢
+
+- **Worth a rewatch (point 1):** poster and title side by side at the top; "Open the film",
+  "Deal another" and, when shown, "Start again" on one row across the full card beneath,
+  unwrapped at 375 px; "Only films I haven't watched" under the row; no empty band under the
+  poster. Poster and title open the film too.
+- **How this estimate works (point 17):** opens as a full-width panel under both figures, not
+  inside the left half; closed by default as now.
+- **Recently added (points 2 and 15, #355):** the first Highlights tab, newest first, from owned
+  copies added in the app (the spreadsheet's rows carry no added date), each card naming who
+  added it, when and the format ("Mark · 5 Nov · 4K UHD"). A film appears once, at its newest
+  copy; copies in Trash or no longer owned are left out; twelve cards, as the other tabs have.
+  Order: Recently added, Most valuable, Most rewatched, Best discs; it opens on Recently added
+  every visit. With nothing added in the app the tab hides and the next one opens, as today.
+- An additive field on the Highlights read, with its zod schema in `packages/shared` in the same
+  PR; existing fields unchanged.
+- Regress: each tab; loading, empty, offline and failed states; both people; 375 px in both
+  themes.
+- Full gate and E2E; after deploy, a read-only check that Recently added matches the newest owned
+  copies with an added date (60 such copies, 10 Oct–5 Nov, at 8 Nov's count).
+
+### AE3 — Closest to complete names what is missing; a film can be set not to count 🟡
+
+- Each set in Home's Closest to complete names its missing films, up to three, with "+N more"
+  opening the set; each has a Want button using the existing wanted-list path, and a film already
+  wanted reads "Wanted".
+- "Doesn't count" on a missing film, for lost films, TV episodes and alternate versions. Either
+  person can set it, and "Count it again" undoes it. It is per set: the film still counts in
+  other sets. Each change is audited in `admin_actions`.
+- A set whose only missing films do not count reads complete and leaves the row; the set's own
+  page lists them, struck through.
+- One migration: a small table (set, film, who, when) with a UUID key and UTC timestamps; guarded
+  SELECT grants to `mcu_readonly` and `mcu_backup` in one block; the downgrade refuses while a row
+  exists.
+- The completion read's changes carry their zod schema in the same PR.
+- Regress: setting Eastwood's Piano Blues not to count moves the row on, and undoing it restores
+  the row; both people see the same; offline and failed states; 375 px in both themes.
+- Full gate and E2E; after deploy, the table exists and is empty, both roles can read it, and the
+  row names Eastwood's, Kubrick's and Hitchcock's missing films as live data has them. The agent
+  sets nothing not to count in production.
+
+### AE4 — Cinema sources: TMDB's own budget, three title patterns, the Omniplex 🔴
+
+- **Budget (#355, changing AC3's 48 in #335):** TMDB lookups get their own cap of 120 requests a
+  run, separate from the unchanged 120-request ceiling on cinema-site reads, which the programme
+  still spends first. The run report records both counts. The caches are unchanged (30 days for a
+  film found, 7 for one not found), and the run's deadline still stops it.
+- **Title cleaner:** "Access Film Club: The Grand Budapest Hotel" links to the film as a special
+  screening; "Arthur Christmas (15th Anniversary)." loses its trailing full stop before the
+  suffix rule, so it reads as an anniversary showing; "CBeebies Panto 2026: Treasure Island" is
+  an event and never links to a film. A regression test per real title; no other identity rule
+  changes (#335, #339).
+- **The Omniplex, Renfrew Street (#355):** a tenth venue, read from its CinemaTimes page as the
+  four ODEONs are. The reader accepts Omniplex's booking host and showtime ids alongside ODEON's
+  and still rejects any other host. The web app's booking allow-list and short names include it,
+  and the "all nine" wording counts the venues instead. The end-to-end suite's fake listings gain
+  an Omniplex page. One more page read a morning, inside the unchanged ceiling.
+- **Enabling stays guarded:** the existing enable step needs fresh accepted coverage, so the
+  Omniplex shows only after a natural morning run has read it. The morning after deploy: a
+  read-only check of its coverage, then the existing enable command for exactly one venue,
+  audited, then a read-back. #355 is the word for this one write; no manual refresh.
+- Regress: CinemaTimes fixtures for ODEON and Omniplex; a foreign booking host rejected; the three
+  titles; the TMDB cap independent of the programme's count; the run report's two counts.
+- Full gate and E2E; after deploy, health and readiness. **Owed the next morning, without holding
+  the sitting:** the Omniplex's coverage accepted and the venue enabled; its showings in both
+  people's cinema filter; the lookup queue at or near zero; both counts within their caps; the
+  nine unchanged.
+
+### AE5 — The day-by-day cinema view, All / None, folded sections 🟡
+
+- **Day by day (point 4):** a date strip is the top control of Movie night's At the cinema view,
+  sticky while scrolling. Today is selected on arrival; the strip runs as far as any cinema
+  lists, a day with nothing showing greyed out, and the existing all-days view stays as its last
+  option. The day is kept in the address, as the other filters are.
+- With a day picked, each film lists that day's times grouped by cinema, each time a chip with its
+  format that opens the booking page under AB7's rule. Times already past today are hidden; when
+  none are left today, the view says so and offers tomorrow.
+- The run and cinema filters stay, under the strip.
+- **All / None (point 8):** at the top of the Cinemas list; with none ticked, the existing "Select
+  at least one cinema" shows.
+- **Folded sections (point 13):** "Not matched to a film yet · N" and "Events and double bills · N"
+  are closed by default, with the count in the heading.
+- No new request: every showing is already in what the view loads.
+- Regress: switching days; an empty day; a cinema listing only to an earlier date; past times
+  today; ten cinemas; 375 px in both themes. E2E updated for Today as the default.
+- Full gate and E2E; after deploy, a read-only check of today's times for both people against the
+  stored showings.
+
+### AE6 — Cinema film page: IMDb and Letterboxd; who has seen it when inviting 🟡
+
+- **Links (point 5):** a matched film's cinema page links to IMDb (when its IMDb id is known) and
+  to Letterboxd (`letterboxd.com/tmdb/<id>`), opening outside the app; an unmatched listing gets
+  a Letterboxd search link only. The film-facts read gains an additive `imdbId`, with zod, in the
+  same PR.
+- **Who has seen it (point 6):** "Who to invite" in Propose a trip shows beside each person
+  "Seen · 12 Mar 2024" (their latest watch) or "Not seen", from their watch history, for a matched
+  film; an unmatched listing shows neither. The same rule as movie night's "who else has seen
+  it" (S7), so nothing new is exposed.
+- Regress: matched and unmatched; several watches show the latest; a person with none; 375 px in
+  both themes.
+- Full gate and E2E; after deploy, a read-only check of both people's seen dates against their
+  watch rows for three matched films. Mark's diary is current only from his first sync (#354;
+  first eligible 10 Nov, 08:00 UTC).
+
+### AE7 — Search that finds what you mean 🔴
+
+- One migration (#355): Postgres's `pg_trgm` and `unaccent` extensions, an immutable
+  accent-folding function, and trigram indexes for titles and people's names; a downgrade that
+  removes what it added. The app's Neon role can create both: a read-only check on 9 Nov found it
+  a member of `neon_superuser`, with both extensions available and neither installed.
+- Title matches rank first (exact, then starts-with, then close), then the existing full-text
+  matches on cast, crew, genre and plot.
+- These searches, each failing on 8 Nov, find the right films first: "godf", "godfathr",
+  "jurasic", "hitchcok", "spiderman", "leon" (Léon) and "lotr"; and "bond" lists the Bond films
+  before Joan of Arc.
+- Aliases are a short fixed list in code (LOTR, T2, MI and the like), reviewed in the PR.
+- Every existing search keeps working: filters, paging, the search page and the top bar's search.
+  The response shape is unchanged, or additive with zod.
+- `docs/restore-runbook.md` names the two extensions. There is no new table, so the backup's
+  grants are unchanged.
+- Regress: the examples above as tests on real Postgres; accents and hyphens; an empty and a
+  one-letter query; ranking ties.
+- Full gate and E2E (the boot job proves the migration on CI's Postgres); after deploy, both
+  extensions installed on production and an `EXPLAIN` through the read-only role showing the
+  indexes used.
+
+### AE8 — Needs you shared, each item labelled by owner 🟡
+
+- **#355 supersedes the private visibility in #351 and AC1's per-person list (#336) for the
+  people who keep the shelves.** Craig and Mark each see every item for both, their own first,
+  each labelled "You" or with the other's name. A later onboarded profile still sees only their
+  own.
+- An item offers its action only to whoever can act now: loan jobs to both shelf keepers, as
+  today; a trip reply only to its invitee; an assigned review's answer only to its assignee
+  (#351's answer rules unchanged). Another person's item opens its page to read.
+- Home keeps its five-item limit; the overflow lists every item for both, labelled.
+- Pushes are unchanged: nobody is pushed about another person's item.
+- An additive owner field per item (id and name), with zod; existing clients keep working.
+- Regress: each item type for Craig, Mark and a third active profile; AD1's forged cross-profile
+  write tests still refuse; empty, offline and failed states; 375 px in both themes.
+- Full gate and E2E; after deploy, a read-only check that both readers get the same labelled
+  list, matching the loan, trip and review rows.
+
+### AE9 — A page for each person 🟡
+
+- A page per active person: photo and name; films watched this year and in total; the last ten
+  diary entries with ratings; copies they added recently; their wants; their loans. Read-only.
+  Your own name opens You.
+- Names and avatars link to it: Needs you's labels, movie night, trips and Most rewatched.
+- Never shown: PINs, sessions, notification settings, connected accounts or anything else from
+  Settings.
+- One new read with its zod schema; no migration.
+- Regress: your own page and another's; a person with no diary; an inactive profile not found;
+  375 px in both themes.
+- Full gate and E2E; after deploy, a read-only check of both pages' counts against live data.
+  Mark's diary is current from his first sync (#354).
+
+### AE10 — Movie night that reaches a match 🔴
+
+- **Checkpoint before build:** a 375 px sketch in both themes, with real data, of the report's
+  five proposals (invite when starting; a shorter shortlist with filters that matter on the
+  night; the other person's progress without their picks; at the match, where the disc is and
+  "Log it for both of you"; closing nights nobody touched), with a recommendation. Made at the
+  start of the run; Craig picks; no build before his answer.
+- The acceptance follows his picks and is written into this entry before the build. Fixed
+  whatever he picks: the other person's votes stay hidden until a match (#157) unless he chooses
+  otherwise; no push is sent twice; a closed night keeps its history.
+- Size 4–8 h, by the picks.
