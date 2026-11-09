@@ -52,6 +52,7 @@ const MovieNightPage = lazy(() => import('./pages/MovieNightPage'))
 const MovieNightJoinPage = lazy(() =>
   import('./pages/MovieNightPage').then((module) => ({ default: module.MovieNightJoinPage })),
 )
+const AssignedReviewsPage = lazy(() => import('./pages/AssignedReviewsPage'))
 const MovieNightSessionPage = lazy(() => import('./pages/MovieNightSessionPage'))
 
 function AdminPage() {
@@ -278,6 +279,10 @@ export default function App() {
             />
             {/* Loans are readable by both — knowing where a disc went is not an
                 admin question, even though lending one is. §6.5 marks GET /loans "Any". */}
+            <Route
+              path="/needs-you"
+              element={<AppShell><AssignedReviewsPage /></AppShell>}
+            />
             <Route
               path="/loans"
               element={<AppShell><LoansPage /></AppShell>}

@@ -61,7 +61,7 @@ function NextTripCard({ trip }: { trip: NextTrip }) {
   )
 }
 
-interface Row { key: string; title: string; detail: string; to: string; poster: string | null; film: string; loan: boolean }
+interface Row { key: string; title: string; detail: string; to: string; poster: string | null; film: string; loan: boolean; review?: boolean }
 
 /**
  * AC1 (#335): what the person signed in can act on now, at the top of Home, for everyone.
@@ -82,9 +82,10 @@ export function NeedsYouRow() {
   })
   const items = query.data?.items ?? []
   const trips = query.data?.trips ?? []
+  const reviews = query.data?.reviews ?? []
   const screening = query.data?.nextScreening ?? null
   const nextTrip = query.data?.nextTrip ?? null
-  const state = listState(query, items.length === 0 && trips.length === 0 && screening === null && nextTrip === null)
+  const state = listState(query, items.length === 0 && trips.length === 0 && reviews.length === 0 && screening === null && nextTrip === null)
   if (!profile || state === 'loading' || state === 'empty') return null
   if (state === 'offline') {
     return <StatePanel compact tone="offline" title="What needs you is not cached here" description="Reconnect to see which discs are waiting on you." />
@@ -102,14 +103,18 @@ export function NeedsYouRow() {
   const top = tripIsSooner(nextTrip, screening)
     ? <NextTripCard trip={nextTrip} />
     : screening ? <NextScreeningCard screening={screening} /> : null
-  if (items.length === 0 && trips.length === 0) return top
+  if (items.length === 0 && trips.length === 0 && reviews.length === 0) return top
   const rows: Row[] = [
     ...trips.map((trip) => ({ ...tripNeedsYouCopy(trip), key: `${trip.kind}:${trip.tripId}:${trip.fromName ?? ''}`, poster: trip.posterPath, film: trip.filmTitle, loan: false })),
     ...items.map((item) => ({ ...needsYouCopy(item), key: `${item.kind}:${item.loanId}`, poster: item.posterPath, film: item.movieTitle, loan: true })),
+    ...reviews.map((review) => ({ key: `review:${review.id}`, title: review.title,
+      detail: review.status === 'answered' ? 'Answered — awaiting correction' : review.status === 'changed' ? 'The record changed — needs another look' : review.question,
+      to: `/needs-you?review=${review.id}`, poster: null, film: review.title, loan: false, review: true })),
   ]
   const shown = rows.slice(0, SHOWN)
   const loansHidden = items.length - shown.filter((row) => row.loan).length
-  const tripsHidden = trips.length - shown.filter((row) => !row.loan).length
+  const reviewsHidden = reviews.length - shown.filter((row) => row.review).length
+  const tripsHidden = trips.length - shown.filter((row) => !row.loan && !row.review).length
   return (
     <div className="space-y-3">
     <section aria-labelledby="needs-you-heading" className="archive-panel p-4">
@@ -144,6 +149,11 @@ export function NeedsYouRow() {
           </li>
         ))}
       </ul>
+      {reviewsHidden > 0 ? (
+        <Link to="/needs-you" className="mt-2 block text-sm font-medium text-primary underline-offset-2 hover:underline">
+          See all {reviews.length} reviews on Needs you
+        </Link>
+      ) : null}
       {tripsHidden > 0 ? (
         <Link to="/movie-night" className="mt-2 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline">
           See all {trips.length} cinema trips on Movie night

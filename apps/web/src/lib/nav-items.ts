@@ -217,6 +217,7 @@ const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
  * that is where its back arrow goes when there is no history to go back through.
  */
 const OFF_MENU_PAGES: Record<string, { title: string; parent: string }> = {
+  '/needs-you': { title: 'Needs you', parent: '/you' },
   '/ebay': { title: 'Your eBay', parent: '/settings' },
   // Batch W2. Every completion set, behind Home's row of the closest to complete.
   '/insights': { title: 'Completion', parent: '/dashboard' },

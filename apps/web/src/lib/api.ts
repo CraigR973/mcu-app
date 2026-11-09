@@ -1,4 +1,6 @@
 import {
+  assignedReviewSchema, assignedReviewListSchema, reviewProposalListSchema,
+  type AssignedReview, type ReviewAnswer, type ReviewProposal,
   activitySchema,
   cinemaFilmDetailSchema,
   cinemaFilmsResponseSchema,
@@ -2925,4 +2927,18 @@ export async function cancelCinemaTrip(id: string): Promise<CinemaTrip> {
     await send(`/cinema-trips/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
     cinemaTripSchema,
   )
+}
+
+
+export async function fetchAssignedReviews(allAssignees = false): Promise<AssignedReview[]> {
+  return parseResponse(await authFetch(`/needs-you/reviews?allAssignees=${String(allAssignees)}`), assignedReviewListSchema)
+}
+export async function fetchReviewProposals(): Promise<ReviewProposal[]> {
+  return parseResponse(await authFetch('/needs-you/reviews/proposals'), reviewProposalListSchema)
+}
+export async function assignReview(proposal: ReviewProposal): Promise<AssignedReview> {
+  return parseResponse(await authFetch('/needs-you/reviews', { method: 'POST', body: JSON.stringify(proposal) }), assignedReviewSchema)
+}
+export async function answerReview(id: string, revision: number, answer: ReviewAnswer): Promise<AssignedReview> {
+  return parseResponse(await authFetch(`/needs-you/reviews/${id}/answer`, { method: 'POST', body: JSON.stringify({ revision, answer }) }), assignedReviewSchema)
 }

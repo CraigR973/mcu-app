@@ -460,7 +460,13 @@ async def test_nothing_to_do_is_an_empty_row_for_anyone(
     response = await client_as("third").get("/api/v1/needs-you")
     assert response.status_code == 200
     # AC5 added `trips` and `nextTrip` (#345): nothing to do is empty in them too.
-    assert response.json() == {"items": [], "nextScreening": None, "trips": [], "nextTrip": None}
+    assert response.json() == {
+        "items": [],
+        "nextScreening": None,
+        "trips": [],
+        "nextTrip": None,
+        "reviews": [],
+    }
 
 
 async def _night(
@@ -514,4 +520,10 @@ async def test_no_planned_screening_reads_as_null_not_a_guess_ac2(
 ) -> None:
     body = (await client_as("third").get("/api/v1/needs-you")).json()
     # AC5's two additive fields (#345) are empty too: no trip is no guess either.
-    assert body == {"items": [], "nextScreening": None, "trips": [], "nextTrip": None}
+    assert body == {
+        "items": [],
+        "nextScreening": None,
+        "trips": [],
+        "nextTrip": None,
+        "reviews": [],
+    }

@@ -142,6 +142,9 @@ export default function YouPage() {
   return (
     <div className="page-shell-narrow space-y-6">
       <PageHeader eyebrow="Your account" title="You" />
+      <Link to="/needs-you" className="archive-panel block p-4 text-primary hover:underline">
+        Needs you — assigned reviews
+      </Link>
 
       <section className="archive-panel flex items-center gap-3 p-4" aria-label="Signed in as">
         <ProfileAvatar profileId={profile?.id} name={profile?.displayName} className="h-11 w-11 text-lg" />

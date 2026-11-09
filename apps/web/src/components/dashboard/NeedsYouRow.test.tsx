@@ -224,3 +224,21 @@ describe('Cinema trips in Needs you and the top slot — AC5 (#345)', () => {
     expect(screen.queryByRole('link', { name: /^Next: Wild Horse Nine/ })).toBeNull()
   })
 })
+
+
+it('exposes every assigned review through overflow after loan and trip jobs', async () => {
+  const reviews = Array.from({ length: 3 }, (_, i) => ({
+    id: `review-${i}`, title: `Review disc ${i}`, question: 'Inspect the physical disc', status: 'open',
+  }))
+  api.fetchNeedsYou.mockResolvedValue({ items: Array.from({ length: 5 }, (_, i) => item({ loanId: `loan-${i}` })), reviews })
+  renderRow()
+  expect((await screen.findByRole('link', { name: 'See all 3 reviews on Needs you' })).getAttribute('href')).toBe('/needs-you')
+  expect(screen.queryByText('Review disc 0')).toBeNull()
+})
+
+it('shows an assigned review on Home even without loans or trips', async () => {
+  api.fetchNeedsYou.mockResolvedValue({ items: [], reviews: [{ id: 'review-1', title: "Check Titanic's Blu-ray", question: 'Inspect the disc', status: 'answered' }] })
+  renderRow()
+  expect((await screen.findByRole('link', { name: /Check Titanic/ })).getAttribute('href')).toBe('/needs-you?review=review-1')
+  expect(screen.getByText('Answered — awaiting correction')).not.toBeNull()
+})

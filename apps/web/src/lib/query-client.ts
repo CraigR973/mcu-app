@@ -24,6 +24,7 @@ export function createQueryClient(): QueryClient {
         void client.invalidateQueries({ queryKey: ['stats'] })
         // AC1: a handover, return or shelf confirmation changes what Home asks of each person.
         void client.invalidateQueries({ queryKey: ['needs-you'] })
+        void client.invalidateQueries({ queryKey: ['assigned-reviews'] })
       },
     }),
     defaultOptions: {

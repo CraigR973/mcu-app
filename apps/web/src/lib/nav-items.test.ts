@@ -178,6 +178,8 @@ describe('Batch T3 — the phone top bar', () => {
   it('names a destination by its menu label, and a page below one by what it shows', () => {
     expect(titleForPath('/wanted')).toBe('Wanted')
     expect(titleForPath('/you')).toBe('You')
+    expect(titleForPath('/needs-you')).toBe('Needs you')
+    expect(parentPath('/needs-you')).toBe('/you')
     expect(titleForPath('/movies/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Film')
     expect(titleForPath('/films/tmdb/11050')).toBe('Film')
     expect(titleForPath('/movie-night/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Movie night')

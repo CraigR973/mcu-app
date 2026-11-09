@@ -12,6 +12,7 @@ from src.models.ai import (
     AiToolCall,
     AiUsageLogEntry,
 )
+from src.models.assigned_review import AssignedReview
 from src.models.barcode import BARCODE_LOOKUPS_TABLE, BARCODE_SOURCES, BarcodeLookup
 from src.models.base import (
     Base,
@@ -166,6 +167,7 @@ from src.models.wanted import (
 from src.models.watch_log import RATING_MAX, RATING_MIN, WatchLog
 
 __all__ = [
+    "AssignedReview",
     "CinemaDigestFilm",
     "CinemaDigestListing",
     "CinemaDigestAppearance",

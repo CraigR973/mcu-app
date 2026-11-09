@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from src.schemas.assigned_reviews import AssignedReviewResponse
 from src.schemas.cinema_trips import ShowingFlag
 from src.schemas.wire import UtcDatetime
 
@@ -86,6 +87,7 @@ class NextTrip(BaseModel):
 
 
 class NeedsYouResponse(BaseModel):
+    reviews: list[AssignedReviewResponse] = Field(default_factory=list)
     #: Most pressing first. Empty when there is nothing to do.
     items: list[NeedsYouLoanItem]
     #: AC2: the next screening the reader is in, planned and not ended; null when none. Home

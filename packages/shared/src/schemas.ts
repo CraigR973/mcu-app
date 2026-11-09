@@ -2816,7 +2816,41 @@ export const nextTripSchema = z.object({
   /** Everyone else going, the proposer first. */
   withNames: z.array(z.string()),
 })
+// AD1: explicit review observations; answers do not correct catalogue records.
+export const reviewKindSchema = z.enum(['titanic_disc', 'wanted_identity', 'shetland_series'])
+export const reviewAnswerSchema = z.enum(['1953', '1997', '1940', '2004', 'use_series', 'keep_separate', 'unsure'])
+export const reviewAssignmentSchema = z.object({
+  kind: reviewKindSchema,
+  targetId: z.string().uuid(),
+  assignedTo: z.string().uuid(),
+  expectedFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+})
+export const reviewProposalSchema = reviewAssignmentSchema.extend({ title: z.string() })
+export const assignedReviewSchema = z.object({
+  id: z.string().uuid(),
+  kind: reviewKindSchema,
+  targetId: z.string().uuid(),
+  assignedTo: z.string().uuid(),
+  assigneeName: z.string(),
+  movieId: z.string().uuid().nullable(),
+  title: z.string(),
+  question: z.string(),
+  evidence: z.string(),
+  choices: z.array(z.object({ value: reviewAnswerSchema, label: z.string() })),
+  revision: z.number().int().positive(),
+  answer: reviewAnswerSchema.nullable(),
+  answeredAt: tripUtcSchema.nullable(),
+  status: z.enum(['open', 'answered', 'changed', 'resolved']),
+  canAnswer: z.boolean(),
+})
+export const assignedReviewListSchema = z.array(assignedReviewSchema)
+export const reviewProposalListSchema = z.array(reviewProposalSchema)
+export type AssignedReview = z.infer<typeof assignedReviewSchema>
+export type ReviewProposal = z.infer<typeof reviewProposalSchema>
+export type ReviewAnswer = z.infer<typeof reviewAnswerSchema>
+
 export const needsYouSchema = z.object({
+  reviews: assignedReviewListSchema.default([]),
   /** Most pressing first; empty when there is nothing to do. */
   items: z.array(needsYouItemSchema),
   /** AC2. Defaulted, so this build still reads an API from before it. */

@@ -279,6 +279,34 @@
     "title": "AlsoListed",
     "type": "object"
    },
+   "AnswerReview": {
+    "properties": {
+     "answer": {
+      "enum": [
+       "1953",
+       "1997",
+       "1940",
+       "2004",
+       "use_series",
+       "keep_separate",
+       "unsure"
+      ],
+      "title": "Answer",
+      "type": "string"
+     },
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "revision",
+     "answer"
+    ],
+    "title": "AnswerReview",
+    "type": "object"
+   },
    "AskRequest": {
     "description": "One question.",
     "properties": {
@@ -375,6 +403,174 @@
      "latencyMs"
     ],
     "title": "AskResponse",
+    "type": "object"
+   },
+   "AssignReview": {
+    "properties": {
+     "assignedTo": {
+      "format": "uuid",
+      "title": "Assignedto",
+      "type": "string"
+     },
+     "expectedFingerprint": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Expectedfingerprint",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "titanic_disc",
+       "wanted_identity",
+       "shetland_series"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "targetId": {
+      "format": "uuid",
+      "title": "Targetid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "targetId",
+     "assignedTo",
+     "expectedFingerprint"
+    ],
+    "title": "AssignReview",
+    "type": "object"
+   },
+   "AssignedReviewResponse": {
+    "properties": {
+     "answer": {
+      "anyOf": [
+       {
+        "enum": [
+         "1953",
+         "1997",
+         "1940",
+         "2004",
+         "use_series",
+         "keep_separate",
+         "unsure"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Answer"
+     },
+     "answeredAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Answeredat"
+     },
+     "assignedTo": {
+      "format": "uuid",
+      "title": "Assignedto",
+      "type": "string"
+     },
+     "assigneeName": {
+      "title": "Assigneename",
+      "type": "string"
+     },
+     "canAnswer": {
+      "title": "Cananswer",
+      "type": "boolean"
+     },
+     "choices": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewChoice"
+      },
+      "title": "Choices",
+      "type": "array"
+     },
+     "evidence": {
+      "title": "Evidence",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "titanic_disc",
+       "wanted_identity",
+       "shetland_series"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "movieId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Movieid"
+     },
+     "question": {
+      "title": "Question",
+      "type": "string"
+     },
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     },
+     "status": {
+      "enum": [
+       "open",
+       "answered",
+       "changed",
+       "resolved"
+      ],
+      "title": "Status",
+      "type": "string"
+     },
+     "targetId": {
+      "format": "uuid",
+      "title": "Targetid",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "targetId",
+     "assignedTo",
+     "assigneeName",
+     "movieId",
+     "title",
+     "question",
+     "evidence",
+     "choices",
+     "revision",
+     "answer",
+     "answeredAt",
+     "status",
+     "canAnswer"
+    ],
+    "title": "AssignedReviewResponse",
     "type": "object"
    },
    "AttentionItemResponse": {
@@ -9197,6 +9393,13 @@
        }
       ]
      },
+     "reviews": {
+      "items": {
+       "$ref": "#/components/schemas/AssignedReviewResponse"
+      },
+      "title": "Reviews",
+      "type": "array"
+     },
      "trips": {
       "items": {
        "$ref": "#/components/schemas/NeedsYouTripItem"
@@ -11250,6 +11453,26 @@
     "title": "ReadinessResponse",
     "type": "object"
    },
+   "ReassignReview": {
+    "properties": {
+     "assignedTo": {
+      "format": "uuid",
+      "title": "Assignedto",
+      "type": "string"
+     },
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "revision",
+     "assignedTo"
+    ],
+    "title": "ReassignReview",
+    "type": "object"
+   },
    "RecentIdentificationResponse": {
     "properties": {
      "actionId": {
@@ -12107,6 +12330,33 @@
     "title": "ReviewCandidate",
     "type": "object"
    },
+   "ReviewChoice": {
+    "properties": {
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "value": {
+      "enum": [
+       "1953",
+       "1997",
+       "1940",
+       "2004",
+       "use_series",
+       "keep_separate",
+       "unsure"
+      ],
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value",
+     "label"
+    ],
+    "title": "ReviewChoice",
+    "type": "object"
+   },
    "ReviewDecision": {
     "additionalProperties": false,
     "description": "Exactly one: the TMDB film it is, from the item's own candidates, or not a film.",
@@ -12200,6 +12450,47 @@
      "items"
     ],
     "title": "ReviewList",
+    "type": "object"
+   },
+   "ReviewProposal": {
+    "properties": {
+     "assignedTo": {
+      "format": "uuid",
+      "title": "Assignedto",
+      "type": "string"
+     },
+     "expectedFingerprint": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Expectedfingerprint",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "titanic_disc",
+       "wanted_identity",
+       "shetland_series"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "targetId": {
+      "format": "uuid",
+      "title": "Targetid",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "targetId",
+     "assignedTo",
+     "expectedFingerprint",
+     "title"
+    ],
+    "title": "ReviewProposal",
     "type": "object"
    },
    "ReviewScoreResponse": {
@@ -24415,6 +24706,296 @@
      }
     ],
     "summary": "Needs You",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews": {
+   "get": {
+    "operationId": "list_reviews_api_v1_needs_you_reviews_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "allAssignees",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Allassignees",
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AssignedReviewResponse"
+         },
+         "title": "Response List Reviews Api V1 Needs You Reviews Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List Reviews",
+    "tags": [
+     "needs-you"
+    ]
+   },
+   "post": {
+    "operationId": "assign_api_v1_needs_you_reviews_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AssignReview"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AssignedReviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Assign",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/proposals": {
+   "get": {
+    "operationId": "proposals_api_v1_needs_you_reviews_proposals_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ReviewProposal"
+         },
+         "title": "Response Proposals Api V1 Needs You Reviews Proposals Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Proposals",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/{review_id}": {
+   "get": {
+    "operationId": "detail_api_v1_needs_you_reviews__review_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "review_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Review Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AssignedReviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Detail",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/{review_id}/answer": {
+   "post": {
+    "operationId": "answer_api_v1_needs_you_reviews__review_id__answer_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "review_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Review Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AnswerReview"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AssignedReviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Answer",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/{review_id}/assignee": {
+   "patch": {
+    "operationId": "reassign_api_v1_needs_you_reviews__review_id__assignee_patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "review_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Review Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReassignReview"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AssignedReviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Reassign",
     "tags": [
      "needs-you"
     ]

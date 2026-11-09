@@ -185,6 +185,12 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/attention/notes/{note_id}",
         # AC1 (#335): Home's "Needs you", a read scoped to whoever is signed in.
         "/api/v1/needs-you",
+        # AD1 (#351): explicit assigned reviews, separate from derived loan/trip jobs.
+        "/api/v1/needs-you/reviews",
+        "/api/v1/needs-you/reviews/proposals",
+        "/api/v1/needs-you/reviews/{review_id}",
+        "/api/v1/needs-you/reviews/{review_id}/answer",
+        "/api/v1/needs-you/reviews/{review_id}/assignee",
         "/api/v1/export/collection.csv",
         "/api/v1/export/collection.json",
         "/api/v1/export/collection.html",
