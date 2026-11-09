@@ -22,21 +22,28 @@ export function AddToMovieNight({ movieId }: { movieId: string }) {
       navigate(`/movie-night/${chosen}`)
     },
   })
-  if (openNights.length === 0) return null
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {openNights.length > 1 ? (
-        <select className="select-control" aria-label="Which movie night" value={chosen} onChange={(event) => setNightId(event.target.value)}>
-          {openNights.map((night) => (
-            <option key={night.id} value={night.id}>
-              {night.plannedStart ? `Planned ${formatDateTime(night.plannedStart)}` : `Started ${formatDateTime(night.createdAt)}`}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      <Button type="button" size="sm" variant="outline" disabled={add.isPending} onClick={() => add.mutate()}>
-        <Popcorn aria-hidden /> Add to movie night
-      </Button>
+    <div>
+      {/* Keep one action row even while nights load or there are none. Inserting it
+          later moves the film's other controls between pointer down and up. */}
+      <div className="flex min-h-11 min-w-0 items-center gap-2">
+        {openNights.length > 0 ? (
+          <>
+            {openNights.length > 1 ? (
+              <select className="select-control min-w-0 max-w-xs flex-1" aria-label="Which movie night" value={chosen} onChange={(event) => setNightId(event.target.value)}>
+                {openNights.map((night) => (
+                  <option key={night.id} value={night.id}>
+                    {night.plannedStart ? `Planned ${formatDateTime(night.plannedStart)}` : `Started ${formatDateTime(night.createdAt)}`}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            <Button type="button" size="sm" variant="outline" className="shrink-0" disabled={add.isPending} onClick={() => add.mutate()}>
+              <Popcorn aria-hidden /> Add to movie night
+            </Button>
+          </>
+        ) : null}
+      </div>
       {add.isError ? <p role="alert" className="w-full text-sm text-destructive">{queryErrorMessage(add.error, 'That film could not be added.')}</p> : null}
     </div>
   )
