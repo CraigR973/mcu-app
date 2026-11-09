@@ -17,7 +17,28 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   fetchFacets: vi.fn().mockResolvedValue({ sections: [], allSections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }),
 }))
 vi.mock('@/lib/sync', () => ({ addOrQueue: addMock }))
-vi.mock('@/components/collection/BarcodeLookupPanel', () => ({ default: () => <p>Barcode panel</p> }))
+vi.mock('@/components/collection/BarcodeLookupPanel', () => ({
+  default: ({
+    onBarcodeChange,
+    onConfirmed,
+  }: {
+    onBarcodeChange: (barcode: string | null) => void
+    onConfirmed: (candidate: unknown, barcode: string) => Promise<void>
+  }) => (
+    <button
+      type="button"
+      onClick={() => {
+        onBarcodeChange('5021866000000')
+        void onConfirmed(
+          { title: 'Contagion', source: 'collection', confidence: 1, movieId: '00000000-0000-4000-8000-0000000000c0', tmdbId: null, year: 2011, posterPath: null, evidence: null },
+          '5021866000000',
+        )
+      }}
+    >
+      Simulate a scan of the same film
+    </button>
+  ),
+}))
 
 import AddToCollectionPage from './AddToCollectionPage'
 
@@ -61,8 +82,8 @@ describe('AddToCollectionPage — AE1, a separate copy', () => {
 
     expect(await screen.findByText('A new copy of this film.')).not.toBeNull()
     expect(screen.getByText('Contagion')).not.toBeNull()
-    // The finder steps aside until another film is wanted.
-    expect(screen.queryByRole('tablist', { name: 'How to find the film' })).toBeNull()
+    // The finder stays beneath it, so the new box can still be scanned or another film chosen.
+    expect(screen.getByRole('tablist', { name: 'How to find the film' })).not.toBeNull()
     expect(movieMock).toHaveBeenCalledWith(MOVIE)
     expect(screen.getByRole('button', { name: '4K UHD' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByRole('button', { name: 'Blu-ray' }).getAttribute('aria-pressed')).toBe('false')
@@ -117,10 +138,23 @@ describe('AddToCollectionPage — AE1, a separate copy', () => {
     expect((addMock.mock.calls[0]?.[0] as Record<string, unknown>).formats).toEqual(['dvd'])
   })
 
-  it('brings the finder back when the film cannot be loaded', async () => {
+  it('says so when the film cannot be loaded, and leaves the finder to find it', async () => {
     movieMock.mockRejectedValue(new Error('offline'))
     renderAt(`/collection/add?movie=${MOVIE}&format=4k_uhd`)
-    fireEvent.click(await screen.findByRole('button', { name: 'Find the film instead' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Find it below instead' }))
+    expect(screen.queryByRole('button', { name: 'Find it below instead' })).toBeNull()
     expect(screen.getByRole('tablist', { name: 'How to find the film' })).not.toBeNull()
+  })
+
+  it('switches to the film a scanned box names, and keeps the barcode for the copy', async () => {
+    renderAt(`/collection/add?movie=${MOVIE}&format=4k_uhd`)
+    expect(await screen.findByText('A new copy of this film.')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Simulate a scan of the same film' }))
+    expect(await screen.findByRole('button', { name: 'Add “Contagion”' })).not.toBeNull()
+    expect(screen.queryByText('A new copy of this film.')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Add as a separate copy/ }))
+    await waitFor(() => expect(addMock).toHaveBeenCalledTimes(1))
+    const body = addMock.mock.calls[0]?.[0] as Record<string, unknown>
+    expect([body.movieId, body.barcode, body.formats]).toEqual([MOVIE, '5021866000000', ['4k_uhd']])
   })
 })

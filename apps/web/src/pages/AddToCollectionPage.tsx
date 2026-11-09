@@ -296,10 +296,9 @@ export default function AddToCollectionPage() {
 
       <section className="archive-panel space-y-4 p-4 sm:p-6" aria-labelledby="choose-film-heading">
         <div><p className="page-kicker">Step 1</p><h2 id="choose-film-heading" className="section-heading">Which film?</h2></div>
-        {presetActive ? (
-          <PresetFilm query={presetQuery} onFindAnother={clearFilm} />
-        ) : (
-        <>
+        {/* AE1: the film the address named, with the finder still beneath it: the new box's
+            barcode can be scanned onto the copy, or another film chosen, as after any choice. */}
+        {presetActive ? <PresetFilm query={presetQuery} onFindAnother={clearFilm} /> : null}
         <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="How to find the film">
           <button
             type="button"
@@ -487,8 +486,6 @@ export default function AddToCollectionPage() {
             )}
           </div>
         )}
-        </>
-        )}
       </section>
 
       {film && (
@@ -585,14 +582,14 @@ function ResultButton({
   )
 }
 
-/** AE1: the film the address named, shown in place of the finder until another is chosen. */
+/** AE1: the film the address named, above the finder, until another is chosen. */
 function PresetFilm({ query, onFindAnother }: { query: UseQueryResult<MovieDetail>; onFindAnother: () => void }) {
   if (query.isError) {
     return (
       <div className="space-y-2 rounded-lg border border-border p-3 text-sm">
         <p role="alert" className="text-destructive">{queryErrorMessage(query.error, 'That film could not be loaded.')}</p>
         <Button type="button" variant="outline" size="sm" onClick={onFindAnother}>
-          Find the film instead
+          Find it below instead
         </Button>
       </div>
     )
