@@ -7670,3 +7670,23 @@ contemporaneous.
      and models; its drafting choices are open to his overrule. Pricing (point 11) needs
      nothing new: AA10c from 25 Nov answers it. Craig gave the go the same evening ("yes codex
      is done"), once Codex had finished in the checkout.
+
+356. **AE1 shipped: how "one box or a separate copy" works (9 Nov, PR 139, `aa4242e`).** Drafting
+     choices under #355, open to Craig's overrule:
+     - **Asked at Save, not at the tick**, in place of the footer, with the form held still. A
+       second disc format newly ticked asks; Digital never does, nor a swap from one disc to
+       another, nor a combo that was already one.
+     - **"A separate copy" saves nothing on the copy** and opens Add a copy for the same film
+       with the new format chosen (`/collection/add?movie=<id>&format=<code>`). Other edits made
+       in the same dialog are not kept, and the question says so.
+     - **A film's own "Add a copy" opens the form on that film**, with the finder still beneath
+       it: the new box's barcode can be scanned onto the copy, or another film chosen. Hiding
+       the finder broke Codex's film-navigation case and lost barcode capture, so it stays.
+     - **The duplicate check follows the format**, a query on film, formats and barcode. The
+       preflight used to ask only about the old default Blu-ray, so "This is an upgrade" never
+       showed for a 4K before the save. "Add another copy" now reads "Add as a separate copy".
+     - **Add stays enabled with no format** and says "Choose a format: 4K UHD, Blu-ray, DVD or
+       Digital." rather than greying out.
+     - **An add refreshes the film's own record**, so its copy count and best format are current;
+       E2E showed "1 owned copy" after a second add.
+

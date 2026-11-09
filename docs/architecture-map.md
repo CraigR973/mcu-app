@@ -486,3 +486,22 @@ Film-page navigation follow-up (8 Nov, decision 352): movie-night reads fill a r
 longer inserts height while Add a copy is being pressed. The multiple-night selector
 stays on that row; suggestion writes and navigation use the existing paths. This deployed
 repair adds no data shape, service, permission or external contract.
+
+## AE1, shipped 9 Nov (PR 139, `aa4242e`) — one box or a separate copy
+
+```mermaid
+flowchart TD
+    A[Edit copy: tick a second disc] --> B{Save asks}
+    B -->|One box| C[PUT the combo, as before]
+    B -->|A separate copy| D[Nothing saved]
+    D --> E[Add a copy: film and format from the address]
+    F[Film page: Add a copy] --> E
+    E --> G[Duplicate check per format]
+    G --> H[POST a second copy]
+```
+
+Web only: no API, schema or stored-copy change. `lib/copy-formats.ts` holds the rules (disc
+formats, what an edit adds, the address of Add a copy). The add page reads `movie` and `format`
+from its address, keeps its finder under the chosen film, and runs its duplicate check as a
+query on film, formats and barcode.
+

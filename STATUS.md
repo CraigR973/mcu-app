@@ -2,14 +2,13 @@
 
 ## Now
 
-**9 Nov, 21:10 GMT: Group AE is under way; Craig gave the go on his 8 Nov feedback (#355).**
-Ten batches in five sittings in `docs/phase-batches.md`, with a phone copy in
-`docs/reviews/group-ae-plan-2026-11-09.md`; the reconciliation is
-`docs/reviews/feedback-reconciliation-2026-11-08.md`. One docs-only commit settled the checkout
-(the 8 Nov reconciliation's record corrections, five 8 Nov reports, this plan), pushed with
-Codex's `b92d710`. AE10's movie night sketch is with Craig for his picks
-(`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`); it corrected the report's usage: one night
-did match (The Exorcist, 11 Oct). Sitting 1 (AE1 → AE2 → AE3) is next.
+**9 Nov, 23:47 GMT: Group AE sitting 1 under way; AE1 shipped (PR 139, `aa4242e`).** A second disc
+ticked on a copy now asks "one box or a separate copy?", a new copy has no default format, and a
+film's Add a copy opens on that film (#356). Production health, readiness and the web's version
+report `aa4242e`. AE2 (Home) and AE3 (Closest to complete) are next. Group AE is ten batches in five
+sittings in `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
+(`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
+and Silent Running are in `OWNER-ACTIONS.md`.
 
 **9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
 A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
@@ -467,6 +466,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **9 Nov, 23:47 GMT — AE1 shipped (PR 139, `aa4242ebf248841cd975e3fb9ca2bec617768766`, #356).** One box or a separate copy at
+  Save; no default format on a new copy; duplicate check per format; Add a copy opens on its film.
+  Local gate green (web 920+, shared 200, API 1693 with no database; E2E Chromium 13 of 13 on the
+  affected cases); CI seven jobs green after one fix (the finder kept under a chosen film, which
+  Codex's film-navigation case caught). Health, readiness and version.json on `aa4242e`.
 - **9 Nov, 21:10 GMT — Group AE go.** Craig answered "yes codex is done" to the go and the
   Codex question. One docs-only commit of the outstanding records (8 Nov reconciliation
   corrections, five 8 Nov reports, #355 and the plan), pushed with `b92d710`; two stray blank
