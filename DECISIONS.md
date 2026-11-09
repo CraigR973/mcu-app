@@ -7576,3 +7576,52 @@ contemporaneous.
      the disposable reminder-fixture idle-socket correction remain documented. Main/handoff
      CI/parity is stamped in PR #137 before completion. AC6 is deployed, still unstruck and
      awaiting natural qualifying digest/phone evidence; no manual production action ran.
+
+351. **Mark's three assigned reviews approved (8 Nov); extends #336 for explicit review work.**
+     Craig replied “approve” to the three-card contract and 2–4-hour estimate in
+     `docs/reviews/mark-needs-you-and-setup-proposal-2026-11-08-1347.md`. AD1 adds durable,
+     per-person Titanic/Dead Man's Shoes/Shetland review assignments and answers; existing
+     loans/trips remain derived. Stable targets, constrained answers, revisions, audit,
+     private caller access and a complete overflow destination are required. An answer
+     records judgement, never repairs identities, moves copies or rewrites price history.
+     Mark retains his role and existing film-page rights. No optional specs/phone scope,
+     feed request, username enable, historical apply, provider call or notification is
+     included. Existing explicit no-commit/push/merge/deploy/live-write boundaries remain
+     for this build sitting. All existing checkout edits are preserved.
+
+352. **Bounded Add a copy navigation follow-up approved (8 Nov).**
+     Craig replied “approve” to the scope and 60–90-minute estimate in
+     `docs/reviews/ad1-firefox-add-copy-blocker-2026-11-08.md`: establish the
+     cause with controlled pointer/network evidence, repair only that cause and run
+     the full local gate. No force clicks, retries, timeout/assertion weakening or
+     replay/data-contract changes. Preserve the checkout and every existing edit.
+     No commit, push, merge, deployment, production assignment, provider request or
+     live write is authorised. Mark setup and all other batches remain separate.
+
+     The controlled pre-repair browser run proved that the initial movie-night response
+     inserts 36 px above Add a copy between pointer down/up, leaving the film page open.
+     The narrow repair reserves one 44 px action row, including empty/loading states;
+     multiple-night selection stays on that row. The cost is 44 px of reserved space
+     when there is no night. Desktop/375 px pointer regressions and both unchanged
+     Firefox offline cases pass; final full local results are in the follow-up report.
+     No replay, auth, schema, source or production change is part of this repair.
+
+     Completed 9 Nov: API2754/zero skips, shared200/web898, static/build checks,
+     Chromium97, Firefox96 + the existing allowed dictation skip, and jobs8 all pass.
+     Final candidate fingerprint is unchanged; 375 px fake-fixture preview inspected.
+     Production still serves 417471a with full readiness, migration073 and no review
+     table. No commit, push, merge, release, live assignment or Mark setup activation.
+     `docs/reviews/ad1-navigation-follow-up-2026-11-08-2326.md` is the final evidence.
+
+353. **AD1 release and Mark's bounded feed preflight approved (9 Nov).**
+     Craig replied “yes to both” to the exact checkpoint in
+     `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`:
+     42 scoped paths across three proposed commits, normal PR/all-seven exact-head CI
+     including WebKit/merge/deployment, migration 074 and both guarded SELECT grants,
+     then exactly three idempotent review assignments and their audits, no notification.
+     The preserved dirty checkout is authorised only through frozen scoped staging;
+     unrelated files/reconciliation remain untouched and unpublished. No automatic clean-tree
+     close-out is claimed. Actual Mark answers and real-phone acceptance remain open.
+     Separately approved: one GET to Mark's RSS, no retries/redirects, 20-second deadline,
+     1 MiB/50-entry caps, private diary evidence, sanitised counts and zero database writes.
+     Username enabling, historical backfill/corrections and all other work remain separate.

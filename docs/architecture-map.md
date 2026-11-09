@@ -456,3 +456,31 @@ production MCU sharp for Archive/Search in both themes, with normal keyboard. Na
 production acceptance is complete; simulated browser geometry is separate evidence. Original
 Archive cold launch resolved through the approved re-add (#309/#310); normal resume
 preserves Home, no navigation code change. Old bundle/internal launcher target uninspected.
+
+## Assigned identity reviews — AD1, approved 8 Nov (local build)
+
+```mermaid
+flowchart TD
+    A[Craig checks current targets] --> B[Assign three private reviews]
+    B --> C[Mark: Home Needs you / You]
+    C --> D[Record observation + audit]
+    D --> E[Craig inspects pending correction]
+    F[Existing catalogue actions] --> G[Recheck target on every read]
+    G --> C
+```
+
+`assigned_reviews` stores assignment, relevant target snapshot, revision and current answer;
+`admin_actions` retains assignment/answer/reassignment history. Target IDs deliberately do
+not constrain catalogue deletion/merge paths; missing, sold or changed targets block new
+answers rather than silently resolving. Existing doubt resolution or Shetland TV 46923
+identity is recognised from source records. A changed wanted identity remains for review
+because it is not proof of retained price-history correction. Existing loans/trips stay
+derived, permissions stay scoped, Home reads perform no source request and assignments
+send no notification. API `reviews` is additive with a shared zod default; `/needs-you`
+shows every review/history. Not yet deployed or assigned in production.
+
+Film-page navigation follow-up (8 Nov, decision 352): movie-night reads fill a reserved
+44 px action row above the film tabs and Owned copies controls. A delayed response no
+longer inserts height while Add a copy is being pressed. The multiple-night selector
+stays on that row; suggestion writes and navigation use the existing paths. This local
+repair adds no data shape, service, permission or external contract.

@@ -5481,3 +5481,33 @@ Batch 6's `section`/`shelf` filter answers the retrieval question printed codes 
 phase — the work happens, the phase does not.
 
 **Reinstating a dropped phase is a `DECISIONS.md` entry, not a quiet edit to this file.**
+
+## AD1 — Mark's three assigned identity reviews — approved 8 Nov 2026
+
+**State: built locally; unstruck and unreleased.** The bounded decision-352 navigation
+follow-up completed 9 Nov: late movie-night action insertion moved Add a copy by 36 px;
+a reserved 44 px row fixes it. API2754/zero skips, shared200/web898, all static/build
+checks, Chromium97, Firefox96 + one allowed dictation skip, jobs8 pass. Both the new
+review flow and original offline case pass in the full browsers. Candidate fingerprint
+and original reports are preserved; 375 px preview inspected. No commit, candidate CI,
+WebKit, deployment or production assignment. Separate release authorisation remains.
+`docs/reviews/ad1-navigation-follow-up-2026-11-08-2326.md` is the final local evidence.
+
+Single bounded batch; Craig replied “approve” to the three-card contract in
+`docs/reviews/mark-needs-you-and-setup-proposal-2026-11-08-1347.md`.
+Model: current Codex session, no model switch or subagents; high effort.
+Scope: assigned review storage/API, three typed catalogue questions, Home and review page.
+No grouped specs/phone work, role promotion, notifications, identity repair or watch import.
+No commit, push, merge, deployment or live assignment in this build sitting; those prior
+explicit boundaries remain. Preserve all existing documentation edits in this checkout.
+The dirty-tree start is intentional under Craig's preserve-checkout instruction, not a
+claim of a clean batch gate.
+
+Acceptance criteria:
+1. Mark sees the three exact reviews; another viewer sees none of them.
+2. Craig can inspect responses; forged cross-profile reads/writes fail.
+3. Uncertainty stays open; answering does not repair catalogue identities.
+4. Stale targets do not permit silent corrections; existing authorised resolutions are recognised.
+5. Overflow exposes every task; normal loan/trip behaviour remains intact.
+6. Assignment is idempotent, answers are revision-guarded and audited, and review history is preserved.
+7. Migration/grants, full local gate and role-aware browser flows pass; unrun CI/deploy/phone gates stay explicit.

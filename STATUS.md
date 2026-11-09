@@ -2,56 +2,42 @@
 
 ## Now
 
-**7 Nov: AC6 is deployed; its separate calendar CI repair is deployed too. AC6 acceptance
-remains open.** PR #136 shipped the default-on Cinemas digest (#348, #349). PR #137 ships
-shared-query/native-button readiness and honest Coming soon loading (#350), fixing the
-proved lost click without changing three feeds, token rotation or page order.
+**9 Nov, 10:00 GMT: AD1 release and single-feed preflight approved; publication in progress.**
+Main, remote main and API/web match `417471a167c4b1469a300cfe8124e5f7c1dbe39c`;
+latest exact-SHA code CI 42402887825 passes all seven jobs and full readiness passes.
+The later Backup workflow 42472268641 also passed; it is not a substitute code gate.
+Source, production parity, full readiness and migration 073/no review table were rechecked
+at 09:55–09:57 GMT on 9 Nov. All 30 candidate fingerprints still match. The three exact
+review targets remain valid; Mark is an active viewer with username null/no sync and
+972 active watches. Other cinema/valuation/queue figures were not re-audited in preparation.
 
-**Verified 18:43 UTC:** API and web serve repair merge
-`7c536d9c99ebd0102a875f099e4bbc29bbbefc06`; every readiness field passes. Local API 2,741
-(zero skips), shared 200, web 891, all static/type/build checks, Chromium 94, Firefox 93+1
-permitted skip and jobs 8 pass. Exact-head PR CI 42400083769 is seven jobs green, including
-C94/F93+1/W92+2/jobs8. Main code CI 42402584704 and the final handoff exact-SHA CI/parity
-stamp are recorded in PR #137 before session completion; do not count a feature push's
-skipped E2E job. Saved repair/criterion/failure record:
-`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`.
+**Mark follow-up built locally:** Craig approved the three-card storage/API contract
+(decision 351) and then the bounded navigation repair (352). The proved failure was a
+movie-night response inserting 36 px above Add a copy during the press. Its action row
+now reserves 44 px and does not wrap. Full local results: API2754/zero skips, shared200,
+web898, all static/build checks, Chromium97, Firefox96 + one allowed dictation skip,
+jobs8 pass. The original film-page/offline files are unchanged. A 375 px fake-fixture
+preview was inspected with no overflow. Exact-candidate CI/WebKit, release, production
+assignment and actual Mark answers remain unrun. The preserved checkout is intentionally
+dirty; no commit/push/merge/deploy occurred. Mark's setup remains a separate prepared plan;
+this sitting made no feed request, username save or historical apply.
+See `docs/reviews/ad1-navigation-follow-up-2026-11-08-2326.md` for the final report.
 
-Migration 073, both-role grants and withheld credentials are read back. Both existing people
-have Cinemas on, Older films only off and Movie night on. Silent baseline remains 278 listings /
-23 identities; appearances, days, delivery claims and cinema outbox rows are zero. Frozen
-London-day evaluation, quiet hours/digest holds and committed daily send claims are unchanged;
-partial source evidence and possible lost uncertain sends are the approved limits.
-
-**Still unverified:** first naturally scheduled qualifying digest day/appearance/outbox/claim
-read-back and real-phone receipt/tap. No scheduled AC6 run has happened since deployment.
-AC6 stays unstruck; an empty run cannot prove positive delivery. No manual live refresh,
-digest, trip, calendar feed creation or token rotation was performed. Full AC6 record:
-`docs/reviews/ac6-implementation-2026-11-07.md` and PR #136.
-
-AC5 shipped in PR #135; migration 072 and empty-trip/default/grant read-back passed before
-AC6. Its first real trip pushes Mark and remains Craig's to propose; both-phone rendering,
-receipt and tap remain owner observations. AC3's rerun read-back after the **8 Nov** run
-(#340) is separately owed. No next batch is authorised by this repair.
-
-**Next:** read back the first naturally scheduled qualifying digest, never create a test send.
-This session stops after the final exact-SHA CI/parity stamp in PR #137; no next batch.
+**Next:** execute Craig's approved release scope: 42 scoped paths across three proposed commits,
+normal PR/all-seven exact-candidate CI including WebKit/merge/deployment, 074/grants and
+three idempotent audited assignments. Frozen partial-document staging excludes unrelated
+reconciliation. No commit/publication/live write yet. Separate next setup checkpoint:
+one bounded feed GET completed: 50 unique entries, 9 recorded/41 absent; enable remains
+a separate decision after review. The proposed
+9 Nov 08:00 slot is past; calculate from Mark's actual future save time. No next build.
+Checkpoint: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
 
 ## Next
 
-**Group AC runs sitting by sitting, at Craig's 4 Nov go for all four.** Sittings 1 (AC1 →
-AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
-4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
-have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
-(AC4 → AC7) is done: AC4 (#341) and AC7 (#343) shipped on 6 Nov. Sitting 4: AC5 shipped on
-7 Nov at Craig's "Approve all 8" (#345, #346); AC6's eight checkpoint recommendations were
-approved on 7 Nov (#348), and its code deployed in PR #136 (#349). Scheduled-digest evidence
-and real-phone receipt remain open. Onboarding more people needs its own plan; nothing in
-Group AC assumes exactly two people. Existing owner actions remain separate.
-
-**The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
-remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
-**sitting 2 is done (X7, X8, 13 Oct); sitting 3 shipped X6, X4 and X5 (14 Oct); X5's live data steps wait for Craig's word, by 31 Oct.**
-Groups V and W are done; their records stay in the ledger.
+The only proposed next action is Craig's release decision described in Now. No further
+implementation batch is authorised. Mark's bounded source preflight is a separate decision,
+followed by his own username save and natural-run read-back after its successful review.
+Other owner acceptance and historical watch-data work retain their existing separate gates.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -438,6 +424,31 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **9 Nov, 14:08 GMT — exact release and single-feed preflight approved (#353).**
+  Craig replied “yes to both”. App/navigation commits begin; unrelated files preserved.
+  One bounded RSS GET completed14:07: HTTP200/40,000 bytes/50 unique diary entries,
+  9 already recorded/41 viewing IDs absent, no writes/retries/redirects/TMDB. Username
+  enable remains separate. Exact candidate PR CI/WebKit/deploy/assignment remain pending.
+
+- **9 Nov, 10:00 GMT — release and Mark setup checkpoints prepared, not approved.**
+  All 30 final candidate hashes match; main/exact seven-job CI/API/web/full readiness pass,
+  production073/no review table. Read-only exact targets/active Mark revalidated; username
+  null/no sync/972 active watches. Proposed release freezes 42 paths/three commits and
+  excludes unrelated reports/reconciliation hunks. Candidate CI/WebKit/deploy/assignment
+  remain unrun. Separate one-GET preflight awaits approval; no username save or job trigger.
+  No application edits, git writes, provider request or live write. Report: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
+
+- **9 Nov, 00:02 — bounded Add a copy follow-up complete, unreleased.** Controlled Firefox
+  proved a 36 px movie-night insertion during pointer press; reserved 44 px fixes it.
+  All runnable local checks pass: API2754, shared200/web898, Chromium97,
+  Firefox96 + allowed dictation skip, jobs8; source fingerprint intact. Production remains
+  417471a/migration073/no review table with full readiness. Report and 375 px fake preview
+  saved; all prior edits/reports preserved. No git publication, deployment or live write.
+
+- **8 Nov, 15:35 GMT — AD1 three-review build; stop at Firefox blocker.** Craig approved the three-card contract (#351). Built assigned review storage/074, private revision-guarded/audited API, Home overflow/full review page and explicit administrator assignment; Mark keeps his role. Local API 2,754/no skips, shared200/web898, all static/build, fresh reversal/grant guards, Chromium95 and fake jobs8 pass. Firefox93+one allowed dictation skip+one Add a copy click/navigation failure; new review flow passes both browsers. Exact cause unproved; no blind retry/force-click/timeout or assertion change/unrelated repair. All fixture/route-wrapper/incomplete-seed failures and remedies retained. Current source fingerprint28 files; main/API/web still417471a, latest main CI42402887825 all seven, every readiness field passes at15:26, production073 and review table absent. No live write/provider request, commit, push, merge or release. All original reports/checkout work preserved; separate feedback report untouched. Blocker/next bounded scope: `docs/reviews/ad1-firefox-add-copy-blocker-2026-11-08.md`; full build evidence: `docs/reviews/ad1-mark-review-cards-implementation-2026-11-08.md`. Mark's setup remains prepared, not enabled.
+- **8 Nov, 13:47 GMT — Mark review-card/setup preparation.** Craig requested the outstanding choices on Mark's Needs you and his setup preparation. Existing Needs you derives loans/trips; no assignable checklist. Saved concrete three-card storage/API/visibility/answer contract and optional specs/phone extension, pending the consequential-change checkpoint; no cards live yet. Read-only Mark revalidation: active viewer, username null, no sync; 158 saved non-doubtful viewing IDs absent, 57 existing/owned targets live, 23 formerly new entries now in catalogue, 78 entries across 74 film IDs still absent; six of seven saved corrections belong to Mark. Prepared one-feed preflight, own-profile username save and natural-cron path, separating historical apply and holding 19 doubtful entries. Manual Sync now's broader TMDB metadata work is disclosed. No source request, account enable, implementation, live write, commit or release. Proposal: `docs/reviews/mark-needs-you-and-setup-proposal-2026-11-08-1347.md`; all prior work preserved.
+- **8 Nov — owner-authorised records/outstanding-work reconciliation, read-only.** Current main/API/web `417471a`, code CI 42402887825 and full readiness pass. Natural cinema evaluation is empty; eight future Rocky reruns prove AC3's owed read-back; AC6 positive delivery/phone acceptance stays open. AA10b campaign and scope-qualified read-back are recorded without another price run. Live records show Mark's username unset/no sync; 638 absent non-doubtful saved viewing IDs and seven still-unmoved correction targets; a fresh proposal is required before writes. Current owned catalogue: Shetland Series 5 unmatched, one Titanic doubt, 419 spec choices. Three exact Y5 TV copies moved 17 Oct remain on their target series, so those stale asks are removed. Charts now have 46 cron days and three numerical qualifiers, but Dead Man's Shoes' 1940 association remains unresolved. Current status/owner/ledger summaries corrected locally; no provider call, implementation, live write, new automation, commit, push, merge or deployment. Evidence: `docs/reviews/outstanding-work-reconciled-2026-11-08.md`; earlier three reports preserved.
 
 - **7 Nov — approved calendar-readiness repair deployed (#350, PR #137, `7c536d9`).** Complete clean-tree local and seven-job exact-head PR gates pass; API/web/full readiness match at 18:43 UTC. Retained original click-race evidence, Mac contention failures and reminder-fixture ECONNRESET correction; no relaxed assertions/retries/skips/timeouts. Final main/handoff exact-SHA CI/parity stamp is in PR #137 before session completion. 073/grants/defaults/silent baseline read back; zero appearances/days/claims/outbox. AC6 remains unstruck pending natural qualifying digest/phone evidence; no manual production action or next batch.
 
