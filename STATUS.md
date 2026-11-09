@@ -2,42 +2,37 @@
 
 ## Now
 
-**9 Nov, 10:00 GMT: AD1 release and single-feed preflight approved; publication in progress.**
-Main, remote main and API/web match `417471a167c4b1469a300cfe8124e5f7c1dbe39c`;
-latest exact-SHA code CI 42402887825 passes all seven jobs and full readiness passes.
-The later Backup workflow 42472268641 also passed; it is not a substitute code gate.
-Source, production parity, full readiness and migration 073/no review table were rechecked
-at 09:55–09:57 GMT on 9 Nov. All 30 candidate fingerprints still match. The three exact
-review targets remain valid; Mark is an active viewer with username null/no sync and
-972 active watches. Other cinema/valuation/queue figures were not re-audited in preparation.
+**9 Nov, 14:36 GMT: Mark's three review cards and Add a copy repair are deployed (PR 138, #353).**
+Merged code SHA b3e796686f453dce1ac2e92fa9d8b2350914bd57; all seven exact-head PR jobs
+passed (42631974308), including Chromium 97 / Firefox 96+1 / WebKit 95+2 / jobs 8, API 2,754/zero skips, shared 200/web 898.
+API/web exact SHA and every readiness field passed at 14:32:44 GMT. Migration 074, both
+SELECT grants and withheld credentials are read back. Main code CI 42635525786 and the
+final documentation head's full gate/parity must complete; the final stamp is in PR 138.
 
-**Mark follow-up built locally:** Craig approved the three-card storage/API contract
-(decision 351) and then the bounded navigation repair (352). The proved failure was a
-movie-night response inserting 36 px above Add a copy during the press. Its action row
-now reserves 44 px and does not wrap. Full local results: API2754/zero skips, shared200,
-web898, all static/build checks, Chromium97, Firefox96 + one allowed dictation skip,
-jobs8 pass. The original film-page/offline files are unchanged. A 375 px fake-fixture
-preview was inspected with no overflow. Exact-candidate CI/WebKit, release, production
-assignment and actual Mark answers remain unrun. The preserved checkout is intentionally
-dirty; no commit/push/merge/deploy occurred. Mark's setup remains a separate prepared plan;
-this sitting made no feed request, username save or historical apply.
-See `docs/reviews/ad1-navigation-follow-up-2026-11-08-2326.md` for the final report.
+**Assignments verified 14:33:46 GMT:** exactly three Mark reviews and three Craig-attributed
+creation audits; approved Titanic doubt/Blu-ray, Dead Man's Shoes Wanted row and Shetland
+DVD copy. Revision 1/no answers; exact frozen snapshots match. No notification, catalogue
+identity/copy/history repair or watch write. Mark's real answers and phone acceptance stay
+open; AD1 remains unstruck. Home → Needs you / You → Needs you now reaches the cards.
 
-**Next:** execute Craig's approved release scope: 42 scoped paths across three proposed commits,
-normal PR/all-seven exact-candidate CI including WebKit/merge/deployment, 074/grants and
-three idempotent audited assignments. Frozen partial-document staging excludes unrelated
-reconciliation. No commit/publication/live write yet. Separate next setup checkpoint:
-one bounded feed GET completed: 50 unique entries, 9 recorded/41 absent; enable remains
-a separate decision after review. The proposed
-9 Nov 08:00 slot is past; calculate from Mark's actual future save time. No next build.
-Checkpoint: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
+**Separate setup checkpoint:** the single approved feed GET succeeded 14:07 GMT:
+HTTP 200/40,000 bytes/50 unique entries, 9 recorded/41 viewing IDs absent; zero writes,
+redirects/retries/TMDB. Private diary evidence stays ignored. Username still null,
+no sync and 972 active watches. Next is a separate decision for Mark to save markr973
+himself in Settings → Watch history, after reviewing the preflight. Saving enables later
+natural feed reads/watch rows/possible bare films, not an immediate fetch. Calculate the
+first eligible 08:00 UTC slot from the actual save time; no save or run is booked.
+Historical apply, doubtful entries, corrections and all other batches remain separate.
+
+Report: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
 
 ## Next
 
-The only proposed next action is Craig's release decision described in Now. No further
-implementation batch is authorised. Mark's bounded source preflight is a separate decision,
-followed by his own username save and natural-run read-back after its successful review.
-Other owner acceptance and historical watch-data work retain their existing separate gates.
+Finish the exact final-head CI/deployment stamp in PR 138, then stop. The next owner
+checkpoint is Mark's own username save after review of the successful bounded preflight.
+No agent impersonation, Sync now, job trigger or historical apply. Mark's actual review
+answers/identity judgements and real-phone acceptance remain his; no further build.
+Other owner/data checkpoints retain their separate scope and approval requirements.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -424,6 +419,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **9 Nov, 14:36 GMT — AD1 code and exact three assignments deployed (#353, PR 138).**
+  Merge b3e7966; PR CI 42631974308 all seven green including WebKit, API 2,754/no skips,
+  shared 200/web 898, C97/F96+1/W95+2/jobs8. Production parity/full readiness passed
+  14:32:44; 074/grants/credential exclusions and zero migration-created reviews checked.
+  Exact three service assignments/creation audits and independent read-back pass 14:33:46;
+  no answers/notifications/catalogue or watch writes. One approved feed GET: 50 entries,
+  9 present/41 absent, zero writes; Mark enable remains separate. Main code CI and final
+  documentation CI/parity stamp follow in PR 138. Real Mark/phone acceptance stays open.
+  Connector 403 and older-Git guard failure are retained in the dated release report;
+  gh/compatible Git succeeded without changed permissions or weakened gates. Unrelated
+  reports and reconciliation remain preserved/unpublished; no additional batch or automation.
 
 - **9 Nov, 14:08 GMT — exact release and single-feed preflight approved (#353).**
   Craig replied “yes to both”. App/navigation commits begin; unrelated files preserved.

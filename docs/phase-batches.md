@@ -5484,14 +5484,16 @@ phase — the work happens, the phase does not.
 
 ## AD1 — Mark's three assigned identity reviews — approved 8 Nov 2026
 
-**State: built locally; unstruck and unreleased.** The bounded decision-352 navigation
-follow-up completed 9 Nov: late movie-night action insertion moved Add a copy by 36 px;
-a reserved 44 px row fixes it. API2754/zero skips, shared200/web898, all static/build
-checks, Chromium97, Firefox96 + one allowed dictation skip, jobs8 pass. Both the new
-review flow and original offline case pass in the full browsers. Candidate fingerprint
-and original reports are preserved; 375 px preview inspected. No commit, candidate CI,
-WebKit, deployment or production assignment. Separate release authorisation remains.
-`docs/reviews/ad1-navigation-follow-up-2026-11-08-2326.md` is the final local evidence.
+**State: deployed 9 Nov via PR 138 / b3e7966; owner acceptance open and unstruck.**
+All seven exact-head PR CI jobs 42631974308 pass, including WebKit; API 2,754/zero skips,
+shared 200/web 898, C97/F96+1/W95+2/jobs8. Production parity/full readiness 14:32:44 and
+074/both SELECT grants/credential exclusions pass. Three exact Mark review assignments
+and creation audits verified independently 14:33:46; revision 1/no answers. No notification,
+identity/copy/history correction or watch write. Actual Mark answers and real-phone
+acceptance stay open. Final main code/documentation-head CI/parity stamp follows in PR 138.
+Decision 353 authorises this release and the separate successful one-feed preflight only;
+username save, historical apply and further implementation remain separate.
+`docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md` is the current evidence.
 
 Single bounded batch; Craig replied “approve” to the three-card contract in
 `docs/reviews/mark-needs-you-and-setup-proposal-2026-11-08-1347.md`.

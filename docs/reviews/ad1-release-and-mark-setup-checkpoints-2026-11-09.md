@@ -1,5 +1,92 @@
 # AD1 release and Mark setup checkpoints — 9 Nov 2026, 10:00 GMT
 
+## Release evidence — 9 Nov, 14:36 GMT
+
+**The code and exact three assignments are deployed. Actual Mark answers/phone acceptance remain open.**
+This supersedes the preparation/in-progress wording retained below as dated history.
+
+- [PR 138](https://github.com/CraigR973/mcu-app/pull/138) fast-forwarded to main at 14:31:30 GMT, merge/code SHA
+  `b3e796686f453dce1ac2e92fa9d8b2350914bd57`.
+  Its three commits are `1801feebc2500852cb245d9be165f62f22b7418a`,
+  `5884f1e9630d27ec54d4856f0479a2c9a820b0fb` and
+  `b3e796686f453dce1ac2e92fa9d8b2350914bd57`; exactly the reviewed 42 paths.
+- [Exact-head PR CI 42631974308](https://github.com/CraigR973/mcu-app/actions/runs/42631974308)
+  passed all seven jobs: API 2,754/zero skips, shared 200, web 898, Chromium 97,
+  Firefox 96 plus documented dictation skip, WebKit 95 plus its two documented skips,
+  fake jobs 8. Image boot, reversal, audits and static/type/build gates pass.
+  CI API emitted 37 warnings; the local run's 36 remains a separate dated result.
+- API and web both served that merged SHA with every readiness field passing at
+  14:32:44 GMT. Vercel production deployment `dpl_EkA4oGBfaoD5M5BJecpqDFo6XAuR`
+  is READY for the verified MCU project/team, main and production domain.
+- Read-only schema checks prove 074, both SELECT grants, withheld PIN credentials and
+  zero migration-created reviews. The first 14:32:06 rolling-deploy sample still served
+  the old API/web SHA while 074 had applied; the subsequent completed-deploy sample above
+  established parity. No missing readiness field or failed deployment was concealed.
+- At 14:33:07–14:33:14 the same validated assignment service, with Craig as the explicitly
+  authorised administrator actor, created only the three reviews below and their audits.
+  It revalidated the whole frozen proposal manifest and each target before writes,
+  rechecked Mark's active viewer status, and loaded only non-credential profile columns.
+
+| Review | Created review ID | Exact subject |
+|---|---|---|
+| Titanic | 322f1f64-9efc-42af-abc2-7565b7907c22 | Doubt 66d4862e-09a6-4b60-95ef-eb0e013ae6db / Blu-ray a5b932de-a679-49b3-bfba-2e9c30ef1e5d |
+| Dead Man's Shoes | 75c72649-3846-4728-bd7a-3e34e108ba79 | Wanted 263ed553-24ce-48ed-9bab-bcffacc92369 |
+| Shetland Series 5 | 3d82815c-f016-4f80-900b-0b04f78092ea | DVD 5235685a-ebad-4af4-9015-6eb4558f2f93 |
+
+Independent `mcu_readonly` read-back at 14:33:46 GMT verified exactly three rows, Mark's
+assignee ID, each frozen snapshot/target, revision 1, no answers, no deletion and exactly
+one creation audit per row attributed to Craig. Mark and administrator caller-scoped
+service reads each return the three correct reviews; Craig cannot answer for Mark.
+This is service/database evidence, not Mark's authenticated browser or a phone observation.
+No notification, identity repair, copy move, price-history transfer, watch write or sync ran.
+Mark's username remains null, sync count 0 and active watch count 972.
+
+Mark can now open [Home → Needs you or You → Needs you](https://mcu-app-fawn.vercel.app/needs-you).
+Saving an observation records his answer for Craig; it does not correct the catalogue.
+“Not sure yet” keeps the question open. Real answers, identity judgements/corrections,
+Dead Man's Shoes' separate price-history judgement and real-phone acceptance stay open.
+AD1 therefore remains unstruck, with deployment and owner acceptance distinguished.
+The 44 px reserved action row and narrow selector truncation are the already approved UI costs.
+
+The separate one-request preflight succeeded at 14:07 GMT: HTTP 200, 40,000 decoded bytes,
+50 parsed/unique entries, 9 already recorded and 41 viewing IDs absent; zero writes,
+redirects, retries or TMDB requests. Private XML and viewing IDs remain mode-600/gitignored.
+No diary contents or actual Mark answers are committed. These are not historical-apply counts.
+
+**Next setup checkpoint:** after reviewing that successful result, separately approve Mark
+saving `markr973` himself in [Settings → Watch history](https://mcu-app-fawn.vercel.app/settings?tab=history).
+The save itself fetches nothing. It permits later natural RSS reads, deduplicated watch-row
+writes and possible bare-film creation at the next eligible 08:00 UTC run, then roughly
+weekly. No admin override or impersonation. Record the actual save time and calculate the
+first strictly later eligible slot; if saved before 10 Nov 08:00 UTC with no intervening
+sync, that slot is 10 Nov 08:00 UTC. No actual save has occurred or been scheduled.
+Do not press Sync now or invoke a job. Historical backfill, doubtful entries and corrections
+remain separate fresh dry-run/approval scopes. The preflight's hard transport caps do not
+alter the already-deployed natural sync's redirect/size behaviour documented below.
+
+Main code CI [42635525786](https://github.com/CraigR973/mcu-app/actions/runs/42635525786)
+was running when this evidence-only handoff was prepared. The final handoff commit changes
+only these approved documentation paths, leaving all 30 verified application files unchanged.
+Both merged-code and final-handoff main CI must pass all seven jobs, and final API/web SHA,
+every readiness field, schema/grants and assignment read-back must be verified before this
+release sitting is reported complete. The final exact-SHA/run/parity stamp is recorded in
+PR 138's description after those checks, avoiding another documentation-only deployment loop.
+No owner/phone criterion is closed by that verification.
+
+Execution failures retained: the GitHub connector first rejected a missing
+`repository_full_name` argument, then returned 403 “Resource not accessible by integration”.
+The existing authenticated gh CLI created the intended single PR successfully; no connector
+permission was changed. The Mac's older Git rejected `branch --show-current` in a read-only
+pre-merge guard, before branch/publication mutation. Compatible `symbolic-ref`/`checkout`
+commands completed the same guarded fast-forward without force, stash, discard or hook bypass.
+All earlier build/fixture/navigation failures remain in the unchanged reports below.
+
+No hosting/credential change, provider expansion, notification/trip/calendar/valuation action,
+cinema refresh, AA10c, new implementation batch, worktree or automation was included.
+The five excluded reports remain byte-for-byte intact; unrelated reconciliation hunks are
+still local and unpublished. There is no claim that this intentionally preserved checkout
+satisfies the automatic clean-tree close-out rule.
+
 **9 Nov, 14:08 GMT — execution approved:** Craig replied “yes to both”. Release is in
 progress under decision 353; this supersedes the preparation-only wording below.
 The one authorised feed preflight completed 14:07 GMT: HTTP 200, 40,000 bytes,

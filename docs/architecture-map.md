@@ -457,7 +457,7 @@ production acceptance is complete; simulated browser geometry is separate eviden
 Archive cold launch resolved through the approved re-add (#309/#310); normal resume
 preserves Home, no navigation code change. Old bundle/internal launcher target uninspected.
 
-## Assigned identity reviews — AD1, approved 8 Nov (local build)
+## Assigned identity reviews — AD1, deployed 9 Nov (PR 138; phone acceptance open)
 
 ```mermaid
 flowchart TD
@@ -477,10 +477,12 @@ identity is recognised from source records. A changed wanted identity remains fo
 because it is not proof of retained price-history correction. Existing loans/trips stay
 derived, permissions stay scoped, Home reads perform no source request and assignments
 send no notification. API `reviews` is additive with a shared zod default; `/needs-you`
-shows every review/history. Not yet deployed or assigned in production.
+shows every review/history. Deployed at b3e7966: 074/grants, exact three assignments and
+audits verified; Mark's real answers/phone acceptance remain open. Final CI/parity stamp
+is recorded in PR 138. No notification or automatic catalogue correction.
 
 Film-page navigation follow-up (8 Nov, decision 352): movie-night reads fill a reserved
 44 px action row above the film tabs and Owned copies controls. A delayed response no
 longer inserts height while Add a copy is being pressed. The multiple-night selector
-stays on that row; suggestion writes and navigation use the existing paths. This local
+stays on that row; suggestion writes and navigation use the existing paths. This deployed
 repair adds no data shape, service, permission or external contract.

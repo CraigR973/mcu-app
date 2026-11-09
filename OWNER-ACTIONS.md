@@ -9,17 +9,19 @@ when Group W was planned (30 added). *Numbers
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
-## Mark review release/setup checkpoint — 9 Nov, 10:00 GMT
+## Mark review release/setup checkpoint — 9 Nov, 14:36 GMT (#353)
 
-The three-card build and Add a copy repair are approved, locally verified and unreleased.
-Craig approved the release scope (#353): 42 scoped paths/three commits, normal PR/all-seven CI,
-deployment/074/grants and only three idempotent audited assignments, without notification.
-Mark's active viewer and three exact current targets were revalidated read-only at 09:56 GMT.
-His username remains null, no sync, 972 active watch rows. Next setup decision is one bounded
-feed preflight only, then his own Settings save after its result is reviewed. The single bounded preflight succeeded14:07:50 unique entries,9 recorded/41 absent,zero
-writes. Username enable remains a separate owner decision; no historical apply.
-Candidate CI/WebKit, Mark's real answers and phone acceptance remain open.
-Details: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
+PR 138 deployed b3e7966 after all seven exact-head jobs, including WebKit. API/web/full
+readiness, 074/both-role grants/credential exclusions and exactly three Mark reviews with
+three creation audits are verified. No notifications, identity/history repairs or watch
+writes. Actual Mark answers and phone acceptance remain open; AD1 is unstruck.
+Final documentation-head CI/parity stamp follows in PR 138 before completion.
+
+The one bounded feed GET succeeded at 14:07: 50 unique entries, 9 recorded/41 absent, zero
+writes. Next separate decision: Mark saves markr973 himself in Settings → Watch history,
+then await the first eligible natural 08:00 UTC run, calculated from his actual save time.
+No save, Sync now, manual job, historical apply, impersonation or automation is included.
+Full evidence: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
 
 ## What is left for you, by sitting *(30 Sep)*
 
