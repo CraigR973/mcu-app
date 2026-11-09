@@ -165,19 +165,29 @@ function Worth({ value, isAdmin, pending, error, offline }: { value: CollectionV
           {value.salesBackedDiscs > 0 ? <span className="mt-0.5 block">{COUNT.format(value.salesBackedDiscs)} based on observed sales</span> : null}
           {running ? <span className="mt-0.5 block" role="status">Pricing now</span> : null}
           {error ? <span className="mt-0.5 block" role="status">The latest value could not be loaded; showing the stored estimate.</span> : null}
-          <details className="mt-1">
-            <summary className="list-link flex min-h-11 cursor-pointer items-center text-primary">How this estimate works</summary>
-            <p className="pb-2 leading-5">
-              Each physical copy is valued as used, including postage. At least three observed sales
-              in 90 days use the median of their last advertised listing prices; otherwise a current used asking-price stand-in is
-              used, with a scaled New-price fallback when used listings are scarce. A listing that disappears
-              is only an inferred sale; a Best Offer may have closed below its advertised price.
-              Downloads have no value here.
-            </p>
-          </details>
         </>
       }
     />
+  )
+}
+
+/**
+ * The method behind the estimate, closed until asked for — AE2 (#355, point 17). It opens as
+ * a panel the width of the card under both figures; inside the value's own half of the row it
+ * was squeezed into a column too narrow to read.
+ */
+function EstimateMethod() {
+  return (
+    <details className="mt-2 text-xs text-muted-foreground">
+      <summary className="list-link flex min-h-11 cursor-pointer items-center text-primary">How this estimate works</summary>
+      <p className="pb-2 leading-5">
+        Each physical copy is valued as used, including postage. At least three observed sales
+        in 90 days use the median of their last advertised listing prices; otherwise a current used asking-price stand-in is
+        used, with a scaled New-price fallback when used listings are scarce. A listing that disappears
+        is only an inferred sale; a Best Offer may have closed below its advertised price.
+        Downloads have no value here.
+      </p>
+    </details>
   )
 }
 
@@ -325,6 +335,7 @@ export function CollectionLedger() {
                 <span className="block h-full rounded-full bg-[hsl(var(--accent))]" style={{ width: `${String(share)}%` }} />
               </span>
             ) : null}
+            {valueQuery.data && valueQuery.data.total !== null ? <EstimateMethod /> : null}
           </li>
           <li className="border-t border-border pt-4">
             <FormatsBar slices={stats.formats} />

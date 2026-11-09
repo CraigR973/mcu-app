@@ -4,6 +4,8 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { londonDate } from '@/lib/utils'
+
 import type { Highlights as Data } from '@/lib/api'
 
 const { fetchHighlightsMock } = vi.hoisted(() => ({ fetchHighlightsMock: vi.fn() }))
@@ -46,8 +48,9 @@ const FULL: Data = {
       copies: 2,
     },
   ],
-  // V5's rows alone; V9's fourth is tested below.
+  // V5's rows alone; V9's fourth and AE2's fifth are tested below.
   bestReviewed: [],
+  recentlyAdded: [],
 }
 
 const EMPTY: Data = {
@@ -55,6 +58,7 @@ const EMPTY: Data = {
   mostRewatched: [],
   mostValuable: [],
   bestReviewed: [],
+  recentlyAdded: [],
 }
 
 function renderPanel(data: Data | Error) {
@@ -91,11 +95,12 @@ describe('Highlights on Home — Batch V5, one row with tabs since AC2', () => {
 
     // AC2 (#337): one "Highlights" row; before it, each was a section of its own (W2, #249).
     expect(await screen.findByRole('region', { name: 'Highlights' })).not.toBeNull()
-    expect(tabs()).toEqual(['Most rewatched', 'Most valuable'])
-    expect(panelLinks()).toEqual([`/movies/${ALIEN.movieId}`])
-    fireEvent.click(screen.getByRole('tab', { name: 'Most valuable' }))
-    expect(screen.getByRole('tab', { name: 'Most valuable' }).getAttribute('aria-selected')).toBe('true')
+    // AE2 (#355): Most valuable before Most rewatched.
+    expect(tabs()).toEqual(['Most valuable', 'Most rewatched'])
     expect(panelLinks()).toEqual([`/movies/${HEAT.movieId}`])
+    fireEvent.click(screen.getByRole('tab', { name: 'Most rewatched' }))
+    expect(screen.getByRole('tab', { name: 'Most rewatched' }).getAttribute('aria-selected')).toBe('true')
+    expect(panelLinks()).toEqual([`/movies/${ALIEN.movieId}`])
     expect(fetchHighlightsMock).toHaveBeenCalledTimes(1)
   })
 
@@ -109,7 +114,8 @@ describe('Highlights on Home — Batch V5, one row with tabs since AC2', () => {
 
   it('counts rewatches across both diaries, saying whose', async () => {
     renderPanel(FULL)
-    await screen.findByRole('region', { name: 'Highlights' })
+    // AE2: Most valuable opens first now.
+    fireEvent.click(await screen.findByRole('tab', { name: 'Most rewatched' }))
     const panel = within(screen.getByRole('tabpanel'))
 
     expect(screen.getByText('Watched two or more times, across both diaries.')).not.toBeNull()
@@ -138,11 +144,11 @@ describe('Highlights on Home — Batch V5, one row with tabs since AC2', () => {
 
   it('moves between tabs with the arrow keys', async () => {
     renderPanel(FULL)
-    const first = await screen.findByRole('tab', { name: 'Most rewatched' })
+    const first = await screen.findByRole('tab', { name: 'Most valuable' })
     fireEvent.keyDown(first, { key: 'ArrowRight' })
-    expect(screen.getByRole('tab', { name: 'Most valuable' }).getAttribute('aria-selected')).toBe('true')
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Most valuable' }), { key: 'ArrowRight' })
     expect(screen.getByRole('tab', { name: 'Most rewatched' }).getAttribute('aria-selected')).toBe('true')
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Most rewatched' }), { key: 'ArrowRight' })
+    expect(screen.getByRole('tab', { name: 'Most valuable' }).getAttribute('aria-selected')).toBe('true')
   })
 
   it('leaves out the whole row when every tab is empty', async () => {
@@ -186,11 +192,11 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
     expect(panel.getByText('Video 4K 5.0 · Audio 4.0')).not.toBeNull()
   })
 
-  it('follows the most valuable discs', async () => {
+  it('comes last', async () => {
     renderPanel(REVIEWED)
     await screen.findByRole('tab', { name: 'Best discs' })
 
-    expect(tabs()).toEqual(['Most rewatched', 'Most valuable', 'Best discs'])
+    expect(tabs()).toEqual(['Most valuable', 'Most rewatched', 'Best discs'])
   })
 
   it('is left out until a review has been read', async () => {
@@ -198,5 +204,42 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
     await screen.findByRole('region', { name: 'Highlights' })
 
     expect(screen.queryByRole('tab', { name: 'Best discs' })).toBeNull()
+  })
+})
+
+describe('Highlights on Home — AE2, Recently added (#355)', () => {
+  // This year, so the cards read "5 Nov" whenever the suite runs.
+  const YEAR = londonDate().slice(0, 4)
+  const BLOOD = { movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3409', title: 'Blood Simple', year: 1984, posterPath: null }
+  const RECENT: Data = {
+    ...FULL,
+    bestReviewed: [{ ...ALIEN, overall: 4.5, outOf: 5, formatCode: '4k_uhd', strength: 'picture', scores: [] }],
+    recentlyAdded: [
+      { ...BLOOD, addedBy: 'Mark', addedAt: `${YEAR}-11-05T20:26:00Z`, formats: ['4k_uhd'] },
+      { ...HEAT, addedBy: null, addedAt: `${YEAR}-10-10T19:00:00Z`, formats: ['blu_ray', '4k_uhd'] },
+    ],
+  }
+
+  it('opens on Recently added, first of the four, naming who added each copy, when and what', async () => {
+    renderPanel(RECENT)
+    await screen.findByRole('tab', { name: 'Recently added' })
+
+    expect(tabs()).toEqual(['Recently added', 'Most valuable', 'Most rewatched', 'Best discs'])
+    expect(screen.getByRole('tab', { name: 'Recently added' }).getAttribute('aria-selected')).toBe('true')
+    expect(panelLinks()).toEqual([`/movies/${BLOOD.movieId}`, `/movies/${HEAT.movieId}`])
+    const panel = within(screen.getByRole('tabpanel'))
+    expect(panel.getByText('Mark · 5 Nov · 4K UHD')).not.toBeNull()
+    expect(panel.getByText('Added 10 Oct · 4K UHD + Blu-ray')).not.toBeNull()
+    expect(screen.getByText('Copies added in the app, newest first, and who added them.')).not.toBeNull()
+  })
+
+  it('opens on Recently added every visit, whichever tab was picked last', async () => {
+    renderPanel(RECENT)
+    fireEvent.click(await screen.findByRole('tab', { name: 'Most valuable' }))
+    expect(screen.getByRole('tab', { name: 'Most valuable' }).getAttribute('aria-selected')).toBe('true')
+    cleanup()
+
+    renderPanel(RECENT)
+    expect((await screen.findByRole('tab', { name: 'Recently added' })).getAttribute('aria-selected')).toBe('true')
   })
 })

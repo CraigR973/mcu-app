@@ -2,8 +2,9 @@
 
 Three short rows in one request: films on the shelf rated 4½ or 5 stars and whose ratings
 those are, the most rewatched films across both diaries, and the most valuable discs at
-their stored value; and, since V9, the best reviewed: owned films by Blu-ray.com's
-review score for a format on the shelf.
+their stored value; since V9, the best reviewed: owned films by Blu-ray.com's review score
+for a format on the shelf; and since AE2 (#355), the films with copies most recently added
+in the app.
 
 Unlike Batch 37's memories this is not caller-scoped: it is the collection's highlights,
 shared by both people, and each rating and viewing says whose it is.
@@ -33,6 +34,7 @@ from src.schemas.highlights import (
     HighlightRatingResponse,
     HighlightsResponse,
     PersonViewingsResponse,
+    RecentlyAddedFilmResponse,
     RewatchedFilmResponse,
     TopRatedFilmResponse,
     TopRatedRowResponse,
@@ -312,12 +314,67 @@ async def _best_reviewed(db: AsyncSession) -> list[BestReviewedFilmResponse]:
     return list(films.values())[:ROW_LENGTH]
 
 
+async def _recently_added(db: AsyncSession) -> list[RecentlyAddedFilmResponse]:
+    """The films whose owned copies were added in the app most recently — AE2 (#355).
+
+    **Only copies added in the app have a date**: the spreadsheet's 1,857 rows carry none, so
+    this row is real additions by construction. A film appears once, at its newest owned copy,
+    and a copy in the Trash or sold is not owned (`owned_copy`), so it never leads its film.
+    """
+    newest = func.row_number().over(
+        partition_by=CollectionItem.movie_id,
+        order_by=(CollectionItem.added_at_utc.desc(), CollectionItem.id.desc()),
+    )
+    ranked = (
+        select(
+            CollectionItem.movie_id.label("movie_id"),
+            CollectionItem.added_at_utc.label("added_at"),
+            CollectionItem.added_by.label("added_by"),
+            CollectionItem.formats.label("formats"),
+            newest.label("rank"),
+        )
+        .where(owned_copy(), CollectionItem.added_at_utc.is_not(None))
+        .subquery()
+    )
+    rows = (
+        await db.execute(
+            select(
+                Movie.id,
+                Movie.title,
+                Movie.year,
+                Movie.poster_path,
+                Profile.display_name,
+                ranked.c.added_at,
+                ranked.c.formats,
+            )
+            .join(ranked, ranked.c.movie_id == Movie.id)
+            .outerjoin(Profile, Profile.id == ranked.c.added_by)
+            .where(ranked.c.rank == 1, Movie.deleted_at.is_(None))
+            .order_by(ranked.c.added_at.desc(), Movie.title)
+            .limit(ROW_LENGTH)
+        )
+    ).all()
+    return [
+        RecentlyAddedFilmResponse(
+            movieId=movie_id,
+            title=title,
+            year=year,
+            posterPath=poster_path,
+            addedBy=added_by,
+            addedAt=added_at,
+            formats=list(formats or []),
+        )
+        for movie_id, title, year, poster_path, added_by, added_at, formats in rows
+    ]
+
+
 @router.get("/highlights", response_model=HighlightsResponse)
 async def highlights(_user: CurrentUser, db: Database) -> HighlightsResponse:
-    """Home's Highlights, four rows in one request. A row with nothing in it comes back empty."""
+    """Home's Highlights, five rows in one request. A row with nothing in it comes back empty."""
     return HighlightsResponse(
         topRated=await _top_rated(db),
         mostRewatched=await _most_rewatched(db),
         mostValuable=await _most_valuable(db),
         bestReviewed=await _best_reviewed(db),
+        recentlyAdded=await _recently_added(db),
     )

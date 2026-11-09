@@ -100,3 +100,35 @@ describe('FeaturedFilm — AC2, Feeling lucky inside it (#337)', () => {
     expect(screen.queryByRole('link', { name: 'Open the film' })).toBeNull()
   })
 })
+
+describe('FeaturedFilm — AE2, poster and title above one row of buttons (#355, point 1)', () => {
+  it('opens the film from its title and its poster too', () => {
+    renderCard(PICK)
+    const title = within(screen.getByRole('heading', { name: 'The Suspect' })).getByRole('link', { name: 'The Suspect' })
+    expect(title.getAttribute('href')).toBe(`/movies/${PICK.movieId}`)
+    // The poster's link is for a thumb; a screen reader has the title and "Open the film".
+    const poster = document.querySelector(`a[aria-hidden="true"][href="/movies/${PICK.movieId}"]`)
+    expect(poster?.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('puts every button in one row beneath the film, the switch under it', async () => {
+    renderCard(PICK)
+    fireEvent.click(screen.getByRole('button', { name: 'Deal another' }))
+    expect(await screen.findByRole('heading', { name: 'Gentle Monster' })).not.toBeNull()
+
+    const open = screen.getByRole('link', { name: 'Open the film' })
+    const deal = screen.getByRole('button', { name: 'Deal another' })
+    // Mid-run, Start again is an icon with its name, so three fit at 375 px.
+    const again = screen.getByRole('button', { name: 'Start again' })
+    expect(again.textContent).toBe('')
+    expect(open.parentElement).toBe(deal.parentElement)
+    expect(again.parentElement).toBe(deal.parentElement)
+    const row = deal.parentElement as HTMLElement
+    const lucky = screen.getByRole('group', { name: 'Feeling lucky' })
+    expect(row.parentElement).toBe(lucky)
+    // The switch sits under the row, and the row is not inside the column beside the poster.
+    const toggle = screen.getByRole('checkbox', { name: 'Only films I haven’t watched' })
+    expect(row.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(lucky.contains(screen.getByRole('heading', { name: 'Gentle Monster' }))).toBe(false)
+  })
+})

@@ -463,16 +463,31 @@ export const bestReviewedFilmSchema = z.object({
   scores: z.array(z.object({ heading: z.string().min(1), score: z.number().positive() })).default([]),
 })
 
+/** A film by its newest owned copy added in the app, and who added it — AE2 (#355). */
+export const recentlyAddedFilmSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  /** Null when the profile that added it has gone. */
+  addedBy: z.string().min(1).nullable(),
+  addedAt: z.string(),
+  formats: z.array(z.string().min(1)),
+})
+
 export const highlightsSchema = z.object({
   topRated: topRatedRowSchema,
   mostRewatched: z.array(rewatchedFilmSchema),
   mostValuable: z.array(valuableDiscSchema),
   /** Batch V9. Defaulted, so the panel parses an API without it yet. */
   bestReviewed: z.array(bestReviewedFilmSchema).default([]),
+  /** AE2. Defaulted, so Home parses an API, or a response cached offline, from before it. */
+  recentlyAdded: z.array(recentlyAddedFilmSchema).default([]),
 })
 
 export type UserRole = z.infer<typeof userRoleSchema>
 export type Highlights = z.infer<typeof highlightsSchema>
+export type RecentlyAddedFilm = z.infer<typeof recentlyAddedFilmSchema>
 export type TopRatedFilm = z.infer<typeof topRatedFilmSchema>
 export type RewatchedFilm = z.infer<typeof rewatchedFilmSchema>
 export type ValuableDisc = z.infer<typeof valuableDiscSchema>

@@ -6,6 +6,7 @@ import { valueBehind } from '@/components/collection/value-words'
 import { PosterCard, ShelfHeading, ShelfRow } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchHighlights, formatLabel, type Highlights as HighlightsData } from '@/lib/api'
+import { addedLine } from '@/lib/highlights'
 import { queryErrorMessage } from '@/lib/query-state'
 import { cn, formatShortDate } from '@/lib/utils'
 
@@ -29,26 +30,49 @@ interface Tab {
   cards: Card[]
 }
 
-/** The three rows as tabs, each only when it has a film in it. Top rated stays off Home (AA1). */
-function highlightTabs(data: Pick<HighlightsData, 'mostRewatched' | 'mostValuable' | 'bestReviewed'>): Tab[] {
+type HighlightsRowData = Pick<HighlightsData, 'mostRewatched' | 'mostValuable' | 'bestReviewed' | 'recentlyAdded'>
+
+function rewatchedTab(data: HighlightsRowData): Tab | null {
+  if (data.mostRewatched.length === 0) return null
+  return {
+    key: 'most-rewatched',
+    label: 'Most rewatched',
+    caption: 'Watched two or more times, across both diaries.',
+    cards: data.mostRewatched.map((film) => ({
+      movieId: film.movieId,
+      title: film.title,
+      posterPath: film.posterPath,
+      detail: (
+        <>
+          {film.viewings} viewings
+          <span className="block">
+            {film.byPerson.map((person) => `${person.personName} ${String(person.viewings)}`).join(' · ')}
+          </span>
+        </>
+      ),
+    })),
+  }
+}
+
+/**
+ * The rows as tabs, each only when it has a film in it. Top rated stays off Home (AA1).
+ *
+ * AE2 (#355): Recently added comes first and is where the row opens every visit; then Most
+ * valuable, Most rewatched and Best discs. A tab with nothing in it is not offered, so with
+ * nothing added in the app the row opens on the next one.
+ */
+function highlightTabs(data: HighlightsRowData): Tab[] {
   const tabs: Tab[] = []
-  if (data.mostRewatched.length > 0) {
+  if (data.recentlyAdded.length > 0) {
     tabs.push({
-      key: 'most-rewatched',
-      label: 'Most rewatched',
-      caption: 'Watched two or more times, across both diaries.',
-      cards: data.mostRewatched.map((film) => ({
+      key: 'recently-added',
+      label: 'Recently added',
+      caption: 'Copies added in the app, newest first, and who added them.',
+      cards: data.recentlyAdded.map((film) => ({
         movieId: film.movieId,
         title: film.title,
         posterPath: film.posterPath,
-        detail: (
-          <>
-            {film.viewings} viewings
-            <span className="block">
-              {film.byPerson.map((person) => `${person.personName} ${String(person.viewings)}`).join(' · ')}
-            </span>
-          </>
-        ),
+        detail: addedLine(film),
       })),
     })
   }
@@ -79,6 +103,8 @@ function highlightTabs(data: Pick<HighlightsData, 'mostRewatched' | 'mostValuabl
       })),
     })
   }
+  const rewatched = rewatchedTab(data)
+  if (rewatched) tabs.push(rewatched)
   if (data.bestReviewed.length > 0) {
     tabs.push({
       key: 'best-reviewed',
@@ -121,7 +147,7 @@ function highlightTabs(data: Pick<HighlightsData, 'mostRewatched' | 'mostValuabl
  * for repetition to go and the redesign keeps at most four. The films come in already free of
  * any shown higher up Home (`home-films.ts`). Arrow keys move between the tabs.
  */
-export function HighlightsRow({ data }: { data: Pick<HighlightsData, 'mostRewatched' | 'mostValuable' | 'bestReviewed'> }) {
+export function HighlightsRow({ data }: { data: HighlightsRowData }) {
   const tabs = highlightTabs(data)
   const [picked, setPicked] = useState<string | null>(null)
   const id = useId()
@@ -182,8 +208,9 @@ export function HighlightsRow({ data }: { data: Pick<HighlightsData, 'mostRewatc
 
 /**
  * Highlights on Home — Batch V5, snag 9 (`DECISIONS.md` #228: "a mix of all"), one row since
- * AC2: most rewatched across both diaries, the most valuable discs at their stored value, and
- * the best discs by Blu-ray.com's overall score. AA1 removed Top rated from Home. A tab with
+ * AC2: since AE2 the copies most recently added in the app first, then the most valuable discs
+ * at their stored value, the most rewatched across both diaries, and the best discs by
+ * Blu-ray.com's overall score. AA1 removed Top rated from Home. A tab with
  * nothing in it is not offered, and the row is not shown when every tab is empty. One request.
  *
  * Home itself reads the same query and passes `HighlightsRow` its films, so none repeats one

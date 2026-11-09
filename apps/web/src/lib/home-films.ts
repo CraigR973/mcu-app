@@ -55,7 +55,7 @@ export interface FeaturedPick {
 export interface HomeLineup {
   featured: FeaturedPick | null
   discs: CalendarEntry[]
-  highlights: Pick<Highlights, 'mostRewatched' | 'mostValuable' | 'bestReviewed'> | null
+  highlights: Pick<Highlights, 'mostRewatched' | 'mostValuable' | 'bestReviewed' | 'recentlyAdded'> | null
   forYou: { movieId: string; title: string; posterPath: string | null; detail: string }[]
 }
 
@@ -122,8 +122,12 @@ export function homeLineup(input: {
       mostRewatched: films.peek(input.highlights.mostRewatched, (film) => film.movieId, ROW),
       mostValuable: films.peek(input.highlights.mostValuable, (disc) => disc.movieId, ROW),
       bestReviewed: films.peek(input.highlights.bestReviewed, (film) => film.movieId, ROW),
+      // AE2: Recently added, a tab like the others, avoids what came before Highlights.
+      recentlyAdded: films.peek(input.highlights.recentlyAdded, (film) => film.movieId, ROW),
     }
-    films.claim([...highlights.mostRewatched, ...highlights.mostValuable, ...highlights.bestReviewed].map((film) => film.movieId))
+    films.claim(
+      [...highlights.recentlyAdded, ...highlights.mostRewatched, ...highlights.mostValuable, ...highlights.bestReviewed].map((film) => film.movieId),
+    )
   }
   const forYou = [
     ...films.take(input.onThisDay ?? [], (memory) => memory.movieId, ROW).map((memory) => ({
@@ -162,7 +166,9 @@ export function cinemaStrip(lineup: HomeLineup, films: CinemaFilms | undefined, 
   const shown = [
     ...(lineup.featured ? [lineup.featured] : []),
     ...lineup.discs,
-    ...(lineup.highlights ? [...lineup.highlights.mostRewatched, ...lineup.highlights.mostValuable, ...lineup.highlights.bestReviewed] : []),
+    ...(lineup.highlights
+      ? [...lineup.highlights.recentlyAdded, ...lineup.highlights.mostRewatched, ...lineup.highlights.mostValuable, ...lineup.highlights.bestReviewed]
+      : []),
     ...lineup.forYou,
   ]
   for (const film of shown) {

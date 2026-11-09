@@ -96,6 +96,20 @@ class BestReviewedFilmResponse(BaseModel):
     scores: list[ReviewScoreResponse] = Field(default_factory=list)
 
 
+class RecentlyAddedFilmResponse(BaseModel):
+    """A film by its newest owned copy added in the app — AE2 (#355, points 2 and 15)."""
+
+    movieId: uuid.UUID
+    title: str
+    year: int | None = None
+    posterPath: str | None = None
+    #: Who added the copy. ``None`` when that profile has gone (``added_by`` is SET NULL).
+    addedBy: str | None = None
+    addedAt: UtcDatetime
+    #: The copy's own formats, as it is on the shelf: two for a combo pack.
+    formats: list[str]
+
+
 class HighlightsResponse(BaseModel):
     """Everything the panel shows, in one request. An empty row is left for the page to hide."""
 
@@ -104,3 +118,5 @@ class HighlightsResponse(BaseModel):
     mostValuable: list[ValuableDiscResponse]
     #: Batch V9. Empty until Blu-ray.com's reviews are read.
     bestReviewed: list[BestReviewedFilmResponse] = []
+    #: AE2. Empty when no copy was ever added in the app: the spreadsheet's rows carry no date.
+    recentlyAdded: list[RecentlyAddedFilmResponse] = []

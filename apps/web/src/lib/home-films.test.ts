@@ -26,6 +26,7 @@ function highlights(over: Partial<Highlights> = {}): Highlights {
     mostRewatched: [],
     mostValuable: [],
     bestReviewed: [],
+    recentlyAdded: [],
     ...over,
   }
 }
@@ -105,6 +106,17 @@ describe('homeLineup — AC2 (#337)', () => {
     expect(lineup.highlights?.mostRewatched.map((f) => f.title)).toEqual(['Alien'])
     expect(lineup.highlights?.bestReviewed).toEqual([])
     expect(lineup.forYou).toEqual([])
+  })
+
+  it('keeps Recently added free of the featured film, and For you free of it — AE2', () => {
+    const added = (n: number, title: string) => ({ ...film(n, title), addedBy: 'Mark', addedAt: '2026-11-05T20:26:00Z', formats: ['4k_uhd'] })
+    const lineup = homeLineup({
+      rewatch: [rewatch(2, 'Heat'), rewatch(4, 'Zodiac')],
+      highlights: highlights({ recentlyAdded: [added(2, 'Heat'), added(4, 'Zodiac'), added(6, 'Contagion')] }),
+    })
+    // Heat is featured, so Recently added starts at Zodiac; For you gives way to what it shows.
+    expect(lineup.highlights?.recentlyAdded.map((f) => f.title)).toEqual(['Zodiac', 'Contagion'])
+    expect(lineup.forYou.map((f) => f.title)).toEqual([])
   })
 })
 

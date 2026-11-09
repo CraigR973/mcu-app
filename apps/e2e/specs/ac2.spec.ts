@@ -22,8 +22,19 @@ for (const person of ['Craig', 'Mark'] as const) {
         await expect(main.getByRole('tab', { name: 'Top rated' })).toHaveCount(0)
         const sideways = await main.locator('ul.overflow-x-auto').count()
         expect(sideways, 'sideways rows').toBeLessThanOrEqual(4)
-        const films = await main.locator('a[href^="/movies/"]').evaluateAll((links) => links.map((link) => link.getAttribute('href')))
-        const repeated = films.filter((href, index) => films.indexOf(href) !== index)
+        // A film in two parts of Home is a film shown twice. Since AE2 the featured film opens from
+        // its poster, its title and "Open the film": three links in one place, not three films.
+        // A link outside any section still counts on its own, as every link did before.
+        const places = await main.locator('a[href^="/movies/"]').evaluateAll((links) => {
+          const sections = Array.from(document.querySelectorAll('section'))
+          return links.map((link, index) => {
+            const section = link.closest('section')
+            return [link.getAttribute('href') ?? '', section ? `section-${String(sections.indexOf(section))}` : `link-${String(index)}`] as const
+          })
+        })
+        const where = new Map<string, Set<string>>()
+        for (const [href, place] of places) where.set(href, (where.get(href) ?? new Set<string>()).add(place))
+        const repeated = [...where].filter(([, seen]) => seen.size > 1).map(([href]) => href)
         expect(repeated, 'a film shown twice on Home').toEqual([])
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${String(width)} px fits`).toBe(true)
         await page.setViewportSize({ width, height: 2600 })

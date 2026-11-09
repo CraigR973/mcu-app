@@ -113,6 +113,7 @@ const HIGHLIGHTS: Highlights = {
     { movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, formatCode: '4k_uhd', price: '34.99', currency: 'GBP', basis: 'current asking prices', sampleSize: 7, valueBasis: 'used', factor: null, low: '30.00', high: '40.00', valuedAs: 'as used copies', checkedAt: '2026-09-26T03:00:00Z', copies: 1 },
   ],
   bestReviewed: [{ movieId: CHINATOWN, title: 'Chinatown', year: 1974, posterPath: null, overall: 4.5, outOf: 5, formatCode: '4k_uhd', strength: 'picture', scores: [{ heading: 'Video 4K', score: 5 }] }],
+  recentlyAdded: [],
 }
 
 function set(id: string, name: string, owned: number, total: number): CompletionSet {
@@ -234,9 +235,14 @@ describe('Home as one ledger and varied modules — AC2, Craig\'s pick A (#337)'
     ])
     renderHome()
     await screen.findByRole('heading', { level: 2, name: 'Highlights' })
-    const filmLinks = screen.getAllByRole('link').map((link) => link.getAttribute('href')).filter((href) => href?.startsWith('/movies/'))
-    expect(filmLinks.filter((href) => href === `/movies/${ALIEN}`)).toHaveLength(1)
-    expect(filmLinks.filter((href) => href === `/movies/${JAWS}`)).toHaveLength(1)
+    // Jaws is in Most rewatched, which no longer opens first (AE2).
+    fireEvent.click(screen.getByRole('tab', { name: 'Most rewatched' }))
+    // Counted by the part of Home each film is in: since AE2 the featured film's title opens
+    // it as well as "Open the film", which is two links in one place, not a film twice.
+    const placesOf = (movieId: string) =>
+      new Set(screen.getAllByRole('link').filter((link) => link.getAttribute('href') === `/movies/${movieId}`).map((link) => link.closest('section')))
+    expect(placesOf(ALIEN).size).toBe(1)
+    expect(placesOf(JAWS).size).toBe(1)
     // Best discs had only Alien, already featured, so its tab is not offered.
     expect(screen.queryByRole('tab', { name: 'Best discs' })).toBeNull()
   })
@@ -300,6 +306,11 @@ describe('Home as one ledger and varied modules — AC2, Craig\'s pick A (#337)'
     fireEvent.click(numbers.getByText('How this estimate works'))
     expect(numbers.getByText(/At least three observed sales in 90 days use the median/)).not.toBeNull()
     expect(numbers.getByText(/a Best Offer may have closed below its advertised price/)).not.toBeNull()
+    // AE2 (#355, point 17): the method opens the width of the card, under both figures, not
+    // inside the value's half of the row.
+    const method = numbers.getByText('How this estimate works').closest('details') as HTMLElement
+    expect(method.closest('.grid')).toBeNull()
+    expect(method.parentElement?.querySelector('.grid')?.textContent).toContain('Estimated used value')
   })
 
   it('tells a viewer explicitly when there is no stored estimate', async () => {

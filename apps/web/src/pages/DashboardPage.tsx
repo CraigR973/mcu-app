@@ -128,8 +128,9 @@ export default function DashboardPage() {
         {lineupSettled ? (
           <FeaturedFilm pick={lineup.featured} homeLayoutPending={homeLayoutPending} />
         ) : (
-          // The featured card's own height while its films arrive.
-          <div aria-hidden className="h-52 animate-pulse rounded-lg bg-muted/50" />
+          // The featured card's own height while its films arrive: since AE2 a 120 px poster row
+          // above the button row and the switch.
+          <div aria-hidden className="h-64 animate-pulse rounded-lg bg-muted/50" />
         )}
 
         {lineupSettled ? <ComingToDisc limit={12} entries={lineup.discs} /> : null}

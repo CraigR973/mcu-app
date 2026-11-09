@@ -6793,6 +6793,14 @@
       "title": "Mostvaluable",
       "type": "array"
      },
+     "recentlyAdded": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/RecentlyAddedFilmResponse"
+      },
+      "title": "Recentlyadded",
+      "type": "array"
+     },
      "topRated": {
       "$ref": "#/components/schemas/TopRatedRowResponse"
      }
@@ -11561,6 +11569,72 @@
      "items"
     ],
     "title": "RecentIdentificationsResponse",
+    "type": "object"
+   },
+   "RecentlyAddedFilmResponse": {
+    "description": "A film by its newest owned copy added in the app — AE2 (#355, points 2 and 15).",
+    "properties": {
+     "addedAt": {
+      "title": "Addedat",
+      "type": "string"
+     },
+     "addedBy": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Addedby"
+     },
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "movieId",
+     "title",
+     "addedAt",
+     "formats"
+    ],
+    "title": "RecentlyAddedFilmResponse",
     "type": "object"
    },
    "RecommendationListResponse": {
@@ -22212,7 +22286,7 @@
   },
   "/api/v1/highlights": {
    "get": {
-    "description": "Home's Highlights, four rows in one request. A row with nothing in it comes back empty.",
+    "description": "Home's Highlights, five rows in one request. A row with nothing in it comes back empty.",
     "operationId": "highlights_api_v1_highlights_get",
     "responses": {
      "200": {

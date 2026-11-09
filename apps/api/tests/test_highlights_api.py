@@ -177,6 +177,7 @@ async def test_every_row_is_empty_when_there_is_nothing_to_show(client: AsyncCli
     assert top["items"] == []
     assert body["mostRewatched"] == []
     assert body["mostValuable"] == []
+    assert body["recentlyAdded"] == []
 
 
 async def test_top_rated_is_films_on_the_shelf_rated_four_and_a_half_or_five(
@@ -332,3 +333,104 @@ async def test_it_needs_a_signed_in_person(api_session: AsyncSession) -> None:
     finally:
         app.dependency_overrides.clear()
     assert response.status_code == 401
+
+
+# --- AE2 (#355, points 2 and 15): Recently added ---------------------------------------
+
+
+async def _added(
+    session: AsyncSession,
+    movie: Movie,
+    by: Profile | None,
+    at: datetime,
+    *,
+    formats: list[str] | None = None,
+    listing_status: str = "in_collection",
+    trashed: bool = False,
+) -> CollectionItem:
+    """A copy added in the app: it carries who added it and when, as a spreadsheet row does not."""
+    copy = CollectionItem(
+        id=uuid.uuid4(),
+        movie_id=movie.id,
+        formats=formats or ["blu_ray"],
+        listing_status=listing_status,
+        added_by=by.id if by is not None else None,
+        added_at_utc=at,
+        deleted_at=datetime(2026, 11, 6) if trashed else None,
+    )
+    session.add(copy)
+    await session.flush()
+    return copy
+
+
+def _recent(body: dict[str, object]) -> list[dict[str, object]]:
+    rows = body["recentlyAdded"]
+    assert isinstance(rows, list)
+    return rows
+
+
+async def test_recently_added_is_newest_first_naming_who_when_and_the_copy_formats(
+    client: AsyncClient, api_session: AsyncSession, rater: Profile, other: Profile
+) -> None:
+    older = await _film(api_session, "Older Addition", formats=[])
+    newer = await _film(api_session, "Newer Addition", formats=[])
+    await _added(api_session, older, rater, datetime(2026, 10, 10, 19, 0))
+    await _added(
+        api_session, newer, other, datetime(2026, 11, 5, 20, 26), formats=["4k_uhd", "blu_ray"]
+    )
+
+    rows = _recent(await _highlights(client))
+    assert [row["title"] for row in rows] == ["Newer Addition", "Older Addition"]
+    assert rows[0]["addedBy"] == other.display_name
+    assert rows[0]["formats"] == ["4k_uhd", "blu_ray"]
+    assert isinstance(rows[0]["addedAt"], str) and rows[0]["addedAt"].startswith(
+        "2026-11-05T20:26:00"
+    )
+    assert rows[1]["addedBy"] == rater.display_name
+
+
+async def test_recently_added_shows_a_film_once_at_its_newest_owned_copy(
+    client: AsyncClient, api_session: AsyncSession, rater: Profile, other: Profile
+) -> None:
+    """Contagion on 5 Nov: a 4K added, then the old Blu-ray copy moved to the Trash."""
+    film = await _film(api_session, "Contagion Twice", formats=[])
+    await _added(api_session, film, other, datetime(2026, 11, 4, 21, 31), formats=["4k_uhd"])
+    await _added(api_session, film, rater, datetime(2026, 11, 5, 20, 26), trashed=True)
+    await _added(api_session, film, rater, datetime(2026, 11, 6, 9, 0), listing_status="sold")
+
+    rows = [row for row in _recent(await _highlights(client)) if row["title"] == "Contagion Twice"]
+    assert len(rows) == 1
+    assert rows[0]["formats"] == ["4k_uhd"]
+    assert rows[0]["addedBy"] == other.display_name
+
+
+async def test_recently_added_leaves_out_spreadsheet_rows_and_films_no_longer_owned(
+    client: AsyncClient, api_session: AsyncSession, rater: Profile
+) -> None:
+    await _film(api_session, "From The Spreadsheet")
+    gone = await _film(api_session, "Sold On", formats=[])
+    await _added(api_session, gone, rater, datetime(2026, 11, 1), listing_status="sold")
+    binned = await _film(api_session, "In The Trash", formats=[])
+    await _added(api_session, binned, rater, datetime(2026, 11, 2), trashed=True)
+    listed = await _film(api_session, "Listed For Sale", formats=[])
+    await _added(api_session, listed, None, datetime(2026, 11, 3), listing_status="listed_for_sale")
+
+    rows = _recent(await _highlights(client))
+    titles = [row["title"] for row in rows]
+    assert "From The Spreadsheet" not in titles
+    assert "Sold On" not in titles
+    assert "In The Trash" not in titles
+    # Still owned while it is listed; whoever added it has gone, so it names nobody.
+    assert [row["addedBy"] for row in rows if row["title"] == "Listed For Sale"] == [None]
+
+
+async def test_recently_added_is_a_short_row(
+    client: AsyncClient, api_session: AsyncSession, rater: Profile
+) -> None:
+    for number in range(15):
+        film = await _film(api_session, f"Added {number:02d}", formats=[])
+        await _added(api_session, film, rater, datetime(2026, 10, 10 + number))
+
+    rows = _recent(await _highlights(client))
+    assert len(rows) == 12
+    assert rows[0]["title"] == "Added 14"

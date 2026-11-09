@@ -37,6 +37,7 @@ import {
   bidTrialStartSchema,
   highlightRatingSchema,
   highlightsSchema,
+  recentlyAddedFilmSchema,
   rewatchedFilmSchema,
   movieNightSessionSchema,
   movieNightVoteResultSchema,
@@ -2167,8 +2168,21 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
           scores: [{ heading: 'Video 4K', score: 4.5 }],
         },
       ],
+      // AE2's fifth row, which the API now always sends.
+      recentlyAdded: [{ ...film, addedBy: 'Mark', addedAt: '2026-11-05T20:26:00Z', formats: ['4k_uhd'] }],
     }
     expect(highlightsSchema.parse(highlights)).toEqual(highlights)
+  })
+
+  it('reads Recently added, naming nobody when the person who added it has gone — AE2', () => {
+    const row = { ...film, addedBy: null, addedAt: '2026-10-10T19:00:00Z', formats: ['4k_uhd', 'blu_ray'] }
+    expect(recentlyAddedFilmSchema.parse(row)).toEqual(row)
+    expect(() => recentlyAddedFilmSchema.parse({ ...row, formats: undefined })).toThrow()
+  })
+
+  it('reads a Highlights answer from before AE2 as having nothing recently added', () => {
+    const before = { topRated: { items: [], ratedBy: [], notRatedBy: [] }, mostRewatched: [], mostValuable: [], bestReviewed: [] }
+    expect(highlightsSchema.parse(before).recentlyAdded).toEqual([])
   })
 
   it('refuses a rating off the half-star scale and a "rewatch" seen once', () => {
