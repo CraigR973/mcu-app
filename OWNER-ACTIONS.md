@@ -9,19 +9,33 @@ when Group W was planned (30 added). *Numbers
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
-## Mark review release/setup checkpoint — 9 Nov, 14:36 GMT (#353)
+## Mark username saved — 9 Nov, 18:33 GMT (#354)
 
-PR 138 deployed b3e7966 after all seven exact-head jobs, including WebKit. API/web/full
-readiness, 074/both-role grants/credential exclusions and exactly three Mark reviews with
-three creation audits are verified. No notifications, identity/history repairs or watch
-writes. Actual Mark answers and phone acceptance remain open; AD1 is unstruck.
-Final documentation-head CI/parity stamp follows in PR 138 before completion.
+Craig explicitly asked “1) can you save it for him”, superseding the previous own-Settings
+save boundary for this one action. At 18:33:28.772656 UTC the agent saved `markr973` on
+Mark's existing profile with a guarded one-row update. This follows the owner-exception
+pattern in #253; no Mark login/token/PIN, impersonation, admin route or permission change.
+The guard required his exact ID, active viewer role, null username, unchanged profile
+version, no sync and 972 active watches. Independent `mcu_readonly` read-back at
+18:33:29 UTC confirmed the username, unchanged role, zero syncs and 972 active watches.
+Only the username changed; the existing profile `updated_at` remained unchanged, so the
+save time above is the database clock captured by the update, not that old timestamp.
 
-The one bounded feed GET succeeded at 14:07: 50 unique entries, 9 recorded/41 absent, zero
-writes. Next separate decision: Mark saves markr973 himself in Settings → Watch history,
-then await the first eligible natural 08:00 UTC run, calculated from his actual save time.
-No save, Sync now, manual job, historical apply, impersonation or automation is included.
-Full evidence: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
+No additional feed request, Sync now, manual job, watch write, film creation or notification
+ran. First eligible natural slot: **10 Nov 08:00 UTC/GMT**, provided no intervening sync.
+The deployed weekly importer can read RSS, add deduplicated watches and create bare films;
+its actual scheduled outcome remains unproved. The preflight's stricter transport caps do
+not apply to this existing natural path. Clearing the username stops future selection,
+not rows already imported. Historical backfill, corrections, identities, Mark's review
+answers and real-phone acceptance remain separate. No new batch or automation.
+Private execution evidence: ignored `scratchpad/ad1-mark-username-save-2026-11-09.json`.
+
+Release verification completed before this save: all seven jobs passed at PR 42631974308,
+merged-code main 42635525786 and final handoff main 42636433778. API and web both served
+`f633605ce0a10b72b4c393cd1bca91a3abb53443` with full readiness at 14:58 GMT;
+the final stamp is in PR 138. This subsequent username action changes live data, not code.
+The documentation handoff is committed locally without another deployment or batch close-out.
+
 
 ## What is left for you, by sitting *(30 Sep)*
 

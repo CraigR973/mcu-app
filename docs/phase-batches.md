@@ -5490,9 +5490,12 @@ shared 200/web 898, C97/F96+1/W95+2/jobs8. Production parity/full readiness 14:3
 074/both SELECT grants/credential exclusions pass. Three exact Mark review assignments
 and creation audits verified independently 14:33:46; revision 1/no answers. No notification,
 identity/copy/history correction or watch write. Actual Mark answers and real-phone
-acceptance stay open. Final main code/documentation-head CI/parity stamp follows in PR 138.
-Decision 353 authorises this release and the separate successful one-feed preflight only;
-username save, historical apply and further implementation remain separate.
+acceptance stay open. All seven jobs also pass on main code42635525786/final42636433778;
+exact f633605 API/web/full readiness verified14:58, final stamp PR138. Decision354 separately
+authorised the guarded one-row username save, completed18:33 UTC; independent read-back
+confirms markr973/active viewer/zero syncs/972 watches. First eligible natural slot10Nov08:00
+UTC absent intervening sync; actual outcome unproved. No manual sync/job, feed request or
+watch write. Historical apply/corrections and further implementation remain separate.
 `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md` is the current evidence.
 
 Single bounded batch; Craig replied “approve” to the three-card contract in

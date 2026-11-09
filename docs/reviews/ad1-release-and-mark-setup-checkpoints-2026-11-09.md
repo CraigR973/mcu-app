@@ -1,5 +1,32 @@
 # AD1 release and Mark setup checkpoints — 9 Nov 2026, 10:00 GMT
 
+## Mark username saved — 9 Nov, 18:33 GMT (#354)
+
+Craig explicitly asked “1) can you save it for him”, superseding the previous own-Settings
+save boundary for this one action. At 18:33:28.772656 UTC the agent saved `markr973` on
+Mark's existing profile with a guarded one-row update. This follows the owner-exception
+pattern in #253; no Mark login/token/PIN, impersonation, admin route or permission change.
+The guard required his exact ID, active viewer role, null username, unchanged profile
+version, no sync and 972 active watches. Independent `mcu_readonly` read-back at
+18:33:29 UTC confirmed the username, unchanged role, zero syncs and 972 active watches.
+Only the username changed; the existing profile `updated_at` remained unchanged, so the
+save time above is the database clock captured by the update, not that old timestamp.
+
+No additional feed request, Sync now, manual job, watch write, film creation or notification
+ran. First eligible natural slot: **10 Nov 08:00 UTC/GMT**, provided no intervening sync.
+The deployed weekly importer can read RSS, add deduplicated watches and create bare films;
+its actual scheduled outcome remains unproved. The preflight's stricter transport caps do
+not apply to this existing natural path. Clearing the username stops future selection,
+not rows already imported. Historical backfill, corrections, identities, Mark's review
+answers and real-phone acceptance remain separate. No new batch or automation.
+Private execution evidence: ignored `scratchpad/ad1-mark-username-save-2026-11-09.json`.
+
+Release verification completed before this save: all seven jobs passed at PR 42631974308,
+merged-code main 42635525786 and final handoff main 42636433778. API and web both served
+`f633605ce0a10b72b4c393cd1bca91a3abb53443` with full readiness at 14:58 GMT;
+the final stamp is in PR 138. This subsequent username action changes live data, not code.
+The documentation handoff is committed locally without another deployment or batch close-out.
+
 ## Release evidence — 9 Nov, 14:36 GMT
 
 **The code and exact three assignments are deployed. Actual Mark answers/phone acceptance remain open.**

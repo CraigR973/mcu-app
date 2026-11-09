@@ -7625,3 +7625,15 @@ contemporaneous.
      Separately approved: one GET to Mark's RSS, no retries/redirects, 20-second deadline,
      1 MiB/50-entry caps, private diary evidence, sanitised counts and zero database writes.
      Username enabling, historical backfill/corrections and all other work remain separate.
+
+354. **Save Mark's username once at Craig's explicit request (9 Nov).**
+     Craig asked “1) can you save it for him” after the successful bounded preflight.
+     This supersedes #353's own-Settings checkpoint for this one action, following #253's
+     owner-exception pattern. A guarded exact-profile one-row update saved markr973 at
+     18:33:28 UTC; independent read-only verification confirms active viewer, zero syncs
+     and 972 active watches. No impersonation, admin route or permission change.
+     No feed request, immediate sync/job, watch import, film create or notification ran.
+     The first eligible natural run is 10 Nov08:00 UTC absent an intervening sync; it can
+     add watches/bare films and its actual outcome remains unproved. Historical backfill,
+     corrections, Mark's actual answers/identity judgements and phone acceptance remain
+     separate. No further build, hosting change, automation or batch close-out.

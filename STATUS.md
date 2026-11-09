@@ -2,37 +2,33 @@
 
 ## Now
 
-**9 Nov, 14:36 GMT: Mark's three review cards and Add a copy repair are deployed (PR 138, #353).**
-Merged code SHA b3e796686f453dce1ac2e92fa9d8b2350914bd57; all seven exact-head PR jobs
-passed (42631974308), including Chromium 97 / Firefox 96+1 / WebKit 95+2 / jobs 8, API 2,754/zero skips, shared 200/web 898.
-API/web exact SHA and every readiness field passed at 14:32:44 GMT. Migration 074, both
-SELECT grants and withheld credentials are read back. Main code CI 42635525786 and the
-final documentation head's full gate/parity must complete; the final stamp is in PR 138.
+**9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
+A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
+passed at 18:33:29. Mark remains an active viewer, sync count 0 and active watches 972.
+No impersonation, permission change, feed request, manual sync/job, watch write or film create.
+First eligible natural run: 10 Nov 08:00 UTC/GMT, assuming no intervening sync. Its actual
+outcome remains unproved; later imports can add watches and bare films. Historical backfill,
+doubtful entries and corrections remain separate fresh dry-run/approval scopes.
 
-**Assignments verified 14:33:46 GMT:** exactly three Mark reviews and three Craig-attributed
-creation audits; approved Titanic doubt/Blu-ray, Dead Man's Shoes Wanted row and Shetland
-DVD copy. Revision 1/no answers; exact frozen snapshots match. No notification, catalogue
-identity/copy/history repair or watch write. Mark's real answers and phone acceptance stay
-open; AD1 remains unstruck. Home → Needs you / You → Needs you now reaches the cards.
+**Release complete:** Mark's three review cards and Add a copy repair are live (PR 138, #353).
+All seven exact-head jobs passed on PR 42631974308, main code 42635525786 and final handoff
+42636433778. API/web served f633605ce0a10b72b4c393cd1bca91a3abb53443 with full readiness
+at 14:58 GMT; schema 074, SELECT grants/credential exclusions and three frozen assignments
+with three Craig creation audits verified. Mark's actual answers and phone acceptance stay
+open; AD1 remains unstruck. Final release stamp is in PR 138.
 
-**Separate setup checkpoint:** the single approved feed GET succeeded 14:07 GMT:
-HTTP 200/40,000 bytes/50 unique entries, 9 recorded/41 viewing IDs absent; zero writes,
-redirects/retries/TMDB. Private diary evidence stays ignored. Username still null,
-no sync and 972 active watches. Next is a separate decision for Mark to save markr973
-himself in Settings → Watch history, after reviewing the preflight. Saving enables later
-natural feed reads/watch rows/possible bare films, not an immediate fetch. Calculate the
-first eligible 08:00 UTC slot from the actual save time; no save or run is booked.
-Historical apply, doubtful entries, corrections and all other batches remain separate.
+**Earlier bounded preflight:** one approved GET at 14:07 GMT returned HTTP200/40,000 bytes,
+50 unique entries, 9 recorded/41 absent, zero writes/retries/redirects/TMDB. Private diary
+evidence stays ignored. Those counts are not a historical-apply approval or a promise of
+the next natural run's counts. Existing natural sync lacks the preflight's hard transport caps.
 
 Report: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
 
 ## Next
 
-Finish the exact final-head CI/deployment stamp in PR 138, then stop. The next owner
-checkpoint is Mark's own username save after review of the successful bounded preflight.
-No agent impersonation, Sync now, job trigger or historical apply. Mark's actual review
-answers/identity judgements and real-phone acceptance remain his; no further build.
-Other owner/data checkpoints retain their separate scope and approval requirements.
+Await the natural 10 Nov08:00 UTC eligibility slot without triggering a job or Sync now.
+Mark's actual review answers/identity judgements and real-phone acceptance remain his.
+Historical apply/corrections and other batches retain separate scope and approval requirements.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -419,6 +415,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **9 Nov, 18:33 GMT — Mark username saved at Craig's explicit request (#354).**
+  Guarded exact one-row save of markr973 at 18:33:28 UTC; independent read-only verification
+  at 18:33:29 confirms active viewer, zero syncs and 972 active watches. No feed request,
+  manual job, watch write, film create, impersonation or permission change. First eligible
+  natural slot 10 Nov08:00 UTC, no intervening sync assumed; outcome still unproved.
+  Historical apply/corrections and Mark/phone acceptance stay open. Prior release all-seven
+  PR/main/final-head CI and exact f633605 API/web/full readiness completed14:58; stamp PR138.
+  Documentation handoff committed locally; no further deployment or batch close-out.
 
 - **9 Nov, 14:36 GMT — AD1 code and exact three assignments deployed (#353, PR 138).**
   Merge b3e7966; PR CI 42631974308 all seven green including WebKit, API 2,754/no skips,
