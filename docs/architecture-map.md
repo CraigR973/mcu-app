@@ -505,3 +505,19 @@ formats, what an edit adds, the address of Add a copy). The add page reads `movi
 from its address, keeps its finder under the chosen film, and runs its duplicate check as a
 query on film, formats and barcode.
 
+## AE2, shipped 10 Nov (PR 140, `f0827ff`) — Recently added on Home
+
+```mermaid
+flowchart TD
+    A[GET /highlights] --> B[recentlyAdded: newest owned copy per film, added in the app]
+    A --> C[mostValuable, mostRewatched, bestReviewed]
+    B --> D[Home line-up: no film twice]
+    C --> D
+    D --> E[Highlights tabs: Recently added first]
+```
+
+`_recently_added` ranks owned copies with an `added_at_utc` per film (row_number) and keeps the
+newest twelve films, naming the adder through `added_by` (SET NULL safe). The field is additive,
+zod-defaulted in `packages/shared`, and in the OpenAPI snapshot. Web only otherwise: the featured
+card's layout and the estimate panel's place moved; no data shape changed.
+

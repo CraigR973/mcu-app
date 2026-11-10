@@ -7690,3 +7690,20 @@ contemporaneous.
      - **An add refreshes the film's own record**, so its copy count and best format are current;
        E2E showed "1 owned copy" after a second add.
 
+357. **AE2 shipped: Home's Recently added, the featured film and the estimate note (10 Nov, PR 140,
+     `f0827ff`).** Drafting choices under #355, open to Craig's overrule:
+     - **Recently added is a film once, at its newest owned copy added in the app**, twelve at
+       most; a copy in the Trash or sold never leads its film, and the spreadsheet's undated
+       rows never appear. Each card says who, the day in London (the year only when it is not
+       this one) and the copy's formats best first: "Mark · 5 Nov · 4K UHD".
+     - **The tab order is Recently added, Most valuable, Most rewatched, Best discs**, and
+       Highlights opens on the first tab with films every visit; nothing is remembered.
+     - **The featured film's poster and title both open it.** The poster's link is hidden from
+       screen readers (the title and "Open the film" are theirs). Mid-run, "Start again" is an
+       icon with its name so three controls fit one row at 375 px; at the end of a run it is the
+       only button and shows its words.
+     - **Home's "no film twice" is counted by place, not by link**, in the unit and E2E checks:
+       one card with three links to its film is one place.
+     - **Home's loading placeholder for the featured film grew to its new height** (h-64), so
+       the layout-shift budget AC2 holds still holds.
+

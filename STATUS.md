@@ -2,10 +2,10 @@
 
 ## Now
 
-**9 Nov, 23:47 GMT: Group AE sitting 1 under way; AE1 shipped (PR 139, `aa4242e`).** A second disc
+**10 Nov, 04:38 GMT: Group AE sitting 1 under way; AE1 and AE2 shipped (PR 139 `aa4242e`, PR 140 `f0827ff`).** Home's Highlights opens on Recently added, its featured film keeps its buttons on one row, and the estimate's method opens full width (#357). A second disc
 ticked on a copy now asks "one box or a separate copy?", a new copy has no default format, and a
 film's Add a copy opens on that film (#356). Production health, readiness and the web's version
-report `aa4242e`. AE2 (Home) and AE3 (Closest to complete) are next. Group AE is ten batches in five
+report `f0827ff`. AE3 (Closest to complete) is next. Group AE is ten batches in five
 sittings in `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -466,6 +466,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 04:38 GMT — AE2 shipped (PR 140, `f0827ff09cdb989d8215f07c90b12ae28965693c`, #357).** Recently added first in
+  Highlights (newest owned copies added in the app, "Mark · 5 Nov · 4K UHD"); the featured film's
+  poster and title open it, its buttons on one row; the estimate's method full width. Local gate
+  green (web 930, shared 202, Highlights API tests 11 of 11 on Postgres, E2E Chromium 19 of 19 on
+  Home's cases); CI's seven jobs green. Health, readiness and version.json on `f0827ff`. Read-only check 10 Nov: 60 owned copies with an added date (60 films, 10 Oct–5 Nov), as at 8 Nov; Recently added opens on Titanic (Mark · 5 Nov · Blu-ray), Contagion (Mark · 4 Nov · 4K UHD) and Targets (Mark · 2 Nov · Digital).
 - **9 Nov, 23:47 GMT — AE1 shipped (PR 139, `aa4242ebf248841cd975e3fb9ca2bec617768766`, #356).** One box or a separate copy at
   Save; no default format on a new copy; duplicate check per format; Add a copy opens on its film.
   Local gate green (web 920+, shared 200, API 1693 with no database; E2E Chromium 13 of 13 on the
