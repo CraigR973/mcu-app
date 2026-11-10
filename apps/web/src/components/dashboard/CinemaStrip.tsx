@@ -41,7 +41,7 @@ export function CinemaStrip({ lineup, settled, homeLayoutPending }: { lineup: Ho
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-display text-base font-semibold">At the cinema</span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">What&apos;s showing this week at your nine cinemas.</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">What&apos;s showing this week at your cinemas.</span>
         </span>
         <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       </Link>
@@ -63,7 +63,7 @@ export function CinemaStrip({ lineup, settled, homeLayoutPending }: { lineup: Ho
             <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
           </Link>
         </h2>
-        <p className="-mt-1 text-xs leading-5 text-muted-foreground">This week at your nine cinemas.</p>
+        <p className="-mt-1 text-xs leading-5 text-muted-foreground">This week at your cinemas.</p>
       </div>
       <ShelfRow label="This week at the cinema">
         {films.map(({ card, run, runReason, venueIds }) => {

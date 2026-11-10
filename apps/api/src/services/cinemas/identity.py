@@ -52,7 +52,9 @@ _EVENT = re.compile(
     r"\bnational theatre live\b|^nt live\b|\brbo\b|\broyal ballet\b|\bopera\b|\blive viewing\b"
     r"|\blive in [a-z]|\bworld tour\b|\bthe [a-z]+ tour\b|\bthe musical\b|\bseason \d+\s*[-–]\s*ep"
     r"|\bcinema experience\b|\bshorts\b|\bsecret screen|\bquiz\b|\bconcert\b|\bweekend pass\b"
-    r"|\bfestival pass\b|\bmarathon\b",
+    r"|\bfestival pass\b|\bmarathon\b"
+    # AE4 (#355, point 7): a children's stage show filmed, never a film.
+    r"|\bcbeebies\b|\bpanto\b",
     re.I,
 )
 #: Two films for one ticket.
@@ -60,7 +62,9 @@ _DOUBLE = re.compile(r"\s\+\s(?!(?:discussion|q\s*&\s*a|intro|introduction|panel
 
 _PREFIXES = re.compile(
     r"^\s*(?:\(imax\)\s*|throwback:\s*|toddler club:\s*|members'? preview:\s*|kids'? club:\s*"
-    r"|parent (?:and|&) baby:\s*|autism friendly:\s*|silver screen:\s*)+",
+    r"|parent (?:and|&) baby:\s*|autism friendly:\s*|silver screen:\s*"
+    # AE4: the Omniplex's subtitled, accessible screenings name the film after the club.
+    r"|access film club:\s*)+",
     re.I,
 )
 #: Decorations a listing adds to a film's own title: a run label, a format, a language, a
@@ -105,6 +109,9 @@ def read_title(title: str, shown: date) -> Title:
     # film's own name: "The Restoration" is a film, "(4K Restoration)" is a reissue.
     prefix = _PREFIXES.match(raw)
     rest = raw[prefix.end() :] if prefix else raw
+    # AE4: "Arthur Christmas (15th Anniversary)." A full stop after the closing bracket hid
+    # the decoration from the suffix rule, so the anniversary was searched as part of the name.
+    rest = re.sub(r"\)\.\s*$", ")", rest)
     suffix = _SUFFIXES.search(rest)
     query = (rest[: suffix.start()] if suffix else rest).strip(" -–:")
     decoration = f"{prefix.group(0) if prefix else ''} {suffix.group(0) if suffix else ''}"

@@ -21,10 +21,13 @@ export const OFFICIAL_PROGRAMMES = [
   ['Everyman Glasgow', 'https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/'],
   ['Glasgow Film Theatre', 'https://www.glasgowfilm.org/all-listings/'],
   ['Glasgow Science Centre IMAX', 'https://www.glasgowsciencecentre.org/imax'],
+  // AE4 (#355): the tenth, read from CinemaTimes as the four ODEONs are.
+  ['Omniplex Glasgow - Renfrew Street', 'https://www.omniplexcinemas.co.uk/cinema/showtimes/glasgow-renfrew-street'],
 ] as const
 
 const BOOKING_PATHS: Record<string, string[]> = {
   'www.odeon.co.uk': ['/ticketing/seat-picker/', '/cinemas/'],
+  'www.omniplexcinemas.co.uk': ['/booking/seats/', '/cinema/'],
   'www.myvue.com': ['/book-tickets/', '/cinema/'],
   'www.everymancinema.com': ['/booking/', '/venues-list/', '/film-listing/'],
   'purchase.everymancinema.com': ['/launch/ticketing/'],
@@ -76,6 +79,8 @@ export const COVERAGE_LABELS: Record<ProgrammeVenue['coverage'][number]['status'
 
 const FORMAT_LABELS: Record<string, string> = {
   '2d': '2D', '3d': '3D', '4k': '4K', imax: 'IMAX', isense: 'iSense',
+  // AE4: the Omniplex's own big screen.
+  maxx: 'MAXX',
   'format.projection.3d': '3D', 'format.projection.4k': '4K',
   'format.projection.digital': 'Digital projection', 'format.projection.imax': 'IMAX',
 }
@@ -132,6 +137,7 @@ const SHORT_NAMES: Record<string, string> = {
   'everyman-glasgow': 'Everyman',
   gft: 'GFT',
   'science-centre-imax': 'Science Centre IMAX',
+  'omniplex-glasgow-renfrew-street': 'Omniplex Renfrew St',
 }
 
 export function shortVenueName(venue: { slug: string; name: string }): string {

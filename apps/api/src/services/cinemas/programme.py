@@ -33,6 +33,7 @@ from src.schemas.cinemas import (
     ProgrammeWindow,
     ReleaseFilter,
 )
+from src.services.cinemas.awaiting import awaiting_first_enable
 from src.services.cinemas.domain import booking_url, days_between, release_category
 
 Age = Literal["unknown", "current", "stale"]
@@ -178,15 +179,19 @@ class Window:
 
 
 async def load_window(db: AsyncSession, dates: list[date], now: datetime) -> Window:
-    venues = list(
-        (
+    # AE4 (#355): a cinema awaiting its first enable is read for its evidence, not shown.
+    hidden = await awaiting_first_enable(db)
+    venues = [
+        venue
+        for venue in (
             await db.scalars(
                 select(CinemaVenue)
                 .where(CinemaVenue.deleted_at.is_(None))
                 .order_by(CinemaVenue.name)
             )
         ).all()
-    )
+        if venue.id not in hidden
+    ]
     known = {v.id for v in venues}
     coverage = {
         (r.venue_id, r.local_date): r

@@ -113,6 +113,17 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
         for slug, value in outcomes.items()
         if slug in BY_SLUG and not value.get("failed", True) and value.get("observedDates")
     }
+    # AE4 (#355): a cinema read while it awaits its first enable is evidence for that step,
+    # not a programme anyone sees, so the digest names nothing from it.
+    good &= set(
+        (
+            await db.scalars(
+                select(CinemaVenue.id).where(
+                    CinemaVenue.collection_enabled.is_(True), CinemaVenue.deleted_at.is_(None)
+                )
+            )
+        ).all()
+    )
     coverage = list(
         (
             await db.scalars(

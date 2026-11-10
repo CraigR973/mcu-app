@@ -6,9 +6,9 @@ when a fact agrees (`identity.py`), so this module's job is to fetch the candida
 weighs: one search per distinct film, then each exact-title candidate's details with its
 credits and UK release dates in the same answer. Two requests for most films.
 
-The budget: at most 48 TMDB requests a run, and never more than the programme left of the
-run's 120 (with a margin of four), so the existing per-run caps hold. On 5 Nov the programme had
-77 distinct films to look up; at about two requests each that is four runs, and the 30-day
+The budget: TMDB has its own 120 requests a run (AE4, #355; it was 48 inside the sites' 120
+under AC3), spent after the programme is read. On 5 Nov the programme had 77 distinct films to
+look up; at about two requests each, one morning now clears what took four, and the 30-day
 positive and 7-day negative caches mean a film is looked up again only when its listing
 changes or its record expires.
 """
@@ -178,12 +178,8 @@ def selected_rows(snapshots: dict[str, Snapshot]) -> dict[FilmKey, Showing]:
 
 
 def metadata_room(fetch: Budget) -> int:
-    """TMDB requests this run may still make: the cap, or what the programme left less four."""
-    return max(
-        0,
-        min(METADATA_CAP, 120 - (fetch.requests - fetch.metadata_requests) - 4)
-        - fetch.metadata_requests,
-    )
+    """TMDB requests this run may still make, from TMDB's own cap (AE4)."""
+    return max(0, METADATA_CAP - fetch.metadata_requests)
 
 
 async def _details(fetch: Budget, token: str, movie_id: int, votes: int) -> Candidate:

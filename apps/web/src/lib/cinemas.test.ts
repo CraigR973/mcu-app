@@ -14,8 +14,8 @@ describe('cinema booking safety before another fetch', () => {
     const p = cinemaFixture(), showing = { ...p.films[0].showings[0], bookingUrl }
     expect(showingBooking(showing, p.venues[0], CINEMA_NOW, true)).toBeNull()
   })
-  it('keeps official fallbacks for all nine venues without an API answer', () => {
-    expect(OFFICIAL_PROGRAMMES).toHaveLength(9)
+  it('keeps official fallbacks for every venue without an API answer, the Omniplex included (AE4)', () => {
+    expect(OFFICIAL_PROGRAMMES).toHaveLength(10)
     for (const [, url] of OFFICIAL_PROGRAMMES) expect(programmeUrl(url)).toBe(url)
     expect(programmeUrl('https://example.com/')).toBeNull()
   })
@@ -94,3 +94,19 @@ describe('At the cinema’s film-first reading (AC4)', () => {
     expect(shortVenueName({ slug: 'new-venue', name: 'A New Venue' })).toBe('A New Venue')
   })
 })
+
+describe('the Omniplex, a tenth cinema — AE4 (#355)', () => {
+  it('books on its own site, and refuses any other path there', () => {
+    const p = cinemaFixture(), s = p.films[0].showings[0], v = p.venues[0]
+    const omniplex = 'https://www.omniplexcinemas.co.uk/booking/seats/glasgow-renfrew-street/5703'
+    expect(showingBooking({ ...s, bookingUrl: omniplex }, v, CINEMA_NOW, true)).toBe(omniplex)
+    expect(showingBooking({ ...s, bookingUrl: 'https://www.omniplexcinemas.co.uk/account/login' }, v, CINEMA_NOW, true)).toBeNull()
+    expect(programmeUrl('https://www.omniplexcinemas.co.uk/cinema/showtimes/glasgow-renfrew-street')).not.toBeNull()
+  })
+
+  it('names its big screen and itself briefly', () => {
+    expect(showingFormats(['maxx'])).toEqual(['MAXX'])
+    expect(shortVenueName({ slug: 'omniplex-glasgow-renfrew-street', name: 'Omniplex Glasgow - Renfrew Street' })).toBe('Omniplex Renfrew St')
+  })
+})
+

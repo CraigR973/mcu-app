@@ -30,6 +30,7 @@ from src.models.profile import Profile, UserRole
 from src.services import heartbeat
 from src.services.cinema_digest.evaluate import evaluate_run, recover
 from src.services.cinemas import identity
+from src.services.cinemas.awaiting import awaiting_first_enable
 from src.services.cinemas.collect import ADAPTER_VERSION, collect_venue
 from src.services.cinemas.domain import (
     LONDON,
@@ -64,13 +65,17 @@ class PreparedRun(BaseModel):
     date_from: date
     date_to: date
     snapshots: dict[str, Snapshot]
-    requests: int = Field(ge=0, le=120)
+    #: Every request the run made: the sites' and TMDB's, each under its own 120 (AE4).
+    requests: int = Field(ge=0, le=240)
+    metadata_requests: int = Field(default=0, ge=0, le=120)
     decoded_bytes: int = Field(ge=0, le=64 * 1024 * 1024)
     metadata: list[Metadata] = Field(default_factory=list, max_length=10000)
     metadata_report: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_scope(self) -> "PreparedRun":
+        if not 0 <= self.requests - self.metadata_requests <= 120:
+            raise ValueError("Artifact's site requests are outside the run's 120")
         dates = set(days_between(self.date_from, self.date_to))
         if not self.snapshots or not set(self.snapshots) <= set(BY_SLUG):
             raise ValueError("Artifact contains an unknown or empty venue scope")
@@ -264,6 +269,7 @@ async def prepare(
         date_to=end,
         snapshots=snapshots,
         requests=fetch.requests,
+        metadata_requests=fetch.metadata_requests,
         decoded_bytes=fetch.bytes_read,
         metadata=metadata,
         metadata_report=metadata_report,
@@ -300,6 +306,9 @@ def summary(prepared: PreparedRun) -> dict[str, Any]:
     return {
         "rows": prepared.row_count,
         "requests": prepared.requests,
+        # AE4: the two caps' counts apart, so a read-back can see each within its own 120.
+        "siteRequests": prepared.requests - prepared.metadata_requests,
+        "metadataRequests": prepared.metadata_requests,
         "decodedBodyBytes": prepared.decoded_bytes,
         "categoryCountsFromSourceEvidence": categories,
         "dateFrom": prepared.date_from.isoformat(),
@@ -512,22 +521,31 @@ async def _promote_all(
     return {"status": status, **summary(prepared), "changes": report["venues"]}
 
 
+async def due_venues(db: AsyncSession) -> set[str]:
+    """The cinemas a morning run reads: those switched on, and since AE4 (#355) any awaiting
+    its first enable, but only beside a switched-on cinema on its own source."""
+    selected = set(
+        (
+            await db.scalars(
+                select(CinemaVenue.slug).where(
+                    CinemaVenue.collection_enabled.is_(True),
+                    CinemaVenue.deleted_at.is_(None),
+                )
+            )
+        ).all()
+    )
+    sources = {BY_SLUG[slug].source for slug in selected if slug in BY_SLUG}
+    awaiting = await awaiting_first_enable(db)
+    return selected | {venue.slug for venue in awaiting.values() if venue.source in sources}
+
+
 async def refresh_due(engine: AsyncEngine) -> dict[str, Any]:
     """Morning child phase: its exception cannot undo the committed reminder pass."""
     started = time.monotonic()
     try:
         factory = async_sessionmaker(engine, expire_on_commit=False)
         async with factory() as db:
-            selected = set(
-                (
-                    await db.scalars(
-                        select(CinemaVenue.slug).where(
-                            CinemaVenue.collection_enabled.is_(True),
-                            CinemaVenue.deleted_at.is_(None),
-                        )
-                    )
-                ).all()
-            )
+            selected = await due_venues(db)
             cache = await metadata_cache(db) if selected else {}
             paused = await metadata_is_paused(db) if selected else False
         if not selected:

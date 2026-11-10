@@ -60,7 +60,7 @@ export default function MovieNightPage({ view = 'home' }: { view?: 'home' | 'cin
         eyebrow="Screening room"
         title="Movie night"
         description={view === 'cinema'
-          ? 'What is on at your nine cinemas, film by film, with every showing a tap away.'
+          ? 'What is on at your cinemas, film by film, with every showing a tap away.'
           : 'Everyone works through the same shortlist. When you all add the same film, tonight is sorted.'}
       />
       <Views />
@@ -208,7 +208,7 @@ function AtHome() {
         {/* AC4: beside "Start a screening". AC5's "Propose a trip" is on a film's page there. */}
         <section className="archive-panel flex flex-col p-4 sm:p-5" aria-labelledby="plan-cinema-trip">
           <h2 id="plan-cinema-trip" className="section-heading">Plan a cinema trip</h2>
-          <p className="mt-1 flex-1 text-sm text-muted-foreground">What is on at your nine cinemas this week and coming up, with every showing of each film.</p>
+          <p className="mt-1 flex-1 text-sm text-muted-foreground">What is on at your cinemas this week and coming up, with every showing of each film.</p>
           <Button asChild variant="outline" className="mt-3 self-start">
             <Link to={CINEMA_VIEW_PATH}><Clapperboard className="mr-2 h-4 w-4" aria-hidden />See what’s on</Link>
           </Button>

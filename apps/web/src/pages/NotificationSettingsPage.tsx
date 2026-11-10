@@ -379,7 +379,7 @@ export function PreferencesSection() {
 
       <div className="mt-3 space-y-3 border-t border-border pt-3">
         <div className="flex items-center gap-4">
-          <div className="min-w-0 flex-1"><p className="font-medium">Cinemas</p><p className="text-sm text-muted-foreground">One daily summary of films newly listed at your nine cinemas. No new films means no notification.</p></div>
+          <div className="min-w-0 flex-1"><p className="font-medium">Cinemas</p><p className="text-sm text-muted-foreground">One daily summary of films newly listed at your cinemas. No new films means no notification.</p></div>
           <Toggle label="Cinemas" checked={current.cinemasEnabled === true} disabled={save.isPending || current.cinemasEnabled === undefined || current.cinemasOlderOnly === undefined} onChange={(next) => save.mutate({ cinemasEnabled: next })} />
         </div>
         <div className="flex items-center gap-4">

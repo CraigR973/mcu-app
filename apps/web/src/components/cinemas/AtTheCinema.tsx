@@ -263,7 +263,7 @@ export function AtTheCinema() {
           </div>
           <details className="group">
             <summary className={cn(CHIP, filters.venueIds === null ? CHIP_OFF : 'border-primary/60 bg-primary/10 text-foreground', 'cursor-pointer list-none [&::-webkit-details-marker]:hidden')}>
-              Cinemas · {filters.venueIds === null ? 'all nine' : `${String(filters.venueIds.length)} of ${String(venues.length)}`}
+              Cinemas · {filters.venueIds === null ? `all ${String(venues.length)}` : `${String(filters.venueIds.length)} of ${String(venues.length)}`}
               <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
             </summary>
             <fieldset className="mt-2 rounded-md border border-border bg-card px-3 py-1">

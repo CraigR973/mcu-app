@@ -8,7 +8,7 @@ import { formatLondonClock, formatWeekdayDate, londonDate } from './utils'
  * Cinema trips in words — AC5 (#345). The wording Craig approved, in one place: a trip's time,
  * its replies, the flag the live programme raises, Needs you's items and Home's top slot.
  *
- * Times are the cinema's own (UK), as the film page writes them: all nine are in Europe/London.
+ * Times are the cinema's own (UK), as the film page writes them: every one is in Europe/London.
  */
 
 /** Every push, card and Needs you item opens the trip's own page. */

@@ -564,7 +564,7 @@ export default function ReleasesPage({ view = 'disc' }: { view?: ReleaseCalendar
         eyebrow="Programme diary"
         title="Releases"
         description={view === 'cinema'
-          ? 'UK cinema opening dates, and what is showing at your nine cinemas.'
+          ? 'UK cinema opening dates, and what is showing at your cinemas.'
           : 'What is coming to disc in 4K and on Blu-ray, and the sales worth waiting for.'}
         actions={profile?.role === 'admin' ? (
           <Button

@@ -208,7 +208,8 @@ test('the run, day and cinema filters answer at once and come back from a film p
   await expect(page.getByRole('article')).toHaveCount(1)
   await expect(page.getByRole('article', { name: 'Hamnet' })).toBeVisible()
   await page.getByRole('group', { name: 'Day' }).getByRole('button', { name: 'Any day' }).click()
-  await page.getByText(/^Cinemas · all nine/).click()
+  // AE4 (#355): the chip counts the cinemas, the Omniplex included, rather than saying nine.
+  await page.getByText(/^Cinemas · all \d+/).click()
   for (const name of ['Cineworld Glasgow Silverburn', 'Vue Glasgow St Enoch', 'ODEON Braehead', 'Glasgow Science Centre IMAX']) {
     await page.getByRole('checkbox', { name }).uncheck()
   }

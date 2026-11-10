@@ -85,7 +85,8 @@ describe('At the cinema, film first (AC4)', () => {
     const day = await screen.findByRole('region', { name: 'Thu 5 Nov' })
     expect(titles(day)).toEqual(['A current first run'])
     fireEvent.click(within(screen.getByRole('group', { name: 'Day' })).getByRole('button', { name: 'Any day' }))
-    fireEvent.click(screen.getByText('Cinemas · all nine'))
+    // AE4: the chip counts the cinemas rather than saying nine; this fixture has two.
+    fireEvent.click(screen.getByText('Cinemas · all 2'))
     fireEvent.click(screen.getByRole('checkbox', { name: 'Vue Glasgow St Enoch' }))
     const favourite = within(grid('This week')).getByRole('article', { name: 'A returning favourite' })
     expect(within(favourite).getByText('ODEON Kilmarnock')).toBeTruthy()
@@ -129,11 +130,12 @@ describe('At the cinema, film first (AC4)', () => {
     expect(state.fetch).toHaveBeenCalledTimes(2)
   })
 
-  it('keeps the nine official programmes when the first read fails, and says when offline', async () => {
+  it('keeps every official programme when the first read fails, and says when offline', async () => {
     state.fetch.mockRejectedValueOnce(new Error('Unavailable'))
     setup()
     const fallback = await screen.findByRole('region', { name: 'Official cinema programmes' })
-    expect(within(fallback).getAllByRole('link')).toHaveLength(9)
+    // AE4 (#355): ten since the Omniplex joined the nine.
+    expect(within(fallback).getAllByRole('link')).toHaveLength(10)
     cleanup()
     state.online = false
     setup()

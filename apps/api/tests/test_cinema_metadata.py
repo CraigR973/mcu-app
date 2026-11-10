@@ -365,7 +365,13 @@ async def test_positive_negative_cache_expiry_fingerprint_and_no_token():
         assert not records and report["pending"] == 1 and not seen
 
 
-async def test_one_lookup_per_film_a_48_request_subcap_and_token_host_isolation():
+async def test_one_lookup_per_film_tmdbs_own_cap_and_token_host_isolation(monkeypatch):
+    # 120 lookups a second apart would take two minutes; the spacing has its own test
+    # (`test_transport_host_spacing_and_global_concurrency`), so here the wait is skipped.
+    async def no_wait(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr("src.services.cinemas.fetch.asyncio.sleep", no_wait)
     seen = []
 
     def handler(request):
@@ -381,22 +387,24 @@ async def test_one_lookup_per_film_a_48_request_subcap_and_token_host_isolation(
         )
         assert len(records) == 13 and fetch.requests == 1 and report["lookups"] == 1
         assert {r.state for r in records} == {"missing"}
-        # Sixty different films: the sub-cap stops the run, and the rest wait for the next one.
+        # More films than TMDB's own cap: it stops the run, and the rest wait for the next one.
         many = [
             replace(film("Clayface"), key=f"many-{i}", film_key=f"many-{i}", title=f"Film {i}")
-            for i in range(60)
+            for i in range(130)
         ]
         fetch = Budget(client)
         records, report = await metadata.enrich(
             {VENUE.slug: Snapshot(rows=many, observed_utc=NOW)}, fetch, "fixture-token", {}
         )
-        assert METADATA_CAP == 48 and fetch.metadata_requests <= METADATA_CAP
-        assert len(records) + report["pending"] == 60 and report["pending"] > 0
+        # AE4 (#355): TMDB's own 120 a run, up from AC3's 48 inside the sites' 120.
+        # A film needs its search and details, so a run stops with one request in hand.
+        assert METADATA_CAP == 120 and METADATA_CAP - 1 <= fetch.metadata_requests <= METADATA_CAP
+        assert len(records) + report["pending"] == 130 and report["pending"] > 0
         with pytest.raises(SourceError, match="credential sent"):
             await fetch.metadata("https://www.myvue.com/3/test", "fixture-token")
         await fetch.get("https://www.myvue.com/programme")
         assert "authorization" not in seen[-1].headers
-        fetch.requests = 120
+        fetch.requests = fetch.metadata_requests + 120  # The sites at their own ceiling.
         with pytest.raises(SourceError, match="limit"):
             await fetch.get("https://www.glasgowfilm.org/")
 
@@ -497,12 +505,14 @@ async def test_two_matching_films_refusals_and_a_spent_budget_never_guess_or_neg
         assert len(seen) == 1
     async with httpx.AsyncClient(transport=httpx.MockTransport(two_films)) as client:
         fetch = Budget(client)
-        fetch.requests = 120
+        # AE4: TMDB's own cap spent, whatever the sites read.
+        fetch.requests = fetch.metadata_requests = METADATA_CAP
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
         # Nothing left to spend: no request at all, and nothing cached as "missing".
-        assert not records and report["pending"] == 1 and fetch.metadata_requests == 0
+        assert not records and report["pending"] == 1
+        assert fetch.metadata_requests == METADATA_CAP and len(seen) == 1
 
 
 def test_a_reviewed_pick_names_a_current_candidate_and_dates_label_the_run():
@@ -684,24 +694,25 @@ async def test_programmes_precede_metadata_and_no_token_or_pause_never_sends_aut
             assert not prepared.metadata
 
 
-async def test_metadata_never_overruns_the_runs_120_request_ceiling():
+async def test_metadata_never_overruns_tmdbs_own_cap():
+    """AE4 (#355): TMDB's 120 is its own; the programme's spend no longer sets it."""
     row = film("Clayface")
     seen = []
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(handler_for(SAMPLES[0], seen))
     ) as client:
         fetch = Budget(client)
-        fetch.requests = 116  # The programme has spent all but the margin of four.
+        fetch.requests = fetch.metadata_requests = METADATA_CAP - 1  # One left: not a film's two.
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
-        assert fetch.requests == 116 and not seen and not records and report["pending"] == 1
+        assert not seen and not records and report["pending"] == 1
         fetch = Budget(client)
-        fetch.requests = 114  # Room for exactly one film's search and details.
+        fetch.requests = fetch.metadata_requests = METADATA_CAP - 2  # Exactly one film's two.
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
-    assert fetch.requests == 116 and fetch.metadata_requests == len(seen) == 2
+    assert fetch.metadata_requests == METADATA_CAP and len(seen) == 2
     assert len(records) == 1 and report["pending"] == 0
 
 
@@ -799,3 +810,48 @@ async def test_a_short_budget_goes_first_to_a_labelled_film_with_source_facts():
     assert records[0].film_key == returning.film_key and records[0].candidates[0].tmdb_id == 1417
     assert report["pending"] == 5
     assert returning.tmdb_id is None  # Prioritisation is not identity approval.
+
+
+async def test_tmdb_keeps_its_own_cap_when_the_programme_has_spent_its_120():
+    """AE4 (#355): the sites' ceiling no longer starves the lookups, and theirs stops the sites."""
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"results": []})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        fetch = Budget(client)
+        fetch.requests = 120  # The programme spent its whole ceiling first.
+        assert fetch.site_requests == 120 and metadata.metadata_room(fetch) == METADATA_CAP
+        records, report = await metadata.enrich(
+            {VENUE.slug: Snapshot(rows=[film("Clayface")], observed_utc=NOW)},
+            fetch,
+            "fixture-token",
+            {},
+        )
+        assert len(records) == 1 and fetch.metadata_requests == 1 and len(seen) == 1
+        assert report["requests"] == 1
+        # And TMDB's spend does not give the sites more: they are still at their 120.
+        with pytest.raises(SourceError, match="limit"):
+            await fetch.get("https://www.glasgowfilm.org/")
+
+
+def test_the_run_report_counts_the_sites_and_tmdb_apart():
+    """AE4 (#355): two caps, so the run records two counts, each held to its own 120."""
+    kwargs = dict(
+        prepared_utc=NOW,
+        date_from=DAY,
+        date_to=DAY,
+        snapshots={VENUE.slug: snapshot(film("Clayface"))},
+        decoded_bytes=100,
+    )
+    prepared = refresh.PreparedRun(**kwargs, requests=150, metadata_requests=60)
+    report = refresh.summary(prepared)
+    assert (report["requests"], report["siteRequests"], report["metadataRequests"]) == (150, 90, 60)
+    # An artifact from before AE4 had one count, all of it within the sites' old shared 120.
+    assert refresh.PreparedRun(**kwargs, requests=110).metadata_requests == 0
+    with pytest.raises(ValueError, match="outside the run's 120"):
+        refresh.PreparedRun(**kwargs, requests=200, metadata_requests=60)
+    with pytest.raises(ValueError):
+        refresh.PreparedRun(**kwargs, requests=240, metadata_requests=121)

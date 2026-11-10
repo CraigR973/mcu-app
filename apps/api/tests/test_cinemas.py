@@ -125,7 +125,9 @@ async def test_api_window_validation_and_explicit_empty_coverage(client):
     response = await client.get("/api/v1/cinemas/programme?dateFrom=2026-11-02&dateTo=2026-11-15")
     assert response.status_code == 200, response.text
     data = response.json()
+    # AE4 (#355): the Omniplex is read but not shown until its first enable.
     assert len(data["venues"]) == 9
+    assert "omniplex-glasgow-renfrew-street" not in {v["slug"] for v in data["venues"]}
     assert data["films"] == [] and not data["selectionComplete"]
     assert all(not v["collectionEnabled"] for v in data["venues"])
     assert all(c["status"] == "notEnabled" for v in data["venues"] for c in v["coverage"])

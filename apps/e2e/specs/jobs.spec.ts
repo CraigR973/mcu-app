@@ -167,3 +167,49 @@ test('the cinema digest names a verified film once across two scheduled runs', a
   const fixture = await exerciseCinemaDigest(await api('Craig'), await api('Mark'), db)
   await fixture.cleanup()
 })
+
+// AE4 (#355): the step owed the morning after AE4 deploys, rehearsed in the fake world. A morning
+// run reads the Omniplex's page beside an ODEON on CinemaTimes and shows it to nobody; with the
+// other nine then on, as production is, the existing command switches on exactly one cinema,
+// audited, and only then is it seen. (Only Braehead is on for the read: the other sources'
+// hosts are not faked here.)
+test('the Omniplex is read on a morning run while off, then the existing command enables it alone', async ({ api, db }) => {
+  const omniplex = db.scalar("SELECT id FROM cinema_venues WHERE slug='omniplex-glasgow-renfrew-street'")
+  const craigId = db.scalar("SELECT id FROM profiles WHERE display_name='Craig'")
+  const runsBefore = new Set((db.scalar("SELECT coalesce(string_agg(id::text,','),'') FROM cinema_refresh_runs") || '').split(','))
+  const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() + 86400000))
+  const slugs = async () => (await (await api('Craig')).get<{ venues: { slug: string }[]; films: { title: string }[] }>('/cinemas/films'))
+  try {
+    db.sql("UPDATE cinema_venues SET collection_enabled = (slug = 'odeon-braehead')")
+    world.setScenario({ cinemas: { slug: 'omniplex-glasgow-renfrew-street', title: 'Renfrew Morning', day } })
+    const morning = runJob('src.scripts.run_reminders')
+    expect(morning.status, morning.output).toBe(0)
+    expect(Number(db.scalar(`SELECT count(*) FROM cinema_coverage WHERE venue_id='${omniplex}' AND observed`))).toBeGreaterThan(0)
+    // Read, but shown to nobody, and not in any digest.
+    const before = await slugs()
+    expect(before.venues.map((venue) => venue.slug)).not.toContain('omniplex-glasgow-renfrew-street')
+    expect(before.films.map((film) => film.title)).not.toContain('Renfrew Morning')
+    expect(db.scalar("SELECT count(*) FROM cinema_digest_appearances")).toBe('0')
+
+    // Production's state for the enable step: the nine on, the Omniplex off.
+    db.sql(`UPDATE cinema_venues SET collection_enabled = (id <> '${omniplex}')`)
+    // The existing command, guarded by its count: any other number writes nothing.
+    const wrong = runJob('src.scripts.refresh_cinemas', ['--enable', '--confirm-count', '2', '--actor-profile-id', craigId])
+    expect(wrong.status).not.toBe(0)
+    expect(db.scalar(`SELECT collection_enabled::text FROM cinema_venues WHERE id='${omniplex}'`)).toBe('false')
+    const enable = runJob('src.scripts.refresh_cinemas', ['--enable', '--confirm-count', '1', '--actor-profile-id', craigId])
+    expect(enable.status, enable.output).toBe(0)
+    expect(db.scalar(`SELECT collection_enabled::text FROM cinema_venues WHERE id='${omniplex}'`)).toBe('true')
+    expect(db.scalar(`SELECT count(*) FROM admin_actions WHERE target_table='cinema_venues' AND target_id='${omniplex}'`)).toBe('1')
+    const after = await slugs()
+    expect(after.venues.map((venue) => venue.slug)).toContain('omniplex-glasgow-renfrew-street')
+    expect(after.films.map((film) => film.title)).toContain('Renfrew Morning')
+  } finally {
+    db.sql(`UPDATE cinema_venues SET collection_enabled=false;
+      DELETE FROM admin_actions WHERE target_table='cinema_venues' AND target_id='${omniplex}';
+      DELETE FROM cinema_films WHERE source='cinematimes' AND source_key='/uk/glasgow/movies/ac6-e2e/'`)
+    const runs = (db.scalar("SELECT coalesce(string_agg(id::text,','),'') FROM cinema_refresh_runs") || '').split(',')
+    for (const id of runs.filter((id) => id && !runsBefore.has(id))) db.sql(`DELETE FROM cinema_refresh_runs WHERE id='${id}'`)
+  }
+})
+

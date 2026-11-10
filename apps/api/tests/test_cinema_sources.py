@@ -4,6 +4,7 @@ import asyncio
 import copy
 import hashlib
 import json
+import uuid
 from dataclasses import replace
 from datetime import UTC, date
 from pathlib import Path
@@ -21,6 +22,7 @@ from src.services.cinemas.domain import (
 )
 from src.services.cinemas.fetch import Budget, Refused
 from src.services.cinemas.parsers import (
+    cinematimes_key,
     movie_metadata,
     parse_boxoffice,
     parse_cinematimes,
@@ -29,7 +31,7 @@ from src.services.cinemas.parsers import (
     parse_vue,
     science_links,
 )
-from src.services.cinemas.venues import BY_SLUG
+from src.services.cinemas.venues import BY_SLUG, VENUES
 
 FIXTURES = Path(__file__).parent / "fixtures" / "cinemas"
 
@@ -40,7 +42,8 @@ def body(name: str) -> str:
 
 def test_real_specimen_provenance():
     provenance = json.loads(body("provenance.json"))
-    assert len(provenance) == 12
+    # AE4 (#355): the Omniplex's page, 8 Nov, the thirteenth specimen.
+    assert len(provenance) == 13
     for name, record in provenance.items():
         assert hashlib.sha256((FIXTURES / name).read_bytes()).hexdigest() == record["fixtureSha256"]
         assert len(record["sourceSha256"]) == 64
@@ -269,3 +272,67 @@ async def test_transport_host_spacing_and_global_concurrency():
     vue = [t for host, t in starts if host == "www.myvue.com"]
     assert vue[1] - vue[0] >= 0.99
     assert maximum <= 2
+
+
+# --- AE4 (#355): the Omniplex on Renfrew Street, read from its CinemaTimes page --------------
+
+OMNIPLEX = BY_SLUG["omniplex-glasgow-renfrew-street"]
+
+
+def test_the_omniplex_reads_its_own_cinematimes_page():
+    snapshot = parse_cinematimes(body("cinematimes-omniplex-renfrew.html"), OMNIPLEX)
+    assert len(snapshot.rows) == 274 and not snapshot.errors
+    assert len(snapshot.observed_dates) == 7
+    assert snapshot.source_update_label == "Times from Omniplex, updated Sunday 13:36"
+    first = snapshot.rows[0]
+    assert first.key == "omniplex-glasgow-renfrew-street-5703" and first.title == "Clayface"
+    assert (
+        first.booking
+        == "https://www.omniplexcinemas.co.uk/booking/seats/glasgow-renfrew-street/5703"
+    )
+    assert first.film_key == "/uk/glasgow/movies/clayface/"
+    assert len({row.key for row in snapshot.rows}) == 274
+    # Its big screen is MAXX; everything else is standard.
+    assert sum(row.formats == ("maxx",) for row in snapshot.rows) == 83
+    # Another branch's identity on the page is refused, as for the ODEONs.
+    with pytest.raises(SourceError, match="identity"):
+        parse_cinematimes(body("cinematimes-omniplex-renfrew.html"), BY_SLUG["odeon-braehead"])
+
+
+def test_the_omniplex_refuses_a_booking_link_to_any_other_host_or_branch():
+    page = body("cinematimes-omniplex-renfrew.html")
+    first = "https://www.omniplexcinemas.co.uk/booking/seats/glasgow-renfrew-street/5703"
+    for wrong in (
+        "https://evil.example/booking/seats/glasgow-renfrew-street/5703",
+        "https://www.odeon.co.uk/ticketing/seat-picker/?showtimeId=615-5703",
+        "https://www.omniplexcinemas.co.uk/booking/seats/belfast/5703",
+    ):
+        # The time button's own link; the same URL also sits in the page's structured data.
+        snapshot = parse_cinematimes(
+            page.replace(f'href="{first}"', f'href="{wrong}"', 1), OMNIPLEX
+        )
+        assert len(snapshot.rows) == 273 and len(snapshot.errors) == 1
+        assert all(row.key != "omniplex-glasgow-renfrew-street-5703" for row in snapshot.rows)
+
+
+def test_each_cinematimes_operator_keys_its_showings_by_its_own_rule():
+    odeon = BY_SLUG["odeon-braehead"]
+    url = "https://www.odeon.co.uk/ticketing/seat-picker/?showtimeId=615-12345"
+    assert cinematimes_key(url, odeon) == "615-12345"
+    with pytest.raises(SourceError, match="another venue"):
+        cinematimes_key(url.replace("615-", "019-"), odeon)
+    omni = "https://www.omniplexcinemas.co.uk/booking/seats/glasgow-renfrew-street/5703"
+    assert cinematimes_key(omni, OMNIPLEX) == "omniplex-glasgow-renfrew-street-5703"
+    with pytest.raises(SourceError, match="another venue"):
+        cinematimes_key(omni + "?cinema=other", OMNIPLEX)
+    with pytest.raises(SourceError, match="Unexpected Omniplex"):
+        cinematimes_key(url, OMNIPLEX)
+
+
+def test_ten_venues_with_the_omniplex_last_and_its_stable_id():
+    assert len(VENUES) == 10 and VENUES[-1] is OMNIPLEX
+    assert OMNIPLEX.source == "cinematimes"
+    assert OMNIPLEX.programme_url == (
+        "https://cinematimes.com/uk/glasgow/cinemas/omniplex-glasgow-renfrew-street-city/"
+    )
+    assert str(OMNIPLEX.id) == str(uuid.uuid5(uuid.NAMESPACE_URL, "mcu:cinema:" + OMNIPLEX.slug))

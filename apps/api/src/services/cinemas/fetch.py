@@ -10,9 +10,13 @@ import httpx
 from src.services.cinemas.domain import SOURCE_HOSTS, SourceError
 
 ALLOWED_HOSTS = SOURCE_HOSTS
-#: TMDB requests a run may make — AC3 (#335) raised it from AB6's 12 so the backlog clears in
-#: days. Always inside the run's 120-request ceiling below, which the programme spends first.
-METADATA_CAP = 48
+#: Cinema-site reads a run may make: the programme's own ceiling, unchanged since AB6.
+SITE_CAP = 120
+#: TMDB requests a run may make, a cap of their own — AE4 (#355). AC3 (#335) raised it from
+#: AB6's 12 to 48 inside the sites' 120; Craig chose about 120 a morning so films match the
+#: morning they appear (TMDB is free; the cap is the app's own). The sites still read first,
+#: and the run's byte and time limits stop both.
+METADATA_CAP = 120
 
 
 class Refused(SourceError):
@@ -33,6 +37,11 @@ class Budget:
         self.slots = asyncio.Semaphore(2)
         self.metadata_requests = 0
         self.metadata_successes = 0
+
+    @property
+    def site_requests(self) -> int:
+        """Cinema-site reads so far: every request but TMDB's."""
+        return self.requests - self.metadata_requests
 
     async def get(self, url: str) -> str:
         return await self._get(url)
@@ -64,7 +73,8 @@ class Budget:
             if delay > 0:
                 await asyncio.sleep(delay)
             if (
-                self.requests >= 120
+                # Each kind of request against its own cap (AE4): the sites' 120 and TMDB's.
+                (token is None and self.site_requests >= SITE_CAP)
                 # Reserve one bounded response plus its final decoder chunk. This
                 # stops before a request that could exceed the whole-pass byte cap.
                 or self.bytes_read > 64 * 1024 * 1024 - (2 * 1024 * 1024 + 65536)

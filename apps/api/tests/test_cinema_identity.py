@@ -236,3 +236,21 @@ def test_the_risk_craig_accepted_with_the_famous_rule():
     new = film(99, "Elf", "2026-10-20", votes=3)
     decision = identify(read_title("Elf", SHOWN), Facts(), [elf, new], SHOWN)
     assert decision.outcome == "linked" and decision.candidate == elf
+
+
+def test_the_three_titles_from_8_nov_read_as_the_films_and_event_they_are():
+    """AE4 (#355, point 7): three real listings that went unmatched on 8 Nov."""
+    access = read_title("Access Film Club: The Grand Budapest Hotel", SHOWN)
+    assert access.query == "The Grand Budapest Hotel" and access.event is None
+
+    arthur = read_title("Arthur Christmas (15th Anniversary).", SHOWN)
+    assert arthur.query == "Arthur Christmas"
+    assert arthur.rerun_label == "anniversary" and arthur.anniversary_year == SHOWN.year - 15
+
+    panto = read_title("CBeebies Panto 2026: Treasure Island", SHOWN)
+    assert panto.event is not None and panto.double_bill is False
+
+
+def test_a_title_that_ends_in_its_own_full_stop_keeps_it():
+    """Only a full stop after a decoration's bracket goes: "Monsters, Inc." is the film's own."""
+    assert read_title("Monsters, Inc.", SHOWN).query == "Monsters, Inc."

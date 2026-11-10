@@ -70,5 +70,11 @@
     "sourceSha256": "48da6b22721bcbe3b72ccbcab4697e536dff55bd2cb4956c46b8d9cf20ca7da7",
     "fixtureSha256": "cf7457a17d36640cb8b318861b780b8fff36f7f708198f5fc4f05d91de15eb08",
     "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cinematimes-omniplex-renfrew.html": {
+    "sourceFile": "ae4-2026-11-08/cinematimes-omniplex-renfrew.html",
+    "sourceSha256": "3d316724a04886e0ce2174e6726f85083569f2f5a3164e891147deecf6a49464",
+    "fixtureSha256": "0f514354f97821983c6191917185c113fc9e704fb7f77a2f4289ff5cd701f88a",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
   }
 }

@@ -95,7 +95,9 @@ async def test_an_empty_programme_still_names_the_fortnight_and_every_cinema(cli
     data = response.json()
     assert data["window"] == {"dateFrom": "2026-11-02", "dateTo": "2026-11-15"}
     assert data["thisWeekTo"] == "2026-11-08"
+    # Every cinema named even with nothing listed; the Omniplex not until its first enable (AE4).
     assert len(data["venues"]) == 9
+    assert "omniplex-glasgow-renfrew-street" not in {v["slug"] for v in data["venues"]}
     assert all(len(v["coverage"]) == 14 for v in data["venues"])
     assert data["films"] == [] and data["complete"] is False
     for key in ("nonsense", "tmdb-", "listing-123", "tmdb-603; drop"):

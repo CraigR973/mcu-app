@@ -17,8 +17,10 @@ ODEON_CODES = {
     "odeon-braehead": "615",
     "odeon-east-kilbride": "923",
 }
+#: AE4 (#355): the Omniplex books on its own site, the showing's id in the path, not a query.
+OMNIPLEX_BRANCHES = {"omniplex-glasgow-renfrew-street": "glasgow-renfrew-street"}
 _OPERATOR_HOSTS = {
-    "cinematimes": {"www.odeon.co.uk"},
+    "cinematimes": {"www.odeon.co.uk", "www.omniplexcinemas.co.uk"},
     "vue": {"www.myvue.com"},
     "everyman": {"purchase.everymancinema.com", "www.everymancinema.com"},
     "cineworld": {"web.cineworld.co.uk", "www.cineworld.co.uk"},
@@ -44,6 +46,31 @@ def _jsonld(soup: BeautifulSoup) -> list[dict[str, Any]]:
     return blocks
 
 
+def cinematimes_key(url: str, venue: Venue) -> str:
+    """A showing's own key, read from its booking link, which must book this very venue.
+
+    ODEON keys a showing by a ``showtimeId`` query naming the branch's code; the Omniplex
+    (AE4) by the number after its branch in the path. Any other host is refused.
+    """
+    parts = urlsplit(url)
+    if venue.slug in ODEON_CODES:
+        if parts.hostname != "www.odeon.co.uk":
+            raise SourceError("Unexpected ODEON booking destination")
+        keys = parse_qs(parts.query).get("showtimeId", [])
+        if len(keys) != 1 or not re.fullmatch(ODEON_CODES[venue.slug] + r"-\d+", keys[0]):
+            raise SourceError("ODEON showing belongs to another venue")
+        return keys[0]
+    branch = OMNIPLEX_BRANCHES.get(venue.slug)
+    if branch is not None:
+        if parts.hostname != "www.omniplexcinemas.co.uk":
+            raise SourceError("Unexpected Omniplex booking destination")
+        found = re.fullmatch(rf"/booking/seats/{re.escape(branch)}/(\d+)", parts.path)
+        if found is None or parts.query:
+            raise SourceError("Omniplex showing belongs to another venue")
+        return f"omniplex-{branch}-{found.group(1)}"
+    raise SourceError("No booking rule for this CinemaTimes venue")
+
+
 def parse_cinematimes(body: str, venue: Venue) -> Snapshot:
     soup = BeautifulSoup(body, "html.parser")
     structured = _jsonld(soup)
@@ -54,9 +81,10 @@ def parse_cinematimes(body: str, venue: Venue) -> Snapshot:
     for node in structured:
         if node.get("@type") == "ScreeningEvent":
             url = node.get("offers", {}).get("url", "")
-            key = parse_qs(urlsplit(url).query).get("showtimeId", [""])[0]
-            if key:
-                times[key] = node["startDate"]
+            try:
+                times[cinematimes_key(url, venue)] = node["startDate"]
+            except (SourceError, KeyError):
+                continue
     result = Snapshot()
     for section in soup.select(".date-section[data-section-date]"):
         day = date.fromisoformat(str(section["data-section-date"]))
@@ -79,19 +107,15 @@ def parse_cinematimes(body: str, venue: Venue) -> Snapshot:
                 try:
                     url = _booking(str(link["href"]), venue.source)
                     if url is None:
-                        raise SourceError("Unexpected ODEON booking destination")
-                    keys = parse_qs(urlsplit(url).query).get("showtimeId", [])
-                    if len(keys) != 1 or not re.fullmatch(
-                        ODEON_CODES[venue.slug] + r"-\d+", keys[0]
-                    ):
-                        raise SourceError("ODEON showing belongs to another venue")
+                        raise SourceError("Unexpected booking destination")
+                    key = cinematimes_key(url, venue)
                     local = day.isoformat() + "T" + str(link["data-time"])
-                    start = local_start(local, explicit_utc=times.get(keys[0]))
+                    start = local_start(local, explicit_utc=times.get(key))
                     fmt = str(link.get("data-format", "standard"))
                     result.rows.append(
                         Showing(
-                            keys[0],
-                            film_key or "showing:" + keys[0],
+                            key,
+                            film_key or "showing:" + key,
                             title.get_text(" ", strip=True),
                             start,
                             url,
@@ -104,7 +128,8 @@ def parse_cinematimes(body: str, venue: Venue) -> Snapshot:
     if not result.observed_dates:
         raise SourceError("No dated CinemaTimes programme sections")
     label = re.search(
-        r"Times from ODEON, updated [A-Za-z]+ \d{2}:\d{2}", soup.get_text(" ", strip=True)
+        r"Times from (?:ODEON|Omniplex), updated [A-Za-z]+ \d{2}:\d{2}",
+        soup.get_text(" ", strip=True),
     )
     result.source_update_label = label.group(0) if label else None
     # A complete HTML parse is not proof of the operator's full schedule. In particular,

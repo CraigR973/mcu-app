@@ -1,4 +1,5 @@
-"""The owner-approved nine venues and their observed source entry points."""
+"""The owner-approved venues and their observed source entry points: the nine AB6 approved and,
+since AE4 (#355), the Omniplex on Renfrew Street, Glasgow."""
 
 from dataclasses import dataclass
 from uuid import NAMESPACE_URL, UUID, uuid5
@@ -91,6 +92,16 @@ VENUES = (
         "gscimax",
         "https://www.glasgowsciencecentre.org/imax",
         "https://www.glasgowsciencecentre.org/imax",
+    ),
+    # AE4 (#355): read from its CinemaTimes page as the four ODEONs are. It shows only once
+    # the existing enable step has accepted a natural morning's coverage.
+    Venue(
+        "omniplex-glasgow-renfrew-street",
+        "Omniplex Glasgow - Renfrew Street",
+        "cinematimes",
+        "omniplex-glasgow-renfrew-street-city",
+        _CT + "omniplex-glasgow-renfrew-street-city/",
+        "https://www.omniplexcinemas.co.uk/cinema/showtimes/glasgow-renfrew-street",
     ),
 )
 BY_ID = {v.id: v for v in VENUES}

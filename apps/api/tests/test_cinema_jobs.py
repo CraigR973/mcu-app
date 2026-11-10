@@ -128,19 +128,20 @@ async def test_reviewed_nine_venue_import_exact_enable_and_separate_heartbeat(db
         date_from=day,
         date_to=day,
         snapshots=snapshots,
-        requests=9,
+        requests=10,
         decoded_bytes=100,
     )
     try:
         report = await refresh.apply_prepared(db_engine, prepared, actor)
-        assert report["status"] == "healthy" and report["rows"] == 9
+        # AE4 (#355): ten venues since the Omniplex joined the nine.
+        assert report["status"] == "healthy" and report["rows"] == 10
         async with factory() as db:
             heartbeat = await db.get(JobHeartbeat, refresh.HEARTBEAT)
             assert heartbeat.outcome == "healthy"
-            assert heartbeat.detail["rows"] == 9
+            assert heartbeat.detail["rows"] == 10
         with pytest.raises(SourceError, match="row count"):
-            await refresh.set_enabled(db_engine, actor, True, 8)
-        assert await refresh.set_enabled(db_engine, actor, True, 9) == 9
+            await refresh.set_enabled(db_engine, actor, True, 9)
+        assert await refresh.set_enabled(db_engine, actor, True, 10) == 10
         async with factory() as db:
             assert (
                 await db.scalar(
@@ -148,9 +149,9 @@ async def test_reviewed_nine_venue_import_exact_enable_and_separate_heartbeat(db
                     .select_from(CinemaVenue)
                     .where(CinemaVenue.collection_enabled.is_(True))
                 )
-                == 9
+                == 10
             )
-        assert await refresh.set_enabled(db_engine, actor, False, 9) == 9
+        assert await refresh.set_enabled(db_engine, actor, False, 10) == 10
     finally:
         async with factory() as db, db.begin():
             for venue in (await db.scalars(select(CinemaVenue))).all():

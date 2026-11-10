@@ -23,6 +23,7 @@ SOURCE_HOSTS = frozenset(
 Category = Literal["newRelease", "olderFilm", "unclassified"]
 BOOKING_PATHS = {
     "www.odeon.co.uk": ("/ticketing/seat-picker/", "/cinemas/"),
+    "www.omniplexcinemas.co.uk": ("/booking/seats/", "/cinema/"),
     "www.myvue.com": ("/book-tickets/", "/cinema/"),
     "www.everymancinema.com": ("/booking/", "/venues-list/", "/film-listing/"),
     "purchase.everymancinema.com": ("/launch/ticketing/",),
