@@ -557,3 +557,19 @@ cinemas from `awaiting.py`; `programme.load_window` and the digest's evaluation 
 until enabled. Migration 076 adds the Omniplex's venue row, switched off; its downgrade refuses
 once anything refers to it.
 
+## AE5, shipped 10 Nov (PR 143, `8641036`) — At the cinema day by day
+
+```mermaid
+flowchart TD
+    A[GET /cinemas/films] --> B[Each slot: startsAtUtc, and times with format and ticket link]
+    B --> C[Date strip: today to the last listed day, then All days]
+    C -->|a day| D[dayFilms: each film's times by cinema, past ones hidden]
+    C -->|All days| E[This week, then Coming up, as before]
+    D --> F[Time chip: books while AB7's rule allows]
+    B --> G[Listings and events: folded, with counts]
+```
+
+`services/cinemas/films.slots` builds each time through `Window.showing`, the film page's code, so
+a link appears only while the server's AB7 rule allows it; `lib/cinemas.timeBooking` checks it
+again as the saved view ages. The address keeps the day, run and cinemas.
+

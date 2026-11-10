@@ -2,16 +2,18 @@
 
 ## Now
 
-**10 Nov, 10:25 GMT: Group AE sitting 2 under way; AE4 shipped (PR 142, `ae36c41`) after sitting 1's
-AE1, AE2 and AE3 (PR 139 `aa4242e`, PR 140 `f0827ff`, PR 141 `1b19579`).** TMDB lookups have their
+**10 Nov, 14:26 GMT: Group AE sitting 2 under way; AE4 and AE5 shipped (PR 142 `ae36c41`, PR 143
+`8641036`) after sitting 1's AE1, AE2 and AE3.** TMDB lookups have their
 own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
 after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
 a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
 (#359). **Owed after the 11 Nov 08:00 UTC run:** its coverage read, its one enable (#355) and the
 read-back. Closest to complete names what each set is missing, and a missing film can be set not
 to count (#358); Highlights opens on Recently added (#357); a second disc asks "one box or a
-separate copy?" (#356). Production health, readiness and the web's version report `ae36c41`.
-AE5 (the day-by-day cinema view) is next. Group AE is ten batches in five sittings in
+separate copy?" (#356). At the cinema now opens on today: a sticky date strip, each film's times by cinema as
+chips that book, past times hidden, All / None for the cinemas, and listings and events folded
+(#360). Production health, readiness and the web's version report `8641036`. AE6 (IMDb and
+Letterboxd links; who has seen it when inviting) is next. Group AE is ten batches in five sittings in
 `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -472,6 +474,17 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 14:26 GMT — AE5 shipped (PR 143, `8641036fd8a813ba34abf59d75ddd2a4d31198df`, #360).** At the cinema day by day: a sticky
+  date strip with today chosen, a day's times by cinema as chips that book under AB7's rule, past
+  times hidden and "See tomorrow" once today is done; All / None; listings and events folded with
+  counts. Each slot of the films list gained an additive `times`. Local gate green (API 2,775 on
+  Postgres, web 948, shared 204; the cinema specs in Chromium and Firefox). Chromium's full suite
+  passed but for AE5's own two cases, whose fixture met coverage an earlier case had left; it now
+  sets those rows aside and restores them, and passed in suite order. CI's seven jobs green.
+  Health, readiness and version.json on `8641036`. Read-only after deploy (`mcu_readonly`), 14:27 GMT: the films list as the deployed code builds it carries 181 of today's times for Craig and for Mark, exactly the 181 stored showings still to start at switched-on cinemas, 180 with a ticket link. Main's run on AE4's merge commit met a third WebKit internal error
+  on a page load today (AC1's Needs you case, then AE4's sign-out case and AE2's cinema case
+  before it); main's next run was green. Each is a different unrelated case: a flake to fix on
+  its own branch.
 - **10 Nov, 10:25 GMT — AE4 shipped (PR 142, `ae36c41130d213820270a682fd3609598d2584b4`, #359).** TMDB's own 120 lookups a run
   beside the sites' 120, both in the run report; three title rules; the Omniplex as a tenth cinema
   (migration 076, off), read by the morning run while it awaits its first enable and out of every

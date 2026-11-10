@@ -7741,3 +7741,23 @@ contemporaneous.
        full stop is dropped only straight after a closing bracket ("Monsters, Inc." keeps its own);
        "CBeebies Panto" is an event.
 
+360. **AE5 shipped: At the cinema day by day (10 Nov, PR 143, `8641036`).** Drafting choices under
+     #355, open to Craig's overrule:
+     - **The list carries each time's format and ticket link** (`times` on each slot: `at`,
+       `bookingUrl`, `formats`), additive with a zod default and built by the film page's own code.
+       The reconciliation sized the view as web only, but the list had start times alone. Same
+       request; about 140 KB more before compression at 999 showings still to start.
+     - **Today needs no word in the address; another day is `?day=YYYY-MM-DD`; every day is
+       `?day=all`**, the old This week and Coming up, as the strip's last chip. A day already gone
+       reads as today.
+     - **The strip runs to the last day any cinema lists or any showing falls on**, inside the
+       fortnight; a day with nothing under the run and cinema choice is greyed, not hidden.
+     - **A chip names only the formats worth a word**, the film page's rule: "Digital projection"
+       never shows on a time. A chip books only while AB7's rule allows, checked again as the page
+       ages; otherwise it is the time alone.
+     - **"Nothing more today" shows once no film is left today**, even with a listing or an event
+       still to come (they stay below), and offers tomorrow.
+     - **A day's card names each cinema with its times** rather than "N cinemas", the widest film
+       first, then the earliest.
+     - **None is kept in the address** (`?cinema=none`), as an empty choice was before.
+
