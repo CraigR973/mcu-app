@@ -151,6 +151,16 @@ FilmKind = Literal["film", "listing", "event"]
 IdentityStatus = Literal["verified", "unverified", "conflict", "review", "event"]
 
 
+class CinemaSlotTime(BaseModel):
+    """One showing in a slot — AE5 (#355): its time, format and ticket link, so the day view
+    can offer each time as a chip without another request. The link is the programme's own,
+    present only while AB7's rule allows it; the page checks its freshness again."""
+
+    at: UtcDatetime
+    bookingUrl: str | None
+    formats: list[str]
+
+
 class CinemaFilmSlot(BaseModel):
     """One cinema's showings of a film on one day, in one run, still to start."""
 
@@ -160,6 +170,8 @@ class CinemaFilmSlot(BaseModel):
     #: AC3's reason in words, "UK release 1977 · rerun"; null when the run rests on no reason.
     runReason: str | None
     startsAtUtc: list[UtcDatetime] = Field(min_length=1)
+    #: AE5: the same showings, each with its format and ticket link. Earliest first.
+    times: list[CinemaSlotTime] = Field(default_factory=list)
 
 
 class CinemaFilmFacts(BaseModel):

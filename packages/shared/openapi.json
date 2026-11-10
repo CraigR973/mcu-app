@@ -2963,6 +2963,13 @@
       "title": "Startsatutc",
       "type": "array"
      },
+     "times": {
+      "items": {
+       "$ref": "#/components/schemas/CinemaSlotTime"
+      },
+      "title": "Times",
+      "type": "array"
+     },
      "venueId": {
       "format": "uuid",
       "title": "Venueid",
@@ -3088,6 +3095,40 @@
      "selectionComplete"
     ],
     "title": "CinemaProgrammeResponse",
+    "type": "object"
+   },
+   "CinemaSlotTime": {
+    "description": "One showing in a slot — AE5 (#355): its time, format and ticket link, so the day view\ncan offer each time as a chip without another request. The link is the programme's own,\npresent only while AB7's rule allows it; the page checks its freshness again.",
+    "properties": {
+     "at": {
+      "title": "At",
+      "type": "string"
+     },
+     "bookingUrl": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bookingurl"
+     },
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     }
+    },
+    "required": [
+     "at",
+     "bookingUrl",
+     "formats"
+    ],
+    "title": "CinemaSlotTime",
     "type": "object"
    },
    "CinemaTripList": {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Page } from '@playwright/test'
+import { filmLink, unfold } from '../support/cinema-view.ts'
 import { test as base, expect } from '../support/test.ts'
 
 const sql = (value: unknown) => `'${String(value).replaceAll("'", "''")}'`
@@ -59,7 +60,7 @@ async function openView(page: Page, day: string) {
 }
 
 async function openFilm(page: Page, title: string) {
-  await page.getByRole('region', { name: /^(This week|Coming up|\w{3} \d+ \w{3})$/ }).getByRole('article', { name: title, exact: true }).getByRole('link').click()
+  await filmLink(page.getByRole('region', { name: /^\w{3} \d+ \w{3}$/ }).getByRole('article', { name: title, exact: true }), title).click()
   await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
 }
 
@@ -73,10 +74,11 @@ for (const person of ['Craig', 'Mark'] as const) {
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       const day = page.getByRole('region', { name: /^\w{3} \d+ \w{3}$/ })
       const favourite = day.getByRole('article', { name: programme.title, exact: true })
-      await expect(favourite).toContainText('2 cinemas')
+      // AE5: the day's card lists each cinema's times, rather than counting the cinemas.
+      await expect(favourite.getByRole('list', { name: /^Times at / })).toHaveCount(2)
       await expect(favourite.getByText('Seen', { exact: true })).toHaveCount(person === 'Craig' ? 1 : 0)
       // One source's two unverified rows of one title read as one listing (#342); AB7 kept two.
-      await expect(page.getByRole('article', { name: 'Programme identity pending', exact: true })).toHaveCount(1)
+      await expect((await unfold(page, 'Not matched to a film yet')).getByRole('article', { name: 'Programme identity pending', exact: true })).toHaveCount(1)
       const runs = page.getByRole('group', { name: 'Run' })
       await expect(runs.getByRole('button', { name: /^New releases/ })).toHaveText(/New releases\s*1/)
       await expect(runs.getByRole('button', { name: /^Unclassified/ })).toHaveText(/Unclassified\s*1/)

@@ -17,6 +17,7 @@ import { ApiError, fetchCinemaFilm, fetchCinemaTrips, type CinemaFilmDetail } fr
 import { tripsForFilm } from '@/lib/cinema-trips'
 import {
   CINEMA_VIEW_PATH,
+  chipFormats,
   cinemaFilmPath,
   clock,
   dayAndDate,
@@ -45,11 +46,9 @@ function runtime(minutes: number | null): string | null {
   return minutes ? `${String(Math.floor(minutes / 60))}h ${String(minutes % 60).padStart(2, '0')}m` : null
 }
 
-/** Formats worth a word on a time: "Digital projection" is how almost every film is shown, so it
- *  is said once for the cinema instead. Provider enum syntax never shows (AB7). */
+/** Formats worth a word on a time, then its screen. Provider enum syntax never shows (AB7). */
 function chipDetails(showing: ProgrammeShowing): string {
-  const formats = showingFormats(showing.formats).filter((format) => format !== 'Digital projection')
-  return [...formats, showing.screen ? showingScreen(showing.screen) : null].filter(Boolean).join(' · ')
+  return [...chipFormats(showing.formats), showing.screen ? showingScreen(showing.screen) : null].filter(Boolean).join(' · ')
 }
 
 function TimeChip({ showing, venue, now, connected, onLapsed }: {

@@ -3018,6 +3018,13 @@ const cinemaFilmFactsSchema = z.object({
   owned: z.boolean().nullable(),
   watched: z.boolean().nullable(),
 })
+/** AE5 (#355): one showing in a slot, with its format and ticket link, for the day view's chips.
+ *  The link is the programme's own, present only while AB7's rule allows it. */
+export const cinemaSlotTimeSchema = z.object({
+  at: cinemaUtcSchema,
+  bookingUrl: z.string().nullable(),
+  formats: z.array(z.string()),
+})
 /** One cinema's showings of a film on one day, in one run, still to start. */
 export const cinemaFilmSlotSchema = z.object({
   venueId: z.string().uuid(),
@@ -3025,6 +3032,8 @@ export const cinemaFilmSlotSchema = z.object({
   releaseCategory: cinemaReleaseCategorySchema,
   runReason: z.string().nullable(),
   startsAtUtc: z.array(cinemaUtcSchema).min(1),
+  /** AE5. Defaulted, so a list saved before it still reads; the day view then has no chips. */
+  times: z.array(cinemaSlotTimeSchema).default([]),
 })
 export const cinemaFilmsResponseSchema = z.object({
   generatedAtUtc: cinemaUtcSchema,
@@ -3061,6 +3070,7 @@ export const cinemaFilmDetailSchema = z.object({
 export type CinemaFilms = z.infer<typeof cinemaFilmsResponseSchema>
 export type CinemaFilmCard = CinemaFilms['films'][number]
 export type CinemaFilmSlot = z.infer<typeof cinemaFilmSlotSchema>
+export type CinemaSlotTime = z.infer<typeof cinemaSlotTimeSchema>
 export type CinemaFilmDetail = z.infer<typeof cinemaFilmDetailSchema>
 
 // AC5 (#345): cinema trips, members only. A trip keeps its showing as a snapshot; the flag and

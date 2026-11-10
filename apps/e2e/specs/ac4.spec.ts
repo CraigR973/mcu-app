@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Page } from '@playwright/test'
+import { posters, unfold } from '../support/cinema-view.ts'
 import { test as base, expect } from '../support/test.ts'
 
 const sql = (value: unknown) => `'${String(value).replaceAll("'", "''")}'`
@@ -74,19 +75,6 @@ const test = base.extend<{ cinema: Fixture }>({
   },
 })
 
-/** Posters from the fake world are not images; draw each as a tinted card, so a screenshot
- *  reads as the phone would. */
-async function posters(page: Page) {
-  await page.route('https://image.tmdb.org/t/p/**', async route => {
-    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
-    const hue = [...name].reduce((sum, c) => sum + c.charCodeAt(0), 0) % 360
-    await route.fulfill({
-      contentType: 'image/svg+xml',
-      body: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${hue} 45% 38%)"/><stop offset="1" stop-color="hsl(${(hue + 40) % 360} 50% 16%)"/></linearGradient></defs><rect width="200" height="300" fill="url(#g)"/><text x="100" y="250" fill="white" font-family="Georgia" font-size="22" text-anchor="middle">${name.replace(/^ac4-|\.jpg$/g, '')}</text></svg>`,
-    })
-  })
-}
-
 async function phone(signedIn: (person: 'Craig' | 'Mark') => Promise<{ context: import('@playwright/test').BrowserContext; page: Page }>, person: 'Craig' | 'Mark', theme: string) {
   const session = await signedIn(person)
   await session.page.setViewportSize({ width: 375, height: 812 })
@@ -137,7 +125,8 @@ test('At the cinema reads film first at 375px, both themes and both people, with
   for (const person of ['Craig', 'Mark'] as const) {
     for (const theme of ['light', 'dark']) {
       const { page } = await phone(signedIn, person, theme)
-      await page.goto('/movie-night/cinema')
+      // AE5: today is the default; every day at once is "All days".
+      await page.goto('/movie-night/cinema?day=all')
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       const week = page.getByRole('region', { name: 'This week' })
       await expect(week.getByRole('article')).toHaveCount(3)
@@ -150,9 +139,9 @@ test('At the cinema reads film first at 375px, both themes and both people, with
       await expect(rocky).toContainText('Rerun')
       await expect(rocky).toContainText('2 cinemas')
       await expect(page.getByRole('region', { name: 'Coming up' }).getByRole('article', { name: 'Hamnet' })).toContainText('Preview')
-      const listings = page.getByRole('region', { name: 'Not matched to a film yet' })
+      const listings = await unfold(page, 'Not matched to a film yet')
       await expect(listings.getByRole('article', { name: 'Primetime' })).toHaveCount(2)
-      await expect(page.getByRole('region', { name: 'Events and double bills' }).getByRole('article', { name: 'National Theatre Live: Golden Boy' })).toBeVisible()
+      await expect((await unfold(page, 'Events and double bills')).getByRole('article', { name: 'National Theatre Live: Golden Boy' })).toBeVisible()
       const horizons = page.getByRole('region', { name: 'How far ahead cinemas list' })
       await expect(horizons).toContainText(`GFT, Vue St Enoch: listed only to ${dayLabel(cinema.plus(1))}`)
       await expect(horizons).toContainText(`ODEON Braehead, ODEON East Kilbride, ODEON Quay, ODEON Kilmarnock: listed only to ${dayLabel(cinema.plus(6))}`)
@@ -191,23 +180,23 @@ test('At the cinema reads film first at 375px, both themes and both people, with
 
 test('the run, day and cinema filters answer at once and come back from a film page', async ({ signedIn, cinema }) => {
   const { page } = await phone(signedIn, 'Mark', 'light')
-  await page.goto('/movie-night/cinema')
+  await page.goto('/movie-night/cinema?day=all')
   await page.getByRole('group', { name: 'Run' }).getByRole('button', { name: /^Older films/ }).click()
   await expect(page.getByRole('article')).toHaveCount(1)
-  await expect(page).toHaveURL(/\?run=olderFilm$/)
+  await expect(page).toHaveURL(/\?day=all&run=olderFilm$/)
   await page.getByRole('article', { name: 'Rocky' }).getByRole('link').click()
   await expect(page.getByRole('heading', { name: 'Rocky', level: 1 })).toBeVisible()
   // The anniversary is the cinemas' label, so the reason is the same at both and said once.
   await expect(page.getByText('UK release 1977 · the cinema calls it an anniversary showing · rerun', { exact: true })).toHaveCount(1)
   await expect(page.getByText('Listed as “Rocky (50th Anniversary)”', { exact: true })).toBeVisible()
   await page.goBack()
-  await expect(page).toHaveURL(/\?run=olderFilm$/)
+  await expect(page).toHaveURL(/\?day=all&run=olderFilm$/)
   await expect(page.getByRole('article')).toHaveCount(1)
   await page.getByRole('group', { name: 'Run' }).getByRole('button', { name: /^All films/ }).click()
   await page.getByRole('group', { name: 'Day' }).getByRole('button', { name: dayLabel(cinema.plus(9)), exact: true }).click()
   await expect(page.getByRole('article')).toHaveCount(1)
   await expect(page.getByRole('article', { name: 'Hamnet' })).toBeVisible()
-  await page.getByRole('group', { name: 'Day' }).getByRole('button', { name: 'Any day' }).click()
+  await page.getByRole('group', { name: 'Day' }).getByRole('button', { name: 'All days' }).click()
   // AE4 (#355): the chip counts the cinemas, the Omniplex included, rather than saying nine.
   await page.getByText(/^Cinemas · all \d+/).click()
   for (const name of ['Cineworld Glasgow Silverburn', 'Vue Glasgow St Enoch', 'ODEON Braehead', 'Glasgow Science Centre IMAX']) {
@@ -219,8 +208,8 @@ test('the run, day and cinema filters answer at once and come back from a film p
 
 test('a listing’s page keeps its address, and opens as the film once a morning links it', async ({ signedIn, db, cinema }) => {
   const { page } = await phone(signedIn, 'Craig', 'dark')
-  await page.goto('/movie-night/cinema')
-  await page.getByRole('region', { name: 'Not matched to a film yet' }).getByRole('article', { name: 'Primetime' }).filter({ hasText: 'Cineworld' }).getByRole('link').click()
+  await page.goto('/movie-night/cinema?day=all')
+  await (await unfold(page, 'Not matched to a film yet')).getByRole('article', { name: 'Primetime' }).filter({ hasText: 'Cineworld' }).getByRole('link').click()
   const address = `/movie-night/cinema/listing-${cinema.listingId}`
   await expect(page).toHaveURL(new RegExp(`${address}$`))
   await expect(page.getByRole('region', { name: 'Which film this is' })).toContainText('Identity unverified')

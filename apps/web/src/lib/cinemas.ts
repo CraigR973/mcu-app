@@ -90,6 +90,12 @@ export function showingFormats(values: string[]): string[] {
   return [...new Set(values.map((value) => FORMAT_LABELS[value.toLowerCase()] ?? (/^format\./i.test(value) ? 'Format unverified' : value)))]
 }
 
+/** The formats worth a word on a time chip: "Digital projection" is how almost every film is
+ *  shown, so the film page says it once for the cinema and the day view not at all. */
+export function chipFormats(values: string[]): string[] {
+  return showingFormats(values).filter((format) => format !== 'Digital projection')
+}
+
 export function showingScreen(value: string): string {
   return /^\d+$/.test(value) ? `Screen ${value}` : value
 }
@@ -244,7 +250,7 @@ export function cinemaSections(data: CinemaFilms, filters: CinemaFilters, now: n
 }
 
 /** The days a showing still to start falls on, today first. */
-export function programmeDays(data: CinemaFilms, now: number): string[] {
+export function programmeDays(data: Pick<CinemaFilms, 'films'>, now: number): string[] {
   const days = new Set<string>()
   for (const card of data.films) for (const slot of card.slots) if (slot.startsAtUtc.some((at) => Date.parse(at) > now)) days.add(slot.localDate)
   return [...days].sort()
@@ -288,3 +294,92 @@ export const CINEMA_VIEW_PATH = '/movie-night/cinema'
 export function cinemaFilmPath(key: string): string {
   return `${CINEMA_VIEW_PATH}/${key}`
 }
+
+// ---------------------------------------------------------------------------
+// AE5 (#355, points 4, 8 and 13): the day-by-day view, as the cinema apps have it.
+// ---------------------------------------------------------------------------
+
+/** The strip's days: today to the last day any cinema lists, or any showing falls on, inside the
+ *  fortnight. */
+export function stripDays(data: Pick<CinemaFilms, 'venues' | 'window' | 'films'>, now: number): string[] {
+  const today = londonDate(now)
+  const last = [...data.venues.map(listedTo), ...programmeDays(data, now)].reduce<string>((to, day) => (day !== null && day > to ? day : to), today)
+  const end = last < data.window.dateTo ? last : data.window.dateTo
+  const days: string[] = []
+  for (let day = today; day <= end; day = shiftDate(day, 1)) days.push(day)
+  return days
+}
+
+/** The days that have a showing still to start under the run and cinema filters: the rest are
+ *  greyed in the strip. */
+export function daysShowing(data: CinemaFilms, filters: Pick<CinemaFilters, 'run' | 'venueIds'>, now: number): Set<string> {
+  const days = new Set<string>()
+  for (const card of data.films) {
+    for (const slot of card.slots) {
+      if (filters.venueIds !== null && !filters.venueIds.includes(slot.venueId)) continue
+      if (filters.run !== 'all' && slot.releaseCategory !== filters.run) continue
+      if (slot.startsAtUtc.some((at) => Date.parse(at) > now)) days.add(slot.localDate)
+    }
+  }
+  return days
+}
+
+/** One time on a day, as a chip: its format and, while AB7's rule allows, its ticket link. */
+export interface DayTime { at: string; formats: string[]; bookingUrl: string | null }
+
+/** One film on a day: its times at each cinema, earliest first. */
+export interface DayFilm {
+  card: CinemaCard
+  byVenue: { venueId: string; times: DayTime[] }[]
+  run: ProgrammeShowing['releaseCategory']
+  runReason: string | null
+}
+
+/**
+ * A day's films, each with that day's times grouped by cinema — films only: listings not
+ * matched yet and events keep their own folded rows. Times already past are left out, so
+ * today shows only what is still to come. The widest film first, then the earliest.
+ */
+export function dayFilms(data: CinemaFilms, filters: CinemaFilters & { day: string }, now: number): DayFilm[] {
+  const found: DayFilm[] = []
+  for (const card of data.films) {
+    if (card.kind !== 'film') continue
+    const byVenue = new Map<string, DayTime[]>()
+    let first: CinemaSlot | null = null
+    for (const slot of card.slots) {
+      if (slot.localDate !== filters.day) continue
+      if (filters.venueIds !== null && !filters.venueIds.includes(slot.venueId)) continue
+      if (filters.run !== 'all' && slot.releaseCategory !== filters.run) continue
+      // A list saved before AE5 has no times: its starts still show, without a link.
+      const times = slot.times.length > 0
+        ? slot.times.map((time) => ({ at: time.at, formats: time.formats, bookingUrl: time.bookingUrl }))
+        : slot.startsAtUtc.map((at) => ({ at, formats: [], bookingUrl: null }))
+      const coming = times.filter((time) => Date.parse(time.at) > now)
+      if (coming.length === 0) continue
+      byVenue.set(slot.venueId, [...(byVenue.get(slot.venueId) ?? []), ...coming])
+      if (first === null) first = slot
+    }
+    if (byVenue.size === 0 || first === null) continue
+    found.push({
+      card,
+      byVenue: [...byVenue].map(([venueId, times]) => ({ venueId, times: times.sort((a, b) => Date.parse(a.at) - Date.parse(b.at)) })),
+      run: first.releaseCategory,
+      runReason: first.runReason,
+    })
+  }
+  const earliest = (film: DayFilm) => Math.min(...film.byVenue.map((venue) => Date.parse(venue.times[0].at)))
+  return found.sort((a, b) => b.byVenue.length - a.byVenue.length || earliest(a) - earliest(b) || a.card.title.localeCompare(b.card.title, 'en-GB'))
+}
+
+/** A time's ticket link under AB7's rule, checked again here as the saved view ages: only when
+ *  connected, before it starts, with the cinema switched on and its day's listing fresh. */
+export function timeBooking(time: DayTime, venue: ProgrammeVenue, now: number, connected: boolean): string | null {
+  const url = safeUrl(time.bookingUrl)
+  const coverage = venue.coverage.find((date) => date.localDate === londonDate(Date.parse(time.at)))
+  if (!connected || !venue.collectionEnabled || !coverage?.observed || coverage.status === 'failed' || coverage.status === 'stale'
+    || !coverage.lastSuccessUtc || now - Date.parse(coverage.lastSuccessUtc) >= 30 * 60 * 60 * 1000
+    || (coverage.upstreamUtc !== null && now - Date.parse(coverage.upstreamUtc) >= 36 * 60 * 60 * 1000)
+    || Date.parse(time.at) <= now) return null
+  return url && BOOKING_PATHS[url.hostname]?.some((path) => url.pathname.startsWith(path)) ? time.bookingUrl : null
+}
+

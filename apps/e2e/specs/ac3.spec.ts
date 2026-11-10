@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Page } from '@playwright/test'
+import { filmLink, unfold } from '../support/cinema-view.ts'
 import { test as base, expect } from '../support/test.ts'
 
 const sql = (value: unknown) => `'${String(value).replaceAll("'", "''")}'`
@@ -65,16 +66,17 @@ test('Craig sees why a showing is a rerun, settles a film the rule could not, an
   await openDay(page, ac3.day)
   const linked = page.getByRole('article', { name: ac3.linked, exact: true })
   await expect(linked).toContainText('Rerun')
-  const waiting = page.getByRole('article', { name: ac3.waiting, exact: true })
+  // AE5: listings are folded until opened.
+  const waiting = (await unfold(page, 'Not matched to a film yet')).getByRole('article', { name: ac3.waiting, exact: true })
   await expect(waiting).toContainText('Waiting for a check')
   await page.screenshot({ path: testInfo.outputPath('ac3-cinemas-craig-375.png') })
   // The run's reason is on the film's page, by each showing.
-  await linked.getByRole('link').click()
+  await filmLink(linked, ac3.linked).click()
   await expect(page.getByRole('heading', { name: ac3.linked, level: 1 })).toBeVisible()
   await expect(page.getByText('UK release 1977 · rerun', { exact: true })).toBeVisible()
   await page.goBack()
 
-  await page.getByRole('article', { name: ac3.waiting, exact: true }).getByRole('link', { name: 'Check which film this is' }).click()
+  await (await unfold(page, 'Not matched to a film yet')).getByRole('article', { name: ac3.waiting, exact: true }).getByRole('link', { name: 'Check which film this is' }).click()
   await expect(page).toHaveURL(/\/identify$/)
   const card = page.getByRole('article', { name: ac3.waiting, exact: true })
   await expect(card).toContainText('the title matches, but nothing else agrees')
@@ -88,8 +90,9 @@ test('Craig sees why a showing is a rerun, settles a film the rule could not, an
   await openDay(page, ac3.day)
   const settled = page.getByRole('region', { name: /^\w{3} \d+ \w{3}$/ }).getByRole('article', { name: ac3.waiting, exact: true })
   await expect(settled).toContainText('Rerun')
-  await expect(page.getByRole('region', { name: 'Not matched to a film yet' }).getByRole('article', { name: ac3.waiting, exact: true })).toHaveCount(0)
-  await settled.getByRole('link').click()
+  // Folded or not, no listing of it is left.
+  await expect(page.getByRole('region', { name: 'Not matched to a film yet' }).getByRole('article', { name: ac3.waiting, exact: true, includeHidden: true })).toHaveCount(0)
+  await filmLink(settled, ac3.waiting).click()
   await expect(page.getByRole('heading', { name: ac3.waiting, level: 1 })).toBeVisible()
   await expect(page.getByText('UK release 1977 · rerun', { exact: true })).toBeVisible()
   await expect(page.getByText('Identity waiting for a check', { exact: false })).toHaveCount(0)
@@ -99,7 +102,7 @@ test('Mark sees a film waiting for a check, but not the check', async ({ signedI
   const { page } = await signedIn('Mark')
   await page.setViewportSize({ width: 375, height: 844 })
   await openDay(page, ac3.day)
-  const waiting = page.getByRole('article', { name: ac3.waiting, exact: true })
+  const waiting = (await unfold(page, 'Not matched to a film yet')).getByRole('article', { name: ac3.waiting, exact: true })
   await expect(waiting).toContainText('Waiting for a check')
   await expect(waiting.getByRole('link', { name: 'Check which film this is' })).toHaveCount(0)
   await waiting.getByRole('link').first().click()

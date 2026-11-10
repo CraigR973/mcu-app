@@ -27,8 +27,15 @@ const base = {
   sourceTitles: [] as string[], posterPath: null, tmdbId: null, movieId: null, originalYear: null, yearConfidence: 'unverified' as const,
   directors: [] as string[], runtimeMinutes: null, identityStatus: 'verified' as const, identityReason: null, owned: null, watched: null,
 }
+/** AE5: each time with its ticket link, as the API sends them since; the ODEON's in IMAX. */
+const booking = (venueId: string, n: number) => venueId === ODEON
+  ? `https://www.odeon.co.uk/ticketing/seat-picker/?showtimeId=019-${String(n)}`
+  : `https://www.myvue.com/book-tickets/summary/10097/${String(n)}`
 const slot = (venueId: string, localDate: string, releaseCategory: Card['slots'][number]['releaseCategory'], runReason: string | null, ...startsAtUtc: string[]) =>
-  ({ venueId, localDate, releaseCategory, runReason, startsAtUtc })
+  ({
+    venueId, localDate, releaseCategory, runReason, startsAtUtc,
+    times: startsAtUtc.map((at, n) => ({ at, bookingUrl: booking(venueId, n + 1), formats: venueId === ODEON ? ['imax'] : [] })),
+  })
 
 export function filmsFixture(): CinemaFilms {
   const films: Card[] = [

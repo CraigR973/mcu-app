@@ -12,24 +12,30 @@ import { useProgrammeClock } from '@/hooks/useProgrammeClock'
 import { fetchCinemaFilms } from '@/lib/api'
 import {
   cinemaFilmPath,
+  chipFormats,
   cinemaSections,
   clock,
   COVERAGE_LABELS,
   dayAndDate,
+  dayFilms,
+  daysShowing,
   listingState,
   londonDate,
   londonTime,
   OFFICIAL_PROGRAMMES,
-  programmeDays,
   RELEASE_LABELS,
   runBadge,
   shortDay,
   shortHorizons,
+  shiftDate,
   shortVenueName,
   staleCoverage,
+  stripDays,
+  timeBooking,
   type CinemaFilms,
   type CinemaFilters,
   type CinemaLine,
+  type DayFilm,
   type ProgrammeVenue,
   type ReleaseFilter,
 } from '@/lib/cinemas'
@@ -42,13 +48,15 @@ const CHIP_ON = 'border-primary bg-primary text-primary-foreground'
 const CHIP_OFF = 'border-border bg-card text-foreground hover:border-primary/40'
 
 /** The filters, read from the address so a film page's back arrow returns to the same view. */
-function readFilters(params: URLSearchParams, data: CinemaFilms | undefined): CinemaFilters {
+function readFilters(params: URLSearchParams, data: CinemaFilms | undefined, today: string): CinemaFilters {
   const run = params.get('run')
   const day = params.get('day')
   const cinemas = params.getAll('cinema')
   return {
     run: RUNS.includes(run as ReleaseFilter) ? (run as ReleaseFilter) : 'all',
-    day: day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null,
+    // AE5 (#355): today unless the address names a day still to come, or "all" for every day
+    // at once. A day already gone (a link kept from last week) is today.
+    day: day === 'all' ? null : day && /^\d{4}-\d{2}-\d{2}$/.test(day) && day >= today ? day : today,
     venueIds: cinemas.length === 0 ? null : (data?.venues ?? []).filter((venue) => cinemas.includes(venue.slug)).map((venue) => venue.id),
   }
 }
@@ -110,13 +118,16 @@ function ListingRows({ id, title, caption, icon: Icon, lines, venues, today, isA
   id: string; title: string; caption: string; icon: typeof Clapperboard; lines: CinemaLine[]; venues: Map<string, ProgrammeVenue>; today: string; isAdmin: boolean
 }) {
   if (lines.length === 0) return null
+  // AE5 (#355, point 13): closed until opened, the count in its heading. The region keeps the
+  // plain title as its name.
   return (
-    <section aria-labelledby={id} className="space-y-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id={id} className="section-heading flex items-center gap-2"><Icon className="h-5 w-5 text-primary" aria-hidden />{title}</h2>
-        <p className="shrink-0 text-xs text-muted-foreground">{lines.length.toLocaleString('en-GB')}</p>
-      </div>
-      <p className="-mt-2 text-xs leading-5 text-muted-foreground">{caption}</p>
+    <section aria-label={title} className="space-y-3">
+      <details className="group space-y-3">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+          <h2 id={id} className="section-heading flex items-center gap-2"><Icon className="h-5 w-5 text-primary" aria-hidden />{title} · {lines.length.toLocaleString('en-GB')}</h2>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden />
+        </summary>
+      <p className="text-xs leading-5 text-muted-foreground">{caption}</p>
       <ul className="archive-panel divide-y divide-border overflow-hidden">
         {lines.map((line) => (
           <li key={line.card.key}>
@@ -133,6 +144,73 @@ function ListingRows({ id, title, caption, icon: Icon, lines, venues, today, isA
             </article>
           </li>
         ))}
+      </ul>
+      </details>
+    </section>
+  )
+}
+
+const TIME_CHIP = 'inline-flex min-h-11 items-center gap-1 rounded-md border px-2.5 text-sm font-semibold tabular-nums'
+
+/** One film on one day: its poster and title, then each cinema's times as chips — AE5. A chip
+ *  opens the ticket page while AB7's rule allows; otherwise it is the time alone. */
+function DayFilmCard({ film, venues, now, online }: { film: DayFilm; venues: Map<string, ProgrammeVenue>; now: number; online: boolean }) {
+  const badge = runBadge(film.run, film.runReason)
+  const path = cinemaFilmPath(film.card.key)
+  return (
+    <li>
+      <article aria-label={film.card.title} className="archive-panel flex gap-3 p-3">
+        <Link to={path} tabIndex={-1} aria-hidden="true" className="w-16 shrink-0">
+          <Poster path={film.card.posterPath} title={film.card.title} size="w92" decorative className="aspect-[2/3] w-16 rounded-sm border border-border object-cover" />
+        </Link>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="min-w-0 text-sm font-semibold text-foreground"><Link to={path} className="hover:text-primary hover:underline">{film.card.title}</Link></h3>
+            {badge ? <span className={cn('rounded-sm px-1.5 py-0.5 text-xs font-semibold', badge === 'Rerun' ? 'bg-accent text-accent-foreground' : 'bg-primary text-primary-foreground')}>{badge}</span> : null}
+            {film.card.watched ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground"><Eye className="h-3 w-3" aria-hidden />Seen</span> : null}
+          </div>
+          {film.byVenue.map(({ venueId, times }) => {
+            const venue = venues.get(venueId)
+            const name = venue?.name ?? 'This cinema'
+            return (
+              <div key={venueId}>
+                <p className="text-xs font-semibold text-muted-foreground">{venue ? shortVenueName(venue) : name}</p>
+                <ul aria-label={`Times at ${name}`} className="mt-1 flex flex-wrap gap-1.5">
+                  {times.map((time) => {
+                    const href = venue ? timeBooking(time, venue, now, online) : null
+                    const formats = chipFormats(time.formats).join(' · ')
+                    const content = <>{clock(time.at)}{formats ? <span className="text-xs font-normal opacity-80">{formats}</span> : null}</>
+                    return (
+                      <li key={time.at}>
+                        {href ? (
+                          <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`Book ${clock(time.at)}${formats ? ` ${formats}` : ''} at ${name}`} className={cn(TIME_CHIP, 'border-primary/50 bg-primary/10 text-foreground hover:bg-primary/15')}>{content}</a>
+                        ) : (
+                          <span className={cn(TIME_CHIP, 'border-border text-muted-foreground')}>{content}</span>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )
+          })}
+        </div>
+      </article>
+    </li>
+  )
+}
+
+/** A day's films with their times — AE5 (#355, point 4). */
+function DayView({ day, films, venues, now, online }: { day: string; films: DayFilm[]; venues: Map<string, ProgrammeVenue>; now: number; online: boolean }) {
+  if (films.length === 0) return null
+  return (
+    <section aria-label={dayAndDate(day)} className="space-y-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="section-heading">{dayAndDate(day)}</h2>
+        <p className="shrink-0 text-xs text-muted-foreground">{films.length.toLocaleString('en-GB')} {films.length === 1 ? 'film' : 'films'}</p>
+      </div>
+      <ul className="space-y-3">
+        {films.map((film) => <DayFilmCard key={film.card.key} film={film} venues={venues} now={now} online={online} />)}
       </ul>
     </section>
   )
@@ -203,14 +281,21 @@ export function AtTheCinema() {
   const query = useQuery({ queryKey: ['cinema-films', profile?.id], queryFn: fetchCinemaFilms, enabled: Boolean(profile) })
   const data = query.data
   const newOnly = params.get('view') === 'new-this-week'
-  const filters = readFilters(params, data)
   const today = londonDate(now)
+  const picked = readFilters(params, data, today)
+  // New this week is the week's list, whatever day the strip has.
+  const filters = newOnly ? { ...picked, day: null } : picked
   const venues = data?.venues ?? []
   const venueMap = new Map(venues.map((venue) => [venue.id, venue]))
   const selected = venues.filter((venue) => filters.venueIds === null || filters.venueIds.includes(venue.id))
-  const days = data ? programmeDays(data, now) : []
+  const days = data ? stripDays(data, now) : []
+  const showing = data ? daysShowing(data, filters, now) : new Set<string>()
   const sections = data && selected.length > 0 ? cinemaSections(data, filters, now) : null
-  const nothing = sections !== null && sections.thisWeek.length + sections.comingUp.length + sections.listings.length + sections.events.length === 0
+  const onDay = data && filters.day !== null && selected.length > 0 ? dayFilms(data, { ...filters, day: filters.day }, now) : []
+  const nothing = sections !== null && (filters.day !== null ? onDay.length : sections.thisWeek.length + sections.comingUp.length) + sections.listings.length + sections.events.length === 0
+  // Today with no film still to start says so, even while a listing or an event is left.
+  const doneToday = sections !== null && !newOnly && filters.day === today && onDay.length === 0
+  const tomorrow = shiftDate(today, 1)
 
   function update(change: (next: URLSearchParams) => void) {
     setParams((current) => {
@@ -223,7 +308,14 @@ export function AtTheCinema() {
     update((next) => (run === 'all' ? next.delete('run') : next.set('run', run)))
   }
   function setDay(day: string | null) {
-    update((next) => (day === null ? next.delete('day') : next.set('day', day)))
+    // Today is the default, so it needs no word in the address; every day at once is "all".
+    update((next) => (day === null ? next.set('day', 'all') : day === today ? next.delete('day') : next.set('day', day)))
+  }
+  function setAllCinemas(all: boolean) {
+    update((next) => {
+      next.delete('cinema')
+      if (!all) next.append('cinema', 'none')
+    })
   }
   function toggleVenue(venue: ProgrammeVenue) {
     const current = filters.venueIds ?? venues.map((item) => item.id)
@@ -239,6 +331,27 @@ export function AtTheCinema() {
 
   return (
     <section aria-label="At the cinema" className="space-y-6">
+      {data && !newOnly ? (
+        // AE5 (#355, point 4): the date strip leads, and stays while the films scroll under it.
+        <div className="sticky top-0 z-10 -mx-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div role="group" aria-label="Day" className="flex gap-2 overflow-x-auto pb-1">
+            {days.map((day) => (
+              <button
+                key={day}
+                type="button"
+                aria-pressed={filters.day === day}
+                aria-label={dayAndDate(day)}
+                title={showing.has(day) ? undefined : 'Nothing showing'}
+                onClick={() => setDay(day)}
+                className={cn(CHIP, filters.day === day ? CHIP_ON : CHIP_OFF, !showing.has(day) && filters.day !== day && 'border-dashed text-muted-foreground opacity-60')}
+              >
+                {shortDay(day, today)}
+              </button>
+            ))}
+            <button type="button" aria-pressed={filters.day === null} onClick={() => setDay(null)} className={cn(CHIP, filters.day === null ? CHIP_ON : CHIP_OFF)}>All days</button>
+          </div>
+        </div>
+      ) : null}
       {data ? (
         <div className="space-y-3" aria-label="Filters" role="group">
           <div role="group" aria-label="Programme view" className="flex flex-wrap gap-2">
@@ -253,14 +366,6 @@ export function AtTheCinema() {
               </button>
             ))}
           </div>
-          <div role="group" aria-label="Day" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-            <button type="button" aria-pressed={filters.day === null} onClick={() => setDay(null)} className={cn(CHIP, filters.day === null ? CHIP_ON : CHIP_OFF)}>Any day</button>
-            {days.map((day) => (
-              <button key={day} type="button" aria-pressed={filters.day === day} aria-label={dayAndDate(day)} onClick={() => setDay(day)} className={cn(CHIP, filters.day === day ? CHIP_ON : CHIP_OFF)}>
-                {shortDay(day, today)}
-              </button>
-            ))}
-          </div>
           <details className="group">
             <summary className={cn(CHIP, filters.venueIds === null ? CHIP_OFF : 'border-primary/60 bg-primary/10 text-foreground', 'cursor-pointer list-none [&::-webkit-details-marker]:hidden')}>
               Cinemas · {filters.venueIds === null ? `all ${String(venues.length)}` : `${String(filters.venueIds.length)} of ${String(venues.length)}`}
@@ -268,6 +373,11 @@ export function AtTheCinema() {
             </summary>
             <fieldset className="mt-2 rounded-md border border-border bg-card px-3 py-1">
               <legend className="sr-only">Cinemas</legend>
+              {/* AE5 (#355, point 8). With none, the view asks for at least one. */}
+              <div className="flex gap-2 border-b border-border py-1.5">
+                <button type="button" onClick={() => setAllCinemas(true)} className="touch-target min-h-11 rounded-md px-2 text-sm font-semibold text-primary hover:underline">All</button>
+                <button type="button" onClick={() => setAllCinemas(false)} className="touch-target min-h-11 rounded-md px-2 text-sm font-semibold text-primary hover:underline">None</button>
+              </div>
               <div className="grid gap-x-4 sm:grid-cols-2">
                 {venues.map((venue) => (
                   <label key={venue.id} className="flex min-h-11 items-center gap-2 text-sm">
@@ -294,7 +404,14 @@ export function AtTheCinema() {
       {data ? (
         <>
           {selected.length === 0 ? <p role="alert" className="text-sm text-destructive">Select at least one cinema.</p> : null}
-          {nothing && !newOnly ? (
+          {doneToday ? (
+            <StatePanel
+              tone="empty"
+              title="Nothing more today"
+              description={nothing ? 'Everything listed for today has started, or nothing is listed for this choice.' : 'Every film listed for today has started. Listings not matched yet and events are below.'}
+              action={days.includes(tomorrow) ? <Button variant="outline" onClick={() => setDay(tomorrow)}>See tomorrow</Button> : undefined}
+            />
+          ) : nothing && !newOnly ? (
             <StatePanel
               tone="empty"
               title={filters.run === 'all' ? 'Nothing listed for this choice' : filters.run === 'unclassified' ? 'No unclassified showings' : `No ${RELEASE_LABELS[filters.run].toLowerCase()} listed`}
@@ -304,15 +421,19 @@ export function AtTheCinema() {
           {newOnly ? <NewThisWeek data={data} filters={filters} now={now} venues={venueMap} today={today} /> : null}
           {sections && !newOnly ? (
             <>
-              {/* One day picked is one grid of that day's films; otherwise this week, then later. */}
-              <FilmGrid
-                id="cinema-this-week"
-                title={filters.day ? dayAndDate(filters.day) : 'This week'}
-                caption={filters.day ? 'Films showing this day.' : `Showing from today to ${dayAndDate(data.thisWeekTo)}.`}
-                lines={filters.day ? [...sections.thisWeek, ...sections.comingUp] : sections.thisWeek}
-                venues={venueMap}
-                today={today}
-              />
+              {/* AE5: a day lists each film's times by cinema; every day at once is this week, then later. */}
+              {filters.day ? (
+                <DayView day={filters.day} films={onDay} venues={venueMap} now={now} online={online} />
+              ) : (
+                <FilmGrid
+                  id="cinema-this-week"
+                  title="This week"
+                  caption={`Showing from today to ${dayAndDate(data.thisWeekTo)}.`}
+                  lines={sections.thisWeek}
+                  venues={venueMap}
+                  today={today}
+                />
+              )}
               {/* Before "Coming up", which thins out past the cinemas that list only a few days. */}
               <Horizons data={data} />
               {filters.day ? null : (

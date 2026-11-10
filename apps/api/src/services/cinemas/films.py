@@ -40,6 +40,7 @@ from src.schemas.cinemas import (
     CinemaFilmFacts,
     CinemaFilmSlot,
     CinemaFilmsResponse,
+    CinemaSlotTime,
     FilmKind,
     IdentityStatus,
     ProgrammeWindow,
@@ -206,9 +207,11 @@ def facts(group: Group, mine: Personal, today: date) -> CinemaFilmFacts:
     )
 
 
-def slots(group: Group) -> list[CinemaFilmSlot]:
-    """The group's showings by cinema, day and run, each with its start times."""
+def slots(group: Group, window: Window | None = None) -> list[CinemaFilmSlot]:
+    """The group's showings by cinema, day and run, each with its start times and, since AE5,
+    each time's format and ticket link as the programme would draw that showing."""
     found: dict[tuple[uuid.UUID, date, ReleaseCategory, str | None], list[datetime]] = {}
+    times: dict[tuple[uuid.UUID, date, ReleaseCategory, str | None], list[CinemaSlotTime]] = {}
     for showing, film in group.rows:
         verified = film.identity_status == "verified"
         category = release_category(showing.category_evidence, identity_verified=verified)
@@ -220,6 +223,13 @@ def slots(group: Group) -> list[CinemaFilmSlot]:
             reason if isinstance(reason, str) else None,
         )
         found.setdefault(slot, []).append(showing.starts_utc)
+        if window is not None:
+            wire = window.showing(showing, film, verified=verified)
+            times.setdefault(slot, []).append(
+                CinemaSlotTime(
+                    at=showing.starts_utc, bookingUrl=wire.bookingUrl, formats=wire.formats
+                )
+            )
     return [
         CinemaFilmSlot(
             venueId=venue,
@@ -227,6 +237,7 @@ def slots(group: Group) -> list[CinemaFilmSlot]:
             releaseCategory=category,
             runReason=reason,
             startsAtUtc=sorted(starts),
+            times=sorted(times.get((venue, day, category, reason), []), key=lambda time: time.at),
         )
         for (venue, day, category, reason), starts in found.items()
     ]
@@ -249,7 +260,7 @@ async def films(db: AsyncSession, user_id: uuid.UUID) -> CinemaFilmsResponse:
     today = window.dates[0]
     venues = window.venue_responses()
     cards = [
-        CinemaFilmCard(**facts(group, mine, today).model_dump(), slots=slots(group))
+        CinemaFilmCard(**facts(group, mine, today).model_dump(), slots=slots(group, window))
         for group in gather(rows, mine).values()
     ]
     cards.sort(key=lambda card: (card.title.casefold(), card.key))

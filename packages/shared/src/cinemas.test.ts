@@ -80,7 +80,11 @@ describe('cinema films to check (AC3, #335)', () => {
 })
 
 describe('At the cinema, film first (AC4)', () => {
-  const slot = { venueId: id, localDate: '2026-11-05', releaseCategory: 'olderFilm', runReason: 'UK release 1977 · rerun', startsAtUtc: ['2026-11-05T19:30:00Z'] }
+  // AE5: the API now sends each time with its format and ticket link, for the day view's chips.
+  const slot = {
+    venueId: id, localDate: '2026-11-05', releaseCategory: 'olderFilm', runReason: 'UK release 1977 · rerun', startsAtUtc: ['2026-11-05T19:30:00Z'],
+    times: [{ at: '2026-11-05T19:30:00Z', bookingUrl: 'https://www.odeon.co.uk/ticketing/seat-picker/?showtimeId=615-1', formats: ['imax'] }],
+  }
   const facts = {
     key: 'tmdb-1366', kind: 'film', title: 'Rocky', sourceTitles: ['Rocky (50th Anniversary)'], posterPath: '/rocky.jpg',
     tmdbId: 1366, movieId: null, originalYear: 1976, yearConfidence: 'verified', directors: ['John G. Avildsen'],
@@ -95,6 +99,8 @@ describe('At the cinema, film first (AC4)', () => {
   }
   it('parses a film, a listing not matched yet and their showings by cinema and day', () => {
     expect(cinemaFilmsResponseSchema.parse(films)).toEqual(films)
+    const { times: _times, ...before } = slot
+    expect(cinemaFilmsResponseSchema.parse({ ...films, films: [{ ...facts, slots: [before] }] }).films[0]?.slots[0]?.times).toEqual([])
   })
   it.each(['tmdb:1366', 'tmdb-', 'listing-123', 'source:abc', 'tmdb-1366/../x'])('rejects the address %s', key => {
     const copy = structuredClone(films)

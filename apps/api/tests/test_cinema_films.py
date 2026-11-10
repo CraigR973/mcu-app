@@ -5,7 +5,7 @@ Real Postgres, rows written the way the refresh writes them (`store.promote`), n
 
 import uuid
 from dataclasses import replace
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -362,3 +362,40 @@ async def test_a_listing_s_address_opens_the_film_once_it_is_linked(
     later = await reads.film(db, admin.id, "tmdb-991350")
     assert later.showings == [] and later.film.title == "Later Linked"
     assert (await reads.film(db, admin.id, listing.key)).film.key == "tmdb-991350"
+
+
+async def test_the_list_carries_each_time_with_its_format_and_ticket_link(
+    api_session: AsyncSession, run, admin: Profile
+):
+    """AE5 (#355): the day view offers each time as a chip that books, with no new request, so
+    the list carries what the film page has: the link only while the programme allows it."""
+    db = api_session
+    row = replace(showing(title="Chip Film"), formats=("imax",))
+    other = replace(
+        row,
+        key="vue-chip",
+        booking="https://www.myvue.com/book-tickets/summary/10097/3",
+        formats=(),
+    )
+    lookup = {"tmdb_id": 991341, "released": "2026-10-20", "uk": ("2026-10-23",)}
+    await promote(db, run, ODEON, [row], looked_up(row, **lookup))
+    await promote(db, run, VUE, [other], looked_up(other, VUE, **lookup))
+    coverage = (
+        await db.scalars(
+            select(CinemaCoverage).where(
+                CinemaCoverage.venue_id == VUE.id, CinemaCoverage.local_date == DAY
+            )
+        )
+    ).one()
+    coverage.status = "failed"
+    await db.flush()
+
+    listing = await reads.films(db, admin.id)
+    card = next(card for card in listing.films if card.key == "tmdb-991341")
+    times = {slot.venueId: slot.times for slot in card.slots}
+    assert [(t.at, t.bookingUrl, t.formats) for t in times[ODEON.id]] == [
+        (row.start.astimezone(UTC).replace(tzinfo=None), row.booking, ["imax"])
+    ]
+    # A failed check pauses the link, exactly as on the film page.
+    assert [t.bookingUrl for t in times[VUE.id]] == [None]
+    assert all(len(slot.times) == len(slot.startsAtUtc) for slot in card.slots)
