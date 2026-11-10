@@ -1240,6 +1240,25 @@ export async function fetchCompletionSet(id: string): Promise<CompletionSetDetai
   )
 }
 
+/** AE3: say a missing film does not count toward this set. Either person may; it is audited. */
+export async function excludeCompletionFilm(setId: string, tmdbId: number): Promise<CompletionSetDetail> {
+  return parseOrThrowApiError(
+    await authFetch(`/insights/completion/${setId}/exclusions`, {
+      method: 'POST',
+      body: JSON.stringify({ tmdbId }),
+    }),
+    completionSetDetailSchema,
+  )
+}
+
+/** AE3: "Count it again". Undoing what is already undone changes nothing. */
+export async function countCompletionFilmAgain(setId: string, tmdbId: number): Promise<CompletionSetDetail> {
+  return parseOrThrowApiError(
+    await authFetch(`/insights/completion/${setId}/exclusions/${String(tmdbId)}`, { method: 'DELETE' }),
+    completionSetDetailSchema,
+  )
+}
+
 /**
  * Rebuild the sets from TMDB. Admin-only, and slow — one API call per set.
  *

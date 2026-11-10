@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
   addManyWanted,
-  addWanted,
   completionCountLabel,
   fetchCompletionSet,
   posterUrl,
@@ -15,6 +14,7 @@ import {
 import { queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/auth'
+import { CountItAgain, DoesNotCount, WantFilm } from '@/components/insights/CompletionFilmActions'
 
 interface Props {
   setId: string
@@ -79,29 +79,6 @@ function BulkAddMissing({ tmdbIds }: { tmdbIds: number[] }) {
   )
 }
 
-function AddMissingToWanted({ tmdbId, wanted }: { tmdbId: number; wanted: boolean }) {
-  const queryClient = useQueryClient()
-  const add = useMutation({
-    mutationFn: () => addWanted({ tmdbId }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['completion-set'] })
-      void queryClient.invalidateQueries({ queryKey: ['wanted'] })
-      void queryClient.invalidateQueries({ queryKey: ['recommendations'] })
-    },
-  })
-
-  if (wanted) return <span className="text-xs font-medium text-primary">Wanted</span>
-  return (
-    <div className="space-y-1">
-      <Button type="button" size="sm" variant="outline" disabled={add.isPending} onClick={() => add.mutate()}>
-        {add.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" />}
-        Add to Wanted
-      </Button>
-      {add.isError ? <p role="alert" className="text-xs text-destructive">{queryErrorMessage(add.error, 'This film could not be added to Wanted.')}</p> : null}
-    </div>
-  )
-}
-
 /**
  * One set's films — §11.2's "missing films list with posters".
  *
@@ -146,6 +123,7 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
             <p className="text-sm text-muted-foreground">
               {setTypeLabel(set.setType)} · {completionCountLabel(set)} ·{' '}
               {set.percentComplete}% complete
+              {set.excludedCount > 0 ? ` · ${String(set.excludedCount)} not counted` : ''}
             </p>
             <div role="progressbar" aria-label={`${set.setName} completion`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={set.percentComplete} className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
@@ -158,12 +136,15 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
             </div>
           </div>
 
-          {profile?.role === 'admin' ? <BulkAddMissing tmdbIds={set.films.filter((film) => !film.owned).map((film) => film.tmdbId)} /> : null}
+          {profile?.role === 'admin' ? <BulkAddMissing tmdbIds={set.films.filter((film) => !film.owned && film.counts).map((film) => film.tmdbId)} /> : null}
 
           <section aria-labelledby="completion-missing" className="space-y-3">
             <h2 id="completion-missing" className="text-lg font-semibold">Missing films</h2>
+            {set.films.some((film) => !film.owned && film.counts) ? null : (
+              <p className="text-sm text-muted-foreground">None: every film that counts is on the shelf.</p>
+            )}
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-            {set.films.filter((film) => !film.owned).map((film) => {
+            {set.films.filter((film) => !film.owned && film.counts).map((film) => {
               const card = (
                 <div className="space-y-1">
                   <div className="relative">
@@ -200,7 +181,9 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
                   >
                     TMDB <ExternalLink className="h-3 w-3" aria-hidden />
                   </a>
-                  {profile?.role === 'admin' ? <AddMissingToWanted tmdbId={film.tmdbId} wanted={film.wanted} /> : film.wanted ? <span className="text-xs font-medium text-primary">Wanted</span> : null}
+                  <WantFilm tmdbId={film.tmdbId} wanted={film.wanted} canAdd={profile?.role === 'admin'} label="Add to Wanted" />
+                  {/* AE3: lost films, TV episodes and other versions, in this set only. */}
+                  <DoesNotCount setId={set.id} film={film} />
                 </div>
               )
               return (
@@ -211,6 +194,24 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
             })}
             </ul>
           </section>
+
+          {set.films.some((film) => !film.owned && !film.counts) ? (
+            <section aria-labelledby="completion-not-counted" className="space-y-2">
+              <h2 id="completion-not-counted" className="text-lg font-semibold">Not counted</h2>
+              <p className="text-xs text-muted-foreground">Missing films either of you said do not count toward this set. They still count in other sets.</p>
+              <ul className="divide-y divide-border">
+                {set.films.filter((film) => !film.owned && !film.counts).map((film) => (
+                  <li key={film.tmdbId} className="flex min-h-11 items-center gap-2 py-1 text-sm">
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground line-through" title={film.title}>
+                      {film.title}
+                      {film.year ? ` (${String(film.year)})` : ''}
+                    </span>
+                    <CountItAgain setId={set.id} film={film} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <section aria-labelledby="completion-owned" className="space-y-3">
             <h2 id="completion-owned" className="text-lg font-semibold">On the shelf</h2>

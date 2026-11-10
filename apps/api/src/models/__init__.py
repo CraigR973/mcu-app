@@ -45,6 +45,7 @@ from src.models.collection_item import (
     SHELVED_SECTIONS,
     CollectionItem,
 )
+from src.models.completion_exclusion import CompletionExclusion
 from src.models.completion_set import (
     MIN_OWNED_FOR_SET,
     SET_TYPES,
@@ -200,6 +201,7 @@ __all__ = [
     "CONDITIONS",
     "CollectionItem",
     "CollectionAddRequest",
+    "CompletionExclusion",
     "CompletionSet",
     "MIN_OWNED_FOR_SET",
     "SET_TYPES",

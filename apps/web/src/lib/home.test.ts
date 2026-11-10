@@ -15,6 +15,8 @@ function set(name: string, owned: number, total: number): CompletionSet {
     percentComplete: Math.floor((owned / total) * 100),
     lastRefreshed: null,
     personProfilePath: null,
+    excludedCount: 0,
+    missingFilms: [],
   }
 }
 

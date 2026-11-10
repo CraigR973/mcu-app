@@ -259,6 +259,9 @@ class CompletionFilmResponse(BaseModel):
     movieId: uuid.UUID | None
     #: Wanted is shared, so both people can see that someone has already added it.
     wanted: bool = False
+    #: AE3: false for a missing film either person set not to count in this set. An owned
+    #: film always counts.
+    counts: bool = True
 
 
 class CompletionSetResponse(BaseModel):
@@ -274,6 +277,16 @@ class CompletionSetResponse(BaseModel):
     lastRefreshed: UtcDatetime | None
     #: A TMDB portrait cached only when the owner-authorised refresh runs.
     personProfilePath: str | None = None
+    #: AE3: members set not to count, left out of the counts above.
+    excludedCount: int = Field(default=0, ge=0)
+    #: AE3: the first few missing films that count, for Home's row to name.
+    missingFilms: list[CompletionFilmResponse] = Field(default_factory=list)
+
+
+class CompletionExclusionRequest(BaseModel):
+    """AE3: a missing film of this set that should not count toward it."""
+
+    tmdbId: int = Field(gt=0)
 
 
 class CompletionSetDetailResponse(CompletionSetResponse):

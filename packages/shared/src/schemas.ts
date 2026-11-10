@@ -848,6 +848,8 @@ export const completionFilmSchema = z.object({
   owned: z.boolean(),
   movieId: z.string().uuid().nullable(),
   wanted: z.boolean().default(false),
+  /** AE3: false for a missing film set not to count in this set. Defaulted for older answers. */
+  counts: z.boolean().default(true),
 })
 
 export const completionSetSchema = z.object({
@@ -862,6 +864,10 @@ export const completionSetSchema = z.object({
   percentComplete: z.number().int().min(0).max(100),
   lastRefreshed: z.string().nullable(),
   personProfilePath: z.string().nullable().default(null),
+  /** AE3: members set not to count, left out of the counts above. */
+  excludedCount: z.number().int().nonnegative().default(0),
+  /** AE3: the first few missing films that count, for Home's row to name. */
+  missingFilms: z.array(completionFilmSchema).default([]),
 })
 
 export const completionSetDetailSchema = completionSetSchema.extend({

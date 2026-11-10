@@ -4517,9 +4517,29 @@
     "title": "CollectionValueResponse",
     "type": "object"
    },
+   "CompletionExclusionRequest": {
+    "description": "AE3: a missing film of this set that should not count toward it.",
+    "properties": {
+     "tmdbId": {
+      "exclusiveMinimum": 0.0,
+      "title": "Tmdbid",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "tmdbId"
+    ],
+    "title": "CompletionExclusionRequest",
+    "type": "object"
+   },
    "CompletionFilmResponse": {
     "description": "One film in a set, owned or not.\n\n``movieId`` is ``None`` for a film that is missing — it has no row in this database,\nwhich is precisely what \"missing\" means. The title, year and poster therefore come\nfrom the set's cached metadata rather than from ``movies``.",
     "properties": {
+     "counts": {
+      "default": true,
+      "title": "Counts",
+      "type": "boolean"
+     },
      "movieId": {
       "anyOf": [
        {
@@ -4671,6 +4691,12 @@
    },
    "CompletionSetDetailResponse": {
     "properties": {
+     "excludedCount": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Excludedcount",
+      "type": "integer"
+     },
      "films": {
       "items": {
        "$ref": "#/components/schemas/CompletionFilmResponse"
@@ -4698,6 +4724,13 @@
       "minimum": 0.0,
       "title": "Missingcount",
       "type": "integer"
+     },
+     "missingFilms": {
+      "items": {
+       "$ref": "#/components/schemas/CompletionFilmResponse"
+      },
+      "title": "Missingfilms",
+      "type": "array"
      },
      "ownedCount": {
       "minimum": 0.0,
@@ -4763,6 +4796,12 @@
    },
    "CompletionSetResponse": {
     "properties": {
+     "excludedCount": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Excludedcount",
+      "type": "integer"
+     },
      "id": {
       "format": "uuid",
       "title": "Id",
@@ -4783,6 +4822,13 @@
       "minimum": 0.0,
       "title": "Missingcount",
       "type": "integer"
+     },
+     "missingFilms": {
+      "items": {
+       "$ref": "#/components/schemas/CompletionFilmResponse"
+      },
+      "title": "Missingfilms",
+      "type": "array"
      },
      "ownedCount": {
       "minimum": 0.0,
@@ -23143,6 +23189,123 @@
      }
     ],
     "summary": "Completion Set Detail",
+    "tags": [
+     "insights"
+    ]
+   }
+  },
+  "/api/v1/insights/completion/{set_id}/exclusions": {
+   "post": {
+    "description": "Say a missing film does not count toward this set — AE3 (#355, point 3).\n\nEither person may, as both keep the shelves. Saying it twice is one row and one audit\nentry: the second, or a replay of the first, finds the row there and changes nothing.",
+    "operationId": "exclude_completion_film_api_v1_insights_completion__set_id__exclusions_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "set_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Set Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CompletionExclusionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CompletionSetDetailResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Exclude Completion Film",
+    "tags": [
+     "insights"
+    ]
+   }
+  },
+  "/api/v1/insights/completion/{set_id}/exclusions/{tmdb_id}": {
+   "delete": {
+    "description": "\"Count it again\" — AE3. Undoing what is already undone changes nothing.",
+    "operationId": "count_completion_film_again_api_v1_insights_completion__set_id__exclusions__tmdb_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "set_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Set Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "tmdb_id",
+      "required": true,
+      "schema": {
+       "title": "Tmdb Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CompletionSetDetailResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Count Completion Film Again",
     "tags": [
      "insights"
     ]

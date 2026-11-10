@@ -128,6 +128,8 @@ function set(id: string, name: string, owned: number, total: number): Completion
     percentComplete: Math.floor((owned / total) * 100),
     lastRefreshed: '2026-09-20T00:00:00Z',
     personProfilePath: null,
+    excludedCount: 0,
+    missingFilms: [],
   }
 }
 const SETS = [

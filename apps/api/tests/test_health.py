@@ -174,6 +174,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # spends a shared TMDB budget and rewrites a table everyone reads.
         "/api/v1/insights/completion",
         "/api/v1/insights/completion/{set_id}",
+        # AE3 (#355): a missing film set not to count in one set, and "Count it again".
+        "/api/v1/insights/completion/{set_id}/exclusions",
+        "/api/v1/insights/completion/{set_id}/exclusions/{tmdb_id}",
         "/api/v1/insights/completion/refresh",
         # Batch 14. Stats and the activity feed are readable by both people; the exports
         # are too — they carry nothing the app does not already show on screen.

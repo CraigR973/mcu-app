@@ -2687,3 +2687,32 @@ describe('AC7 release calendars', () => {
     expect(calendarSubscriptionSchema.parse(answer)).toMatchObject({ discPath: null, cinemaPath: null })
   })
 })
+
+describe('AE3 — Closest to complete names what is missing', () => {
+  const set = {
+    id: '3f2504e0-4f89-41d3-9a0c-0305e82c3501',
+    setType: 'director',
+    setKey: '190',
+    setName: 'Clint Eastwood',
+    ownedCount: 39,
+    totalCount: 39,
+    missingCount: 0,
+    percentComplete: 100,
+    lastRefreshed: '2026-10-25T03:00:00Z',
+  }
+  const pianoBlues = { tmdbId: 54321, title: 'Piano Blues', year: 2003, posterPath: null, owned: false, movieId: null, wanted: false }
+
+  it('reads a set with what is missing and how many do not count', () => {
+    const parsed = completionSetSchema.parse({ ...set, excludedCount: 1, missingFilms: [{ ...pianoBlues, counts: true }] })
+    expect(parsed.excludedCount).toBe(1)
+    expect(parsed.missingFilms[0]?.title).toBe('Piano Blues')
+  })
+
+  it('reads an answer from before AE3 as every film counting and nothing named', () => {
+    const parsed = completionSetSchema.parse(set)
+    expect(parsed.excludedCount).toBe(0)
+    expect(parsed.missingFilms).toEqual([])
+    expect(completionFilmSchema.parse(pianoBlues).counts).toBe(true)
+  })
+})
+
