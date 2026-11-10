@@ -66,6 +66,10 @@ console. Each command is one line; never `cd` into `apps/api` (autoenv prints it
    It migrates the branch to the copy's migration, loads every table, and ends with
    "every table's rows match the copy", or names the tables that differ and changes nothing.
 
+   **Two Postgres extensions come with the migrations** (AE7, #355): from migration 077 on, the
+   migration creates `pg_trgm` and `unaccent`, which search depends on. A Neon branch offers
+   both, and the app's role may create them; a Postgres without them stops at migration 077.
+
 5. **Switch to it.** Either point every Railway service's `DATABASE_URL` at the branch's
    pooled address (`api` and each `cron-*`), or use Neon's restore of `main` from the branch
    if the console offers it, which keeps the address. Both are hosting changes, so Craig's.

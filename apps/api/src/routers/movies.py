@@ -56,6 +56,7 @@ from src.schemas.movies import (
     ShelfFacetResponse,
 )
 from src.schemas.valuation import CopyValuationResponse
+from src.services import search
 from src.services.identification import IdentifyError, identify_film
 from src.services.identify.doubts import doubted_films, film_page_doubts, in_doubt
 from src.services.identify.matcher import Identifier, find_series, match_score
@@ -950,29 +951,16 @@ async def search_movies(
             detail="Query too short",
         )
 
-    tsquery = func.websearch_to_tsquery("english", query)
-    filters = [
-        Movie.deleted_at.is_(None),
-        _live_copy_exists(MovieFilters()),
-        Movie.search_vector.op("@@")(tsquery),
-    ]
-    rank = func.ts_rank_cd(Movie.search_vector, tsquery).label("rank")
+    # AE7 (#355): a title first (the same, then starting so, then close), then a person, then
+    # the full-text match, as `services.search` ranks them.
+    statement = search.ranked(query, Movie.deleted_at.is_(None), _live_copy_exists(MovieFilters()))
     copy_count = _copy_count().label("copy_count")
     total_matches = func.count(Movie.id).over().label("total_matches")
-    rows = (
-        await db.execute(
-            select(Movie, copy_count, rank, total_matches)
-            .where(*filters)
-            .order_by(desc(rank), asc(func.lower(Movie.title)))
-            .limit(limit)
-        )
-    ).all()
+    rows = (await db.execute(statement.add_columns(copy_count, total_matches).limit(limit))).all()
     return SearchResponse(
-        items=await _enrich_list_items(
-            db, user.id, [(movie, int(copies)) for movie, copies, _rank, _total in rows]
-        ),
+        items=await _enrich_list_items(db, user.id, [(row[0], int(row[4])) for row in rows]),
         query=query,
-        total=int(rows[0].total_matches) if rows else 0,
+        total=int(rows[0][5]) if rows else 0,
     )
 
 

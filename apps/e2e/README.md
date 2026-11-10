@@ -21,6 +21,11 @@ You need a **throwaway** Postgres server and nothing else outside the repo. Neve
 or production: the harness refuses a URL that looks hosted, and the fake world refuses to arm
 against one.
 
+**Since migration 077 (AE7, #355) the server needs Postgres's `pg_trgm` and `unaccent`
+extensions**, which search depends on. CI's service container has both. pgserver, below, ships
+neither, so on the Mac the harness stops at migration 077 until a server with them is used
+(`OWNER-ACTIONS.md` says how one can be had); until then this suite runs in CI.
+
 ```bash
 # once per sitting: a local server (pgserver is in the API venv); keep the path short
 apps/api/.venv/bin/python3.12 -c "import pgserver,pathlib; s=pgserver.get_server(pathlib.Path('scratchpad/e2e-pgdata'), cleanup_mode=None); print(s.get_uri('postgres'))"
