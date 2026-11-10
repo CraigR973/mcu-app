@@ -53,7 +53,12 @@ for (const person of ['Craig', 'Mark'] as const) {
         const again = lucky.getByRole('button', { name: 'Start again' })
         await expect(open).toBeVisible()
         await expect(again).toBeVisible()
-        const tops = await Promise.all([open, deal, again].map(async (control) => (await control.boundingBox())?.y))
+        // One layout snapshot of the row, whole pixels: three separate reads could each catch the
+        // page mid-shift while rows above it are still arriving (WebKit did, on CI).
+        const tops = await deal.evaluate((button) =>
+          Array.from(button.parentElement?.children ?? []).map((control) => Math.round(control.getBoundingClientRect().top)),
+        )
+        expect(tops, 'Open the film, Deal another and Start again').toHaveLength(3)
         expect(new Set(tops).size, 'the buttons share one row').toBe(1)
         for (const control of [open, deal]) {
           expect(await control.evaluate((element) => element.scrollWidth <= element.clientWidth), 'a label fits its button').toBe(true)
