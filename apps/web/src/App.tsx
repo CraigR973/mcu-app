@@ -53,6 +53,7 @@ const MovieNightJoinPage = lazy(() =>
   import('./pages/MovieNightPage').then((module) => ({ default: module.MovieNightJoinPage })),
 )
 const AssignedReviewsPage = lazy(() => import('./pages/AssignedReviewsPage'))
+const PersonPage = lazy(() => import('./pages/PersonPage'))
 const MovieNightSessionPage = lazy(() => import('./pages/MovieNightSessionPage'))
 
 function AdminPage() {
@@ -282,6 +283,11 @@ export default function App() {
             <Route
               path="/needs-you"
               element={<AppShell><AssignedReviewsPage /></AppShell>}
+            />
+            {/* AE9 (#355): a page for each person, read-only; your own opens You. */}
+            <Route
+              path="/people/:profileId"
+              element={<AppShell><PersonPage /></AppShell>}
             />
             <Route
               path="/loans"

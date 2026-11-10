@@ -40,6 +40,8 @@ class TopRatedRowResponse(BaseModel):
 class PersonViewingsResponse(BaseModel):
     personName: str
     viewings: int = Field(ge=1)
+    #: AE9 (#355): whose page the name opens. Additive.
+    personId: uuid.UUID | None = None
 
 
 class RewatchedFilmResponse(BaseModel):

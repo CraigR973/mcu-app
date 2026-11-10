@@ -117,7 +117,8 @@ describe('NeedsYouRow', () => {
     })
     renderRow()
     const row = await screen.findByRole('region', { name: /Needs you/ })
-    const links = within(row).getAllByRole('link')
+    // AE9: each row's own link comes first; its label is a link to whose it is.
+    const links = within(row).getAllByRole('listitem').map((li) => within(li).getAllByRole('link')[0])
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/loans?view=open&loan=3f2504e0-4f89-41d3-9a0c-0305e82c3202',
       `/loans?view=back&loan=${BASE.loanId}`,
@@ -204,7 +205,8 @@ describe('Cinema trips in Needs you and the top slot — AC5 (#345)', () => {
     api.fetchNeedsYou.mockResolvedValue({ items: [BASE], nextScreening: null, trips: [invite], nextTrip: null })
     renderRow()
     const row = await screen.findByRole('region', { name: /Needs you/ })
-    const links = within(row).getAllByRole('link')
+    // AE9: each row's own link comes first; its label is a link to whose it is.
+    const links = within(row).getAllByRole('listitem').map((li) => within(li).getAllByRole('link')[0])
     expect(links.map((link) => link.getAttribute('href'))).toEqual([`/movie-night/trips/${TRIP}`, `/loans?view=back&loan=${BASE.loanId}`])
     expect(links[0].textContent).toContain('Craig invited you: Wild Horse Nine, Mon 9 Nov 20:10')
     expect(within(row).getByText('2')).toBeTruthy()
@@ -271,6 +273,9 @@ it('says whose each item is, the reader’s own first, in words for the reader (
   expect(rows[3]).toContain('Craig to hand over The Thing')
   expect(rows[3]).toContain('You asked for it · needed by 12 Nov')
   expect(rows[4]).toContain('For Craig · Is it one box?')
+  // AE9 (#355): each label opens whose it is: Craig's page, or You for Mark's own.
+  expect(within(row).getAllByRole('link', { name: 'Yours: open You' })[0].getAttribute('href')).toBe('/you')
+  expect(within(row).getAllByRole('link', { name: 'Craig’s: open their page' })[0].getAttribute('href')).toBe('/people/p-craig')
 })
 
 it('shows an assigned review on Home even without loans or trips', async () => {

@@ -34,19 +34,19 @@ test('AE8 Craig and Mark see one Needs you, each item labelled, their own first,
         await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
         await page.goto('/dashboard')
         const row = page.getByRole('region', { name: /Needs you/ })
-        // Each says whose it is: the reader's own "You", the other's by name.
-        await expect(row.getByRole('link', { name: own })).toHaveText(/You$/)
-        await expect(row.getByRole('link', { name: other })).toHaveText(new RegExp(`${owner}$`))
+        // Each says whose it is: the reader's own "You", the other's by name (since AE9 a link).
+        const item = (name: RegExp) => row.getByRole('listitem').filter({ has: page.getByRole('link', { name }) })
+        await expect(item(own).getByRole('link', { name: 'Yours: open You' })).toHaveText('You')
+        await expect(item(other).getByRole('link', { name: `${owner}’s: open their page` })).toHaveText(owner)
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
         await row.screenshot({ path: testInfo.outputPath(`ae8-home-${person.toLowerCase()}-${theme}-375.png`) })
 
         // Needs you lists every item for both, the reader's own first.
         await page.goto('/needs-you')
         const all = page.getByRole('region', { name: 'Everything waiting' })
-        const mine = all.getByRole('link', { name: own })
-        const theirs = all.getByRole('link', { name: other })
-        await expect(mine).toHaveText(/You$/)
-        await expect(theirs).toHaveText(new RegExp(`${owner}$`))
+        const listed = (name: RegExp) => all.getByRole('listitem').filter({ has: page.getByRole('link', { name }) })
+        await expect(listed(own).getByRole('link', { name: 'Yours: open You' })).toHaveText('You')
+        await expect(listed(other).getByRole('link', { name: `${owner}’s: open their page` })).toHaveText(owner)
         const titles = await all.getByRole('link').allTextContents()
         expect(titles.findIndex(text => own.test(text))).toBeLessThan(titles.findIndex(text => other.test(text)))
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

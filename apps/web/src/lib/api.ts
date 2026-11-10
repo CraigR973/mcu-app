@@ -78,6 +78,7 @@ import {
   recommendationListSchema,
   rewatchSuggestionsSchema,
   highlightsSchema,
+  personPageSchema,
   streamingSchema,
   profileResponseSchema,
   pushDeviceStatusSchema,
@@ -203,6 +204,7 @@ import {
   type RecommendationList,
   type RewatchSuggestion,
   type Highlights,
+  type PersonPage,
   type RetailerList,
   type RetailerRow,
   type BuiltInScraperList,
@@ -644,6 +646,11 @@ export async function fetchOnThisDayMemories(): Promise<OnThisDayMemory[]> {
 /** Home's Highlights, three rows in one request — Batch V5. */
 export async function fetchHighlights(): Promise<Highlights> {
   return parseResponse(await authFetch('/highlights'), highlightsSchema)
+}
+
+/** AE9 (#355): one person's page. Read-only. */
+export async function fetchPerson(profileId: string): Promise<PersonPage> {
+  return parseResponse(await authFetch(`/people/${encodeURIComponent(profileId)}`), personPageSchema)
 }
 
 export async function fetchRewatchSuggestions(): Promise<RewatchSuggestion[]> {

@@ -68,6 +68,8 @@ export interface NeedsYouRowData {
   /** "You", or whose item it is. */
   label: string
   own: boolean
+  /** AE9: whose page the label opens; null when not known. */
+  ownerId: string | null
 }
 
 type Review = Pick<AssignedReview, 'id' | 'title' | 'question' | 'status'> & Partial<Pick<AssignedReview, 'assignedTo' | 'assigneeName'>>
@@ -86,12 +88,12 @@ export function needsYouRows(
     ...(data.trips ?? []).map((trip) => {
       const own = mine(trip.owner?.profileId)
       const copy = own || !trip.owner ? tripNeedsYouCopy(trip) : othersTripCopy(trip, trip.owner.name, reader?.displayName)
-      return { ...copy, key: `${trip.kind}:${trip.tripId}:${trip.fromName ?? ''}:${trip.owner?.profileId ?? ''}`, kind: 'trip' as const, poster: trip.posterPath, film: trip.filmTitle, label: own ? 'You' : trip.owner?.name ?? 'You', own }
+      return { ...copy, key: `${trip.kind}:${trip.tripId}:${trip.fromName ?? ''}:${trip.owner?.profileId ?? ''}`, kind: 'trip' as const, poster: trip.posterPath, film: trip.filmTitle, label: own ? 'You' : trip.owner?.name ?? 'You', own, ownerId: trip.owner?.profileId ?? reader?.id ?? null }
     }),
     ...(data.items ?? []).map((item) => {
       const own = mine(item.owner?.profileId)
       const copy = own || !item.owner ? needsYouCopy(item) : othersLoanCopy(item, item.owner.name)
-      return { ...copy, key: `${item.kind}:${item.loanId}`, kind: 'loan' as const, poster: item.posterPath, film: item.movieTitle, label: own ? 'You' : item.owner?.name ?? 'You', own }
+      return { ...copy, key: `${item.kind}:${item.loanId}`, kind: 'loan' as const, poster: item.posterPath, film: item.movieTitle, label: own ? 'You' : item.owner?.name ?? 'You', own, ownerId: item.owner?.profileId ?? reader?.id ?? null }
     }),
     ...(data.reviews ?? []).map((review) => {
       const own = mine(review.assignedTo)
@@ -101,6 +103,7 @@ export function needsYouRows(
         detail: own ? status : `For ${review.assigneeName ?? 'someone else'} · ${status}`,
         to: `/needs-you?review=${review.id}`, poster: null, film: review.title,
         label: own ? 'You' : review.assigneeName ?? 'Someone else', own,
+        ownerId: review.assignedTo ?? reader?.id ?? null,
       }
     }),
   ]

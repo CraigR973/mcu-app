@@ -209,6 +209,8 @@ const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
   ['/box-sets/', 'Box set'],
   ['/collections/', 'Collection'],
   ['/settings/', 'Settings'],
+  // AE9 (#355): a person's page; their name is the page's own heading.
+  ['/people/', 'Person'],
 ]
 
 /**

@@ -108,7 +108,7 @@ const RELEASE: CalendarEntry = {
 
 const HIGHLIGHTS: Highlights = {
   topRated: { items: [{ movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, ratings: [{ personName: 'Craig', rating: 5 }] }], ratedBy: ['Craig'], notRatedBy: ['Mark'] },
-  mostRewatched: [{ movieId: JAWS, title: 'Jaws', year: 1975, posterPath: null, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 3 }] }],
+  mostRewatched: [{ movieId: JAWS, title: 'Jaws', year: 1975, posterPath: null, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 3, personId: null }] }],
   mostValuable: [
     { movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, formatCode: '4k_uhd', price: '34.99', currency: 'GBP', basis: 'current asking prices', sampleSize: 7, valueBasis: 'used', factor: null, low: '30.00', high: '40.00', valuedAs: 'as used copies', checkedAt: '2026-09-26T03:00:00Z', copies: 1 },
   ],

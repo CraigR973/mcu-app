@@ -179,6 +179,9 @@ describe('Batch T3 — the phone top bar', () => {
     expect(titleForPath('/wanted')).toBe('Wanted')
     expect(titleForPath('/you')).toBe('You')
     expect(titleForPath('/needs-you')).toBe('Needs you')
+    // AE9 (#355): a person's page is named in the top bar; with no history its back arrow goes Home.
+    expect(titleForPath('/people/0b6ccc42-9b9c-4e85-8d81-f476772e997a')).toBe('Person')
+    expect(parentPath('/people/0b6ccc42-9b9c-4e85-8d81-f476772e997a')).toBe('/dashboard')
     expect(parentPath('/needs-you')).toBe('/you')
     expect(titleForPath('/movies/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Film')
     expect(titleForPath('/films/tmdb/11050')).toBe('Film')

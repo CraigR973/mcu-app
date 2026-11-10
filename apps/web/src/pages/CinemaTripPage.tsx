@@ -9,6 +9,7 @@ import { Poster } from '@/components/movies/Poster'
 import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
+import { personPath } from '@/lib/people'
 import { useGoBack } from '@/hooks/useGoBack'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useProgrammeClock } from '@/hooks/useProgrammeClock'
@@ -192,7 +193,8 @@ function Trip({ trip, online }: { trip: CinemaTrip; online: boolean }) {
         <p className="text-sm text-muted-foreground">{tripTally(trip.counts)}</p>
         <ul className="archive-panel divide-y divide-border overflow-hidden">
           <li className="flex min-h-12 items-center justify-between gap-3 px-4 py-2 text-sm">
-            <span className="font-semibold">{trip.proposer.displayName}{trip.proposer.isYou ? ' (you)' : ''}</span>
+            {/* AE9 (#355): a name opens its person's page; your own opens You. */}
+            <Link to={personPath(trip.proposer.profileId, trip.proposer.isYou ? trip.proposer.profileId : null)} className="font-semibold hover:text-primary hover:underline">{trip.proposer.displayName}{trip.proposer.isYou ? ' (you)' : ''}</Link>
             <span className="text-muted-foreground">Organising</span>
           </li>
           {trip.invitees.map((person) => (
@@ -354,7 +356,7 @@ function Invitee({ person, now, actions }: { person: CinemaTripInvitee; now: num
   return (
     <li className="px-4 py-2 text-sm">
       <div className="flex min-h-8 items-center justify-between gap-3">
-        <span className="font-semibold">{person.displayName}{person.isYou ? ' (you)' : ''}</span>
+        <Link to={personPath(person.profileId, person.isYou ? person.profileId : null)} className="font-semibold hover:text-primary hover:underline">{person.displayName}{person.isYou ? ' (you)' : ''}</Link>
         <span className={cn(person.reply === 'going' ? 'font-semibold text-success' : 'text-muted-foreground')}>{REPLY_LABELS[person.reply]}</span>
       </div>
       {suggestion ? (

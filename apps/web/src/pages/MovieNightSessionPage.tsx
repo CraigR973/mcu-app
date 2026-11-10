@@ -16,6 +16,7 @@ import { Poster } from '@/components/movies/Poster'
 import { FeelingLucky } from '@/components/movies/FeelingLucky'
 import { SuggestFilmPanel } from '@/components/movies/SuggestFilmPanel'
 import { useAuth } from '@/context/auth'
+import { personPath } from '@/lib/people'
 import {
   castMovieNightVote,
   fetchMovieNight,
@@ -143,6 +144,7 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
   const facts = [runtime, card.genres.join(' · ') || null].filter(Boolean).join(' · ')
   const path = filmPath(card)
   const people = card.people ?? []
+  const viewer = useAuth().profile?.id
   const locations = card.locations ?? []
   const hasPlace = locations.some((place) => Boolean(place.location || place.section || place.shelf))
   const imdb = imdbUrl({ imdbId: card.imdbId ?? null })
@@ -159,8 +161,11 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
         <ul className="space-y-1" aria-label="Watch history and personal ratings">
           {people.map((person) => (
             <li key={person.personId} className="text-xs text-muted-foreground">
-              <ProfileAvatar profileId={person.personId} name={person.personName} className="mr-1 h-6 w-6 align-middle" />
-              <span className="font-semibold text-foreground">{person.personName}</span>: {person.lastWatchedAt ? `last watched ${formatShortDate(person.lastWatchedAt)}` : 'no watch logged'}
+              {/* AE9 (#355): a face and name open their page; your own opens You. */}
+              <Link to={personPath(person.personId, viewer)} className="font-semibold text-foreground hover:text-primary hover:underline">
+                <ProfileAvatar profileId={person.personId} name={person.personName} className="mr-1 h-6 w-6 align-middle" />
+                {person.personName}
+              </Link>: {person.lastWatchedAt ? `last watched ${formatShortDate(person.lastWatchedAt)}` : 'no watch logged'}
               {' · '}{person.personalRating === null ? 'not rated' : `${String(person.personalRating)}/5`}
             </li>
           ))}

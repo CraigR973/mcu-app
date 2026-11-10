@@ -52,6 +52,7 @@ from src.routers import (
     navigation,
     needs_you,
     notifications,
+    people,
     photos,
     profile_photos,
     scraping,
@@ -197,6 +198,7 @@ app.include_router(trash.router)
 app.include_router(navigation.router)
 app.include_router(attention.router)
 app.include_router(needs_you.router)
+app.include_router(people.router)
 app.include_router(assigned_reviews.router)
 app.include_router(watch_history.router)
 app.include_router(discovery.router)

@@ -1,12 +1,15 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 
 import { valueBehind } from '@/components/collection/value-words'
 import { PosterCard, ShelfHeading, ShelfRow } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
+import { useAuth } from '@/context/auth'
 import { fetchHighlights, formatLabel, type Highlights as HighlightsData } from '@/lib/api'
 import { addedLine } from '@/lib/highlights'
+import { personPath } from '@/lib/people'
 import { queryErrorMessage } from '@/lib/query-state'
 import { cn, formatShortDate } from '@/lib/utils'
 
@@ -32,7 +35,7 @@ interface Tab {
 
 type HighlightsRowData = Pick<HighlightsData, 'mostRewatched' | 'mostValuable' | 'bestReviewed' | 'recentlyAdded'>
 
-function rewatchedTab(data: HighlightsRowData): Tab | null {
+function rewatchedTab(data: HighlightsRowData, reader: string | undefined): Tab | null {
   if (data.mostRewatched.length === 0) return null
   return {
     key: 'most-rewatched',
@@ -42,13 +45,20 @@ function rewatchedTab(data: HighlightsRowData): Tab | null {
       movieId: film.movieId,
       title: film.title,
       posterPath: film.posterPath,
-      detail: (
-        <>
-          {film.viewings} viewings
-          <span className="block">
-            {film.byPerson.map((person) => `${person.personName} ${String(person.viewings)}`).join(' · ')}
-          </span>
-        </>
+      detail: <>{film.viewings} viewings</>,
+      // AE9 (#355): each name opens that person's page (your own opens You), outside the
+      // card's own link to the film.
+      after: (
+        <span className="block text-xs leading-4 text-muted-foreground">
+          {film.byPerson.map((person, index) => (
+            <span key={person.personId ?? person.personName}>
+              {index > 0 ? ' · ' : null}
+              {person.personId ? (
+                <Link to={personPath(person.personId, reader)} className="hover:text-primary hover:underline">{person.personName} {String(person.viewings)}</Link>
+              ) : `${person.personName} ${String(person.viewings)}`}
+            </span>
+          ))}
+        </span>
       ),
     })),
   }
@@ -61,7 +71,7 @@ function rewatchedTab(data: HighlightsRowData): Tab | null {
  * valuable, Most rewatched and Best discs. A tab with nothing in it is not offered, so with
  * nothing added in the app the row opens on the next one.
  */
-function highlightTabs(data: HighlightsRowData): Tab[] {
+function highlightTabs(data: HighlightsRowData, reader?: string): Tab[] {
   const tabs: Tab[] = []
   if (data.recentlyAdded.length > 0) {
     tabs.push({
@@ -103,7 +113,7 @@ function highlightTabs(data: HighlightsRowData): Tab[] {
       })),
     })
   }
-  const rewatched = rewatchedTab(data)
+  const rewatched = rewatchedTab(data, reader)
   if (rewatched) tabs.push(rewatched)
   if (data.bestReviewed.length > 0) {
     tabs.push({
@@ -148,7 +158,8 @@ function highlightTabs(data: HighlightsRowData): Tab[] {
  * any shown higher up Home (`home-films.ts`). Arrow keys move between the tabs.
  */
 export function HighlightsRow({ data }: { data: HighlightsRowData }) {
-  const tabs = highlightTabs(data)
+  const reader = useAuth().profile?.id
+  const tabs = highlightTabs(data, reader)
   const [picked, setPicked] = useState<string | null>(null)
   const id = useId()
   if (tabs.length === 0) return null

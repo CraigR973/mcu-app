@@ -416,6 +416,8 @@ export const topRatedRowSchema = z.object({
 export const personViewingsSchema = z.object({
   personName: z.string().min(1),
   viewings: z.number().int().positive(),
+  /** AE9 (#355): whose page the name opens. */
+  personId: z.string().uuid().nullable().default(null),
 })
 
 /** A film watched twice or more, across both diaries. */
@@ -3165,3 +3167,56 @@ export type TripReply = z.infer<typeof tripReplySchema>
 export type TripPerson = z.infer<typeof tripPersonSchema>
 export type InvitablePeople = z.infer<typeof invitablePeopleSchema>
 export type InvitablePerson = z.infer<typeof invitablePersonSchema>
+
+// AE9 (#355): a page for each person. Read-only, and nothing from Settings: no PIN, session,
+// notification setting or connected account.
+const personDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+export const personPageSchema = z.object({
+  profileId: z.string().uuid(),
+  displayName: z.string().min(1),
+  /** The reader's own page: the web opens You instead. */
+  isYou: z.boolean(),
+  /** Different films watched this calendar year (London), and ever. */
+  watchedThisYear: z.number().int().nonnegative(),
+  watchedTotal: z.number().int().nonnegative(),
+  /** The last ten diary entries, newest first. */
+  diary: z.array(z.object({
+    movieId: z.string().uuid(),
+    title: z.string().min(1),
+    year: z.number().int().nullable(),
+    posterPath: z.string().nullable(),
+    watchedOn: personDateSchema,
+    rating: z.number().min(0.5).max(5).nullable(),
+    rewatch: z.boolean(),
+  })),
+  /** The last ten copies they added that are still on the shelves, newest first. */
+  recentlyAdded: z.array(z.object({
+    copyId: z.string().uuid(),
+    movieId: z.string().uuid(),
+    title: z.string().min(1),
+    posterPath: z.string().nullable(),
+    formats: z.array(z.string()),
+    addedOn: personDateSchema,
+  })),
+  /** Their wants, newest first, the first twenty, and how many in all. */
+  wants: z.array(z.object({
+    movieId: z.string().uuid(),
+    title: z.string().min(1),
+    year: z.number().int().nullable(),
+    posterPath: z.string().nullable(),
+  })),
+  wantsTotal: z.number().int().nonnegative(),
+  /** Discs they have, or have asked for, now. */
+  loans: z.array(z.object({
+    loanId: z.string().uuid(),
+    movieId: z.string().uuid(),
+    title: z.string().min(1),
+    posterPath: z.string().nullable(),
+    state: z.enum(['asked_for', 'out']),
+    lentDate: personDateSchema.nullable(),
+    dueDate: personDateSchema.nullable(),
+    neededBy: personDateSchema.nullable(),
+  })),
+})
+export type PersonPage = z.infer<typeof personPageSchema>
+

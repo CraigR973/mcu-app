@@ -194,6 +194,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/needs-you/reviews/{review_id}",
         "/api/v1/needs-you/reviews/{review_id}/answer",
         "/api/v1/needs-you/reviews/{review_id}/assignee",
+        # AE9 (#355): a page for each person, read-only.
+        "/api/v1/people/{profile_id}",
         "/api/v1/export/collection.csv",
         "/api/v1/export/collection.json",
         "/api/v1/export/collection.html",

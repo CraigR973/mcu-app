@@ -9,6 +9,8 @@ import { londonDate } from '@/lib/utils'
 import type { Highlights as Data } from '@/lib/api'
 
 const { fetchHighlightsMock } = vi.hoisted(() => ({ fetchHighlightsMock: vi.fn() }))
+// AE9: Most rewatched's names open their pages, so the row reads who is signed in.
+vi.mock('@/context/auth', () => ({ useAuth: () => ({ profile: { id: 'p-craig', displayName: 'Craig', role: 'admin' } }) }))
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   fetchHighlights: fetchHighlightsMock,
@@ -29,7 +31,7 @@ const FULL: Data = {
     notRatedBy: ['Mark'],
   },
   mostRewatched: [
-    { ...ALIEN, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 2 }, { personName: 'Mark', viewings: 1 }] },
+    { ...ALIEN, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 2, personId: 'p-craig' }, { personName: 'Mark', viewings: 1, personId: 'p-mark' }] },
   ],
   mostValuable: [
     {
@@ -100,7 +102,8 @@ describe('Highlights on Home — Batch V5, one row with tabs since AC2', () => {
     expect(panelLinks()).toEqual([`/movies/${HEAT.movieId}`])
     fireEvent.click(screen.getByRole('tab', { name: 'Most rewatched' }))
     expect(screen.getByRole('tab', { name: 'Most rewatched' }).getAttribute('aria-selected')).toBe('true')
-    expect(panelLinks()).toEqual([`/movies/${ALIEN.movieId}`])
+    // AE9 (#355): after the film, each rewatcher's name opens their page, the reader's own You.
+    expect(panelLinks()).toEqual([`/movies/${ALIEN.movieId}`, '/you', '/people/p-mark'])
     expect(fetchHighlightsMock).toHaveBeenCalledTimes(1)
   })
 
@@ -120,7 +123,10 @@ describe('Highlights on Home — Batch V5, one row with tabs since AC2', () => {
 
     expect(screen.getByText('Watched two or more times, across both diaries.')).not.toBeNull()
     expect(panel.getByText(/3 viewings/)).not.toBeNull()
-    expect(panel.getByText('Craig 2 · Mark 1')).not.toBeNull()
+    expect(panel.getAllByRole('listitem')[0].textContent).toContain('Craig 2 · Mark 1')
+    // AE9 (#355): each name opens that person's page; the reader's own opens You.
+    expect(panel.getByRole('link', { name: 'Mark 1' }).getAttribute('href')).toBe('/people/p-mark')
+    expect(panel.getByRole('link', { name: 'Craig 2' }).getAttribute('href')).toBe('/you')
   })
 
   it('shows each disc at its stored value, with its basis and listings', async () => {

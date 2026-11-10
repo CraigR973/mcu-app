@@ -150,11 +150,14 @@ async def _most_rewatched(db: AsyncSession) -> list[RewatchedFilmResponse]:
                 top.c.viewings,
                 Profile.display_name,
                 func.count(WatchLog.id),
+                Profile.id,
             )
             .join(top, top.c.movie_id == Movie.id)
             .join(WatchLog, and_(WatchLog.movie_id == Movie.id, WatchLog.deleted_at.is_(None)))
             .join(Profile, Profile.id == WatchLog.user_id)
-            .group_by(Movie.id, top.c.viewings, top.c.last_watched, Profile.display_name)
+            .group_by(
+                Movie.id, top.c.viewings, top.c.last_watched, Profile.display_name, Profile.id
+            )
             .order_by(
                 top.c.viewings.desc(),
                 top.c.last_watched.desc(),
@@ -165,7 +168,7 @@ async def _most_rewatched(db: AsyncSession) -> list[RewatchedFilmResponse]:
     ).all()
 
     films: dict[uuid.UUID, RewatchedFilmResponse] = {}
-    for movie_id, title, year, poster_path, total, person, count in rows:
+    for movie_id, title, year, poster_path, total, person, count, person_id in rows:
         film = films.setdefault(
             movie_id,
             RewatchedFilmResponse(
@@ -177,7 +180,9 @@ async def _most_rewatched(db: AsyncSession) -> list[RewatchedFilmResponse]:
                 byPerson=[],
             ),
         )
-        film.byPerson.append(PersonViewingsResponse(personName=person, viewings=int(count)))
+        film.byPerson.append(
+            PersonViewingsResponse(personName=person, viewings=int(count), personId=person_id)
+        )
     return list(films.values())
 
 

@@ -2131,6 +2131,8 @@ describe('Batch 22b — checking the sale pages', () => {
 
 describe('Batch V5 — Home\u2019s Highlights', () => {
   const film = { movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3401', title: 'Heat', year: 1995, posterPath: null }
+  const craigId = '9b2f6c1e-3d4a-4e5b-8c7d-1a2b3c4d5e6f'
+  const markId = '0c1d2e3f-4a5b-4c6d-9e7f-8a9b0c1d2e3f'
 
   it('reads the three rows, each saying whose it is or what it rests on', () => {
     const highlights = {
@@ -2139,7 +2141,8 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
         ratedBy: ['Craig'],
         notRatedBy: ['Mark'],
       },
-      mostRewatched: [{ ...film, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 2 }, { personName: 'Mark', viewings: 1 }] }],
+      // Each rewatcher with AE9's personId, which the API now always sends.
+      mostRewatched: [{ ...film, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 2, personId: craigId }, { personName: 'Mark', viewings: 1, personId: markId }] }],
       mostValuable: [
         {
           ...film,
@@ -2183,6 +2186,12 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
   it('reads a Highlights answer from before AE2 as having nothing recently added', () => {
     const before = { topRated: { items: [], ratedBy: [], notRatedBy: [] }, mostRewatched: [], mostValuable: [], bestReviewed: [] }
     expect(highlightsSchema.parse(before).recentlyAdded).toEqual([])
+  })
+
+  it('reads a rewatcher from before AE9 as opening nobody’s page, and refuses an id that is not one', () => {
+    const before = { ...film, viewings: 2, byPerson: [{ personName: 'Craig', viewings: 2 }] }
+    expect(rewatchedFilmSchema.parse(before).byPerson[0]?.personId).toBeNull()
+    expect(() => rewatchedFilmSchema.parse({ ...before, byPerson: [{ personName: 'Craig', viewings: 2, personId: 'craig' }] })).toThrow()
   })
 
   it('refuses a rating off the half-star scale and a "rewatch" seen once', () => {

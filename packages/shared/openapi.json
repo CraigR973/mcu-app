@@ -10402,6 +10402,170 @@
     "title": "PendingToolCallResponse",
     "type": "object"
    },
+   "PersonAddedCopy": {
+    "description": "A copy they added in the app, still on the shelves.",
+    "properties": {
+     "addedOn": {
+      "format": "date",
+      "title": "Addedon",
+      "type": "string"
+     },
+     "copyId": {
+      "format": "uuid",
+      "title": "Copyid",
+      "type": "string"
+     },
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "copyId",
+     "movieId",
+     "title",
+     "posterPath",
+     "formats",
+     "addedOn"
+    ],
+    "title": "PersonAddedCopy",
+    "type": "object"
+   },
+   "PersonDiaryEntry": {
+    "description": "One watch from the person's diary.",
+    "properties": {
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "rating": {
+      "anyOf": [
+       {
+        "maximum": 5.0,
+        "minimum": 0.5,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rating"
+     },
+     "rewatch": {
+      "title": "Rewatch",
+      "type": "boolean"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "watchedOn": {
+      "format": "date",
+      "title": "Watchedon",
+      "type": "string"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "movieId",
+     "title",
+     "year",
+     "posterPath",
+     "watchedOn",
+     "rewatch"
+    ],
+    "title": "PersonDiaryEntry",
+    "type": "object"
+   },
+   "PersonFilm": {
+    "description": "A film they want.",
+    "properties": {
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "movieId",
+     "title",
+     "year",
+     "posterPath"
+    ],
+    "title": "PersonFilm",
+    "type": "object"
+   },
    "PersonFilmResponse": {
     "properties": {
      "lastWatchedAt": {
@@ -10446,6 +10610,166 @@
     "title": "PersonFilmResponse",
     "type": "object"
    },
+   "PersonLoan": {
+    "description": "A disc they have, or have asked for.",
+    "properties": {
+     "dueDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duedate"
+     },
+     "lentDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lentdate"
+     },
+     "loanId": {
+      "format": "uuid",
+      "title": "Loanid",
+      "type": "string"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "neededBy": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Neededby"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "state": {
+      "enum": [
+       "asked_for",
+       "out"
+      ],
+      "title": "State",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "loanId",
+     "movieId",
+     "title",
+     "posterPath",
+     "state",
+     "lentDate",
+     "dueDate",
+     "neededBy"
+    ],
+    "title": "PersonLoan",
+    "type": "object"
+   },
+   "PersonPageResponse": {
+    "properties": {
+     "diary": {
+      "items": {
+       "$ref": "#/components/schemas/PersonDiaryEntry"
+      },
+      "title": "Diary",
+      "type": "array"
+     },
+     "displayName": {
+      "title": "Displayname",
+      "type": "string"
+     },
+     "isYou": {
+      "title": "Isyou",
+      "type": "boolean"
+     },
+     "loans": {
+      "items": {
+       "$ref": "#/components/schemas/PersonLoan"
+      },
+      "title": "Loans",
+      "type": "array"
+     },
+     "profileId": {
+      "format": "uuid",
+      "title": "Profileid",
+      "type": "string"
+     },
+     "recentlyAdded": {
+      "items": {
+       "$ref": "#/components/schemas/PersonAddedCopy"
+      },
+      "title": "Recentlyadded",
+      "type": "array"
+     },
+     "wants": {
+      "items": {
+       "$ref": "#/components/schemas/PersonFilm"
+      },
+      "title": "Wants",
+      "type": "array"
+     },
+     "wantsTotal": {
+      "minimum": 0.0,
+      "title": "Wantstotal",
+      "type": "integer"
+     },
+     "watchedThisYear": {
+      "minimum": 0.0,
+      "title": "Watchedthisyear",
+      "type": "integer"
+     },
+     "watchedTotal": {
+      "minimum": 0.0,
+      "title": "Watchedtotal",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "profileId",
+     "displayName",
+     "isYou",
+     "watchedThisYear",
+     "watchedTotal",
+     "diary",
+     "recentlyAdded",
+     "wants",
+     "wantsTotal",
+     "loans"
+    ],
+    "title": "PersonPageResponse",
+    "type": "object"
+   },
    "PersonResponse": {
     "properties": {
      "displayName": {
@@ -10467,6 +10791,18 @@
    },
    "PersonViewingsResponse": {
     "properties": {
+     "personId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Personid"
+     },
      "personName": {
       "title": "Personname",
       "type": "string"
@@ -25936,6 +26272,55 @@
     "summary": "Vapid Key",
     "tags": [
      "notifications"
+    ]
+   }
+  },
+  "/api/v1/people/{profile_id}": {
+   "get": {
+    "description": "One person's page, for anyone signed in. Read-only.",
+    "operationId": "person_page_api_v1_people__profile_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "profile_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Profile Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PersonPageResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Person Page",
+    "tags": [
+     "people"
     ]
    }
   },
