@@ -68,7 +68,14 @@ describe('a cinema trip', () => {
 
   it('lists the people the reader can invite', () => {
     const people = { people: [{ profileId: other, displayName: 'Mark', isYou: false }] }
+    // AE6: a list asked for no film says nothing of who has seen it.
+    expect(invitablePeopleSchema.parse(people)).toEqual({ people: [{ ...people.people[0], lastWatchedOn: null }], seenKnown: false })
+  })
+
+  it('carries each person’s latest watch when asked for a matched film (AE6)', () => {
+    const people = { people: [{ profileId: other, displayName: 'Mark', isYou: false, lastWatchedOn: '2024-03-12' }], seenKnown: true }
     expect(invitablePeopleSchema.parse(people)).toEqual(people)
+    expect(() => invitablePeopleSchema.parse({ ...people, people: [{ ...people.people[0], lastWatchedOn: '12 Mar 2024' }] })).toThrow()
   })
 })
 

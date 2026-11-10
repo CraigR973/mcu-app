@@ -28,3 +28,18 @@ export function letterboxdUrl(movie: { title: string; imdbId: string | null }): 
 export function imdbUrl(movie: { imdbId: string | null }): string | null {
   return movie.imdbId ? `https://www.imdb.com/title/${encodeURIComponent(movie.imdbId)}/` : null
 }
+
+/**
+ * A cinema film's links out — AE6 (#355, point 5). A film matched to TMDB opens its own
+ * Letterboxd page by its TMDB id (`letterboxd.com/tmdb/<id>`), and IMDb when its id is known.
+ * A listing not matched yet gets a Letterboxd search for its title only: naming one film for it
+ * would be a guess. An event is never one film, so it gets neither.
+ */
+export function cinemaFilmLinks(film: { kind: 'film' | 'listing' | 'event'; title: string; tmdbId: number | null; imdbId: string | null }): { letterboxd: string | null; imdb: string | null; search: boolean } {
+  if (film.kind === 'event') return { letterboxd: null, imdb: null, search: false }
+  if (film.kind === 'film' && film.tmdbId !== null) {
+    return { letterboxd: `https://letterboxd.com/tmdb/${String(film.tmdbId)}/`, imdb: imdbUrl(film), search: false }
+  }
+  if (film.kind === 'film') return { letterboxd: letterboxdUrl(film), imdb: imdbUrl(film), search: film.imdbId === null }
+  return { letterboxd: `https://letterboxd.com/search/${encodeURIComponent(film.title)}/`, imdb: null, search: true }
+}

@@ -2567,6 +2567,18 @@
       "title": "Identitystatus",
       "type": "string"
      },
+     "imdbId": {
+      "anyOf": [
+       {
+        "pattern": "^tt\\d{7,10}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Imdbid"
+     },
      "key": {
       "pattern": "^(tmdb-\\d+|movie-[0-9a-f-]{36}|imdb-tt\\d{7,10}|listing-[0-9a-f-]{36})$",
       "title": "Key",
@@ -2792,6 +2804,18 @@
       ],
       "title": "Identitystatus",
       "type": "string"
+     },
+     "imdbId": {
+      "anyOf": [
+       {
+        "pattern": "^tt\\d{7,10}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Imdbid"
      },
      "key": {
       "pattern": "^(tmdb-\\d+|movie-[0-9a-f-]{36}|imdb-tt\\d{7,10}|listing-[0-9a-f-]{36})$",
@@ -7654,16 +7678,57 @@
     "properties": {
      "people": {
       "items": {
-       "$ref": "#/components/schemas/TripPerson"
+       "$ref": "#/components/schemas/InvitablePerson"
       },
       "title": "People",
       "type": "array"
+     },
+     "seenKnown": {
+      "default": false,
+      "title": "Seenknown",
+      "type": "boolean"
      }
     },
     "required": [
      "people"
     ],
     "title": "InvitablePeople",
+    "type": "object"
+   },
+   "InvitablePerson": {
+    "properties": {
+     "displayName": {
+      "title": "Displayname",
+      "type": "string"
+     },
+     "isYou": {
+      "title": "Isyou",
+      "type": "boolean"
+     },
+     "lastWatchedOn": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lastwatchedon"
+     },
+     "profileId": {
+      "format": "uuid",
+      "title": "Profileid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "profileId",
+     "displayName",
+     "isYou"
+    ],
+    "title": "InvitablePerson",
     "type": "object"
    },
    "InviteMore": {
@@ -19816,8 +19881,27 @@
   },
   "/api/v1/cinema-trips/people": {
    "get": {
-    "description": "Everyone the reader can invite: active profiles with a PIN, not themselves.",
+    "description": "Everyone the reader can invite: active profiles with a PIN, not themselves. AE6\n(#355): with a film page's address, each person's latest watch of a matched film, by\nmovie night's rule (S7), so Propose a trip shows who has seen it.",
     "operationId": "invitable_people_api_v1_cinema_trips_people_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "filmKey",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "pattern": "^(tmdb-[0-9]{1,10}|imdb-tt[0-9]{7,10}|(movie|listing)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Filmkey"
+      }
+     }
+    ],
     "responses": {
      "200": {
       "content": {
@@ -19828,6 +19912,16 @@
        }
       },
       "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
      }
     },
     "security": [

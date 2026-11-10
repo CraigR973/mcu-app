@@ -87,7 +87,9 @@ async def enable(db):
     await db.flush()
 
 
-def looked_up(row, venue=VENUE, *, tmdb_id, title=None, released, uk=(), directors=()):
+def looked_up(
+    row, venue=VENUE, *, tmdb_id, title=None, released, uk=(), directors=(), imdb_id=None
+):
     """The TMDB record AC3's lookup would store for ``row``: one exact-title candidate."""
     return {
         (venue.source, row.film_key): Metadata(
@@ -105,6 +107,7 @@ def looked_up(row, venue=VENUE, *, tmdb_id, title=None, released, uk=(), directo
                     primary_release_date=date.fromisoformat(released),
                     gb_theatrical=[ReleaseEvent(date=date.fromisoformat(d), type=3) for d in uk],
                     directors=list(directors),
+                    imdb_id=imdb_id,
                 )
             ],
         )

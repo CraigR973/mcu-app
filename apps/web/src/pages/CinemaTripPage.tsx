@@ -115,9 +115,10 @@ function Trip({ trip, online }: { trip: CinemaTrip; online: boolean }) {
     enabled: Boolean(profile) && (picker === 'anotherTime' || picker === 'move'),
     staleTime: 60_000,
   })
+  // AE6 (#355): asked for the trip's film, so each person says whether they have seen it.
   const people = useQuery({
-    queryKey: ['cinema-trip-people', profile?.id],
-    queryFn: fetchInvitablePeople,
+    queryKey: ['cinema-trip-people', profile?.id, trip.filmKey],
+    queryFn: () => fetchInvitablePeople(trip.filmKey),
     enabled: Boolean(profile) && picker === 'invite',
   })
 
@@ -307,6 +308,7 @@ function Trip({ trip, online }: { trip: CinemaTrip; online: boolean }) {
                   chosen={chosen}
                   onChange={setChosen}
                   disabled={busy}
+                  seenKnown={people.data.seenKnown}
                 />
               ) : people.isError ? (
                 <p role="alert" className="text-sm text-destructive">{queryErrorMessage(people.error, 'Could not load who you can invite.')}</p>

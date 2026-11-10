@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Clapperboard, Disc3, Eye, Info, Theater, Ticket } from 'lucide-react'
+import { ArrowLeft, Clapperboard, Disc3, ExternalLink, Eye, Info, Theater, Ticket } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { ProgrammeCoverage, ProgrammeLink } from '@/components/cinemas/ProgrammeCoverage'
@@ -8,6 +8,7 @@ import { ProposeTrip } from '@/components/cinemas/ProposeTrip'
 import { TripCard } from '@/components/cinemas/TripCard'
 import { Poster } from '@/components/movies/Poster'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import { useGoBack } from '@/hooks/useGoBack'
@@ -15,6 +16,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useProgrammeClock } from '@/hooks/useProgrammeClock'
 import { ApiError, fetchCinemaFilm, fetchCinemaTrips, type CinemaFilmDetail } from '@/lib/api'
 import { tripsForFilm } from '@/lib/cinema-trips'
+import { cinemaFilmLinks } from '@/lib/external-links'
 import {
   CINEMA_VIEW_PATH,
   chipFormats,
@@ -41,6 +43,27 @@ import { queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
 type Detail = CinemaFilmDetail
+
+/** AE6 (#355, point 5): the film's own pages elsewhere, opening outside the app. A listing not
+ *  matched yet gets a Letterboxd search only; an event, nothing. */
+function FilmLinks({ film }: { film: Detail['film'] }) {
+  const links = cinemaFilmLinks(film)
+  if (!links.letterboxd && !links.imdb) return null
+  return (
+    <div className="flex flex-wrap gap-2">
+      {links.letterboxd ? (
+        <Button asChild size="sm" variant="outline">
+          <a href={links.letterboxd} target="_blank" rel="noopener noreferrer">{links.search ? 'Search Letterboxd' : 'Letterboxd'} <ExternalLink aria-hidden /></a>
+        </Button>
+      ) : null}
+      {links.imdb ? (
+        <Button asChild size="sm" variant="outline">
+          <a href={links.imdb} target="_blank" rel="noopener noreferrer">IMDb <ExternalLink aria-hidden /></a>
+        </Button>
+      ) : null}
+    </div>
+  )
+}
 
 function runtime(minutes: number | null): string | null {
   return minutes ? `${String(Math.floor(minutes / 60))}h ${String(minutes % 60).padStart(2, '0')}m` : null
@@ -297,6 +320,8 @@ function FilmShowings({ detail, now, today, online, connected, onLapsed, isAdmin
           <Link to={`/films/tmdb/${String(film.tmdbId)}`} className="list-link font-semibold text-primary hover:underline">About the film</Link>
         ) : null}
       </div>
+
+      <FilmLinks film={film} />
 
       {/* AC5 (#345): a trip from this page's times, and the reader's trips to this film. */}
       <ProposeTrip detail={detail} now={now} today={today} online={online} />

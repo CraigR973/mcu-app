@@ -192,14 +192,17 @@ describe('a cinema trip, as its organiser reads it (AC5)', () => {
   it('invites more people, offering only those not on the trip', async () => {
     api.fetchCinemaTrip.mockResolvedValue(tripFixture({ asCraig: true }))
     api.fetchInvitablePeople.mockResolvedValue({ people: [
-      { profileId: ALEX, displayName: 'Alex', isYou: false },
-      { profileId: MARK, displayName: 'Mark', isYou: false },
-      { profileId: '00000000-0000-4000-8000-000000000799', displayName: 'Sam', isYou: false },
-    ] })
+      { profileId: ALEX, displayName: 'Alex', isYou: false, lastWatchedOn: null },
+      { profileId: MARK, displayName: 'Mark', isYou: false, lastWatchedOn: null },
+      { profileId: '00000000-0000-4000-8000-000000000799', displayName: 'Sam', isYou: false, lastWatchedOn: '2025-02-01' },
+    ], seenKnown: true })
     api.inviteToCinemaTrip.mockResolvedValue(tripFixture({ asCraig: true }))
     setup()
     fireEvent.click(await screen.findByRole('button', { name: 'Invite more' }))
     const sam = await screen.findByRole('checkbox', { name: 'Sam' })
+    // AE6: asked for the trip's film, so each person says whether they have seen it.
+    expect(api.fetchInvitablePeople).toHaveBeenCalledWith(tripFixture({ asCraig: true }).filmKey)
+    expect(document.getElementById(sam.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Seen · 1 Feb 2025')
     expect(screen.queryByRole('checkbox', { name: 'Mark' })).toBeNull()
     expect((sam as HTMLInputElement).checked).toBe(false)
     fireEvent.click(sam)

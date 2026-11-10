@@ -29,8 +29,10 @@ from src.database import get_db
 from src.main import app
 from src.models.cinema import CinemaCoverage, CinemaFilm, CinemaScreening, CinemaVenue
 from src.models.cinema_trip import CinemaTrip, CinemaTripInvitee
+from src.models.movie import Movie
 from src.models.notification import Notification
 from src.models.profile import Profile, UserRole
+from src.models.watch_log import WatchLog
 from src.routers import cinema_trips as trips_router
 from src.routers import needs_you as needs_you_router
 from src.services import reminders
@@ -334,6 +336,69 @@ async def test_anyone_active_who_can_sign_in_can_be_invited_except_you(
     people = {p["profileId"] for p in response.json()["people"]}
     assert {str(mark.id), str(alex.id)} <= people
     assert not people & {str(craig.id), str(gone.id), str(no_pin.id)}
+
+
+async def test_asked_for_a_matched_film_each_person_s_latest_watch_says_who_has_seen_it(
+    db: AsyncSession,
+    as_: Call,
+    programme: Programme,
+    craig: Profile,
+    mark: Profile,
+    alex: Profile,
+) -> None:
+    """AE6 (#355, point 6): with a matched film's address, the invite list carries each
+    person's latest watch of it, by movie night's rule (S7): a deleted watch never counts, nor
+    one a namesake mismatch makes doubtful. The film is found by its TMDB id, though no cinema
+    row links to its catalogue film here."""
+    movie = Movie(
+        id=uuid.uuid4(), tmdb_id=WHN, title="Wild Horse Nine", original_title="Wild Horse Nine"
+    )
+    db.add(movie)
+    await db.flush()
+    db.add_all(
+        [
+            WatchLog(movie_id=movie.id, user_id=mark.id, watched_at=date(2022, 1, 5)),
+            WatchLog(movie_id=movie.id, user_id=mark.id, watched_at=date(2024, 3, 12)),
+            WatchLog(
+                movie_id=movie.id, user_id=mark.id, watched_at=date(2025, 6, 1), deleted_at=NOW
+            ),
+            WatchLog(
+                movie_id=movie.id, user_id=alex.id, watched_at=date(2025, 1, 1), tmdb_id=WHN + 1
+            ),
+        ]
+    )
+    await db.flush()
+    response = await as_(craig, "get", f"/cinema-trips/people?filmKey=tmdb-{WHN}")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["seenKnown"] is True
+    seen = {p["profileId"]: p["lastWatchedOn"] for p in body["people"]}
+    assert seen[str(mark.id)] == "2024-03-12"
+    assert seen[str(alex.id)] is None
+    assert str(craig.id) not in seen
+
+    # A listing not matched yet, an address that names nothing, or no film: nothing said.
+    listing = CinemaFilm(
+        id=uuid.uuid4(),
+        source=QUAY.source,
+        source_key=f"ac5:{uuid.uuid4()}",
+        title="Untitled Preview",
+        identity_status="unverified",
+        evidence={},
+    )
+    db.add(listing)
+    await db.flush()
+    await showing(db, QUAY, listing, MON, "21:00")
+    for path in (
+        "/cinema-trips/people",
+        f"/cinema-trips/people?filmKey=listing-{listing.id}",
+        "/cinema-trips/people?filmKey=tmdb-999999",
+    ):
+        quiet = await as_(craig, "get", path)
+        assert quiet.status_code == 200, (path, quiet.text)
+        assert quiet.json()["seenKnown"] is False, path
+        assert all(p["lastWatchedOn"] is None for p in quiet.json()["people"]), path
+    assert (await as_(craig, "get", "/cinema-trips/people?filmKey=nonsense")).status_code == 422
 
 
 async def test_proposing_keeps_the_showing_and_invites_each_person_once(

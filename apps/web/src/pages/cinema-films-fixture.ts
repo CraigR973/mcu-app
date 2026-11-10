@@ -26,6 +26,7 @@ type Card = CinemaFilms['films'][number]
 const base = {
   sourceTitles: [] as string[], posterPath: null, tmdbId: null, movieId: null, originalYear: null, yearConfidence: 'unverified' as const,
   directors: [] as string[], runtimeMinutes: null, identityStatus: 'verified' as const, identityReason: null, owned: null, watched: null,
+  imdbId: null as string | null,
 }
 /** AE5: each time with its ticket link, as the API sends them since; the ODEON's in IMAX. */
 const booking = (venueId: string, n: number) => venueId === ODEON
@@ -41,7 +42,7 @@ export function filmsFixture(): CinemaFilms {
   const films: Card[] = [
     {
       ...base, key: 'tmdb-1417', kind: 'film', title: 'A returning favourite', sourceTitles: ['A returning favourite'], posterPath: '/fav.jpg',
-      tmdbId: 1417, movieId: uid(90), originalYear: 1990, yearConfidence: 'verified', owned: true, watched: true,
+      tmdbId: 1417, movieId: uid(90), originalYear: 1990, yearConfidence: 'verified', owned: true, watched: true, imdbId: 'tt0101417',
       slots: [slot(VUE, '2026-11-03', 'olderFilm', 'UK release 1990 · rerun', '2026-11-03T20:00:00Z'), slot(ODEON, '2026-11-03', 'olderFilm', 'UK release 1990 · rerun', '2026-11-03T21:00:00Z')],
     },
     {

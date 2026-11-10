@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { imdbUrl, letterboxdUrl } from './external-links'
+import { cinemaFilmLinks, imdbUrl, letterboxdUrl } from './external-links'
 
 describe('letterboxdUrl', () => {
   it('resolves to the film page when an IMDb id is present', () => {
@@ -43,3 +43,27 @@ describe('imdbUrl', () => {
     expect(imdbUrl({ imdbId: null })).toBeNull()
   })
 })
+
+describe('cinemaFilmLinks (AE6, #355 point 5)', () => {
+  it('opens a matched film on Letterboxd by its TMDB id, and on IMDb when its id is known', () => {
+    expect(cinemaFilmLinks({ kind: 'film', title: 'Rocky', tmdbId: 1366, imdbId: 'tt0075148' })).toEqual({
+      letterboxd: 'https://letterboxd.com/tmdb/1366/', imdb: 'https://www.imdb.com/title/tt0075148/', search: false,
+    })
+    expect(cinemaFilmLinks({ kind: 'film', title: 'Rocky', tmdbId: 1366, imdbId: null })).toEqual({
+      letterboxd: 'https://letterboxd.com/tmdb/1366/', imdb: null, search: false,
+    })
+  })
+
+  it('gives a listing not matched yet a Letterboxd search only, and an event nothing', () => {
+    expect(cinemaFilmLinks({ kind: 'listing', title: 'Face/Off (Preview)', tmdbId: null, imdbId: null })).toEqual({
+      letterboxd: 'https://letterboxd.com/search/Face%2FOff%20(Preview)/', imdb: null, search: true,
+    })
+    expect(cinemaFilmLinks({ kind: 'event', title: 'NT Live: Hamlet', tmdbId: null, imdbId: null })).toEqual({ letterboxd: null, imdb: null, search: false })
+  })
+
+  it('names a catalogue film without a TMDB id by its IMDb id, else searches', () => {
+    expect(cinemaFilmLinks({ kind: 'film', title: 'Old Film', tmdbId: null, imdbId: 'tt0012345' }).letterboxd).toBe('https://letterboxd.com/imdb/tt0012345/')
+    expect(cinemaFilmLinks({ kind: 'film', title: 'Old Film', tmdbId: null, imdbId: null })).toMatchObject({ letterboxd: 'https://letterboxd.com/search/Old%20Film/', search: true })
+  })
+})
+

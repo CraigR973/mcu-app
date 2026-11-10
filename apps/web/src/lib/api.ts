@@ -2888,8 +2888,10 @@ export async function fetchCinemaTrip(id: string): Promise<CinemaTrip> {
 }
 
 /** Everyone the reader can invite: active profiles who can sign in, not themselves. */
-export async function fetchInvitablePeople(): Promise<InvitablePeople> {
-  return parseResponse(await authFetch('/cinema-trips/people'), invitablePeopleSchema)
+/** AE6 (#355): with a film page's address, each person's latest watch of a matched film. */
+export async function fetchInvitablePeople(filmKey?: string): Promise<InvitablePeople> {
+  const query = filmKey ? `?filmKey=${encodeURIComponent(filmKey)}` : ''
+  return parseResponse(await authFetch(`/cinema-trips/people${query}`), invitablePeopleSchema)
 }
 
 /** A time from the film's page and the people to invite. `clientRequestId` is made once per

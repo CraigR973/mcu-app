@@ -6,12 +6,13 @@ answer is the trip as its reader now sees it, so a phone redraws from one respon
 """
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from src.auth import CurrentUser
 from src.clock import utcnow
-from src.models.cinema_trip import CinemaTrip
+from src.models.cinema_trip import FILM_KEY_PATTERN, CinemaTrip
 from src.models.profile import Profile
 from src.routers.movies import Database
 from src.schemas.cinema_trips import (
@@ -46,9 +47,15 @@ async def list_trips(user: CurrentUser, db: Database) -> CinemaTripList:
 
 
 @router.get("/people", response_model=InvitablePeople)
-async def invitable_people(user: CurrentUser, db: Database) -> InvitablePeople:
-    """Everyone the reader can invite: active profiles with a PIN, not themselves."""
-    return InvitablePeople(people=await trips.invitable(db, user))
+async def invitable_people(
+    user: CurrentUser,
+    db: Database,
+    filmKey: Annotated[str | None, Query(pattern=FILM_KEY_PATTERN)] = None,
+) -> InvitablePeople:
+    """Everyone the reader can invite: active profiles with a PIN, not themselves. AE6
+    (#355): with a film page's address, each person's latest watch of a matched film, by
+    movie night's rule (S7), so Propose a trip shows who has seen it."""
+    return await trips.invitable(db, user, filmKey)
 
 
 @router.get("/{trip_id}", response_model=CinemaTripResponse)

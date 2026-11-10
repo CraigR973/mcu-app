@@ -149,12 +149,38 @@ describe('a film’s every showing across the nine (AC4)', () => {
 
   it('never gives an event a year or a film', async () => {
     const event = detailFixture()
-    event.film = { ...event.film, key: 'listing-00000000-0000-4000-8000-000000000052', kind: 'event', title: 'NT Live: Hamlet', identityStatus: 'event', tmdbId: null, movieId: null, owned: null, watched: null, originalYear: null }
+    event.film = { ...event.film, key: 'listing-00000000-0000-4000-8000-000000000052', kind: 'event', title: 'NT Live: Hamlet', identityStatus: 'event', tmdbId: null, movieId: null, owned: null, watched: null, originalYear: null, imdbId: null }
     event.showings = [showingFixture(5, ODEON, '2026-11-06T19:00:00Z', { sourceTitle: 'NT Live: Hamlet', releaseCategory: 'unclassified', categoryReason: null })]
     state.fetch.mockResolvedValue(event)
     setup(event.film.key)
     expect(await screen.findByText('An event or double bill, not one film')).toBeTruthy()
     expect(screen.queryByText(/1990|Open in the archive|About the film/)).toBeNull()
+    // AE6: an event is never one film, so it links to neither.
+    expect(screen.queryByRole('link', { name: /Letterboxd|IMDb/ })).toBeNull()
+  })
+
+  it('links a matched film to Letterboxd by its TMDB id and to IMDb, outside the app (AE6)', async () => {
+    setup()
+    const letterboxd = await screen.findByRole('link', { name: 'Letterboxd' })
+    expect(letterboxd.getAttribute('href')).toBe('https://letterboxd.com/tmdb/1417/')
+    const imdb = screen.getByRole('link', { name: 'IMDb' })
+    expect(imdb.getAttribute('href')).toBe('https://www.imdb.com/title/tt0101417/')
+    for (const link of [letterboxd, imdb]) {
+      expect(link.getAttribute('target')).toBe('_blank')
+      expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+    }
+    expect(screen.queryByRole('link', { name: 'Search Letterboxd' })).toBeNull()
+  })
+
+  it('gives a listing not matched yet a Letterboxd search for its title, and no IMDb (AE6)', async () => {
+    const listing = detailFixture()
+    listing.film = { ...listing.film, key: 'listing-00000000-0000-4000-8000-000000000050', kind: 'listing', title: 'An uncertain programme', identityStatus: 'unverified', identityReason: 'not yet looked up on TMDB', tmdbId: null, movieId: null, owned: null, watched: null, originalYear: null, posterPath: null, imdbId: null }
+    state.fetch.mockResolvedValue(listing)
+    setup(listing.film.key)
+    const search = await screen.findByRole('link', { name: 'Search Letterboxd' })
+    expect(search.getAttribute('href')).toBe('https://letterboxd.com/search/An%20uncertain%20programme/')
+    expect(screen.queryByRole('link', { name: 'IMDb' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Letterboxd' })).toBeNull()
   })
 
   it('opens a listing linked since as the film, under the film’s address', async () => {
@@ -239,6 +265,30 @@ describe('a trip from a film’s page (AC5, #345)', () => {
     await waitFor(() => expect(state.propose).toHaveBeenCalledTimes(2))
     const ids = state.propose.mock.calls.map(([input]) => (input as { clientRequestId: string }).clientRequestId)
     expect(ids[0]).toBe(ids[1])
+  })
+
+  it('says beside each person whether they have seen a matched film (AE6)', async () => {
+    state.people.mockResolvedValue({ people: [
+      { profileId: ALEX, displayName: 'Alex', isYou: false, lastWatchedOn: null },
+      { profileId: MARK, displayName: 'Mark', isYou: false, lastWatchedOn: '2024-03-12' },
+    ], seenKnown: true })
+    setup()
+    fireEvent.click(await screen.findByRole('button', { name: 'Propose a trip' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Propose a trip' })
+    const mark = await within(sheet).findByRole('checkbox', { name: 'Mark' })
+    expect(state.people).toHaveBeenCalledWith('tmdb-1417')
+    expect(document.getElementById(mark.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Seen · 12 Mar 2024')
+    const alex = within(sheet).getByRole('checkbox', { name: 'Alex' })
+    expect(document.getElementById(alex.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Not seen')
+  })
+
+  it('says nothing of who has seen it when the list cannot (AE6)', async () => {
+    setup()
+    fireEvent.click(await screen.findByRole('button', { name: 'Propose a trip' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Propose a trip' })
+    const mark = await within(sheet).findByRole('checkbox', { name: 'Mark' })
+    expect(mark.getAttribute('aria-describedby')).toBeNull()
+    expect(within(sheet).queryByText(/^Seen · |^Not seen$/)).toBeNull()
   })
 
   it('offers no trip when no confirmed time is still to start', async () => {

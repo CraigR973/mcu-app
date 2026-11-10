@@ -399,3 +399,39 @@ async def test_the_list_carries_each_time_with_its_format_and_ticket_link(
     # A failed check pauses the link, exactly as on the film page.
     assert [t.bookingUrl for t in times[VUE.id]] == [None]
     assert all(len(slot.times) == len(slot.startsAtUtc) for slot in card.slots)
+
+
+async def test_a_film_names_its_imdb_id_its_catalogue_film_s_first_and_a_listing_none(
+    api_session: AsyncSession, run, admin: Profile
+):
+    """AE6 (#355, point 5): the film page links IMDb when the film's id is known: its catalogue
+    film's first, else the TMDB record it was matched to. A listing not matched yet has none."""
+    db = api_session
+    lookup = {"released": "2026-10-20", "uk": ("2026-10-23",)}
+    matched = showing("odeon-imdb", film_key="imdb-film", title="Imdb Film", start=at(DAY, 20))
+    await promote(
+        db, run, ODEON, [matched], looked_up(matched, tmdb_id=991352, imdb_id="tt9913520", **lookup)
+    )
+    db.add(
+        Movie(
+            id=uuid.uuid4(),
+            tmdb_id=991353,
+            title="Catalogue Film",
+            original_title="Catalogue Film",
+            year=1980,
+            imdb_id="tt9913539",
+        )
+    )
+    await db.flush()
+    owned = showing("vue-owned", film_key="vue-owned", title="Catalogue Film", start=at(DAY, 21))
+    await promote(
+        db, run, VUE, [owned], looked_up(owned, VUE, tmdb_id=991353, imdb_id="tt9913530", **lookup)
+    )
+    alone = showing("gft-alone", film_key="gft-alone", title="Alone Title", start=at(DAY, 22))
+    await promote(db, run, GFT, [alone])
+
+    cards = {card.title: card for card in (await reads.films(db, admin.id)).films}
+    assert cards["Imdb Film"].imdbId == "tt9913520"
+    assert cards["Catalogue Film"].imdbId == "tt9913539"
+    assert cards["Alone Title"].kind == "listing" and cards["Alone Title"].imdbId is None
+    assert (await reads.film(db, admin.id, "tmdb-991352")).film.imdbId == "tt9913520"

@@ -199,6 +199,9 @@ class CinemaFilmFacts(BaseModel):
     identityReason: str | None
     owned: bool | None
     watched: bool | None
+    #: AE6 (#355): the film's IMDb id when one is known — its catalogue film's, else the TMDB
+    #: record it was matched to, else the cinema's own. Null for a listing or an event.
+    imdbId: str | None = Field(default=None, pattern=r"^tt\d{7,10}$")
 
 
 class CinemaFilmCard(CinemaFilmFacts):

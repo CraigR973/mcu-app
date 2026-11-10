@@ -43,9 +43,10 @@ function ProposeSheet({ detail, now, today, online, onClose }: {
   // One id per choice of time and people: the same send again, its answer lost, returns the
   // same trip; a different choice is a different send.
   const ids = useRef(new Map<string, string>())
+  // AE6 (#355): asked for this film, so each person says whether they have seen it.
   const people = useQuery({
-    queryKey: ['cinema-trip-people', profile?.id],
-    queryFn: fetchInvitablePeople,
+    queryKey: ['cinema-trip-people', profile?.id, detail.film.key],
+    queryFn: () => fetchInvitablePeople(detail.film.key),
     enabled: Boolean(profile),
   })
   const send = useMutation({
@@ -90,7 +91,7 @@ function ProposeSheet({ detail, now, today, online, onClose }: {
         <fieldset className="space-y-2">
           <legend className="text-sm font-semibold">Who to invite</legend>
           {people.data ? (
-            <PeoplePicker people={people.data.people} chosen={chosen} onChange={setChosen} disabled={send.isPending} />
+            <PeoplePicker people={people.data.people} chosen={chosen} onChange={setChosen} disabled={send.isPending} seenKnown={people.data.seenKnown} />
           ) : people.isError ? (
             <p role="alert" className="text-sm text-destructive">{queryErrorMessage(people.error, 'Could not load who you can invite.')}</p>
           ) : (

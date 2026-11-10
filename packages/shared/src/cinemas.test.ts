@@ -88,10 +88,10 @@ describe('At the cinema, film first (AC4)', () => {
   const facts = {
     key: 'tmdb-1366', kind: 'film', title: 'Rocky', sourceTitles: ['Rocky (50th Anniversary)'], posterPath: '/rocky.jpg',
     tmdbId: 1366, movieId: null, originalYear: 1976, yearConfidence: 'verified', directors: ['John G. Avildsen'],
-    runtimeMinutes: 120, identityStatus: 'verified', identityReason: null, owned: null, watched: null,
+    runtimeMinutes: 120, identityStatus: 'verified', identityReason: null, owned: null, watched: null, imdbId: 'tt0075148',
   }
   const listing = { ...facts, key: `listing-${id}`, kind: 'listing', posterPath: null, tmdbId: null, originalYear: null,
-    yearConfidence: 'unverified', directors: [], runtimeMinutes: null, identityStatus: 'unverified', identityReason: 'not yet looked up on TMDB' }
+    yearConfidence: 'unverified', directors: [], runtimeMinutes: null, identityStatus: 'unverified', identityReason: 'not yet looked up on TMDB', imdbId: null }
   const films = {
     generatedAtUtc: '2026-11-05T08:00:00Z', window: { dateFrom: '2026-11-05', dateTo: '2026-11-18' }, thisWeekTo: '2026-11-11',
     venues: programme.venues, films: [{ ...facts, slots: [slot] }, { ...listing, slots: [{ ...slot, releaseCategory: 'unclassified', runReason: null }] }],
@@ -101,6 +101,10 @@ describe('At the cinema, film first (AC4)', () => {
     expect(cinemaFilmsResponseSchema.parse(films)).toEqual(films)
     const { times: _times, ...before } = slot
     expect(cinemaFilmsResponseSchema.parse({ ...films, films: [{ ...facts, slots: [before] }] }).films[0]?.slots[0]?.times).toEqual([])
+    // AE6: a list saved before the IMDb id reads with none, so no IMDb link.
+    const { imdbId: _imdb, ...older } = facts
+    expect(cinemaFilmsResponseSchema.parse({ ...films, films: [{ ...older, slots: [slot] }] }).films[0]?.imdbId).toBeNull()
+    expect(cinemaFilmsResponseSchema.safeParse({ ...films, films: [{ ...facts, imdbId: '0075148', slots: [slot] }] }).success).toBe(false)
   })
   it.each(['tmdb:1366', 'tmdb-', 'listing-123', 'source:abc', 'tmdb-1366/../x'])('rejects the address %s', key => {
     const copy = structuredClone(films)

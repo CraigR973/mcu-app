@@ -28,17 +28,21 @@ from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import HTTPException, status
-from sqlalchemy import ColumnElement, or_, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.cinema import CinemaFilm, CinemaScreening, CinemaVenue
 from src.models.cinema_trip import CinemaTrip, CinemaTripInvitee
+from src.models.movie import Movie
 from src.models.notification import NotificationCategory
 from src.models.profile import Profile
+from src.models.watch_log import WatchLog
 from src.schemas.cinema_trips import (
     CinemaTripList,
     CinemaTripResponse,
+    InvitablePeople,
+    InvitablePerson,
     InviteMore,
     KeepTime,
     MoveTrip,
@@ -361,7 +365,11 @@ async def one(
     return described
 
 
-async def invitable(db: AsyncSession, user: Profile) -> list[TripPerson]:
+async def invitable(
+    db: AsyncSession, user: Profile, film_key: str | None = None
+) -> InvitablePeople:
+    """Everyone the reader can invite. AE6 (#355): asked for a film's page, each person's
+    latest watch of it too, when the page is one matched film."""
     people = (
         await db.scalars(
             select(Profile)
@@ -369,7 +377,64 @@ async def invitable(db: AsyncSession, user: Profile) -> list[TripPerson]:
             .order_by(Profile.display_name, Profile.id)
         )
     ).all()
-    return [TripPerson(profileId=p.id, displayName=p.display_name, isYou=False) for p in people]
+    seen = await _last_watched(db, user, film_key, [p.id for p in people]) if film_key else None
+    return InvitablePeople(
+        people=[
+            InvitablePerson(
+                profileId=p.id,
+                displayName=p.display_name,
+                isYou=False,
+                lastWatchedOn=seen.get(p.id) if seen is not None else None,
+            )
+            for p in people
+        ],
+        seenKnown=seen is not None,
+    )
+
+
+async def _last_watched(
+    db: AsyncSession, user: Profile, film_key: str, people: list[uuid.UUID]
+) -> dict[uuid.UUID, date] | None:
+    """Each person's latest watch of the film a page's address names, or None when the page
+    is not one matched film (a listing, an event, or no film at all). Movie night's rule for
+    who else has seen it (S7): a deleted watch never counts, nor one a known namesake
+    mismatch makes doubtful. The film is found by its TMDB id first, as a watch's film row
+    may not be the one the cinema's row links to."""
+    try:
+        header = (await films.film(db, user.id, film_key)).film
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_404_NOT_FOUND:
+            return None
+        raise
+    if header.kind != "film":
+        return None
+    if header.tmdbId is not None:
+        which: ColumnElement[bool] = Movie.tmdb_id == header.tmdbId
+    elif header.movieId is not None:
+        which = Movie.id == header.movieId
+    elif header.imdbId is not None:
+        which = Movie.imdb_id == header.imdbId
+    else:
+        return None
+    if not people:
+        return {}
+    rows = await db.execute(
+        select(WatchLog.user_id, func.max(WatchLog.watched_at))
+        .join(Movie, Movie.id == WatchLog.movie_id)
+        .where(
+            which,
+            Movie.deleted_at.is_(None),
+            WatchLog.user_id.in_(people),
+            WatchLog.deleted_at.is_(None),
+            or_(
+                WatchLog.tmdb_id.is_(None),
+                Movie.tmdb_id.is_(None),
+                WatchLog.tmdb_id == Movie.tmdb_id,
+            ),
+        )
+        .group_by(WatchLog.user_id)
+    )
+    return {person: last for person, last in rows.tuples()}
 
 
 # ---------------------------------------------------------------------------

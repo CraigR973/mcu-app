@@ -3017,6 +3017,9 @@ const cinemaFilmFactsSchema = z.object({
   identityReason: z.string().nullable(),
   owned: z.boolean().nullable(),
   watched: z.boolean().nullable(),
+  /** AE6 (#355): the film's IMDb id when one is known; null for a listing or an event. Defaulted,
+   *  so a list saved before it still reads, with no IMDb link. */
+  imdbId: z.string().regex(/^tt\d{7,10}$/).nullable().default(null),
 })
 /** AE5 (#355): one showing in a slot, with its format and ticket link, for the day view's chips.
  *  The link is the programme's own, present only while AB7's rule allows it. */
@@ -3140,7 +3143,10 @@ export const cinemaTripListSchema = z.object({
   /** Past and cancelled, most recent first. */
   past: z.array(cinemaTripSchema),
 })
-export const invitablePeopleSchema = z.object({ people: z.array(tripPersonSchema) })
+/** AE6 (#355): asked for a matched film, each person's latest watch of it ("Seen · 12 Mar 2024").
+ *  `seenKnown` false (a listing, an event, no film) means the list says nothing either way. */
+export const invitablePersonSchema = tripPersonSchema.extend({ lastWatchedOn: cinemaDateSchema.nullable().default(null) })
+export const invitablePeopleSchema = z.object({ people: z.array(invitablePersonSchema), seenKnown: z.boolean().default(false) })
 
 export type CinemaTrip = z.infer<typeof cinemaTripSchema>
 export type CinemaTripList = z.infer<typeof cinemaTripListSchema>
@@ -3148,3 +3154,4 @@ export type CinemaTripInvitee = CinemaTrip['invitees'][number]
 export type TripReply = z.infer<typeof tripReplySchema>
 export type TripPerson = z.infer<typeof tripPersonSchema>
 export type InvitablePeople = z.infer<typeof invitablePeopleSchema>
+export type InvitablePerson = z.infer<typeof invitablePersonSchema>

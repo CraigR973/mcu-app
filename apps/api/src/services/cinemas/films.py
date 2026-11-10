@@ -103,6 +103,11 @@ def _candidate(film: CinemaFilm) -> dict[str, Any] | None:
     return None
 
 
+def _imdb(*values: object) -> str | None:
+    """The first well-formed IMDb id among those offered, or None."""
+    return next((v for v in values if isinstance(v, str) and _IMDB.fullmatch(v)), None)
+
+
 def _cleaned(title: str, shown: date) -> str:
     return identity.read_title(title, shown).query or title
 
@@ -176,8 +181,14 @@ def facts(group: Group, mine: Personal, today: date) -> CinemaFilmFacts:
     poster: str | None = None
     directors: list[str] = []
     runtime: int | None = None
+    imdb: str | None = None
     if group.kind == "film":
         candidate = next((c for c in map(_candidate, films) if c), None) or {}
+        imdb = _imdb(
+            movie.imdb_id if movie else None,
+            candidate.get("imdb_id"),
+            *((f.evidence or {}).get("imdbId") for f in films),
+        )
         title = movie.title if movie else candidate.get("title") or title
         year = (
             movie.year if movie else next((f.original_year for f in films if f.original_year), None)
@@ -204,6 +215,7 @@ def facts(group: Group, mine: Personal, today: date) -> CinemaFilmFacts:
         identityReason=reason,
         owned=movie.id in mine.owned if movie else None,
         watched=movie.id in mine.watched if movie else None,
+        imdbId=imdb,
     )
 
 
@@ -390,6 +402,7 @@ async def _unlisted(
             identityReason=None,
             owned=movie.id in mine.owned,
             watched=movie.id in mine.watched,
+            imdbId=_imdb(movie.imdb_id),
         )
     named = await _last_named(db, _parse(canonical))
     if named is None and match["uuidkind"] == "listing":
@@ -464,6 +477,9 @@ def _row_facts(film: CinemaFilm, key: str, today: date) -> CinemaFilmFacts:
         identityReason=reason if isinstance(reason, str) and not verified else None,
         owned=None,
         watched=None,
+        imdbId=_imdb((candidate or {}).get("imdb_id"), evidence.get("imdbId"))
+        if verified
+        else None,
     )
 
 

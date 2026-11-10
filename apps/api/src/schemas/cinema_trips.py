@@ -4,6 +4,7 @@ Replies are camelCase on the wire (`notGoing`, `anotherTime`) and snake_case in 
 """
 
 import uuid
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -101,8 +102,17 @@ class CinemaTripList(BaseModel):
     past: list[CinemaTripResponse]
 
 
+class InvitablePerson(TripPerson):
+    #: AE6 (#355): their latest watch of the film the list was asked for, when `seenKnown`;
+    #: null then means not seen. Movie night's rule for who else has seen it (S7).
+    lastWatchedOn: date | None = None
+
+
 class InvitablePeople(BaseModel):
-    people: list[TripPerson]
+    people: list[InvitablePerson]
+    #: AE6: true when asked for a matched film, so each `lastWatchedOn` says seen or not seen.
+    #: False for a listing not matched yet, an event, or no film at all.
+    seenKnown: bool = False
 
 
 class ProposeTrip(BaseModel):
