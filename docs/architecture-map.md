@@ -588,3 +588,22 @@ flowchart TD
 `services/cinema_trips/trips._last_watched` resolves the address through the film page's own read,
 then reads watches through `movies.tmdb_id`. `lib/external-links.cinemaFilmLinks` builds the links.
 
+## AE8, shipped 10 Nov (PR 145, `d3fbaf6`) — Needs you shared, labelled
+
+```mermaid
+flowchart TD
+    A[GET /needs-you] --> B{Reader keeps the shelves?}
+    B -->|No| C[Own items only, as before]
+    B -->|Yes| D[Every keeper's loan jobs, owner on each]
+    B -->|Yes| E[Own trip items, and the other keeper's on trips the reader is on]
+    B -->|Yes| F[Every keeper's reviews; canAnswer only for the assignee]
+    D --> G[Web: needsYouRows, own first, label You or the name]
+    E --> G
+    F --> G
+    G --> H[Home: five, then See all on Needs you]
+    G --> I[Needs you page: Everything waiting]
+```
+
+`routers/needs_you.py` works out each item's owner (`shelf_keepers`, `needs_you_items`,
+`shared_trips`); `services/assigned_reviews` widens reads with `shared_with`, never writes.
+

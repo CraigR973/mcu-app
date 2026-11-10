@@ -2,8 +2,8 @@
 
 ## Now
 
-**10 Nov, 15:02 GMT: Group AE sitting 2 done, but for the Omniplex's owed enable; AE4, AE5 and AE6
-shipped (PR 142 `ae36c41`, PR 143 `8641036`, PR 144 `4b93f06`) after sitting 1's AE1, AE2 and AE3.** TMDB lookups have their
+**10 Nov, 19:39 GMT: Group AE sitting 4 under way; AE8 shipped (PR 145, `d3fbaf6`) after sittings 1
+and 2 (AE1 to AE6; the Omniplex's enable owed).** TMDB lookups have their
 own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
 after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
 a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
@@ -13,8 +13,9 @@ to count (#358); Highlights opens on Recently added (#357); a second disc asks "
 separate copy?" (#356). At the cinema now opens on today: a sticky date strip, each film's times by cinema as
 chips that book, past times hidden, All / None for the cinemas, and listings and events folded
 (#360). A cinema film's page links to Letterboxd and IMDb, and Propose a trip says beside each
-person whether they have seen it (#361). Production health, readiness and the web's version report
-`4b93f06`. Sitting 4 (AE8 → AE9) is next, ahead of sitting 3's AE7 (#362). Group AE is ten batches in five sittings in
+person whether they have seen it (#361). Craig and Mark now share one Needs you, each item
+saying whose it is, their own first (#363). Production health, readiness and the web's version
+report `d3fbaf6`. AE9 (a page for each person) is next, then sitting 3's AE7 (#362). Group AE is ten batches in five sittings in
 `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -475,6 +476,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 19:39 GMT — AE8 shipped (PR 145, `d3fbaf615d8da6510746f7cebd02ccc40cf52451`, #363).** Needs you shared by the two who keep
+  the shelves: every keeper's items for both, their own first, each saying whose it is; another
+  keeper's trip items only on trips the reader is on; reviews readable by both, answerable only by
+  the assignee; Home's five, then one link to Needs you, which lists everything. Local gate green
+  (API 2,780 on Postgres, web 957, shared 205; AE8, AC1, AD1, loans and AC5 in Chromium, the first
+  four in Firefox); CI's seven jobs green. Health, readiness and version.json on `d3fbaf6`.
+  Read-only after deploy (the app's own role in a READ ONLY transaction), 19:39 GMT: Craig and Mark get the same items: the two overdue loans Craig has, labelled Craig for both; Mark's three reviews, answerable only by Mark; no upcoming trips. That matches the tables' 2 open loans, 3 reviews and 0 upcoming trips.
 - **10 Nov, 15:02 GMT — AE6 shipped (PR 144, `4b93f06d72bb3467b32cb687cdc36e86f0143051`, #361); sitting 2 done but for the Omniplex's
   owed enable.** A matched cinema film links to Letterboxd by TMDB id and to IMDb; a listing gets a
   Letterboxd search; Propose a trip and Invite more say "Seen · date" or "Not seen" by movie

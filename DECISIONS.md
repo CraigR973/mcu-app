@@ -7788,3 +7788,20 @@ contemporaneous.
      (`OWNER-ACTIONS.md`). The sittings never depended on each other (#355); only the order of
      value changes.
 
+363. **AE8 shipped: whose each Needs you item is (10 Nov, PR 145, `d3fbaf6`).** Drafting choices under
+     #355, open to Craig's overrule:
+     - **A shelf job is each keeper's own**: putting a disc back, handing one over, chasing an
+       overdue loan. Both keepers already act on loans, so each sees "You".
+     - **The other keeper's** are a disc they borrowed (theirs to give back; the reader can still
+       ask for it) and a request the reader made (theirs to hand over). Before AE8 the asker did
+       not see their own request at all.
+     - **Trips stay their members' (#345)**: another keeper's trip item shows only on a trip the
+       reader is on. A trip reply stays the invitee's, a suggestion or withdrawn time the
+       proposer's.
+     - **Reviews are readable by both keepers**, through the list and the review itself; every
+       write path is unchanged, so another's review still cannot be answered (404).
+     - **Home's overflow is one link**, "See all N on Needs you", and the Needs you page opens with
+       "Everything waiting", every item for both, labelled.
+     - **The read-back used the app's own role in a READ ONLY transaction**: the read loads
+       profiles, whose PIN-hash column the read-only role cannot see.
+
