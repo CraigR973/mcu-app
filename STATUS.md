@@ -2,13 +2,16 @@
 
 ## Now
 
-**10 Nov, 04:38 GMT: Group AE sitting 1 under way; AE1 and AE2 shipped (PR 139 `aa4242e`, PR 140 `f0827ff`).** Home's Highlights opens on Recently added, its featured film keeps its buttons on one row, and the estimate's method opens full width (#357). A second disc
-ticked on a copy now asks "one box or a separate copy?", a new copy has no default format, and a
-film's Add a copy opens on that film (#356). Production health, readiness and the web's version
-report `f0827ff`. AE3 (Closest to complete) is next. Group AE is ten batches in five
-sittings in `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
-(`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
-and Silent Running are in `OWNER-ACTIONS.md`.
+**10 Nov, 05:19 GMT: Group AE sitting 1 done; AE1, AE2 and AE3 shipped (PR 139 `aa4242e`, PR 140
+`f0827ff`, PR 141 `1b19579`).** Closest to complete names what each set is missing, and either person
+can set a missing film not to count in that set (#358). Home's Highlights opens on Recently added,
+its featured film keeps its buttons on one row, and the estimate's method opens full width (#357).
+A second disc ticked on a copy now asks "one box or a separate copy?", a new copy has no default
+format, and a film's Add a copy opens on that film (#356). Production health, readiness and the
+web's version reported `1b19579` at 05:19 GMT. Sitting 2 (AE4 → AE5 → AE6, cinema) is under way.
+Group AE is ten batches in five sittings in `docs/phase-batches.md` (#355); AE10's movie night
+sketch is with Craig for his picks (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's
+answers on Contagion, King Arthur and Silent Running are in `OWNER-ACTIONS.md`.
 
 **9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
 A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
@@ -466,6 +469,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 05:19 GMT — AE3 shipped (PR 141, `1b19579866b170241553c1f37987e8b153966198`, #358); sitting 1 done.** Migration 075
+  (`completion_exclusions`); Home's Closest to complete names up to three missing films with Want
+  and Doesn't count; the set page strikes through what does not count, with Count it again.
+  Local gate green (completion API 29 of 29 on Postgres, web 937, shared 204, E2E Chromium and
+  Firefox); CI's seven jobs green. Health, readiness and version.json on `1b19579`. Read-only after deploy (`mcu_readonly`): migration 075 is live, `completion_exclusions` is empty and both roles can read it; the row's sets read Eastwood 39 of 40 (Piano Blues), Kubrick 12 of 13 (Fear and Desire) and Hitchcock 48 of 54 (The Pleasure Garden, The Mountain Eagle and Downhill named, +3 more). Screenshots: `docs/reviews/assets/ae3-2026-11-10/`.
 - **10 Nov, 04:38 GMT — AE2 shipped (PR 140, `f0827ff09cdb989d8215f07c90b12ae28965693c`, #357).** Recently added first in
   Highlights (newest owned copies added in the app, "Mark · 5 Nov · 4K UHD"); the featured film's
   poster and title open it, its buttons on one row; the estimate's method full width. Local gate

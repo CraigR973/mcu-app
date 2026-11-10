@@ -521,3 +521,20 @@ newest twelve films, naming the adder through `added_by` (SET NULL safe). The fi
 zod-defaulted in `packages/shared`, and in the OpenAPI snapshot. Web only otherwise: the featured
 card's layout and the estimate panel's place moved; no data shape changed.
 
+## AE3, shipped 10 Nov (PR 141, `1b19579`) — films that do not count
+
+```mermaid
+flowchart TD
+    A[completion_sets: members by TMDB id] --> C[GET /insights/completion]
+    B[completion_exclusions: set, film, who] --> C
+    D[movies owned] --> C
+    C --> E[Counts leave out films that do not count]
+    C --> F[missingFilms: first three that count]
+    G[POST and DELETE .../exclusions] --> B
+    G --> H[admin_actions: create / delete]
+```
+
+New table `completion_exclusions` (migration 075), read with the completion sets in one query
+per page. The read's additions (`excludedCount`, `missingFilms`, `counts`) are zod-defaulted. Home's
+row and the set page call the two new routes; both people see the same.
+

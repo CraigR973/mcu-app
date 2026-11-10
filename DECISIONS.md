@@ -7707,3 +7707,17 @@ contemporaneous.
      - **Home's loading placeholder for the featured film grew to its new height** (h-64), so
        the layout-shift budget AC2 holds still holds.
 
+358. **AE3 shipped: what "Doesn't count" means (10 Nov, PR 141, `1b19579`).** Drafting choices under
+     #355, open to Craig's overrule:
+     - **Per set, by TMDB id, either person, undoable, audited.** `completion_exclusions` holds
+       (set, film, who, when); a set the weekly rebuild retires takes its rows with it.
+     - **A film on the shelf always counts**, so one bought after being set not to count counts
+       again as owned; setting an owned film not to count is refused.
+     - **Audited with `admin_actions`' own verbs**, `create` and `delete` on
+       `completion_exclusions`, the set, film and whether it counts in `changes`: the table's check
+       has allowed only its five verbs since migration 008, and widening it was not needed.
+     - **Want on Home is Craig's**, as the Wanted route is admin-only; Mark sees "Wanted" when a
+       film already is. "Doesn't count" is both people's (#355).
+     - **Home names the three oldest missing films that count**, as the set's page orders them;
+       "+N more" opens the set and appears only beside named films.
+
