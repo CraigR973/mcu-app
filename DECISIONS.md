@@ -7761,3 +7761,30 @@ contemporaneous.
        first, then the earliest.
      - **None is kept in the address** (`?cinema=none`), as an empty choice was before.
 
+361. **AE6 shipped: links out from a cinema film, and who has seen it when inviting (10 Nov, PR
+     144, `4b93f06`).** Drafting choices under #355, open to Craig's overrule:
+     - **Letterboxd by TMDB id for a matched film** (`letterboxd.com/tmdb/<id>/`), as the batch
+       named it; IMDb when the id is known: the catalogue film's, else the TMDB match's, else the
+       cinema's own. A listing gets a Letterboxd search for its title; an event gets neither.
+     - **Who has seen it rides on the invite list**: `GET /cinema-trips/people?filmKey=<address>`
+       adds each person's `lastWatchedOn` and `seenKnown` for a matched film; a listing, an event or
+       an address naming nothing says nothing, rather than refusing.
+     - **Found by TMDB id, not by the cinema row's catalogue link**: on 10 Nov only 4 of 51 matched
+       films carried that link, and a diary sync can add a film between mornings.
+     - **Movie night's rule (S7)**: a deleted watch never counts, nor one a namesake mismatch makes
+       doubtful; the latest counts. The people who can be invited are unchanged, so nothing new is
+       exposed.
+     - **A trip's Invite more shows the same**, for the trip's film: the same choice, so the same
+       help.
+     - **The line is beside the box and its description**, so the box's name stays the person's.
+
+362. **Sitting 4 (AE8 → AE9) runs before sitting 3 (AE7) (10 Nov).** AE7's migration needs
+     Postgres's `pg_trgm` and `unaccent`. pgserver, the Mac's local throwaway Postgres
+     (`apps/e2e/README.md`), ships neither, and no Postgres on the Mac has them; Homebrew has no
+     ready build for Intel macOS 13. So AE7 can be proved only in CI here, and once it merges the
+     local end-to-end suite stops at its migration. AE8 and AE9 are proved locally first; AE7
+     follows, proved in CI. Making the local Postgres capable again needs a download (the
+     PostgreSQL source, to build the two extensions into pgserver), which is Craig's to approve
+     (`OWNER-ACTIONS.md`). The sittings never depended on each other (#355); only the order of
+     value changes.
+

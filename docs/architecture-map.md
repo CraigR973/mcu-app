@@ -573,3 +573,18 @@ flowchart TD
 a link appears only while the server's AB7 rule allows it; `lib/cinemas.timeBooking` checks it
 again as the saved view ages. The address keeps the day, run and cinemas.
 
+## AE6, shipped 10 Nov (PR 144, `4b93f06`) — links out, and who has seen it
+
+```mermaid
+flowchart TD
+    A[Film facts: imdbId, additive] --> B[Film page: Letterboxd by TMDB id, IMDb]
+    C[Propose a trip / Invite more] --> D[GET /cinema-trips/people?filmKey=]
+    D --> E[films.film: is it one matched film?]
+    E -->|yes| F[watch_log by TMDB id: latest per person, S7's rule]
+    E -->|no| G[seenKnown false: nothing said]
+    F --> H[Seen · date, or Not seen, beside each box]
+```
+
+`services/cinema_trips/trips._last_watched` resolves the address through the film page's own read,
+then reads watches through `movies.tmdb_id`. `lib/external-links.cinemaFilmLinks` builds the links.
+

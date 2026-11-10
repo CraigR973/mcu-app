@@ -2,8 +2,8 @@
 
 ## Now
 
-**10 Nov, 14:26 GMT: Group AE sitting 2 under way; AE4 and AE5 shipped (PR 142 `ae36c41`, PR 143
-`8641036`) after sitting 1's AE1, AE2 and AE3.** TMDB lookups have their
+**10 Nov, 15:02 GMT: Group AE sitting 2 done, but for the Omniplex's owed enable; AE4, AE5 and AE6
+shipped (PR 142 `ae36c41`, PR 143 `8641036`, PR 144 `4b93f06`) after sitting 1's AE1, AE2 and AE3.** TMDB lookups have their
 own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
 after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
 a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
@@ -12,8 +12,9 @@ read-back. Closest to complete names what each set is missing, and a missing fil
 to count (#358); Highlights opens on Recently added (#357); a second disc asks "one box or a
 separate copy?" (#356). At the cinema now opens on today: a sticky date strip, each film's times by cinema as
 chips that book, past times hidden, All / None for the cinemas, and listings and events folded
-(#360). Production health, readiness and the web's version report `8641036`. AE6 (IMDb and
-Letterboxd links; who has seen it when inviting) is next. Group AE is ten batches in five sittings in
+(#360). A cinema film's page links to Letterboxd and IMDb, and Propose a trip says beside each
+person whether they have seen it (#361). Production health, readiness and the web's version report
+`4b93f06`. Sitting 4 (AE8 → AE9) is next, ahead of sitting 3's AE7 (#362). Group AE is ten batches in five sittings in
 `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -474,6 +475,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 15:02 GMT — AE6 shipped (PR 144, `4b93f06d72bb3467b32cb687cdc36e86f0143051`, #361); sitting 2 done but for the Omniplex's
+  owed enable.** A matched cinema film links to Letterboxd by TMDB id and to IMDb; a listing gets a
+  Letterboxd search; Propose a trip and Invite more say "Seen · date" or "Not seen" by movie
+  night's rule, found by TMDB id. Local gate green; CI's seven jobs green. Health, readiness and
+  version.json on `4b93f06`. Read-only after deploy (`mcu_readonly`), 15:02 GMT: the deployed rule for three listed films matches the watch rows. Almost Famous: Craig not seen, Mark 27 Mar 2025. Elf: Craig 24 Dec 2013, Mark 23 Dec 2023. Prisoners: Craig 5 Feb 2026 (the later of two), Mark not seen. Main's run on AE5's merge
+  commit met a fourth WebKit flake, in AC6's settings case (the page reloaded before its save
+  landed); main's next run was green.
 - **10 Nov, 14:26 GMT — AE5 shipped (PR 143, `8641036fd8a813ba34abf59d75ddd2a4d31198df`, #360).** At the cinema day by day: a sticky
   date strip with today chosen, a day's times by cinema as chips that book under AB7's rule, past
   times hidden and "See tomorrow" once today is done; All / None; listings and events folded with

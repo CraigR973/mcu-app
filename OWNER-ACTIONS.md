@@ -12,6 +12,18 @@ Older dated sections retain historical instructions; the current summary below t
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
+## A local Postgres for search — 10 Nov (#362)
+
+Nothing in production waits on this. It decides whether the Mac can run the end-to-end suite
+once AE7 (search) merges; CI runs it either way.
+
+- [ ] **Approve one download, or say no.** AE7 needs Postgres's `pg_trgm` and `unaccent`
+      extensions. The Mac's local throwaway Postgres (pgserver, in the API's venv) ships
+      neither, and Homebrew has no ready build for Intel macOS 13. An agent can download the
+      PostgreSQL 16.2 source (about 24 MB, from postgresql.org, checked against its published
+      checksum) and build just those two extensions into pgserver. Undone by reinstalling
+      pgserver; nothing else is installed. Reply "yes, build them" or "no, CI only".
+
 ## Ask Mark about three copies — 9 Nov (#355)
 
 From point 10 of the 8 Nov feedback (`docs/reviews/feedback-reconciliation-2026-11-08.md`).
