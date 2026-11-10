@@ -7721,3 +7721,23 @@ contemporaneous.
      - **Home names the three oldest missing films that count**, as the set's page orders them;
        "+N more" opens the set and appears only beside named films.
 
+359. **AE4 shipped: TMDB's own budget, three titles, and how a new cinema gets switched on (10 Nov,
+     PR 142, `ae36c41`).** Drafting choices under #355, open to Craig's overrule:
+     - **TMDB has its own cap of 120 a run, beside the cinema sites' unchanged 120**, which are
+       still read first. The run report records `siteRequests` and `metadataRequests`, with
+       `requests` their sum. The caches and the run's deadline are unchanged.
+     - **A cinema awaiting its first enable is read by the morning run.** Found while building: the
+       run read only switched-on cinemas, so a new one could never earn the fresh coverage the
+       enable step demands. The awaiting list is in code (`awaiting.py`, the Omniplex alone); a
+       cinema on it that is off and has never been enabled (no enable in `admin_actions`) is read,
+       but only beside a switched-on cinema on its own source, so a source switched off after a
+       refusal is not asked. Until enabled it is in no view and the digest counts only switched-on
+       cinemas. Once enabled it is an ordinary cinema; switched off later, it is not read.
+     - **Booking links are checked per operator**: ODEON's by its `showtimeId` code, the Omniplex's
+       by `www.omniplexcinemas.co.uk/booking/seats/glasgow-renfrew-street/<id>`; any other host or
+       branch is refused, on the server and in the web app.
+     - **"all nine" now counts the cinemas** ("all 10"); other sentences say "your cinemas".
+     - **The title rules are narrow**: "Access Film Club:" joins the special-screening prefixes; a
+       full stop is dropped only straight after a closing bracket ("Monsters, Inc." keeps its own);
+       "CBeebies Panto" is an event.
+

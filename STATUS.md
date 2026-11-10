@@ -2,16 +2,19 @@
 
 ## Now
 
-**10 Nov, 05:19 GMT: Group AE sitting 1 done; AE1, AE2 and AE3 shipped (PR 139 `aa4242e`, PR 140
-`f0827ff`, PR 141 `1b19579`).** Closest to complete names what each set is missing, and either person
-can set a missing film not to count in that set (#358). Home's Highlights opens on Recently added,
-its featured film keeps its buttons on one row, and the estimate's method opens full width (#357).
-A second disc ticked on a copy now asks "one box or a separate copy?", a new copy has no default
-format, and a film's Add a copy opens on that film (#356). Production health, readiness and the
-web's version reported `1b19579` at 05:19 GMT. Sitting 2 (AE4 → AE5 → AE6, cinema) is under way.
-Group AE is ten batches in five sittings in `docs/phase-batches.md` (#355); AE10's movie night
-sketch is with Craig for his picks (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's
-answers on Contagion, King Arthur and Silent Running are in `OWNER-ACTIONS.md`.
+**10 Nov, 10:25 GMT: Group AE sitting 2 under way; AE4 shipped (PR 142, `ae36c41`) after sitting 1's
+AE1, AE2 and AE3 (PR 139 `aa4242e`, PR 140 `f0827ff`, PR 141 `1b19579`).** TMDB lookups have their
+own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
+after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
+a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
+(#359). **Owed after the 11 Nov 08:00 UTC run:** its coverage read, its one enable (#355) and the
+read-back. Closest to complete names what each set is missing, and a missing film can be set not
+to count (#358); Highlights opens on Recently added (#357); a second disc asks "one box or a
+separate copy?" (#356). Production health, readiness and the web's version report `ae36c41`.
+AE5 (the day-by-day cinema view) is next. Group AE is ten batches in five sittings in
+`docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
+(`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
+and Silent Running are in `OWNER-ACTIONS.md`.
 
 **9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
 A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
@@ -469,6 +472,17 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 10:25 GMT — AE4 shipped (PR 142, `ae36c41130d213820270a682fd3609598d2584b4`, #359).** TMDB's own 120 lookups a run
+  beside the sites' 120, both in the run report; three title rules; the Omniplex as a tenth cinema
+  (migration 076, off), read by the morning run while it awaits its first enable and out of every
+  view and the digest until then. Local gate green, the jobs rehearsal included (the Omniplex read
+  while off, then enabled alone). CI's first run caught a jobs case still counting nine cinemas,
+  which the local run of only the two new jobs cases had missed: fixed in `ae36c41` (the full
+  jobs project, 9 of 9, then run locally). Its re-run met a WebKit internal error loading a page
+  in the unrelated sign-out case; one re-run of that job was green. Health, readiness and
+  version.json on `ae36c41`. Read-only after deploy (`mcu_readonly`): migration 076, ten cinemas with nine switched on, and the Omniplex off with no enable in `admin_actions`, so the 11 Nov 08:00 UTC run reads it. AE3's records were committed after this merge, so AE4's pushed
+  branch was never rewritten. Owed after the 11 Nov 08:00 UTC run: the Omniplex's coverage, its
+  one enable, read-back.
 - **10 Nov, 05:19 GMT — AE3 shipped (PR 141, `1b19579866b170241553c1f37987e8b153966198`, #358); sitting 1 done.** Migration 075
   (`completion_exclusions`); Home's Closest to complete names up to three missing films with Want
   and Doesn't count; the set page strikes through what does not count, with Count it again.

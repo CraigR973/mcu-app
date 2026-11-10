@@ -538,3 +538,22 @@ New table `completion_exclusions` (migration 075), read with the completion sets
 per page. The read's additions (`excludedCount`, `missingFilms`, `counts`) are zod-defaulted. Home's
 row and the set page call the two new routes; both people see the same.
 
+## AE4, shipped 10 Nov (PR 142, `ae36c41`) — two budgets and a cinema awaiting its first enable
+
+```mermaid
+flowchart TD
+    A[08:00 morning run] --> B[Due: switched-on cinemas, and an awaiting one beside them on its source]
+    B --> C[Cinema sites: 120 requests]
+    C --> D[Showings and coverage]
+    D --> E[TMDB lookups: their own 120]
+    D --> F{Switched on?}
+    F -->|No, awaiting| G[In no view or digest]
+    F -->|Yes| H[At the cinema, film pages, digest]
+    I[refresh_cinemas --enable: fresh coverage, audited] --> F
+```
+
+`fetch.py` keeps the two caps (`SITE_CAP`, `METADATA_CAP`); `refresh.due_venues` adds the awaiting
+cinemas from `awaiting.py`; `programme.load_window` and the digest's evaluation leave them out
+until enabled. Migration 076 adds the Omniplex's venue row, switched off; its downgrade refuses
+once anything refers to it.
+
