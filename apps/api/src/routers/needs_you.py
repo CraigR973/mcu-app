@@ -4,6 +4,13 @@
 everyone's row at once, and no job has to keep a list true between runs. AC5 adds cinema trip
 replies to the same row.
 
+**Shared by the people who keep the shelves** (AE8, #355, superseding the per-person list of
+#336 and the private reviews of #351 for them): each keeper sees every keeper's items, their own
+first, each with its owner, so the web can say "You" or the other's name. Only the owner can act
+on an item, except the shelf jobs both keepers already do. Another keeper's cinema trip item
+shows only on a trip the reader is on, as trips are their members' alone (#345). Anyone else
+still sees only their own. Nobody is pushed about another person's item: this is a read.
+
 **Who sees what** (#335):
 
 - A disc back but not shelved, and a disc asked for and waiting to be handed over, go to the
@@ -23,11 +30,11 @@ request.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
@@ -38,7 +45,13 @@ from src.models.movie import Movie
 from src.models.movie_night import MovieNightParticipant, MovieNightSession, MovieNightSuggestion
 from src.models.profile import Profile, UserRole
 from src.routers.movies import Database, location_label
-from src.schemas.needs_you import NeedsYouLoanItem, NeedsYouResponse, NextScreening
+from src.schemas.needs_you import (
+    NeedsYouLoanItem,
+    NeedsYouOwner,
+    NeedsYouResponse,
+    NeedsYouTripItem,
+    NextScreening,
+)
 from src.services.assigned_reviews import list_reviews
 from src.services.cinema_trips import trips
 from src.services.collection_additions import MARK_PROFILE_ID
@@ -60,6 +73,27 @@ def keeps_the_shelves(person: Profile) -> bool:
     id, never by role or display name (#306), so a later viewer is given no shelf jobs.
     """
     return person.role == UserRole.admin or person.id == MARK_PROFILE_ID
+
+
+async def shelf_keepers(db: AsyncSession) -> list[Profile]:
+    """The active people who keep the shelves, by name: whom AE8 shares Needs you between."""
+    return list(
+        (
+            await db.scalars(
+                select(Profile)
+                .where(
+                    Profile.is_active.is_(True),
+                    Profile.deleted_at.is_(None),
+                    or_(Profile.role == UserRole.admin, Profile.id == MARK_PROFILE_ID),
+                )
+                .order_by(Profile.display_name, Profile.id)
+            )
+        ).all()
+    )
+
+
+def owner(person: Profile) -> NeedsYouOwner:
+    return NeedsYouOwner(profileId=person.id, name=person.display_name)
 
 
 def _overdue_from(loan: Loan) -> date | None:
@@ -98,29 +132,41 @@ async def _current_loans(db: AsyncSession) -> list[tuple[Loan, CollectionItem, M
 
 
 async def needs_you_items(
-    db: AsyncSession, person: Profile, *, today: date
+    db: AsyncSession, person: Profile, *, today: date, keepers: list[Profile] | None = None
 ) -> list[NeedsYouLoanItem]:
-    """What ``person`` can act on now, most pressing first."""
+    """What ``person`` can act on now, and, for a shelf keeper, what the other keepers can
+    (AE8): their own first, then most pressing first."""
     keeper = keeps_the_shelves(person)
-    found: list[tuple[tuple[int, date, str], NeedsYouLoanItem]] = []
+    reader = owner(person)
+    others = [k for k in keepers or [] if k.id != person.id] if keeper else []
+    found: list[tuple[tuple[bool, int, date, str], NeedsYouLoanItem]] = []
     for loan, item, movie in await _current_loans(db):
         state = loan_state(loan)
         yours = loan.borrower_profile_id is not None and loan.borrower_profile_id == person.id
         kind: Literal["putBack", "handOver", "overdue"]
+        whose = reader
         if state == "back" and keeper:
             kind, since = "putBack", loan.returned_date or today
         elif state == "asked_for" and keeper and not yours:
             kind, since = "handOver", loan.needed_by_date or today
+        elif state == "asked_for" and keeper and others:
+            # AE8: a keeper who asked sees their request too, as the other keeper's to hand over.
+            kind, since, whose = "handOver", loan.needed_by_date or today, owner(others[0])
         elif state == "out" and (keeper or yours):
             overdue_from = _overdue_from(loan)
             if overdue_from is None or overdue_from > today:
                 continue
             kind, since = "overdue", overdue_from
+            # The other keeper's to give back when they borrowed it; otherwise a shelf job,
+            # chasing whoever has it, and so the reader's own.
+            borrower = next((k for k in others if k.id == loan.borrower_profile_id), None)
+            if borrower is not None:
+                whose = owner(borrower)
         else:
             continue
         found.append(
             (
-                (_ORDER[kind], since, movie.title.casefold()),
+                (whose.profileId != person.id, _ORDER[kind], since, movie.title.casefold()),
                 NeedsYouLoanItem(
                     kind=kind,
                     loanId=loan.id,
@@ -145,6 +191,7 @@ async def needs_you_items(
                         if kind == "overdue" and loan.lent_date is not None
                         else None
                     ),
+                    owner=whose,
                 ),
             )
         )
@@ -187,14 +234,44 @@ async def next_screening(db: AsyncSession, person: Profile) -> NextScreening | N
     )
 
 
+async def shared_trips(
+    db: AsyncSession, person: Profile, keepers: list[Profile], now: datetime
+) -> list[NeedsYouTripItem]:
+    """The reader's own trip items, then, for a shelf keeper, the other keepers' on trips the
+    reader is on (AE8): an invitation waiting for Mark's reply shows to Craig who proposed it."""
+    items = [
+        item.model_copy(update={"owner": owner(person)})
+        for item in await trips.needs_you_trips(db, person, now)
+    ]
+    if not keeps_the_shelves(person):
+        return items
+    on = await trips.trip_ids_of(db, person)
+    for other in keepers:
+        if other.id == person.id:
+            continue
+        items += [
+            item.model_copy(update={"owner": owner(other)})
+            for item in await trips.needs_you_trips(db, other, now)
+            if item.tripId in on
+        ]
+    return items
+
+
 @router.get("/needs-you", response_model=NeedsYouResponse)
 async def needs_you(user: CurrentUser, db: Database) -> NeedsYouResponse:
-    """What the person signed in can act on now, and their next screening."""
+    """What the person signed in can act on now, and their next screening. For a shelf keeper,
+    every keeper's items, each with its owner, their own first (AE8, #355)."""
     now = utcnow()
+    keepers = await shelf_keepers(db)
+    shared = [k.id for k in keepers] if keeps_the_shelves(user) else []
     return NeedsYouResponse(
-        reviews=[review for review in await list_reviews(db, user) if review.status != "resolved"],
-        items=await needs_you_items(db, user, today=utc_today()),
+        reviews=[
+            review
+            for review in await list_reviews(db, user, shared_with=shared)
+            if review.status != "resolved"
+        ],
+        items=await needs_you_items(db, user, today=utc_today(), keepers=keepers),
         nextScreening=await next_screening(db, user),
-        trips=await trips.needs_you_trips(db, user, now),
+        trips=await shared_trips(db, user, keepers, now),
         nextTrip=await trips.next_trip(db, user, now),
     )

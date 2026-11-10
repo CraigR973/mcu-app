@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
 from src.routers.movies import Database
+from src.routers.needs_you import keeps_the_shelves, shelf_keepers
 from src.schemas.assigned_reviews import (
     AnswerReview,
     AssignedReviewResponse,
@@ -19,11 +20,18 @@ from src.services import assigned_reviews as reviews
 router = APIRouter(prefix="/api/v1/needs-you/reviews", tags=["needs-you"])
 
 
+async def _shared_with(db: Database, user: CurrentUser) -> list[uuid.UUID]:
+    """AE8 (#355): a shelf keeper reads every keeper's reviews; anyone else, their own."""
+    return [k.id for k in await shelf_keepers(db)] if keeps_the_shelves(user) else []
+
+
 @router.get("", response_model=list[AssignedReviewResponse])
 async def list_reviews(
     user: CurrentUser, db: Database, allAssignees: bool = False
 ) -> list[AssignedReviewResponse]:
-    return await reviews.list_reviews(db, user, all_assignees=allAssignees)
+    return await reviews.list_reviews(
+        db, user, all_assignees=allAssignees, shared_with=await _shared_with(db, user)
+    )
 
 
 @router.get("/proposals", response_model=list[ReviewProposal])
@@ -40,7 +48,8 @@ async def assign(payload: AssignReview, user: AdminUser, db: Database) -> Assign
 
 @router.get("/{review_id}", response_model=AssignedReviewResponse)
 async def detail(review_id: uuid.UUID, user: CurrentUser, db: Database) -> AssignedReviewResponse:
-    return await reviews.describe(db, await reviews.review_for(db, review_id, user), user)
+    row = await reviews.review_for(db, review_id, user, shared_with=await _shared_with(db, user))
+    return await reviews.describe(db, row, user)
 
 
 @router.post("/{review_id}/answer", response_model=AssignedReviewResponse)

@@ -3,22 +3,7 @@ import type { CinemaTrip, NeedsYouTripItem } from '@mcu/shared'
 
 import { detailFixture, ODEON, showingFixture, VUE } from '../pages/cinema-films-fixture'
 import { ApiError, NetworkError } from './api'
-import {
-  flagWords,
-  nextTripWords,
-  pickableTimes,
-  REPLY_LABELS,
-  TRIP_OFFLINE,
-  tripClock,
-  tripErrorMessage,
-  tripIsSooner,
-  tripLine,
-  tripNeedsYouCopy,
-  tripPath,
-  tripsForFilm,
-  tripTally,
-  tripWhen,
-} from './cinema-trips'
+import { flagWords, nextTripWords, othersTripCopy, pickableTimes, REPLY_LABELS, TRIP_OFFLINE, tripClock, tripErrorMessage, tripIsSooner, tripLine, tripNeedsYouCopy, tripPath, tripsForFilm, tripTally, tripWhen } from './cinema-trips'
 
 // AC5 (#345): the worked example, Wild Horse Nine on Mon 9 Nov at 20:10 at ODEON Glasgow Quay.
 const MONDAY = '2026-11-09T20:10:00Z'
@@ -50,9 +35,13 @@ describe('a trip in words', () => {
   it('words each Needs you item and opens the trip', () => {
     const base: NeedsYouTripItem = {
       kind: 'tripInvite', tripId: id, filmTitle: 'Wild Horse Nine', posterPath: null, venueName: 'ODEON Glasgow Quay',
-      venueTimezone: 'Europe/London', startsAtUtc: MONDAY, proposerName: 'Craig', fromName: null, flag: null,
+      venueTimezone: 'Europe/London', startsAtUtc: MONDAY, proposerName: 'Craig', fromName: null, flag: null, owner: null,
     }
     expect(tripNeedsYouCopy(base)).toEqual({ title: 'Craig invited you: Wild Horse Nine, Mon 9 Nov 20:10', detail: 'ODEON Glasgow Quay', to: tripPath(id) })
+    // AE8 (#355): another keeper's item, as the reader reads it.
+    expect(othersTripCopy(base, 'Mark', 'Craig').title).toBe('Mark hasn’t replied: Wild Horse Nine, Mon 9 Nov 20:10')
+    expect(othersTripCopy({ ...base, kind: 'tripSuggestion', fromName: 'Craig' }, 'Mark', 'Craig')).toMatchObject({ title: 'You suggest another time for Wild Horse Nine', detail: 'Mark to answer · Mon 9 Nov 20:10 · ODEON Glasgow Quay' })
+    expect(othersTripCopy({ ...base, kind: 'tripSuggestion', fromName: 'Alex' }, 'Mark', 'Craig').title).toBe('Alex suggests another time for Wild Horse Nine')
     expect(tripNeedsYouCopy({ ...base, kind: 'tripSuggestion', fromName: 'Mark' }).title).toBe('Mark suggests another time for Wild Horse Nine')
     expect(tripNeedsYouCopy({ ...base, kind: 'tripWithdrawn', flag: 'withdrawn' })).toEqual({
       title: 'ODEON Glasgow Quay no longer lists your Wild Horse Nine time', detail: 'Pick another time or cancel.', to: tripPath(id),

@@ -187,7 +187,7 @@ async def test_a_disc_back_but_not_shelved_goes_to_the_shelf_keepers_only(
     assert await _row(client_as("third"), back) == []
 
 
-async def test_a_request_goes_to_the_shelf_keepers_but_not_to_whoever_asked(
+async def test_a_request_goes_to_the_shelf_keepers_and_to_a_keeper_who_asked_as_the_other_s(
     api_session: AsyncSession,
     people: dict[str, Profile],
     client_as: Callable[[str], AsyncClient],
@@ -214,11 +214,17 @@ async def test_a_request_goes_to_the_shelf_keepers_but_not_to_whoever_asked(
         ("handOver", "The Thing"),
         ("handOver", "Alien"),
     ]
-    # Mark asked for The Thing: he is waiting for it, not handing it over.
+    assert {entry["owner"]["profileId"] for entry in craig} == {str(people["craig"].id)}
+    # Mark asked for The Thing: he is waiting for it, not handing it over. Since AE8 (#355) he
+    # sees it after his own, as Craig's to hand over.
     mark = await _row(client_as("mark"), asked_by_mark, asked_by_third)
-    assert [entry["movieTitle"] for entry in mark] == ["Alien"]
+    assert [(entry["movieTitle"], entry["owner"]["name"]) for entry in mark] == [
+        ("Alien", people["mark"].display_name),
+        ("The Thing", people["craig"].display_name),
+    ]
     assert mark[0]["borrowerName"] == people["third"].display_name
     assert mark[0]["neededBy"] == (TODAY + timedelta(days=5)).isoformat()
+    # Whoever else asked keeps no shelves: still nothing to do.
     assert await _row(client_as("third"), asked_by_mark, asked_by_third) == []
 
 
@@ -527,3 +533,57 @@ async def test_no_planned_screening_reads_as_null_not_a_guess_ac2(
         "nextTrip": None,
         "reviews": [],
     }
+
+
+async def test_the_keepers_share_one_list_each_item_owned_their_own_first(
+    api_session: AsyncSession,
+    people: dict[str, Profile],
+    client_as: Callable[[str], AsyncClient],
+) -> None:
+    """AE8 (#355): a shelf job is each keeper's own; a loan the other keeper borrowed is theirs
+    to give back, and the reader still sees it, after their own. Anyone else sees only theirs."""
+    put_back = await _loan(
+        api_session,
+        await _disc(api_session, "A Put Back"),
+        state="back",
+        borrower=people["third"],
+        lent_days_ago=9,
+        returned_days_ago=4,
+    )
+    to_mark = await _loan(
+        api_session,
+        await _disc(api_session, "B Mark Has It"),
+        state="out",
+        borrower=people["mark"],
+        lent_days_ago=20,
+        due_in_days=-5,
+    )
+    to_third = await _loan(
+        api_session,
+        await _disc(api_session, "C Third Has It"),
+        state="out",
+        borrower=people["third"],
+        lent_days_ago=9,
+        due_in_days=-2,
+    )
+    loans = (put_back, to_mark, to_third)
+    names = {person.id: person.display_name for person in people.values()}
+
+    def read(row: list[dict[str, Any]]) -> list[tuple[str, str, str]]:
+        return [(e["kind"], e["movieTitle"], e["owner"]["name"]) for e in row]
+
+    craig, mark = names[people["craig"].id], names[people["mark"].id]
+    assert read(await _row(client_as("craig"), *loans)) == [
+        ("overdue", "C Third Has It", craig),
+        ("putBack", "A Put Back", craig),
+        ("overdue", "B Mark Has It", mark),
+    ]
+    mark_row = await _row(client_as("mark"), *loans)
+    assert read(mark_row) == [
+        ("overdue", "B Mark Has It", mark),
+        ("overdue", "C Third Has It", mark),
+        ("putBack", "A Put Back", mark),
+    ]
+    assert mark_row[0]["borrowerIsYou"] is True
+    third = names[people["third"].id]
+    assert read(await _row(client_as("third"), *loans)) == [("overdue", "C Third Has It", third)]

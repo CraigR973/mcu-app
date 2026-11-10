@@ -920,6 +920,11 @@ async def cancel(
 # ---------------------------------------------------------------------------
 
 
+async def trip_ids_of(db: AsyncSession, user: Profile) -> set[uuid.UUID]:
+    """Every trip ``user`` proposed or is invited to: the trips whose items AE8 shares with them."""
+    return set((await db.scalars(select(CinemaTrip.id).where(_mine(user)))).all())
+
+
 async def needs_you_trips(
     db: AsyncSession, person: Profile, now: datetime
 ) -> list[NeedsYouTripItem]:

@@ -401,6 +401,42 @@ async def test_asked_for_a_matched_film_each_person_s_latest_watch_says_who_has_
     assert (await as_(craig, "get", "/cinema-trips/people?filmKey=nonsense")).status_code == 422
 
 
+async def test_the_shelf_keepers_see_each_other_s_trip_items_only_on_trips_they_are_on(
+    db: AsyncSession,
+    as_: Call,
+    programme: Programme,
+    craig: Profile,
+    mark: Profile,
+    alex: Profile,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AE8 (#355): Craig keeps the shelves as an administrator, Mark by his stable id. Each sees
+    the other's trip items, with their owner, on a trip both are on, never on one they are
+    not; and only the owner can reply. Someone who keeps no shelves sees only their own."""
+    craig.role = UserRole.admin
+    await db.flush()
+    monkeypatch.setattr(needs_you_router, "MARK_PROFILE_ID", mark.id)
+    together = await propose(as_, craig, programme.monday, mark)
+    apart = await propose(as_, mark, programme.tuesday, alex)
+
+    def read(person: Profile) -> Any:
+        return as_(person, "get", "/needs-you")
+
+    craigs = (await read(craig)).json()["trips"]
+    assert [(t["tripId"], t["kind"], t["owner"]["profileId"]) for t in craigs] == [
+        (together["id"], "tripInvite", str(mark.id))
+    ]
+    marks = (await read(mark)).json()["trips"]
+    assert [(t["tripId"], t["owner"]["profileId"]) for t in marks] == [
+        (together["id"], str(mark.id))
+    ]
+    alexs = (await read(alex)).json()["trips"]
+    assert [(t["tripId"], t["owner"]["profileId"]) for t in alexs] == [(apart["id"], str(alex.id))]
+    # Craig sees Mark's invitation, but the reply is still Mark's alone.
+    refused = await answer(as_, craig, together, "going")
+    assert refused.status_code in (403, 404), refused.text
+
+
 async def test_proposing_keeps_the_showing_and_invites_each_person_once(
     db: AsyncSession, as_: Call, programme: Programme, craig: Profile, mark: Profile
 ) -> None:

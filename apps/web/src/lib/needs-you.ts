@@ -1,5 +1,6 @@
-import type { NeedsYouItem } from '@mcu/shared'
+import type { AssignedReview, NeedsYou, NeedsYouItem } from '@mcu/shared'
 
+import { othersTripCopy, tripNeedsYouCopy } from './cinema-trips'
 import { formatDayMonth } from './utils'
 
 function days(count: number): string {
@@ -40,3 +41,69 @@ export function needsYouCopy(item: NeedsYouItem): { title: string; detail: strin
     to,
   }
 }
+
+/** Another keeper's loan item, as the reader reads it (AE8): a request the reader made is the
+ *  other keeper's to hand over; a disc the other keeper has is still the reader's to ask for. */
+function othersLoanCopy(item: NeedsYouItem, owner: string): { title: string; detail: string; to: string } {
+  const base = needsYouCopy(item)
+  if (item.kind !== 'handOver') return base
+  const by = item.neededBy ? ` · needed by ${formatDayMonth(item.neededBy)}` : ''
+  return { ...base, title: `${owner} to hand over ${item.movieTitle}`, detail: `You asked for it${by}` }
+}
+
+const REVIEW_STATUS: Record<string, string> = {
+  answered: 'Answered — awaiting correction',
+  changed: 'The record changed — needs another look',
+}
+
+/** One row on Home's Needs you and on the Needs you page (AE8, #355). */
+export interface NeedsYouRowData {
+  key: string
+  kind: 'trip' | 'loan' | 'review'
+  title: string
+  detail: string
+  to: string
+  poster: string | null
+  film: string
+  /** "You", or whose item it is. */
+  label: string
+  own: boolean
+}
+
+type Review = Pick<AssignedReview, 'id' | 'title' | 'question' | 'status'> & Partial<Pick<AssignedReview, 'assignedTo' | 'assigneeName'>>
+
+/**
+ * Everything on Needs you as rows, the reader's own first — AE8 (#355). The people who keep the
+ * shelves see each other's items too: each says whose it is, in its words for the reader, and
+ * opens its page, where only its owner can act (loans, which both keepers act on, aside).
+ */
+export function needsYouRows(
+  data: { items?: NeedsYouItem[]; trips?: NeedsYou['trips']; reviews?: Review[] },
+  reader: { id: string; displayName?: string } | null | undefined,
+): NeedsYouRowData[] {
+  const mine = (id: string | null | undefined) => !id || id === reader?.id
+  const rows: NeedsYouRowData[] = [
+    ...(data.trips ?? []).map((trip) => {
+      const own = mine(trip.owner?.profileId)
+      const copy = own || !trip.owner ? tripNeedsYouCopy(trip) : othersTripCopy(trip, trip.owner.name, reader?.displayName)
+      return { ...copy, key: `${trip.kind}:${trip.tripId}:${trip.fromName ?? ''}:${trip.owner?.profileId ?? ''}`, kind: 'trip' as const, poster: trip.posterPath, film: trip.filmTitle, label: own ? 'You' : trip.owner?.name ?? 'You', own }
+    }),
+    ...(data.items ?? []).map((item) => {
+      const own = mine(item.owner?.profileId)
+      const copy = own || !item.owner ? needsYouCopy(item) : othersLoanCopy(item, item.owner.name)
+      return { ...copy, key: `${item.kind}:${item.loanId}`, kind: 'loan' as const, poster: item.posterPath, film: item.movieTitle, label: own ? 'You' : item.owner?.name ?? 'You', own }
+    }),
+    ...(data.reviews ?? []).map((review) => {
+      const own = mine(review.assignedTo)
+      const status = REVIEW_STATUS[review.status] ?? review.question
+      return {
+        key: `review:${review.id}`, kind: 'review' as const, title: review.title,
+        detail: own ? status : `For ${review.assigneeName ?? 'someone else'} · ${status}`,
+        to: `/needs-you?review=${review.id}`, poster: null, film: review.title,
+        label: own ? 'You' : review.assigneeName ?? 'Someone else', own,
+      }
+    }),
+  ]
+  return [...rows.filter((row) => row.own), ...rows.filter((row) => !row.own)]
+}
+

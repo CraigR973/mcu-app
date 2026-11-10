@@ -3,13 +3,13 @@ import { CalendarHeart, ChevronRight, Clapperboard, ListChecks } from 'lucide-re
 import { Link } from 'react-router-dom'
 import type { NextScreening, NextTrip } from '@mcu/shared'
 
-import { Poster } from '@/components/movies/Poster'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import { fetchNeedsYou } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { needsYouCopy } from '@/lib/needs-you'
-import { nextTripWords, tripIsSooner, tripNeedsYouCopy, tripPath } from '@/lib/cinema-trips'
+import { needsYouRows } from '@/lib/needs-you'
+import { nextTripWords, tripIsSooner, tripPath } from '@/lib/cinema-trips'
+import { NeedsYouList } from './NeedsYouList'
 import { formatLondonDateTime } from '@/lib/utils'
 
 /** How many items the row shows before it points at Loans for the rest. */
@@ -61,8 +61,6 @@ function NextTripCard({ trip }: { trip: NextTrip }) {
   )
 }
 
-interface Row { key: string; title: string; detail: string; to: string; poster: string | null; film: string; loan: boolean; review?: boolean }
-
 /**
  * AC1 (#335): what the person signed in can act on now, at the top of Home, for everyone.
  *
@@ -72,6 +70,8 @@ interface Row { key: string; title: string; detail: string; to: string; poster: 
  * Craig's operational "Needs attention" row is separate and stays his alone. Since AC2 the
  * next planned screening sits with it, from the same read (#337). Since AC5 cinema trips come
  * first, soonest showing first, and the next trip takes the slot when it is sooner (#345).
+ * Since AE8 the people who keep the shelves see each other's items too, each saying whose it is,
+ * their own first; five show here and Needs you lists every one (#355).
  */
 export function NeedsYouRow() {
   const { profile } = useAuth()
@@ -104,17 +104,8 @@ export function NeedsYouRow() {
     ? <NextTripCard trip={nextTrip} />
     : screening ? <NextScreeningCard screening={screening} /> : null
   if (items.length === 0 && trips.length === 0 && reviews.length === 0) return top
-  const rows: Row[] = [
-    ...trips.map((trip) => ({ ...tripNeedsYouCopy(trip), key: `${trip.kind}:${trip.tripId}:${trip.fromName ?? ''}`, poster: trip.posterPath, film: trip.filmTitle, loan: false })),
-    ...items.map((item) => ({ ...needsYouCopy(item), key: `${item.kind}:${item.loanId}`, poster: item.posterPath, film: item.movieTitle, loan: true })),
-    ...reviews.map((review) => ({ key: `review:${review.id}`, title: review.title,
-      detail: review.status === 'answered' ? 'Answered — awaiting correction' : review.status === 'changed' ? 'The record changed — needs another look' : review.question,
-      to: `/needs-you?review=${review.id}`, poster: null, film: review.title, loan: false, review: true })),
-  ]
+  const rows = needsYouRows({ items, trips, reviews }, profile)
   const shown = rows.slice(0, SHOWN)
-  const loansHidden = items.length - shown.filter((row) => row.loan).length
-  const reviewsHidden = reviews.length - shown.filter((row) => row.review).length
-  const tripsHidden = trips.length - shown.filter((row) => !row.loan && !row.review).length
   return (
     <div className="space-y-3">
     <section aria-labelledby="needs-you-heading" className="archive-panel p-4">
@@ -126,42 +117,10 @@ export function NeedsYouRow() {
           {rows.length}
         </span>
       </h2>
-      <ul className="mt-2 divide-y divide-border">
-        {shown.map((row) => (
-          <li key={row.key}>
-            <Link
-              to={row.to}
-              className="touch-target flex min-h-14 items-center gap-3 py-2.5 text-foreground hover:text-primary"
-            >
-              <Poster
-                path={row.poster}
-                title={row.film}
-                size="w92"
-                decorative
-                className="h-12 w-8 shrink-0 rounded-sm border border-border"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 text-sm font-semibold">{row.title}</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">{row.detail}</span>
-              </span>
-              <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-      {reviewsHidden > 0 ? (
+      <NeedsYouList rows={shown} className="mt-2" />
+      {rows.length > shown.length ? (
         <Link to="/needs-you" className="mt-2 block text-sm font-medium text-primary underline-offset-2 hover:underline">
-          See all {reviews.length} reviews on Needs you
-        </Link>
-      ) : null}
-      {tripsHidden > 0 ? (
-        <Link to="/movie-night" className="mt-2 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline">
-          See all {trips.length} cinema trips on Movie night
-        </Link>
-      ) : null}
-      {loansHidden > 0 ? (
-        <Link to="/loans" className="mt-2 block text-sm font-medium text-primary underline-offset-2 hover:underline">
-          See all {items.length} on Loans
+          See all {rows.length} on Needs you
         </Link>
       ) : null}
     </section>

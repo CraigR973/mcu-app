@@ -77,6 +77,21 @@ export function tripNeedsYouCopy(item: NeedsYouTripItem): { title: string; detai
   return { title: `${item.venueName} no longer lists your ${item.filmTitle} time`, detail: 'Pick another time or cancel.', to }
 }
 
+/** AE8 (#355): another keeper's trip item, as the reader reads it: theirs to act on, the trip
+ *  open to read. ``you`` is the reader's own name, for a suggestion the reader made. */
+export function othersTripCopy(item: NeedsYouTripItem, owner: string, you: string | undefined): { title: string; detail: string; to: string } {
+  const to = tripPath(item.tripId)
+  const when = tripWhen(item.startsAtUtc)
+  if (item.kind === 'tripInvite') {
+    return { title: `${owner} hasn’t replied: ${item.filmTitle}, ${when}`, detail: item.venueName, to }
+  }
+  if (item.kind === 'tripSuggestion') {
+    const who = item.fromName && item.fromName === you ? 'You suggest' : `${item.fromName ?? 'Someone'} suggests`
+    return { title: `${who} another time for ${item.filmTitle}`, detail: `${owner} to answer · ${when} · ${item.venueName}`, to }
+  }
+  return { title: `${item.venueName} no longer lists ${owner}’s ${item.filmTitle} time`, detail: `${owner} picks another time or cancels.`, to }
+}
+
 /** Home's top slot: "Next: Wild Horse Nine, Mon 9 Nov 20:10 at ODEON Glasgow Quay, with Mark". */
 export function nextTripWords(trip: NextTrip): { detail: string; sentence: string } {
   const company = trip.withNames.length ? `, with ${trip.withNames.join(' and ')}` : ''

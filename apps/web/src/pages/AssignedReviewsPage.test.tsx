@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import type { AssignedReview } from '@mcu/shared'
 
 const auth = vi.hoisted(() => ({ role: 'viewer' }))
-const api = vi.hoisted(() => ({ fetchAssignedReviews: vi.fn(), answerReview: vi.fn(), fetchReviewProposals: vi.fn(), assignReview: vi.fn() }))
+const api = vi.hoisted(() => ({ fetchAssignedReviews: vi.fn(), answerReview: vi.fn(), fetchReviewProposals: vi.fn(), assignReview: vi.fn(), fetchNeedsYou: vi.fn() }))
 vi.mock('@/context/auth', () => ({ useAuth: () => ({ profile: { id: 'mark', role: auth.role } }) }))
 vi.mock('@/lib/api', async original => ({ ...(await original<typeof import('@/lib/api')>()), ...api }))
 import AssignedReviewsPage from './AssignedReviewsPage'
@@ -28,6 +28,7 @@ beforeEach(() => {
   auth.role = 'viewer'
   api.fetchAssignedReviews.mockResolvedValue([review])
   api.answerReview.mockResolvedValue({ ...review, revision: 2, answer: 'unsure' })
+  api.fetchNeedsYou.mockResolvedValue({ items: [], trips: [], reviews: [] })
 })
 afterEach(() => { cleanup(); vi.resetAllMocks() })
 
@@ -85,3 +86,23 @@ it('checks the three current targets without assigning, then assigns only on the
   await vi.waitFor(() => expect(api.assignReview).toHaveBeenCalledTimes(3))
   for (const proposal of proposals) expect(api.assignReview).toHaveBeenCalledWith(proposal)
 })
+
+it('lists everything waiting for both, labelled, the reader’s own first (AE8)', async () => {
+  api.fetchNeedsYou.mockResolvedValue({
+    items: [{
+      kind: 'handOver', loanId: 'loan-1', movieId: 'film-1', movieTitle: 'The Thing', posterPath: null, locationLabel: 'Front 2nd',
+      borrowerName: 'Mark', borrowerIsYou: false, lentDate: null, returnedDate: null, neededBy: null, dueDate: null,
+      daysOverdue: null, daysOut: null, owner: { profileId: 'craig', name: 'Craig' },
+    }],
+    trips: [],
+    reviews: [{ ...review, assignedTo: 'mark' }],
+  })
+  show()
+  const all = await screen.findByRole('region', { name: 'Everything waiting' })
+  const rows = (await within(all).findAllByRole('listitem')).map((li) => li.textContent ?? '')
+  expect(rows[0]).toContain("Check Titanic's Blu-ray")
+  expect(rows[0]).toMatch(/You$/)
+  expect(rows[1]).toContain('Craig to hand over The Thing')
+  expect(rows[1]).toMatch(/Craig$/)
+})
+

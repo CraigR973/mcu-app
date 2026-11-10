@@ -2773,6 +2773,9 @@ export type Attention = z.infer<typeof attentionSchema>
 // AC1 (#335): Home's "Needs you", what the person signed in can act on now. The API decides
 // who sees what from the loan rows; the web words each item and links to the exact place.
 const needsYouDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+/** AE8 (#355): whose item it is. The web says "You" on the reader's own and the other's name on
+ *  theirs. Defaulted, so an answer from before AE8 still reads, every item the reader's own. */
+export const needsYouOwnerSchema = z.object({ profileId: z.string().uuid(), name: z.string().min(1) })
 export const needsYouItemSchema = z.object({
   /** `putBack`: back but not shelved. `handOver`: asked for and waiting. `overdue`: past its
    *  due date, or out 14 days or more with none. Cinema trips have their own list (AC5). */
@@ -2795,6 +2798,9 @@ export const needsYouItemSchema = z.object({
   daysOverdue: z.number().int().nonnegative().nullable(),
   /** Days since it went out, on an overdue item. */
   daysOut: z.number().int().nonnegative().nullable(),
+  /** AE8: a shelf job is each keeper's own; a loan the other keeper borrowed, or a request the
+   *  reader made, is the other keeper's. */
+  owner: needsYouOwnerSchema.nullable().default(null),
 })
 /** AC2: the reader's next planned movie night, for the top of Home. */
 export const nextScreeningSchema = z.object({
@@ -2825,6 +2831,9 @@ export const needsYouTripItemSchema = z.object({
   fromName: z.string().nullable().default(null),
   /** Why, on a `tripWithdrawn`. */
   flag: tripShowingFlagSchema.nullable().default(null),
+  /** AE8: the invitee's reply, or the proposer's to deal with. Another keeper's item shows only
+   *  on a trip the reader is on, and only its owner acts on it. */
+  owner: needsYouOwnerSchema.nullable().default(null),
 })
 /** AC5 (#345): the reader's next trip they proposed or are going on, for Home's top slot when it
  *  is sooner than their next planned screening. */
@@ -2885,6 +2894,7 @@ export const needsYouSchema = z.object({
 })
 
 export type NeedsYouItem = z.infer<typeof needsYouItemSchema>
+export type NeedsYouOwner = z.infer<typeof needsYouOwnerSchema>
 export type NeedsYou = z.infer<typeof needsYouSchema>
 export type NextScreening = z.infer<typeof nextScreeningSchema>
 export type NeedsYouTripItem = z.infer<typeof needsYouTripItemSchema>

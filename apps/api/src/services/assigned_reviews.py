@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from collections.abc import Collection
 from typing import Any, cast
 
 from fastapi import HTTPException
@@ -199,13 +200,17 @@ async def list_reviews(
     reader: Profile,
     *,
     all_assignees: bool = False,
+    shared_with: Collection[uuid.UUID] = (),
 ) -> list[AssignedReviewResponse]:
+    """The reader's reviews; with ``shared_with`` (AE8, #355: the shelf keepers, for one of
+    them), every one of theirs too, the reader's own first. Only the assignee answers."""
     if all_assignees and reader.role != UserRole.admin:
         raise HTTPException(403, "Only an administrator can inspect other people's reviews")
     query = select(AssignedReview).where(AssignedReview.deleted_at.is_(None))
     if not all_assignees:
-        query = query.where(AssignedReview.assigned_to == reader.id)
+        query = query.where(AssignedReview.assigned_to.in_({reader.id, *shared_with}))
     rows = (await db.scalars(query.order_by(AssignedReview.created_at, AssignedReview.id))).all()
+    rows = sorted(rows, key=lambda row: row.assigned_to != reader.id)
     return [await describe(db, row, reader) for row in rows]
 
 
@@ -215,13 +220,16 @@ async def review_for(
     reader: Profile,
     *,
     lock: bool = False,
+    shared_with: Collection[uuid.UUID] = (),
 ) -> AssignedReview:
+    """A review the reader may see. ``shared_with`` widens it, for reading only, to the other
+    shelf keepers' reviews (AE8, #355); every write passes none, so its refusals are unchanged."""
     query = select(AssignedReview).where(
         AssignedReview.id == review_id,
         AssignedReview.deleted_at.is_(None),
     )
     if reader.role != UserRole.admin:
-        query = query.where(AssignedReview.assigned_to == reader.id)
+        query = query.where(AssignedReview.assigned_to.in_({reader.id, *shared_with}))
     if lock:
         query = query.with_for_update().execution_options(populate_existing=True)
     row = await db.scalar(query)

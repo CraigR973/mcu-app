@@ -9481,6 +9481,16 @@
       ],
       "title": "Neededby"
      },
+     "owner": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NeedsYouOwner"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "posterPath": {
       "anyOf": [
        {
@@ -9522,6 +9532,26 @@
      "daysOut"
     ],
     "title": "NeedsYouLoanItem",
+    "type": "object"
+   },
+   "NeedsYouOwner": {
+    "description": "Whose item it is — AE8 (#355): the web says \"You\" on the reader's own, the other's name\non theirs. A shelf job both keepers can do is each keeper's own.",
+    "properties": {
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "profileId": {
+      "format": "uuid",
+      "title": "Profileid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "profileId",
+     "name"
+    ],
+    "title": "NeedsYouOwner",
     "type": "object"
    },
    "NeedsYouResponse": {
@@ -9616,6 +9646,16 @@
       ],
       "title": "Kind",
       "type": "string"
+     },
+     "owner": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NeedsYouOwner"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "posterPath": {
       "anyOf": [
@@ -25058,7 +25098,7 @@
   },
   "/api/v1/needs-you": {
    "get": {
-    "description": "What the person signed in can act on now, and their next screening.",
+    "description": "What the person signed in can act on now, and their next screening. For a shelf keeper,\nevery keeper's items, each with its owner, their own first (AE8, #355).",
     "operationId": "needs_you_api_v1_needs_you_get",
     "responses": {
      "200": {

@@ -39,6 +39,7 @@ const BASE: NeedsYouItem = {
   dueDate: null,
   daysOverdue: null,
   daysOut: null,
+  owner: null,
 }
 
 function item(overrides: Partial<NeedsYouItem>): NeedsYouItem {
@@ -126,14 +127,14 @@ describe('NeedsYouRow', () => {
     expect(links[1].textContent).toContain('Put back Pulp Fiction')
   })
 
-  it('shows five and points at Loans for the rest', async () => {
+  it('shows five and points at Needs you for every one (AE8)', async () => {
     api.fetchNeedsYou.mockResolvedValue({
       items: Array.from({ length: 7 }, (_, index) => item({ movieTitle: `Film ${String(index)}`, loanId: `3f2504e0-4f89-41d3-9a0c-0305e82c32${String(10 + index)}` })),
     })
     renderRow()
     const row = await screen.findByRole('region', { name: /Needs you/ })
     expect(within(row).getAllByRole('listitem')).toHaveLength(5)
-    expect(within(row).getByRole('link', { name: 'See all 7 on Loans' }).getAttribute('href')).toBe('/loans')
+    expect(within(row).getByRole('link', { name: 'See all 7 on Needs you' }).getAttribute('href')).toBe('/needs-you')
   })
 
   it('says so when the read fails, rather than looking like nothing to do', async () => {
@@ -226,14 +227,50 @@ describe('Cinema trips in Needs you and the top slot — AC5 (#345)', () => {
 })
 
 
-it('exposes every assigned review through overflow after loan and trip jobs', async () => {
+it('exposes every item, reviews included, through the one overflow to Needs you (AE8)', async () => {
   const reviews = Array.from({ length: 3 }, (_, i) => ({
     id: `review-${i}`, title: `Review disc ${i}`, question: 'Inspect the physical disc', status: 'open',
   }))
   api.fetchNeedsYou.mockResolvedValue({ items: Array.from({ length: 5 }, (_, i) => item({ loanId: `loan-${i}` })), reviews })
   renderRow()
-  expect((await screen.findByRole('link', { name: 'See all 3 reviews on Needs you' })).getAttribute('href')).toBe('/needs-you')
+  expect((await screen.findByRole('link', { name: 'See all 8 on Needs you' })).getAttribute('href')).toBe('/needs-you')
   expect(screen.queryByText('Review disc 0')).toBeNull()
+})
+
+it('says whose each item is, the reader’s own first, in words for the reader (AE8)', async () => {
+  const craig = { profileId: 'p-craig', name: 'Craig' }
+  const mark = { profileId: 'p-mark', name: 'Mark' }
+  const trip = {
+    tripId: '3f2504e0-4f89-41d3-9a0c-0305e82c3401', filmTitle: 'Wild Horse Nine', posterPath: null, venueName: 'ODEON Glasgow Quay',
+    venueTimezone: 'Europe/London', startsAtUtc: '2026-11-09T20:10:00Z', proposerName: 'Craig', fromName: null, flag: null,
+  }
+  api.fetchNeedsYou.mockResolvedValue({
+    items: [
+      item({ kind: 'handOver', movieTitle: 'The Thing', loanId: 'loan-thing', borrowerName: 'Mark', neededBy: '2026-11-12', owner: craig }),
+      item({ movieTitle: 'Pulp Fiction', loanId: 'loan-pulp', owner: mark }),
+    ],
+    trips: [
+      { ...trip, kind: 'tripWithdrawn', flag: 'withdrawn', owner: craig },
+      { ...trip, kind: 'tripInvite', tripId: '3f2504e0-4f89-41d3-9a0c-0305e82c3402', owner: mark },
+    ],
+    reviews: [
+      { id: 'review-craig', title: 'Check a box', question: 'Is it one box?', status: 'open', assignedTo: 'p-craig', assigneeName: 'Craig' },
+    ],
+  })
+  renderRow()
+  const row = await screen.findByRole('region', { name: /Needs you/ })
+  const rows = within(row).getAllByRole('listitem').map((li) => li.textContent ?? '')
+  expect(rows).toHaveLength(5)
+  // Mark's own first: his invitation and the disc to put back; then Craig's three.
+  expect(rows[0]).toContain('Craig invited you: Wild Horse Nine')
+  expect(rows[0]).toMatch(/You$/)
+  expect(rows[1]).toContain('Put back Pulp Fiction')
+  expect(rows[2]).toContain('ODEON Glasgow Quay no longer lists Craig’s Wild Horse Nine time')
+  expect(rows[2]).toContain('Craig picks another time or cancels.')
+  expect(rows[2]).toMatch(/Craig$/)
+  expect(rows[3]).toContain('Craig to hand over The Thing')
+  expect(rows[3]).toContain('You asked for it · needed by 12 Nov')
+  expect(rows[4]).toContain('For Craig · Is it one box?')
 })
 
 it('shows an assigned review on Home even without loans or trips', async () => {

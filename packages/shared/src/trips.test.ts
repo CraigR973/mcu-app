@@ -97,7 +97,8 @@ describe('Needs you, with trips (AC5)', () => {
       nextTrip: { tripId: id, filmTitle: 'Wild Horse Nine', venueName: 'ODEON Glasgow Quay',
         venueTimezone: 'Europe/London', startsAtUtc: '2026-11-09T20:10:00Z', withNames: ['Mark'] },
     })
-    expect(parsed.trips[0]).toEqual({ ...item, fromName: null, flag: null })
+    // AE8 (#355): an item from before AE8 has no owner, and reads as the reader's own.
+    expect(parsed.trips[0]).toEqual({ ...item, fromName: null, flag: null, owner: null })
     expect(parsed.nextTrip?.withNames).toEqual(['Mark'])
     expect(needsYouSchema.safeParse({ items: [], trips: [{ ...item, kind: 'tripMaybe' }] }).success).toBe(false)
   })

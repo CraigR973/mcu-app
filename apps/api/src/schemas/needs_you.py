@@ -16,6 +16,14 @@ from src.schemas.wire import UtcDatetime
 Days = Annotated[int, Field(ge=0)]
 
 
+class NeedsYouOwner(BaseModel):
+    """Whose item it is — AE8 (#355): the web says "You" on the reader's own, the other's name
+    on theirs. A shelf job both keepers can do is each keeper's own."""
+
+    profileId: uuid.UUID
+    name: str
+
+
 class NeedsYouLoanItem(BaseModel):
     """One disc the reader can act on. The web words it; the API decides who sees it."""
 
@@ -40,6 +48,9 @@ class NeedsYouLoanItem(BaseModel):
     daysOverdue: Days | None
     #: Days since it went out, on an overdue item; null otherwise.
     daysOut: Days | None
+    #: AE8: whose item it is. The reader's own for a shelf job, chasing an overdue loan
+    #: included; the other keeper's on a loan they borrowed or a request the reader made.
+    owner: NeedsYouOwner | None = None
 
 
 class NextScreening(BaseModel):
@@ -72,6 +83,9 @@ class NeedsYouTripItem(BaseModel):
     #: Why, on a ``tripWithdrawn``: withdrawn (which includes gone, or moved to another time)
     #: or cancelled.
     flag: ShowingFlag | None = None
+    #: AE8: whose item it is: the invitee's reply, or the proposer's to deal with. Another
+    #: keeper's item shows only on a trip the reader is on, and only its owner can act on it.
+    owner: NeedsYouOwner | None = None
 
 
 class NextTrip(BaseModel):
@@ -87,8 +101,10 @@ class NextTrip(BaseModel):
 
 
 class NeedsYouResponse(BaseModel):
+    #: AE8 (#355): for the people who keep the shelves, every keeper's open reviews, the
+    #: reader's own first; only the assignee can answer (``canAnswer``).
     reviews: list[AssignedReviewResponse] = Field(default_factory=list)
-    #: Most pressing first. Empty when there is nothing to do.
+    #: The reader's own first, then most pressing first. Empty when there is nothing to do.
     items: list[NeedsYouLoanItem]
     #: AC2: the next screening the reader is in, planned and not ended; null when none. Home
     #: shows it beside "Needs you" from this one read, so it adds no request.

@@ -3,11 +3,13 @@ import type { AssignedReview, ReviewAnswer } from '@mcu/shared'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { NeedsYouList } from '@/components/dashboard/NeedsYouList'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
-import { answerReview, assignReview, fetchAssignedReviews, fetchReviewProposals } from '@/lib/api'
+import { answerReview, assignReview, fetchAssignedReviews, fetchNeedsYou, fetchReviewProposals } from '@/lib/api'
+import { needsYouRows } from '@/lib/needs-you'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
 const STATUS = {
@@ -92,6 +94,25 @@ function MarkAssignmentPanel() {
   )
 }
 
+/** AE8 (#355): every item on Needs you, Home's five and the rest, each saying whose it is, the
+ *  reader's own first. One read, shared with Home's row. */
+function EverythingWaiting() {
+  const { profile } = useAuth()
+  const query = useQuery({ queryKey: ['needs-you', profile?.id], queryFn: fetchNeedsYou, enabled: Boolean(profile) })
+  const rows = query.data ? needsYouRows(query.data, profile) : []
+  const state = listState(query, rows.length === 0)
+  return (
+    <section aria-labelledby="needs-you-everything" className="archive-panel p-4">
+      <h2 id="needs-you-everything" className="font-display text-lg font-semibold">Everything waiting</h2>
+      {state === 'ready' ? <NeedsYouList rows={rows} className="mt-2" /> : null}
+      {state === 'loading' ? <p className="mt-1 text-sm text-muted-foreground">Loading what is waiting…</p> : null}
+      {state === 'empty' ? <p className="mt-1 text-sm text-muted-foreground">Nothing is waiting on you.</p> : null}
+      {state === 'offline' ? <p role="status" className="mt-1 text-sm">Not kept offline. Reconnect to see what is waiting.</p> : null}
+      {state === 'error' ? <p role="alert" className="mt-1 text-sm text-destructive">{queryErrorMessage(query.error, 'Could not load what is waiting.')}</p> : null}
+    </section>
+  )
+}
+
 export default function AssignedReviewsPage() {
   const { profile } = useAuth()
   const [params] = useSearchParams()
@@ -105,10 +126,11 @@ export default function AssignedReviewsPage() {
   return (
     <div className="page-shell-narrow space-y-5">
       <PageHeader eyebrow={admin ? 'Catalogue review' : 'Your account'} title="Needs you"
-        description={admin ? 'Assigned observations and catalogue follow-up.' : 'Questions waiting for your judgement.'} />
+        description="Loans, cinema trips and reviews waiting, yours first. Only the person an item is for can act on it, except loans, which either of you can." />
       <nav aria-label="Other Needs you actions" className="flex gap-4 text-sm text-primary">
         <Link to="/loans">Loans</Link><Link to="/movie-night">Cinema trips</Link>
       </nav>
+      <EverythingWaiting />
       {admin ? <MarkAssignmentPanel /> : null}
       {state === 'loading' ? <StatePanel tone="loading" title="Loading your reviews" /> : null}
       {state === 'offline' ? <StatePanel tone="offline" title="Reviews are unavailable offline" description="Reconnect to see the current records and save an observation." /> : null}

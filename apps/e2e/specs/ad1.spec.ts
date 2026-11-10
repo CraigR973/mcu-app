@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { expect, test } from '../support/test.ts'
 
-interface Review { id: string; kind: string }
+interface Review { id: string; kind: string; assigneeName: string; canAnswer: boolean }
 
 const TITANIC = '219a59fc-8a0b-4eeb-ba7c-18b0391eb69f'
 const WANTED = '58df19fb-d961-457c-8374-6df550b563cf'
@@ -10,7 +10,7 @@ const ids = `'${TITANIC}','${WANTED}','${SHETLAND}'`
 
 // These fixture facts reproduce the three approved targets in disposable Postgres only.
 // The assignment, observations and every read then use the app's real API and UI.
-test('Mark answers his three private reviews; Craig inspects; changed and resolved targets stay honest', async ({ db, api, signedIn, page: anonymous }, info) => {
+test('Mark answers his three reviews; Craig reads them without answering; changed and resolved targets stay honest', async ({ db, api, signedIn, page: anonymous }, info) => {
   await anonymous.goto('/needs-you')
   await expect(anonymous).toHaveURL(/\/login(?:\?|$)/)
   await expect(anonymous.getByRole('region', { name: "Check Titanic's Blu-ray" })).toHaveCount(0)
@@ -39,7 +39,11 @@ test('Mark answers his three private reviews; Craig inspects; changed and resolv
     const reviews = await mark.get<Review[]>('/needs-you/reviews')
     expect(reviews).toHaveLength(3)
     expect((await mark.get<{ reviews: Review[] }>('/needs-you')).reviews).toHaveLength(3)
-    expect((await craig.get<{ reviews: Review[] }>('/needs-you')).reviews).toHaveLength(0)
+    // AE8 (#355) shares Needs you between the two who keep the shelves: Craig reads Mark's
+    // three, labelled as Mark's, and can answer none of them.
+    const craigs = (await craig.get<{ reviews: Review[] }>('/needs-you')).reviews
+    expect(craigs).toHaveLength(3)
+    expect(craigs.every(review => review.assigneeName === 'Mark' && !review.canAnswer)).toBe(true)
     await mark.call('GET', '/needs-you/reviews?allAssignees=true', undefined, [403])
 
     const { page } = await signedIn('Mark')

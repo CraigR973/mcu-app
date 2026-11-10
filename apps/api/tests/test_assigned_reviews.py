@@ -265,3 +265,35 @@ async def test_deleted_film_preserves_question_without_a_broken_inspection_link(
     assert response.json()["status"] == "changed"
     assert response.json()["movieId"] is None
     assert not response.json()["canAnswer"]
+
+
+async def test_the_shelf_keepers_read_each_other_s_reviews_but_answer_only_their_own(
+    review_world: dict[str, Any],
+    people: dict[str, Profile],
+    client_as: Callable[[str], AsyncClient],
+) -> None:
+    """AE8 (#355): Craig and Mark read each other's open reviews, labelled by assignee, their
+    own first; only the assignee answers; someone who keeps no shelves reads only their own."""
+    rows = await assigned(client_as)
+    mark, admin, third = [client_as(name) for name in ("mark", "craig", "third")]
+    craig_home = (await admin.get("/api/v1/needs-you")).json()["reviews"]
+    assert {r["id"] for r in craig_home} == {r["id"] for r in rows}
+    assert all(r["canAnswer"] is False for r in craig_home)
+    # One review moves to Craig: Mark still reads it, after his own, and cannot answer it.
+    moved = rows[0]
+    path = f"/api/v1/needs-you/reviews/{moved['id']}"
+    response = await admin.patch(
+        path + "/assignee",
+        json={"revision": moved["revision"], "assignedTo": str(people["craig"].id)},
+    )
+    assert response.status_code == 200, response.text
+    marks = (await mark.get("/api/v1/needs-you")).json()["reviews"]
+    assert [r["id"] for r in marks][-1] == moved["id"]
+    assert [r["canAnswer"] for r in marks] == [True] * (len(rows) - 1) + [False]
+    detail = await mark.get(path)
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["canAnswer"] is False
+    answer = {"revision": detail.json()["revision"], "answer": "1953"}
+    assert (await mark.post(path + "/answer", json=answer)).status_code == 404
+    assert (await third.get(path)).status_code == 404
+    assert (await third.get("/api/v1/needs-you")).json()["reviews"] == []
