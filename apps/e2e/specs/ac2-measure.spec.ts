@@ -37,7 +37,10 @@ test('Home measures its banner bytes and its layout shift while the first layout
       const now = await page.evaluate(() => JSON.stringify([
         (window as unknown as { __shift: number }).__shift,
         performance.getEntriesByType('resource').length,
-        Array.from(document.images).every((image) => image.complete),
+        // Settled means the first layout's images, not a lazy poster below the fold that the page
+        // has not asked for: Firefox reports one of those incomplete until it is scrolled to, and
+        // since AE2 Home's Highlights opens on Recently added's posters there.
+        Array.from(document.images).every((image) => image.complete || (image.loading === 'lazy' && image.getBoundingClientRect().top >= innerHeight)),
       ]))
       const settled = now === last && now.endsWith('true]')
       last = now

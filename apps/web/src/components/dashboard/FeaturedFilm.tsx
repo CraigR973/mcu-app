@@ -8,7 +8,7 @@ import { useLuckyDeck } from '@/lib/lucky-deck'
 import { queryErrorMessage } from '@/lib/query-state'
 import { cn, formatShortDate } from '@/lib/utils'
 
-const BUTTON = 'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 text-sm font-semibold'
+const BUTTON = 'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-2 text-[13px] font-semibold'
 
 /**
  * Home's one featured film, with Feeling lucky inside it — AC2, Craig's pick (#337).
@@ -23,7 +23,8 @@ const BUTTON = 'inline-flex min-h-11 items-center justify-center gap-2 whitespac
  * AE2 (#355, point 1): poster and title side by side at the top, both opening the film; the
  * buttons on one row across the whole card beneath, so they no longer wrap in a narrow column
  * beside the poster and leave a band of empty card under it. Mid-run, "Start again" is an icon
- * with its name, so three fit at 375 px; at the end of a run it is the only button, in words.
+ * with its name, so three fit at 375 px in any font; at the end of a run it is the only button,
+ * in words.
  */
 export function FeaturedFilm({ pick, homeLayoutPending = false }: { pick: FeaturedPick | null; homeLayoutPending?: boolean }) {
   const deck = useLuckyDeck({ alsoExclude: pick ? [pick.movieId] : [] })
@@ -78,15 +79,16 @@ export function FeaturedFilm({ pick, homeLayoutPending = false }: { pick: Featur
         </div>
       </div>
       <div role="group" aria-label="Feeling lucky" aria-busy={homeLayoutPending} className="space-y-1">
-        <div className="flex gap-2">
+        {/* AE2: one row at 375 px whatever the phone's font, so 13 px labels, tight padding and
+            no shuffle icon on Deal: CI's wider Linux fonts clipped "Deal another" at 14 px. */}
+        <div className="flex gap-1.5">
           {shown && !exhausted ? (
             <Link to={`/movies/${shown.movieId}`} className={cn(BUTTON, 'min-w-0 flex-1 bg-primary text-primary-foreground hover:bg-primary/90')}>
               Open the film
             </Link>
           ) : null}
           {!exhausted ? (
-            <Button type="button" variant="outline" disabled={busy} onClick={deck.deal} className="min-h-11 min-w-0 flex-1 px-3">
-              <Shuffle className="size-4" aria-hidden />
+            <Button type="button" variant="outline" disabled={busy} onClick={deck.deal} className="min-h-11 min-w-0 flex-1 px-2 text-[13px]">
               {draw.isPending ? 'Dealing…' : draw.isError ? 'Try again' : shown ? 'Deal another' : 'Deal a film'}
             </Button>
           ) : null}
