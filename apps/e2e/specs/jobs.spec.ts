@@ -37,7 +37,8 @@ test.describe('the cron jobs, run as Railway runs them', () => {
     expect(db.scalar("SELECT count(*) FROM job_heartbeats WHERE job = 'cron-reminders'")).toBe('1')
     // AB6: the installed child phase stays idle until the separate owner enable.
     expect(run.output).toMatch(/cinema programme:\s+disabled/)
-    expect(db.scalar('SELECT count(*) FROM cinema_venues')).toBe('9')
+    // AE4 (#355): the Omniplex on Renfrew Street is the tenth, installed switched off like the nine.
+    expect(db.scalar('SELECT count(*) FROM cinema_venues')).toBe('10')
     expect(db.scalar('SELECT count(*) FROM cinema_venues WHERE collection_enabled')).toBe('0')
     expect(db.scalar('SELECT count(*) FROM cinema_refresh_runs')).toBe('0')
     for (const host of ['cinematimes.com', 'www.myvue.com', 'www.everymancinema.com',
