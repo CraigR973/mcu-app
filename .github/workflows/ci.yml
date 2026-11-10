@@ -228,7 +228,10 @@ jobs:
   e2e:
     name: E2E — Chromium · Firefox · WebKit · jobs
     if: github.event_name != 'push' || github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: on 10 Nov ubuntu-latest became Ubuntu 26.04, where Playwright
+    # 1.60.0 installs no browsers ("does not support chromium on ubuntu26.04-x64"), so the job
+    # stopped before its first case. Unpin with the Playwright upgrade that supports 26.04.
+    runs-on: ubuntu-24.04
     # Installing WebKit's Ubuntu dependencies can exceed 40 minutes when the apt mirror
     # is slow; keep the browser gate intact and allow the packages to finish.
     timeout-minutes: 90
