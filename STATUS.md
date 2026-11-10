@@ -476,6 +476,15 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **10 Nov, 19:54 GMT — Session handoff, mid sitting 4.** AE9 (a page for each person) is built on
+  `feat/ae9-person-pages`: three wip commits on `71596ca`, unpushed, its PR body in
+  `scratchpad/ae9-pr-body.md`. Its local gate had passed ruff and mypy when the session stopped;
+  rerun it whole. AE7 (search) is drafted on `feat/ae7-search`: four wip commits on `784d23a`,
+  unpushed, its PR body in `scratchpad/ae7-pr-body.md`. Rebase it on main after AE9 and prove it in
+  CI (#362). Still owed: the Omniplex's one enable after the 11 Nov 08:00 UTC run (#355, #359), and
+  Craig's picks for AE10. WebKit hit four unrelated flakes in CI today (AE2's cinema case, AE4's
+  sign-out, AC1's Needs you, AC6's settings), each green on the next run: a fix for its own branch.
+  Read-back and close-out helpers: `scratchpad/handoff-2026-11-10/` (gitignored).
 - **10 Nov, 19:39 GMT — AE8 shipped (PR 145, `d3fbaf615d8da6510746f7cebd02ccc40cf52451`, #363).** Needs you shared by the two who keep
   the shelves: every keeper's items for both, their own first, each saying whose it is; another
   keeper's trip items only on trips the reader is on; reviews readable by both, answerable only by
