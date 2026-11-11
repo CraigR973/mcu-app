@@ -7862,3 +7862,62 @@ contemporaneous.
        clean-up (a plain `DELETE` on `collection_items` only moves a copy to the Trash); and the
        ranking fix. No pushed branch was rewritten.
 
+367. **WebKit's end-to-end flakes: a case leaves a page only once it has settled (11 Nov, PR 150,
+     `e100508`).** On 10 Nov CI's WebKit project failed four unrelated cases, one on each of four
+     runs, each green on the next. Their traces show one cause: **WebKit cancels everything a page
+     has in flight the moment a navigation starts**, where Chromium and Firefox keep loading until
+     the next page commits. The page's script is still running, so it meets each cancelled load as
+     a failure.
+     - **The four, from their traces.** AC6's reload began 22 ms after the settings save went out
+       and cancelled it, so the page came back unsaved. The cinemas case left `/cinemas` while its
+       screen's chunks were arriving; the app's reload-once for a new build (X8) answered the
+       cancelled chunk, and that reload interrupted the case's goto. The sign-out and Needs you
+       cases failed in the navigation itself, "WebKit encountered an internal error", with 16 and
+       12 loads cancelled under it; none of the ten navigations in those traces made with nothing in
+       flight failed. The sign-out case met the same error on 26 Oct, AB4's reload race on 30 Oct
+       was this too, and login's first-run case and both offline cases had each been patched for it
+       one at a time.
+     - **The harness waits** (`apps/e2e/support/settle.ts`): `goto` and `reload` on every page from
+       `signedIn`, `page` or `context` first wait until nothing is in flight and nothing has started
+       for 500 ms, Playwright's own measure of a quiet network. A page still loading after 15 s
+       fails the case and names what it waited on. The wait is a boxed step that calls the
+       original, so a failure still reads `page.goto` at the case's own line.
+     - **A fetch counts once its answer arrives**, the body not awaited, and so does an answer from
+       the service worker's cache. The first CI run of the guard failed 59 cases at the ceiling: on
+       CI, Chromium never reported a profile photo's fetch finished, as the app reads only the status
+       of its 404 (a probe found it open 20 s after Home rendered). The server has answered by then,
+       so a save has landed, and the quiet half second still catches what the answer starts.
+     - **`goBack` and `goForward` are left alone**: here they move within the page, which cancels
+       nothing, and AA9's case goes Back with an answer still on its way on purpose.
+     - **No retry.** The internal error came only with loads being cancelled, which the wait now
+       prevents, and a retry around it would also have hidden the lost save and the hijacked
+       navigation. If it recurs on a navigation made with nothing in flight, that is the engine
+       alone, and a documented retry around that one error is the next step.
+     - **Three specs changed as well.** AC6 waits for the Cinemas switch to show the server's answer
+       before reloading ("Older films only" is disabled while any save is in flight, so on its own
+       it proved nothing); the cinemas case waits for the screen the old address arrives at; the
+       poster case holds only the film page's poster and fallback, not the night page's own. A new
+       case, `settle.spec.ts`, holds a save at the network while a reload is asked for.
+     - **Rejected: fixing only the four cases.** The race sits behind any navigation a case makes
+       after an action; four separate cases met it in one day, and the earlier one-case fixes did
+       not stop the next.
+     - **Proved in CI** (WebKit cannot run on Craig's Mac): the E2E job ran three times on
+       `e100508`, every project green each time with only the three documented skips: Chromium
+       115 passed, Firefox 114, WebKit 113, jobs 9. Those were PR run 43017829727 (attempts 1 and
+       4) and a dispatched run, 43043892379 (attempt 3). The four cases and `settle.spec.ts`
+       passed in WebKit on all three. Four more attempts never reached a case: from about 15:00 to
+       16:55 UTC the runners could not resolve Ubuntu's apt mirror, and `playwright install
+       --with-deps` failed after an hour (STATUS gotcha 32). A throwaway probe branch (deleted) left
+       `/cinemas` as soon as its address arrived, 25 times each in WebKit: 1 failure without the
+       wait ("Frame load interrupted"), none with it. The internal error did not recur in 50 bare
+       mid-load navigations, so it is rare as well as triggered. The local gate was green on
+       `e100508` from a clean tree.
+     - **Cost**: up to about a minute per browser. On the three runs WebKit took 8.8 to 10.1
+       minutes, Chromium 6.6 to 7.4 and Firefox 8.1 to 8.9. Main's last run before the fix
+       (42995277444) took 8.9, 6.2 and 7.8.
+     - **Left open, not this fix's to change:** the app's reload-once for a new build also fires
+       when a full navigation away cancels a chunk (WebKit, so Safari), and reloads the page being
+       left, so a notification tap's `client.navigate` could lose to it; rare, as the app navigates
+       in-page. The browser's poster requests still reach the real image.tmdb.org: the fake world
+       covers the Python processes only.
+

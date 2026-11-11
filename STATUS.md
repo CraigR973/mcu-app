@@ -2,6 +2,12 @@
 
 ## Now
 
+**11 Nov, 17:42 GMT: WebKit's four end-to-end flakes of 10 Nov are fixed (PR 150, #367).** WebKit
+cancels everything a page has in flight the moment a navigation starts. So the harness's `goto`
+and `reload` now wait for the page to settle, and AC6 and the cinemas case wait for what they
+claim. The E2E job ran three times on the fix, and all four projects passed each time. After the
+merge, production health and readiness were on `e100508`.
+
 **11 Nov, 09:19 GMT: the Omniplex on Renfrew Street is switched on, a tenth cinema; Group AE
 sittings 1 to 4 done, AE4's owed step included.** The 08:00 UTC run (08:04–08:05 GMT) read it while
 off: 311 showings over seven days (11–17 Nov), as the four ODEONs on the same CinemaTimes source.
@@ -476,10 +482,37 @@ it renders — and report what was observed rather than what passed.
    pins that route's clock to the capture's time; a service call takes `now=` explicitly. When
    a test fails on a branch that did not touch its area, check whether `main` fails the same
    way before blaming the branch.
+32. **An E2E job stuck on "Install the browsers" is waiting on Ubuntu's mirror, not the suite.**
+   The browsers come from the cache, but `playwright install --with-deps` fetches 181 system
+   packages (114 MB) from the runner's apt mirror on every run, normally in under a minute. On 23
+   Oct the mirror was slow, and the job's limit went from 40 to 90 minutes. On 11 Nov, from about
+   15:00 to 16:55 UTC, the runners could not resolve `azure.archive.ubuntu.com`, and four attempts
+   ran an hour each without reaching a case. Read the step's log: a run of `Ign:` lines 20 s apart,
+   or `Temporary failure resolving`, means no test has run. Re-run once the mirror answers; that is
+   not fishing for green.
 
 
 ## Log
 
+- **11 Nov, 17:42 GMT — WebKit's four end-to-end flakes fixed (PR 150, `e100508533d4d0d8ecbce36de79da293ac27c906`, #367).**
+  The four 10 Nov failures (AE2's cinema case, AE4's sign-out, AC1's Needs you, AC6's settings) had
+  one cause, read from their traces: WebKit cancels everything a page has in flight when a
+  navigation starts. A save was lost, a cancelled chunk made the app reload over the case's goto,
+  and twice the navigation itself failed with WebKit's internal error, with 16 and 12 loads
+  cancelled under it. The harness's `goto` and `reload` now wait for the page to settle: nothing in
+  flight and nothing started for 500 ms. A fetch counts once its answer arrives, as does a
+  service-worker answer, and after 15 s the case fails, naming what it waited on. `goBack` and
+  `goForward` move within the page and are left alone. AC6 waits for the server's answer before
+  reloading, the cinemas case waits for its screen, the poster case holds only the film page's
+  images, and `settle.spec.ts` holds a save while a reload is asked for. No retry or skip. The local
+  gate was green on `e100508` from a clean tree (ruff, mypy, API 1,702 without a database, shared,
+  web 964, builds, e2e types); the suite runs in CI only (#362). The first CI run failed 59 cases at
+  the ceiling: Chromium never reports an unread 404 fetch as finished, AA9 goes Back mid-answer, and
+  the poster hold caught the night page's own fallbacks. `e100508` fixed those, and the E2E job then
+  passed three times (43017829727 attempts 1 and 4, 43043892379 attempt 3): Chromium 115 passed,
+  Firefox 114, WebKit 113 and jobs 9 each time, with only the documented skips. Four more attempts
+  never reached the suite because the runners could not resolve Ubuntu's mirror from about 15:00 to
+  16:55 UTC (gotcha 32). Health, readiness and version.json on `e100508`.
 - **11 Nov, 09:19 GMT — The Omniplex switched on, AE4's owed step (#355, #359).** The 08:00 UTC
   run (08:04–08:05 GMT, `partial` as on the four mornings before) read ten cinemas, the Omniplex
   among them while off: 311 showings added, seven days observed (11–17 Nov), none failed. By the
