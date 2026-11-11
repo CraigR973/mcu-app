@@ -11,18 +11,26 @@ import { test, type BrowserContext, type Page, type Request, type Response } fro
  * cinemas case), and twice WebKit's loader failing the navigation itself, "WebKit encountered an
  * internal error", with 12 and 16 loads cancelled under it (the sign-out and Needs you cases).
  *
- * So every navigation a case starts (goto, reload, goBack, goForward) first waits until the page
- * has nothing in flight and has started nothing for half a second, Playwright's own measure of a
- * quiet network. Two kinds of answer count as done once they arrive: an event stream, which stays
- * open for as long as its screen does (movie night's, the assistant's), and an answer the page's
- * service worker gave from its cache.
+ * So every goto and reload a case starts first waits until the page has nothing in flight and has
+ * started nothing for half a second, Playwright's own measure of a quiet network. goBack and
+ * goForward are left alone: in this app they move within the page, which cancels nothing, and
+ * AA9's case goes Back with an answer still on its way on purpose.
+ *
+ * A fetch counts as done once its answer arrives, the body not awaited. Chromium reports a fetch
+ * finished only when the page reads its body, and a page that only looks at the status never does
+ * (a profile photo's 404), so that fetch would otherwise stay open for ever; and an event stream
+ * stays open for as long as its screen does (movie night's, the assistant's). The server has
+ * answered by then, so a save has landed. An answer from the service worker's cache counts once it
+ * arrives too: there is nothing left to fetch.
  */
 const QUIET_MS = 500
 /** Long enough for the slowest screen; a page still busy after this is reported, not left. */
 const CEILING_MS = 15_000
 const POLL_MS = 50
 
-const methods = ['goto', 'reload', 'goBack', 'goForward'] as const
+const methods = ['goto', 'reload'] as const
+/** The resource types whose answer, once it arrives, is all the page was waiting for. */
+const ANSWERED_AT_HEADERS = new Set(['fetch', 'xhr', 'eventsource'])
 type Leaving = (typeof methods)[number]
 type Navigate = (...args: unknown[]) => Promise<Response | null>
 
@@ -41,8 +49,8 @@ class Traffic {
     page.on('requestfinished', (request) => this.done(request))
     page.on('requestfailed', (request) => this.done(request))
     page.on('response', (response) => {
-      const type = response.headers()['content-type'] ?? ''
-      if (/^text\/event-stream/i.test(type) || response.fromServiceWorker()) this.done(response.request())
+      const request = response.request()
+      if (ANSWERED_AT_HEADERS.has(request.resourceType()) || response.fromServiceWorker()) this.done(request)
     })
   }
 
@@ -81,7 +89,7 @@ export function settleBeforeLeaving(page: Page): void {
   for (const method of methods) {
     // Awaited, and boxed, so a failure is reported at the case's own line as a bare call's would
     // be, not at this file's. Called as `originals[method]` so Playwright still names the call
-    // page.goto, page.reload and so on: it names a call by how the caller spelled it.
+    // page.goto or page.reload: it names a call by how the caller spelled it.
     own[method] = async (...args) =>
       await test.step(
         `${method}${typeof args[0] === 'string' ? ` ${args[0]}` : ''}, once the page has settled`,

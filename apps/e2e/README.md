@@ -85,12 +85,15 @@ unfaked host, or to a path on a faked host nobody wrote, fails the case that cau
   everything a page has in flight the moment a navigation starts, and the page meets each
   cancelled load as a failure: a save that never lands, a lazy chunk the app answers by reloading
   over the case's own navigation, or WebKit failing the navigation itself ("WebKit encountered an
-  internal error"). So `goto`, `reload`, `goBack` and `goForward`, on any page from `signedIn`,
-  `page` or `context`, first wait until nothing is in flight and nothing has started for 500 ms;
-  an event stream, or an answer from the service worker's cache, counts once it arrives. A context
-  a case makes itself calls `settleEveryPage(context)`. A page still loading after 15 s fails the
-  case, naming what it was waiting on. This is not a reason to stop waiting for what a case needs:
-  a save has landed when the screen shows the server's answer.
+  internal error"). So `goto` and `reload`, on any page from `signedIn`, `page` or `context`,
+  first wait until nothing is in flight and nothing has started for 500 ms. A fetch counts once
+  its answer arrives (Chromium reports a fetch's end only when the page reads its body), and so
+  does an answer from the service worker's cache. `goBack` and `goForward` are left alone: here
+  they move within the page, which cancels nothing. A context a case makes itself calls
+  `settleEveryPage(context)`. A page still loading after 15 s fails the case, naming what it was
+  waiting on, so a case that holds a request at its route holds only the screen it is about. This
+  is not a reason to stop waiting for what a case needs: a save has landed when the screen shows
+  the server's answer.
 - Cases that are not about the service worker run without one (`signedIn(person)`); ask for it
   with `signedIn(person, { worker: true })` and wait for it to take control.
 

@@ -1,3 +1,4 @@
+import type { Route } from '@playwright/test'
 import { runJob } from '../support/cli.ts'
 import { pushesTo, registerDevice } from '../support/push.ts'
 import { filmId } from '../support/films.ts'
@@ -122,12 +123,18 @@ test('a poster failure cannot move the movie-night action during a click', async
   const posterRequested = new Promise<void>((resolve) => { requestedPoster = resolve })
   const posterFailure = new Promise<void>((resolve) => { failPoster = resolve })
   const fallbackReady = new Promise<void>((resolve) => { loadFallback = resolve })
+  // Only the film page's poster and fallback are held. The night page's own fallbacks, still
+  // loading when the case leaves it, go through: the harness waits for them before it navigates
+  // (#367), and a hold on them would never let it.
+  const onFilmPage = (route: Route) => new URL(route.request().frame().url()).pathname === `/movies/${id}`
   await craig.page.route('https://image.tmdb.org/t/p/w342/**', async (route) => {
+    if (!onFilmPage(route)) return route.continue()
     requestedPoster()
     await posterFailure
     await route.fulfill({ status: 404, contentType: 'text/html', body: 'Poster unavailable' })
   })
   await craig.page.route('**/placeholder-poster.svg', async (route) => {
+    if (!onFilmPage(route)) return route.continue()
     await fallbackReady
     await route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300"></svg>' })
   })
