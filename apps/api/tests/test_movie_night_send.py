@@ -412,6 +412,11 @@ async def test_a_match_is_stored_on_the_session_and_shown_on_the_night(
         "title": "The Exorcist",
         "year": 1973,
         "posterPath": "/exorcist.jpg",
+        # AE10 (#355): where the disc is and how long it runs; this film has no copy and no
+        # runtime, and nothing has been logged.
+        "runtimeMinutes": None,
+        "places": [],
+        "loggedAt": None,
     }
     stored = await db.get(MovieNightSession, night.id)
     assert stored is not None and stored.matched_suggestion_id == suggestion.id
@@ -449,23 +454,26 @@ async def test_planned_start_is_stored_as_utc_and_invite_uses_recipient_timezone
     preference = await get_or_create_preferences(db, mark.id)
     preference.quiet_hours_timezone = "America/New_York"
     await db.flush()
+    # Next July, so the night is still to come: since AE10 a planned night nobody touched
+    # closes two days after its planned start, and a July 2026 night is long past (#355).
+    year = utcnow().year + 1
     async with _as(db, craig) as client:
         created = await client.post(
             "/api/v1/movie-night",
-            json={"plannedStart": "2026-07-10T20:30:00+01:00"},
+            json={"plannedStart": f"{year}-07-10T20:30:00+01:00"},
         )
         assert created.status_code == 201, created.text
-        assert created.json()["plannedStart"] == "2026-07-10T19:30:00Z"
+        assert created.json()["plannedStart"] == f"{year}-07-10T19:30:00Z"
         night_id = uuid.UUID(created.json()["id"])
         night = await db.get(MovieNightSession, night_id)
         assert night is not None
-        assert night.planned_start_utc == datetime(2026, 7, 10, 19, 30)
+        assert night.planned_start_utc == datetime(year, 7, 10, 19, 30)
         sent = await client.post(f"/api/v1/movie-night/{night_id}/send", json={})
         assert sent.status_code == 200, sent.text
         listed = await client.get("/api/v1/movie-night")
-        assert any(n["plannedStart"] == "2026-07-10T19:30:00Z" for n in listed.json()["items"])
+        assert any(n["plannedStart"] == f"{year}-07-10T19:30:00Z" for n in listed.json()["items"])
     (invite,) = await _invites(db, night, mark)
-    assert invite.body.startswith("Planned for 10 Jul 2026 at 15:30 EDT. ")
+    assert invite.body.startswith(f"Planned for 10 Jul {year} at 15:30 EDT. ")
 
 
 async def test_unplanned_nights_remain_valid(db: AsyncSession) -> None:

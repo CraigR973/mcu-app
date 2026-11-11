@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import httpx
 import structlog
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
@@ -121,7 +121,7 @@ async def people_history(
                 select(Profile.id, Profile.display_name)
                 .join(MovieNightParticipant, MovieNightParticipant.user_id == Profile.id)
                 .where(MovieNightParticipant.session_id == session_id)
-                .order_by(MovieNightParticipant.joined_at_utc)
+                .order_by(MovieNightParticipant.joined_at_utc, Profile.display_name, Profile.id)
             )
         ).tuples()
     )
@@ -152,6 +152,32 @@ async def people_history(
             rating if rating is not None else watch.personal_rating,
         )
     return people, history
+
+
+async def best_ratings(
+    db: AsyncSession, people: list[uuid.UUID], movie_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, Decimal]:
+    """Each film's highest rating by anyone in ``people``, as Home's "Worth a rewatch" reads
+    a rating (AE10). Films nobody rated are absent. The namesake guard applies, as above."""
+    if not people or not movie_ids:
+        return {}
+    rows = await db.execute(
+        select(WatchLog.movie_id, func.max(WatchLog.personal_rating))
+        .join(Movie, Movie.id == WatchLog.movie_id)
+        .where(
+            WatchLog.movie_id.in_(movie_ids),
+            WatchLog.user_id.in_(people),
+            WatchLog.deleted_at.is_(None),
+            WatchLog.personal_rating.is_not(None),
+            or_(
+                WatchLog.tmdb_id.is_(None),
+                Movie.tmdb_id.is_(None),
+                WatchLog.tmdb_id == Movie.tmdb_id,
+            ),
+        )
+        .group_by(WatchLog.movie_id)
+    )
+    return {movie_id: rating for movie_id, rating in rows.tuples() if rating is not None}
 
 
 async def copy_places(

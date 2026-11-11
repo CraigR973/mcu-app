@@ -16,11 +16,11 @@ import json
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
-from typing import Annotated
+from decimal import Decimal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import structlog
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
@@ -54,13 +54,18 @@ from src.schemas.movie_night import (
     VoteResponse,
     WatchedByResponse,
 )
+from src.services.movie_night.closing import close_untouched
+from src.services.movie_night.deal import WORTH_A_REWATCH, DealtAs
 from src.services.movie_night.details import (
+    best_ratings,
     copy_places,
     fill_suggestion_metadata,
     films_for_suggestions,
     imdb_details,
     people_history,
 )
+from src.services.movie_night.diary import FilmInTrash, NothingToLog, log_the_match
+from src.services.movie_night.presence import progress, stamp_seen
 from src.services.movie_night.realtime import broadcaster
 from src.services.movie_night.sessions import (
     SuggestionRefused,
@@ -90,7 +95,13 @@ HEARTBEAT_SECONDS = 20.0
 async def _session_for(
     db: Database, session_id: uuid.UUID, user: Profile, *, must_be_open: bool = False
 ) -> MovieNightSession:
-    """A session the caller is actually in."""
+    """A session the caller is actually in.
+
+    Before anything that changes a night, a night nobody touched that is due to close is
+    closed first (AE10's proposal E), so it cannot be voted on, added to or sent.
+    """
+    if must_be_open:
+        await close_untouched(db)
     session = (
         await db.execute(
             select(MovieNightSession)
@@ -126,7 +137,7 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
             select(Profile.id, Profile.display_name)
             .join(MovieNightParticipant, MovieNightParticipant.user_id == Profile.id)
             .where(MovieNightParticipant.session_id == session.id)
-            .order_by(MovieNightParticipant.joined_at_utc)
+            .order_by(MovieNightParticipant.joined_at_utc, Profile.display_name, Profile.id)
         )
     ).all()
     present = [person_id for person_id, _ in people]
@@ -155,15 +166,9 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
         if session.status == "open"
         else []
     )
-    matched = (
-        await db.get(MovieNightSuggestion, session.matched_suggestion_id)
-        if session.matched_suggestion_id is not None
-        else None
-    )
-    match = None
-    if matched is not None:
-        title, year, poster = await film_face(db, matched)
-        match = MatchResponse(movieId=matched.movie_id, title=title, year=year, posterPath=poster)
+    match = await _match_response(db, session)
+    how_far = await progress(db, session.id)
+    now = utcnow()
     return MovieNightSessionResponse(
         id=session.id,
         status="open" if session.status == "open" else "ended",
@@ -182,11 +187,43 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
                 id=person_id,
                 displayName=name,
                 invited=invite_key(session.id, person_id) in sent,
+                added=how_far[person_id].added if person_id in how_far else 0,
+                lastSeen=how_far[person_id].last_seen if person_id in how_far else None,
+                choosingNow=how_far[person_id].choosing_now(now) if person_id in how_far else False,
             )
             for person_id, name in people
         ],
         invitable=[PersonResponse(id=person_id, displayName=name) for person_id, name in others],
         match=match,
+    )
+
+
+async def _match_response(db: Database, session: MovieNightSession) -> MatchResponse | None:
+    """The night's latest match (Batch X12a), with where the disc is, how long it runs and
+    whether it was logged for everyone (AE10's proposal D)."""
+    if session.matched_suggestion_id is None:
+        return None
+    matched = await db.get(MovieNightSuggestion, session.matched_suggestion_id)
+    if matched is None:
+        return None
+    title, year, poster = await film_face(db, matched)
+    movie = await db.get(Movie, matched.movie_id) if matched.movie_id is not None else None
+    copies = (await copy_places(db, [movie.id])).get(movie.id, []) if movie is not None else []
+    logged = session.logged_suggestion_id is not None and (
+        session.logged_suggestion_id == session.matched_suggestion_id
+    )
+    return MatchResponse(
+        movieId=matched.movie_id,
+        title=title,
+        year=year,
+        posterPath=poster,
+        runtimeMinutes=(movie.runtime_minutes if movie is not None else None)
+        or matched.runtime_minutes,
+        places=[
+            CopyPlaceResponse(location=copy.location, section=copy.section, shelf=copy.shelf)
+            for copy in copies
+        ],
+        loggedAt=session.logged_at_utc if logged else None,
     )
 
 
@@ -234,7 +271,13 @@ async def _streaming_names(
 
 @router.get("/movie-night", response_model=MovieNightSessionListResponse)
 async def list_sessions(user: CurrentUser, db: Database) -> MovieNightSessionListResponse:
-    """The caller's sessions, newest first."""
+    """The caller's sessions, newest first, and who a new one can be sent to.
+
+    Nights nobody touched that are due to close are closed first (AE10's proposal E): the
+    list is where a forgotten night is noticed, so it is where it closes.
+    """
+    await close_untouched(db)
+    await db.commit()
     sessions = list(
         (
             await db.execute(
@@ -251,9 +294,76 @@ async def list_sessions(user: CurrentUser, db: Database) -> MovieNightSessionLis
         .scalars()
         .all()
     )
+    people = (
+        await db.execute(
+            select(Profile.id, Profile.display_name)
+            .where(*_CAN_BE_SENT, Profile.id != user.id)
+            .order_by(Profile.display_name)
+        )
+    ).all()
     return MovieNightSessionListResponse(
-        items=[await _response(db, session) for session in sessions], total=len(sessions)
+        items=[await _response(db, session) for session in sessions],
+        total=len(sessions),
+        people=[PersonResponse(id=person_id, displayName=name) for person_id, name in people],
     )
+
+
+async def _recipients(
+    db: Database, user: Profile, user_ids: list[uuid.UUID] | None
+) -> list[Profile]:
+    """Who a night can be sent to: everyone named who can sign in, never the sender.
+
+    ``None`` means everyone (Batch T4's one tap); a name that cannot be sent is refused
+    rather than skipped, so a night never quietly goes to fewer people than asked.
+    """
+    query = select(Profile).where(*_CAN_BE_SENT, Profile.id != user.id)
+    if user_ids is not None:
+        wanted = set(user_ids) - {user.id}
+        query = query.where(Profile.id.in_(wanted))
+    recipients = list((await db.execute(query.order_by(Profile.display_name))).scalars().all())
+    if user_ids is not None and len(recipients) != len(wanted):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Not everyone named can be sent a movie night",
+        )
+    return recipients
+
+
+async def _send_to(
+    db: Database, session: MovieNightSession, user: Profile, recipients: list[Profile]
+) -> None:
+    """Put each recipient in the night and push it to them, once per person per night.
+
+    Batch T4's send, shared since AE10 with starting a night (proposal A). The night is dealt
+    first, with everyone in it, so "in neither diary" reads all their diaries and the push can
+    say how many films are on it. Commits, then delivers.
+    """
+    present = set(await participants(db, session.id))
+    now = utcnow()
+    for person in recipients:
+        if person.id not in present:
+            db.add(
+                MovieNightParticipant(
+                    id=uuid.uuid4(), session_id=session.id, user_id=person.id, joined_at_utc=now
+                )
+            )
+            await db.flush()
+            await publish(db, session.id, "joined", {"userId": str(person.id)})
+    await ensure_seeded(db, session=session)
+    films = len(await session_suggestions(db, session=session))
+    for person in recipients:
+        await queue_notification(
+            db,
+            user_id=person.id,
+            category=NotificationCategory.movie_night,
+            title=f"{user.display_name} started a movie night",
+            body=await _planned_invite_body(db, person.id, films, session.planned_start_utc),
+            url=f"/movie-night/{session.id}",
+            dedupe_key=invite_key(session.id, person.id),
+            now=now,
+        )
+    await db.commit()
+    await deliver_now(db, [person.id for person in recipients])
 
 
 @router.post(
@@ -262,7 +372,13 @@ async def list_sessions(user: CurrentUser, db: Database) -> MovieNightSessionLis
 async def create_session(
     payload: SessionCreateRequest, user: CurrentUser, db: Database
 ) -> MovieNightSessionResponse:
-    """§8.3 — start a movie night. The creator is its first participant."""
+    """§8.3 — start a movie night. The creator is its first participant.
+
+    **AE10 (#355), proposal A: who is watching is picked as it starts, and the push goes at
+    once**, as "Propose a trip" does. Of the 11 nights since 10 Sep only two ever had a
+    second person: the night stalled at getting the other person in.
+    """
+    recipients = await _recipients(db, user, payload.userIds) if payload.userIds else []
     session = MovieNightSession(
         id=uuid.uuid4(),
         created_by=user.id,
@@ -277,7 +393,11 @@ async def create_session(
             id=uuid.uuid4(), session_id=session.id, user_id=user.id, joined_at_utc=utcnow()
         )
     )
-    await db.commit()
+    await db.flush()
+    if recipients:
+        await _send_to(db, session, user, recipients)
+    else:
+        await db.commit()
     await db.refresh(session)
     return await _response(db, session)
 
@@ -292,6 +412,9 @@ async def join_session(
     surfaces for people with no account; this one votes, and a vote has to belong to
     somebody. The token says *which session*, not *who*.
     """
+    # A night nobody touched that is due to close is closed first, so its link stops working
+    # on time (AE10's proposal E).
+    await close_untouched(db)
     session = (
         await db.execute(
             select(MovieNightSession).where(
@@ -331,7 +454,14 @@ async def join_session(
 async def read_session(
     session_id: uuid.UUID, user: CurrentUser, db: Database
 ) -> MovieNightSessionResponse:
-    return await _response(db, await _session_for(db, session_id, user))
+    """One night. Reading it closes it if nobody touched it and it is due (AE10's proposal
+    E), and says the caller has it open (proposal C): the night page reads it again every
+    minute while it is on screen."""
+    await close_untouched(db)
+    session = await _session_for(db, session_id, user)
+    await stamp_seen(db, session_id=session.id, user_id=user.id)
+    await db.commit()
+    return await _response(db, session)
 
 
 @router.post("/movie-night/{session_id}/end", response_model=MovieNightSessionResponse)
@@ -393,42 +523,8 @@ async def send_session(
     notification settings and quiet hours apply, as to every other push.
     """
     session = await _session_for(db, session_id, user, must_be_open=True)
-    present = set(await participants(db, session.id))
-    query = select(Profile).where(*_CAN_BE_SENT, Profile.id != user.id)
-    if payload.userIds is not None:
-        wanted = set(payload.userIds) - {user.id}
-        query = query.where(Profile.id.in_(wanted))
-    recipients = list((await db.execute(query.order_by(Profile.display_name))).scalars().all())
-    if payload.userIds is not None and len(recipients) != len(wanted):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Not everyone named can be sent a movie night",
-        )
-
-    await ensure_seeded(db, session=session)
-    films = len(await session_suggestions(db, session=session))
-    now = utcnow()
-    for person in recipients:
-        if person.id not in present:
-            db.add(
-                MovieNightParticipant(
-                    id=uuid.uuid4(), session_id=session.id, user_id=person.id, joined_at_utc=now
-                )
-            )
-            await db.flush()
-            await publish(db, session.id, "joined", {"userId": str(person.id)})
-        await queue_notification(
-            db,
-            user_id=person.id,
-            category=NotificationCategory.movie_night,
-            title=f"{user.display_name} started a movie night",
-            body=await _planned_invite_body(db, person.id, films, session.planned_start_utc),
-            url=f"/movie-night/{session.id}",
-            dedupe_key=invite_key(session.id, person.id),
-            now=now,
-        )
-    await db.commit()
-    await deliver_now(db, [person.id for person in recipients])
+    recipients = await _recipients(db, user, payload.userIds)
+    await _send_to(db, session, user, recipients)
     return await _response(db, session)
 
 
@@ -438,7 +534,6 @@ async def list_candidates(
     user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
-    limit: Annotated[int, Query(ge=1, le=100)] = 30,
 ) -> CandidateListResponse:
     """Tonight's list — **Batch S7 rebuilt this from a deck into a shortlist.**
 
@@ -448,16 +543,19 @@ async def list_candidates(
 
     **The card answers "what is this and have they seen it"** before a swipe — cast,
     runtime, genres, where it streams if nobody owns it, and which of the *other*
-    participants have watched it and when.
+    participants have watched it and when. Since AE10 a film the night dealt also says why
+    it is there (``dealtAs``), and reading the list says the caller has the night open.
     """
     session = await _session_for(db, session_id, user)
-    await ensure_seeded(db, session=session, limit=limit)
+    await ensure_seeded(db, session=session)
+    await stamp_seen(db, session_id=session.id, user_id=user.id)
     suggestions = await session_suggestions(db, session=session)
     await db.commit()
 
     movies, by_tmdb = await films_for_suggestions(db, suggestions)
     await fill_suggestion_metadata(db, suggestions, by_tmdb, tmdb)
     people, history = await people_history(db, session.id, list(movies))
+    best = await best_ratings(db, [person_id for person_id, _ in people], list(movies))
     places = await copy_places(db, list(movies))
 
     names = {
@@ -541,10 +639,31 @@ async def list_candidates(
                 imdbCheckedAt=imdb_checked,
                 streamingLink=streaming_link,
                 myVote=my_votes.get(suggestion.id),
+                dealtAs=_dealt_as(suggestion, face, viewers, best),
             )
         )
 
     return CandidateListResponse(items=items, total=len(items))
+
+
+def _dealt_as(
+    suggestion: MovieNightSuggestion,
+    movie: Movie | None,
+    viewers: list[PersonFilmResponse],
+    best: dict[uuid.UUID, Decimal],
+) -> DealtAs | None:
+    """Why a film the night dealt is on it, read now (AE10's proposal B).
+
+    Someone in the night rated it 4½ or 5: worth a rewatch. Nobody in the night has a viewing
+    of it: in neither diary. A film somebody put forward is there because they did.
+    """
+    if suggestion.suggested_by is not None or movie is None:
+        return None
+    if best.get(movie.id, Decimal(0)) >= WORTH_A_REWATCH:
+        return "worthARewatch"
+    if all(viewer.lastWatchedAt is None for viewer in viewers):
+        return "inNeitherDiary"
+    return None
 
 
 @router.post(
@@ -580,6 +699,7 @@ async def suggest_film(
         )
     except SuggestionRefused as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    await stamp_seen(db, session_id=session.id, user_id=user.id)
     await db.commit()
     return await list_candidates(session_id, user, db, tmdb)
 
@@ -603,23 +723,38 @@ async def cast_vote(
     match = await record_vote(
         db, session=session, user=user, suggestion=suggestion, liked=payload.liked
     )
+    await stamp_seen(db, session_id=session.id, user_id=user.id)
     await db.commit()
-    if match is not None:
-        # Batch T4: "It's a match" goes out now. It used to wait for a job that never ran.
-        await deliver_now(db, await participants(db, session.id))
-    return VoteResponse(
-        recorded=True,
-        match=(
-            MatchResponse(
-                movieId=match.movie_id,
-                title=match.title,
-                year=match.year,
-                posterPath=match.poster_path,
-            )
-            if match is not None
-            else None
-        ),
-    )
+    if match is None:
+        return VoteResponse(recorded=True, match=None)
+    # Batch T4: "It's a match" goes out now. It used to wait for a job that never ran.
+    await deliver_now(db, await participants(db, session.id))
+    # The night now remembers this match; AE10's card says where the disc is (proposal D).
+    return VoteResponse(recorded=True, match=await _match_response(db, session))
+
+
+@router.post("/movie-night/{session_id}/log", response_model=MovieNightSessionResponse)
+async def log_for_everyone(
+    session_id: uuid.UUID, user: CurrentUser, db: Database
+) -> MovieNightSessionResponse:
+    """AE10 (#355), proposal D — "Log it for both of us": the night's match, one viewing for
+    each person in it, dated today.
+
+    Allowed once the night has ended too: the film is watched after the match, and a night
+    may be ended before anyone remembers to log it. A second tap writes nothing. A film
+    nobody owns gets its row from the suggestion's snapshot, with no copy.
+    """
+    session = await _session_for(db, session_id, user)
+    try:
+        await log_the_match(db, session=session)
+    except NothingToLog as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except FilmInTrash as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    await stamp_seen(db, session_id=session.id, user_id=user.id)
+    await db.commit()
+    await db.refresh(session)
+    return await _response(db, session)
 
 
 async def _events(session_id: uuid.UUID) -> AsyncIterator[str]:
@@ -649,8 +784,14 @@ async def _events(session_id: uuid.UUID) -> AsyncIterator[str]:
 async def session_events(
     session_id: uuid.UUID, user: CurrentUser, db: Database
 ) -> StreamingResponse:
-    """§8.4's realtime sync. `LISTEN`/`NOTIFY` over SSE, per `DECISIONS.md` #113."""
-    await _session_for(db, session_id, user)
+    """§8.4's realtime sync. `LISTEN`/`NOTIFY` over SSE, per `DECISIONS.md` #113.
+
+    Opening the stream says the caller has the night open (AE10's proposal C); the write is
+    committed before streaming starts, so no request connection is held by the stream.
+    """
+    session = await _session_for(db, session_id, user)
+    await stamp_seen(db, session_id=session.id, user_id=user.id)
+    await db.commit()
     return StreamingResponse(
         _events(session_id),
         media_type="text/event-stream",

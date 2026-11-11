@@ -39,6 +39,8 @@ import {
   highlightsSchema,
   recentlyAddedFilmSchema,
   rewatchedFilmSchema,
+  movieNightCandidateSchema,
+  movieNightSessionListSchema,
   movieNightSessionSchema,
   movieNightVoteResultSchema,
   notificationPreferenceSchema,
@@ -1398,6 +1400,35 @@ describe('movie night schemas', () => {
     // `match` is non-null only on the swipe that completes one; a missing key would make
     // "not yet" and "malformed response" the same thing.
     expect(movieNightVoteResultSchema.parse({ recorded: true, match: null }).match).toBeNull()
+  })
+
+  it('reads a night cached before AE10 as nobody choosing, nothing added and nothing logged', () => {
+    const before = {
+      ...session,
+      people: [{ id: UUID_A, displayName: 'Craig', invited: false }],
+      match: { movieId: null, title: 'The Exorcist', year: 1973, posterPath: null },
+    }
+    const parsed = movieNightSessionSchema.parse(before)
+    expect(parsed.people[0]).toMatchObject({ added: 0, lastSeen: null, choosingNow: false })
+    expect(parsed.match).toMatchObject({ runtimeMinutes: null, places: [], loggedAt: null })
+    expect(movieNightSessionListSchema.parse({ items: [], total: 0 }).people).toEqual([])
+  })
+
+  it('reads how far the other person has got, and refuses a negative count — AE10', () => {
+    const mark = { id: UUID_A, displayName: 'Mark', invited: true, added: 3, lastSeen: '2026-11-11T20:00:00Z', choosingNow: true }
+    expect(movieNightSessionSchema.parse({ ...session, people: [mark] }).people[0]?.added).toBe(3)
+    expect(movieNightSessionSchema.safeParse({ ...session, people: [{ ...mark, added: -1 }] }).success).toBe(false)
+  })
+
+  it('reads why a dealt film is on the list, and refuses a reason it does not know — AE10', () => {
+    const card = {
+      suggestionId: UUID_A, movieId: UUID_A, tmdbId: null, title: 'Alien', year: 1979, posterPath: null,
+      overview: null, runtimeMinutes: 117, genres: [], cast: [], suggestedBy: null, streamingOn: [],
+      watchedBy: [], myVote: null,
+    }
+    expect(movieNightCandidateSchema.parse(card).dealtAs).toBeNull()
+    expect(movieNightCandidateSchema.parse({ ...card, dealtAs: 'inNeitherDiary' }).dealtAs).toBe('inNeitherDiary')
+    expect(movieNightCandidateSchema.safeParse({ ...card, dealtAs: 'random' }).success).toBe(false)
   })
 })
 

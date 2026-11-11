@@ -5908,8 +5908,40 @@ Read-only after deploy (the app's own role in a READ ONLY transaction), 01:17 GM
   from eight films Craig put forward). Recommendation: all five, about 8 h, built B, A, D, C, E;
   the smaller option A, B and D is about 6 h. Two catches the build owns: "in neither diary" is
   not "unseen", and "Log it for both" must merge with the Letterboxd sync, which skips only
-  viewing ids it already holds. **Waiting for Craig's picks.**
-- The acceptance follows his picks and is written into this entry before the build. Fixed
-  whatever he picks: the other person's votes stay hidden until a match (#157) unless he chooses
-  otherwise; no push is sent twice; a closed night keeps its history.
+  viewing ids it already holds.
+- **Craig's picks, 11 Nov: all five, about 8 h, built B, A, D, C, E.** His go on the data
+  changes followed the same day: three nullable columns (migration 078), "Log it for both"
+  writing to both diaries with the sync merging, and untouched nights closing themselves,
+  starting with the open 6 Nov night. The sketch's canvas link no longer opens on this account
+  ("artifact not found"); the build worked from this entry and the sketch's file.
+- **Acceptance**, each held by an API test (`test_movie_night_ae10.py`), a web test and, where
+  a browser matters, `apps/e2e/specs/ae10.spec.ts`:
+  - **B, the shortlist:** a night is dealt at most ten films: up to four someone in the night
+    rated 4½ or 5 (Home's "Worth a rewatch"), the rest in nobody in the night's diary, never TV,
+    in the same stable shuffle. Films people put forward sit above, in their own section. Each
+    dealt film says why ("Worth a rewatch · Craig 5/5", "In neither diary"). The start form's
+    year box is gone; its filters are Under two hours (a known running time of 120 minutes or
+    less), In neither diary, 4K (an owned 4K copy) and one genre, shown on the night as chips.
+  - **A, invite when starting:** the start form lists who can be sent a night, nobody ticked
+    (as "Propose a trip", #345); whoever is ticked is put in the night and pushed at once, with
+    the night dealt first so both diaries count. One push per person per night still holds;
+    a name that cannot be sent refuses the start rather than sending fewer.
+  - **D, at the match:** the match names each copy's place and the running time, on the night
+    and in the vote that makes it. "Log it for both of us" writes one viewing per person in the
+    night, dated that day in London, a rewatch for whoever had a viewing already; a second tap,
+    on either phone, writes nothing. A film nobody owns gets its row with no copy; a film in the
+    Trash is refused. The Letterboxd import gives an entry to an app-logged viewing of the same
+    person and film within a day (closest date first) instead of adding a second row; a dry run
+    claims nothing.
+  - **C, progress without picks:** each other person's line says how many films they have
+    added and whether they are choosing now (the night open in the last five minutes, stamped
+    by its reads, votes, suggestions and stream, and read again every minute while on screen),
+    or that they have not opened it. Their picks stay hidden (#157), and the live vote event no
+    longer names the film.
+  - **E, closing:** an open night with no votes closes two days after it started, or after its
+    planned start; computed when nights are listed or opened and before anything changes one,
+    with no new job. `ended_at_utc` is when it became due; its list stays. A night anyone voted
+    on stays open until ended.
+- Fixed whatever he picks: the other person's votes stay hidden until a match (#157); no push is
+  sent twice; a closed night keeps its history.
 - Size 4–8 h, by the picks.

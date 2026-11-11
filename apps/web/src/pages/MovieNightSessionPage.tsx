@@ -1,12 +1,13 @@
 import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, ChevronDown, Eye, Link2, Plus, Popcorn, Send } from 'lucide-react'
+import { ArrowLeft, BookCheck, Check, ChevronDown, Eye, Link2, MapPin, Plus, Popcorn, Send } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type {
   MovieNightCandidate,
   MovieNightCandidateList,
   MovieNightMatch,
+  MovieNightParticipant,
   MovieNightSession,
 } from '@mcu/shared'
 
@@ -21,6 +22,7 @@ import {
   castMovieNightVote,
   fetchMovieNight,
   fetchMovieNightCandidates,
+  logMovieNight,
   posterUrl,
   sendMovieNight,
   streamMovieNightEvents,
@@ -37,6 +39,124 @@ function peopleLine(session: MovieNightSession, you: string | undefined): string
   if (others.length === 0) return 'Just you so far'
   if (others.length === 1) return `You and ${others[0]}`
   return `You, ${others.slice(0, -1).join(', ')} and ${others[others.length - 1]}`
+}
+
+/**
+ * How far someone has got — AE10 (#355), proposal C. **A count, never the films**: their
+ * picks stay hidden until a match (#157). "Choosing now" is the API's word: they had the night
+ * open in the last five minutes.
+ */
+function progressLine(person: MovieNightParticipant): string {
+  // Read defensively, as the shortlist's own fields are: a night cached before AE10 has none.
+  const count = person.added ?? 0
+  if ((person.lastSeen ?? null) === null && count === 0) return `${person.displayName} hasn’t opened it yet`
+  const added = count === 0
+    ? `${person.displayName} hasn’t added any yet`
+    : `${person.displayName} has added ${String(count)}`
+  return person.choosingNow === true ? `${added} · choosing now` : added
+}
+
+const FILTER_LABELS = { underTwoHours: 'Under two hours', inNeitherDiary: 'In neither diary', fourK: '4K' } as const
+
+/** The filters a night was started with, as the start form named them (AE10, proposal B). */
+function filterChips(filters: Record<string, unknown>): string[] {
+  const chips: string[] = Object.entries(FILTER_LABELS)
+    .filter(([key]) => filters[key] === true)
+    .map(([, label]) => label)
+  if (typeof filters.genre === 'string' && filters.genre) chips.push(filters.genre)
+  return chips
+}
+
+/** Why a film the night dealt is on it (AE10, proposal B): someone in the night rated it 4½
+ *  or 5, or it is in nobody's diary. "In neither diary" is what the app knows, not "unseen". */
+function dealtLine(card: MovieNightCandidate): string {
+  const people = card.people ?? []
+  if (card.dealtAs === 'worthARewatch') {
+    const fans = people.filter((person) => person.personalRating !== null && person.personalRating >= 4.5)
+    return fans.length > 0
+      ? `Worth a rewatch · ${fans.map((person) => `${person.personName} ${String(person.personalRating)}/5`).join(', ')}`
+      : 'Worth a rewatch'
+  }
+  if (card.dealtAs === 'inNeitherDiary') return people.length > 1 ? 'In neither diary' : 'Not in your diary'
+  return 'From the Archive'
+}
+
+function runtimeText(minutes: number | null): string | null {
+  return minutes ? `${String(Math.floor(minutes / 60))}h ${String(minutes % 60)}m` : null
+}
+
+/**
+ * The match — AE10 (#355), proposal D: where the disc is, how long it runs, and "Log it for
+ * both of us", which logs one viewing for each person in the night, dated today, once.
+ */
+function MatchCard({
+  match,
+  everyone,
+  logging,
+  logError,
+  onLog,
+  onKeepGoing,
+  onDone,
+}: {
+  match: MovieNightMatch
+  everyone: number
+  logging: boolean
+  logError: string | null
+  onLog: () => void
+  onKeepGoing: () => void
+  onDone: () => void
+}) {
+  const runtime = runtimeText(match.runtimeMinutes ?? null)
+  const shelved = (match.places ?? []).filter((place) => Boolean(place.location || place.section || place.shelf))
+  const both = everyone === 2
+  return (
+    <div role="status" className="w-full rounded-lg border-2 border-success bg-success/10 p-6 text-center">
+      <Check className="mx-auto h-8 w-8 text-success" aria-hidden />
+      <p className="mt-2 text-lg font-bold">It's a match</p>
+      <p className="mt-1 text-xl">
+        {match.title}
+        {match.year ? ` (${String(match.year)})` : ''}
+      </p>
+      {match.posterPath ? (
+        <img src={posterUrl(match.posterPath)} alt="" className="mx-auto mt-3 w-32 rounded shadow" />
+      ) : null}
+      <div className="mt-3 space-y-1 text-sm">
+        {runtime ? <p className="text-muted-foreground">{runtime}</p> : null}
+        {shelved.length > 0 ? (
+          <ul aria-label="Where the disc is">
+            {shelved.map((place, index) => (
+              <li key={index} className="flex items-center justify-center gap-1.5 font-semibold">
+                <MapPin className="h-4 w-4 shrink-0 text-success" aria-hidden />
+                {placeLabel(place)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground">{match.movieId ? 'No shelf recorded for this film' : 'Not on the shelf'}</p>
+        )}
+      </div>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        {match.loggedAt ? (
+          <p className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-success">
+            <BookCheck className="h-4 w-4" aria-hidden />
+            Logged for {both ? 'both of you' : 'everyone'} · {formatShortDate(match.loggedAt)}
+          </p>
+        ) : (
+          <Button onClick={onLog} disabled={logging}>
+            <BookCheck className="h-4 w-4" aria-hidden />
+            {both ? 'Log it for both of us' : 'Log it for everyone'}
+          </Button>
+        )}
+      </div>
+      {logError ? <p role="alert" className="mt-2 text-sm text-destructive">{logError}</p> : null}
+      <div className="mt-3 flex justify-center gap-2">
+        <Button variant="outline" onClick={onKeepGoing}>
+          Keep going
+        </Button>
+        <Button variant="outline" onClick={onDone}>Done</Button>
+      </div>
+    </div>
+  )
 }
 
 /**
@@ -225,6 +345,7 @@ function Shortlist({
   headingId,
   pendingId,
   readOnly,
+  chips = [],
   onToggle,
 }: {
   cards: MovieNightCandidate[]
@@ -232,6 +353,8 @@ function Shortlist({
   headingId: string
   pendingId: string | null
   readOnly: boolean
+  /** AE10: the filters the night was started with, under the heading of the films it dealt. */
+  chips?: string[]
   onToggle: (card: MovieNightCandidate) => void
 }) {
   const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set())
@@ -256,6 +379,13 @@ function Shortlist({
           {added === 0 ? 'Add the ones you would watch tonight.' : `You've added ${String(added)}.`}
         </p>
       </div>
+      {chips.length > 0 ? (
+        <ul aria-label="Started with" className="flex flex-wrap gap-1.5">
+          {chips.map((chip) => (
+            <li key={chip} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">{chip}</li>
+          ))}
+        </ul>
+      ) : null}
       <ul className="archive-panel divide-y divide-border overflow-hidden">
         {cards.map((card) => {
           const open = opened.has(card.suggestionId)
@@ -277,7 +407,7 @@ function Shortlist({
                       {card.year ? <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{card.year}</span> : null}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {card.suggestedBy ? `Suggested by ${card.suggestedBy}${card.suggestedAt ? ` · ${formatDateTime(card.suggestedAt)}` : ''}` : 'From the Archive'}
+                      {card.suggestedBy ? `Suggested by ${card.suggestedBy}${card.suggestedAt ? ` · ${formatDateTime(card.suggestedAt)}` : ''}` : dealtLine(card)}
                       {card.movieId ? '' : card.streamingOn.length > 0 ? ` · on ${card.streamingOn.join(', ')}` : ' · not on the shelf'}
                     </span>
                   </span>
@@ -329,6 +459,10 @@ export default function MovieNightSessionPage() {
     queryKey: ['movie-night', id],
     queryFn: () => fetchMovieNight(id),
     enabled: Boolean(id),
+    // AE10 (#355), proposal C: read again every minute while the night is open and on
+    // screen, which both says you have it open and keeps "Mark has added 3" current. Paused
+    // in a background tab, as every refetch here is.
+    refetchInterval: (query) => (query.state.data?.status === 'open' ? 60_000 : false),
   })
   const shortlist = useQuery({
     queryKey: ['movie-night-candidates', id],
@@ -352,8 +486,14 @@ export default function MovieNightSessionPage() {
               title: event.title,
               year: event.year ?? null,
               posterPath: event.posterPath ?? null,
+              runtimeMinutes: null,
+              places: [],
+              loggedAt: null,
             })
-          } else if (event.kind === 'joined' || event.kind === 'ended') {
+            // The night now remembers it, with where the disc is (AE10, proposal D).
+            void queryClient.invalidateQueries({ queryKey: ['movie-night', id] })
+          } else if (event.kind === 'joined' || event.kind === 'ended' || event.kind === 'vote' || event.kind === 'logged') {
+            // A vote names no film: it changes only how many each person has added (AE10, C).
             void queryClient.invalidateQueries({ queryKey: ['movie-night', id] })
           } else if (event.kind === 'suggestion') {
             void queryClient.invalidateQueries({ queryKey: ['movie-night-candidates', id] })
@@ -394,9 +534,19 @@ export default function MovieNightSessionPage() {
     onError: (cause) => setError(queryErrorMessage(cause, 'That vote did not register.')),
   })
 
+  const log = useMutation({
+    mutationFn: () => logMovieNight(id),
+    onSuccess: (updated) => queryClient.setQueryData(['movie-night', id], updated),
+  })
+
   // A match just made on this screen, else the one the session remembers (Batch X12a), so a
-  // night opened from the "It's a match" push shows its match.
-  const shownMatch = match ?? (dismissedStored ? null : (session.data?.match ?? null))
+  // night opened from the "It's a match" push shows its match. The stored one carries where
+  // the disc is and whether it was logged (AE10), so it is preferred once it is the same film.
+  const stored = session.data?.match ?? null
+  const sameFilm = (a: MovieNightMatch, b: MovieNightMatch) => a.title === b.title && a.movieId === b.movieId
+  const shownMatch = match
+    ? (stored && sameFilm(stored, match) ? stored : match)
+    : (dismissedStored ? null : stored)
   const cards = shortlist.data?.items ?? []
   const shortlistState = listState(shortlist, cards.length === 0)
 
@@ -450,6 +600,17 @@ export default function MovieNightSessionPage() {
             {night.status === 'ended' ? ' · this one has ended' : ''}
           </p>
         ) : null}
+        {/* AE10 (#355), proposal C: how far everyone else has got, never which films. */}
+        {night && open && night.people.some((person) => person.id !== profile?.id) ? (
+          <ul aria-label="How far everyone has got" className="space-y-0.5 text-sm">
+            {night.people.filter((person) => person.id !== profile?.id).map((person) => (
+              <li key={person.id} className={cn('flex items-center gap-1.5', person.choosingNow === true ? 'font-semibold text-foreground' : 'text-muted-foreground')}>
+                {person.choosingNow === true ? <span className="h-2 w-2 shrink-0 rounded-full bg-success" aria-hidden /> : null}
+                {progressLine(person)}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </header>
 
       {open ? <SuggestFilmPanel sessionId={id} /> : null}
@@ -465,29 +626,18 @@ export default function MovieNightSessionPage() {
       ) : null}
 
       {shownMatch ? (
-        <div role="status" className="w-full rounded-lg border-2 border-success bg-success/10 p-6 text-center">
-          <Check className="mx-auto h-8 w-8 text-success" aria-hidden />
-          <p className="mt-2 text-lg font-bold">It's a match</p>
-          <p className="mt-1 text-xl">
-            {shownMatch.title}
-            {shownMatch.year ? ` (${String(shownMatch.year)})` : ''}
-          </p>
-          {shownMatch.posterPath ? (
-            <img src={posterUrl(shownMatch.posterPath)} alt="" className="mx-auto mt-3 w-32 rounded shadow" />
-          ) : null}
-          <div className="mt-4 flex justify-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setMatch(null)
-                setDismissedStored(true)
-              }}
-            >
-              Keep going
-            </Button>
-            <Button onClick={() => navigate('/movie-night')}>Done</Button>
-          </div>
-        </div>
+        <MatchCard
+          match={shownMatch}
+          everyone={night?.people.length ?? 2}
+          logging={log.isPending}
+          logError={log.isError ? queryErrorMessage(log.error, 'It could not be logged.') : null}
+          onLog={() => log.mutate()}
+          onKeepGoing={() => {
+            setMatch(null)
+            setDismissedStored(true)
+          }}
+          onDone={() => navigate('/movie-night')}
+        />
       ) : shortlistState === 'loading' ? (
         <StatePanel className="w-full" tone="loading" title="Preparing the shortlist" />
       ) : shortlistState === 'offline' ? (
@@ -516,12 +666,15 @@ export default function MovieNightSessionPage() {
             readOnly={night?.status === 'ended'}
             onToggle={(card) => vote.mutate({ card, liked: card.myVote !== true })}
           />
+          {/* AE10 (#355), proposal B: ten films the night dealt, each saying why it is here —
+              no longer thirty at random. */}
           <Shortlist
-            title="Stuck for ideas? A random shortlist"
+            title="From the shelf"
             headingId="archive-heading"
             cards={cards.filter((card) => card.suggestedBy === null)}
             pendingId={vote.isPending ? (vote.variables?.card.suggestionId ?? null) : null}
             readOnly={night?.status === 'ended'}
+            chips={night ? filterChips(night.filters) : []}
             onToggle={(card) => vote.mutate({ card, liked: card.myVote !== true })}
           />
         </>

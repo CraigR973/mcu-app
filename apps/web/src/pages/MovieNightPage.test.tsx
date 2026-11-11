@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   // AC5: the Cinema trips section's read; no trips, so the section is not drawn.
   fetchCinemaTrips: vi.fn().mockResolvedValue({ upcoming: [], past: [] }),
   posterUrl: (path: string | null) => path ?? '/placeholder-poster.svg',
+  // AE10: the start form's genre filter reads TMDB's list.
+  TMDB_GENRES: [{ id: 27, name: 'Horror' }, { id: 878, name: 'Science Fiction' }],
 }))
 
 vi.mock('@/lib/api', () => mocks)
@@ -141,5 +143,38 @@ describe('MovieNightPage — AC5 cinema trips (#345)', () => {
     await screen.findByRole('heading', { name: 'Your screenings' })
     await waitFor(() => expect(mocks.fetchCinemaTrips).toHaveBeenCalled())
     expect(screen.queryByRole('region', { name: 'Cinema trips' })).toBeNull()
+  })
+})
+
+describe('MovieNightPage — AE10 (#355)', () => {
+  const MARK = '22222222-2222-4222-8222-222222222222'
+
+  it('picks who is watching as it starts, nobody ticked, and the button says who it goes to (A)', async () => {
+    mocks.fetchMovieNights.mockResolvedValue({ items: [], total: 0, people: [{ id: MARK, displayName: 'Mark' }] })
+    mocks.createMovieNight.mockResolvedValue({ id: '3f2504e0-4f89-41d3-9a0c-0305e82c3401' })
+    renderPage()
+
+    const mark = await screen.findByRole('checkbox', { name: 'Mark' })
+    expect((mark as HTMLInputElement).checked).toBe(false)
+    fireEvent.click(mark)
+    fireEvent.click(screen.getByRole('button', { name: 'Start and send to Mark' }))
+
+    await waitFor(() => expect(mocks.createMovieNight).toHaveBeenCalledWith({}, undefined, [MARK]))
+  })
+
+  it('starts with the filters that matter on the night, and no year box (B)', async () => {
+    mocks.fetchMovieNights.mockResolvedValue({ items: [], total: 0, people: [] })
+    mocks.createMovieNight.mockResolvedValue({ id: '3f2504e0-4f89-41d3-9a0c-0305e82c3401' })
+    renderPage()
+
+    expect(screen.queryByText('Nothing older than')).toBeNull()
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Under two hours' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: '4K' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Genre' }), { target: { value: 'Horror' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Start movie night' }))
+
+    await waitFor(() =>
+      expect(mocks.createMovieNight).toHaveBeenCalledWith({ underTwoHours: true, fourK: true, genre: 'Horror' }),
+    )
   })
 })

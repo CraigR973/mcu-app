@@ -2465,12 +2465,32 @@ export async function fetchMovieNights(): Promise<MovieNightSessionList> {
   return parseResponse(await authFetch('/movie-night'), movieNightSessionListSchema)
 }
 
+/** The filters a night starts with — AE10 (#355), in place of the year box. */
+export interface MovieNightFilters {
+  underTwoHours?: boolean
+  inNeitherDiary?: boolean
+  fourK?: boolean
+  /** A TMDB genre name. */
+  genre?: string
+}
+
+/** Start a night. AE10 (#355): `userIds` are who is watching, sent it as it starts. */
 export async function createMovieNight(
-  filters: Record<string, unknown> = {},
+  filters: MovieNightFilters = {},
   plannedStart?: string,
+  userIds: string[] = [],
 ): Promise<MovieNightSession> {
   return parseOrThrowApiError(
-    await authFetch('/movie-night', { method: 'POST', body: JSON.stringify({ filters, plannedStart }) }),
+    await authFetch('/movie-night', { method: 'POST', body: JSON.stringify({ filters, plannedStart, userIds }) }),
+    movieNightSessionSchema,
+  )
+}
+
+/** AE10 (#355): "Log it for both of us" — the night's match, one viewing each, dated today.
+ *  A second tap writes nothing. */
+export async function logMovieNight(id: string): Promise<MovieNightSession> {
+  return parseOrThrowApiError(
+    await authFetch(`/movie-night/${id}/log`, { method: 'POST' }),
     movieNightSessionSchema,
   )
 }
@@ -2544,7 +2564,8 @@ export async function suggestMovieNightFilm(
 }
 
 export interface MovieNightEvent {
-  kind: 'vote' | 'match' | 'joined' | 'ended' | 'suggestion'
+  /** AE10: a vote names no film, and `logged` says the match was logged for everyone. */
+  kind: 'vote' | 'match' | 'joined' | 'ended' | 'suggestion' | 'logged'
   sessionId: string
   movieId?: string | null
   title?: string

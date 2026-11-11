@@ -6,6 +6,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 
 import { AtTheCinema } from '@/components/cinemas/AtTheCinema'
 import { CinemaTrips } from '@/components/cinemas/CinemaTrips'
+import { PeoplePicker } from '@/components/cinemas/TripPickers'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,8 @@ import {
   endMovieNight,
   fetchMovieNights,
   joinMovieNight,
+  TMDB_GENRES,
+  type MovieNightFilters,
 } from '@/lib/api'
 import { CINEMA_VIEW_PATH } from '@/lib/cinemas'
 import { listState, queryErrorMessage } from '@/lib/query-state'
@@ -69,27 +72,62 @@ export default function MovieNightPage({ view = 'home' }: { view?: 'home' | 'cin
   )
 }
 
+/** "Mark", "Mark and Sam", "Mark, Sam and Alex". */
+function listNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? ''
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1] ?? ''}`
+}
+
+/** The filters that matter on the night — AE10 (#355), in place of the year box no night used. */
+const SHORTLIST_FILTERS = [
+  { key: 'underTwoHours', label: 'Under two hours' },
+  { key: 'inNeitherDiary', label: 'In neither diary' },
+  { key: 'fourK', label: '4K' },
+] as const
+
+type FilterKey = (typeof SHORTLIST_FILTERS)[number]['key']
+
 function AtHome() {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [decadeFrom, setDecadeFrom] = useState('')
+  const [watching, setWatching] = useState<ReadonlySet<string>>(() => new Set())
+  const [ticked, setTicked] = useState<ReadonlySet<FilterKey>>(() => new Set())
+  const [genre, setGenre] = useState('')
   const [plannedStart, setPlannedStart] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [copyError, setCopyError] = useState<string | null>(null)
 
   const sessions = useQuery({ queryKey: ['movie-nights'], queryFn: fetchMovieNights })
+  // AE10 (#355), proposal A: who can be sent a night, picked as it starts.
+  const people = sessions.data?.people ?? []
+  const sendTo = people.filter((person) => watching.has(person.id))
 
   const start = useMutation({
-    mutationFn: () =>
-      plannedStart
-        ? createMovieNight(decadeFrom ? { decadeFrom: Number(decadeFrom) } : {}, new Date(plannedStart).toISOString())
-        : createMovieNight(decadeFrom ? { decadeFrom: Number(decadeFrom) } : {}),
+    mutationFn: () => {
+      const filters: MovieNightFilters = {}
+      for (const key of ticked) filters[key] = true
+      if (genre) filters.genre = genre
+      const when = plannedStart ? new Date(plannedStart).toISOString() : undefined
+      const ids = sendTo.map((person) => person.id)
+      // Only what is set: a night for nobody, unplanned, is still `createMovieNight({})`.
+      if (ids.length > 0) return createMovieNight(filters, when, ids)
+      return when ? createMovieNight(filters, when) : createMovieNight(filters)
+    },
     onSuccess: (session) => {
       void queryClient.invalidateQueries({ queryKey: ['movie-nights'] })
       navigate(`/movie-night/${session.id}`)
     },
   })
+
+  function toggleFilter(key: FilterKey) {
+    setTicked((current) => {
+      const next = new Set(current)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const finish = useMutation({
     mutationFn: (id: string) => endMovieNight(id),
@@ -166,25 +204,47 @@ function AtHome() {
         <section className="archive-panel p-4 sm:p-5">
           <h2 className="section-heading">Start a screening</h2>
           <form
-            className="mt-3 flex flex-wrap items-end gap-3"
+            className="mt-3 space-y-4"
             onSubmit={(event) => {
               event.preventDefault()
               start.mutate()
             }}
           >
-            <label className="text-sm">
-              <span className="field-label">Nothing older than</span>
-              <Input
-                type="number"
-                min={1900}
-                max={2100}
-                placeholder="any year"
-                className="w-32"
-                value={decadeFrom}
-                onChange={(event) => setDecadeFrom(event.target.value)}
-              />
-            </label>
-            <label className="text-sm">
+            {/* AE10 (#355), proposal A: who is watching, as "Propose a trip" asks; nobody is
+                ticked until you tick them, and whoever is ticked is sent it as it starts. */}
+            <fieldset className="space-y-2">
+              <legend className="field-label">Who’s watching</legend>
+              {state === 'loading' ? (
+                <p className="text-sm text-muted-foreground">Finding who can be sent it…</p>
+              ) : (
+                <PeoplePicker
+                  people={people.map((person) => ({ profileId: person.id, displayName: person.displayName, isYou: false }))}
+                  chosen={watching}
+                  onChange={setWatching}
+                  disabled={start.isPending}
+                />
+              )}
+            </fieldset>
+            {/* Proposal B: the filters that matter on the night, in place of the year box. */}
+            <fieldset className="space-y-2">
+              <legend className="field-label">Tonight’s shortlist</legend>
+              <div className="flex flex-wrap gap-2">
+                {SHORTLIST_FILTERS.map((filter) => (
+                  <label key={filter.key} className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-input px-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+                    <input type="checkbox" className="size-4 accent-primary" checked={ticked.has(filter.key)} onChange={() => toggleFilter(filter.key)} disabled={start.isPending} />
+                    {filter.label}
+                  </label>
+                ))}
+              </div>
+              <label className="block text-sm">
+                <span className="sr-only">Genre</span>
+                <select className="select-control w-full sm:w-64" aria-label="Genre" value={genre} onChange={(event) => setGenre(event.target.value)} disabled={start.isPending}>
+                  <option value="">Any genre</option>
+                  {TMDB_GENRES.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
+                </select>
+              </label>
+            </fieldset>
+            <label className="block text-sm">
               <span className="field-label">Planned date and time (optional)</span>
               <Input type="datetime-local" value={plannedStart} onChange={(event) => setPlannedStart(event.target.value)} />
             </label>
@@ -194,8 +254,9 @@ function AtHome() {
               ) : (
                 <Popcorn className="mr-2 h-4 w-4" aria-hidden />
               )}
-              {/* Batch V3: a night is the shortlist now, with no deck to swipe (#228). */}
-              Start movie night
+              {/* Batch V3: a night is the shortlist now, with no deck to swipe (#228). AE10:
+                  the button says who it goes to, since starting it sends it. */}
+              {sendTo.length > 0 ? `Start and send to ${listNames(sendTo.map((person) => person.displayName))}` : 'Start movie night'}
             </Button>
           </form>
           {start.isError ? (
@@ -244,7 +305,7 @@ function AtHome() {
             className="mt-3"
             tone="empty"
             title="No screenings yet"
-            description="Start one above, then send it to the other person from the night itself."
+            description="Start one above. Whoever you tick is sent it as it starts."
           />
         ) : null}
         {finish.isError ? (

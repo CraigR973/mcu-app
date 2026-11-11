@@ -35,6 +35,7 @@ from src.models.movie_night import (
 from src.models.notification import Notification
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
+from src.services.movie_night.deal import DEAL_SIZE
 from src.services.movie_night.realtime import MovieNightBroadcaster, encode
 from src.services.movie_night.sessions import (
     SuggestionRefused,
@@ -403,7 +404,8 @@ class TestTheDeckOrderMatchesItsDocstring:
         second = [movie.id for movie in await seeded_candidates(db, session=session)]
 
         assert first == second
-        assert len(first) >= 12
+        # AE10 (#355) deals ten films where Batch 35 dealt thirty: twelve on the shelf fill it.
+        assert len(first) == DEAL_SIZE
 
     async def test_two_sessions_deal_different_orders(self, db: AsyncSession) -> None:
         """Otherwise every movie night opens on the same twelve films, which is the reason

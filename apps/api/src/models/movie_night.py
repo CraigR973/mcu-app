@@ -74,6 +74,13 @@ class MovieNightSession(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
         DateTime(timezone=False), nullable=True
     )
     ended_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+    #: AE10 (#355): the match "Log it for both of us" logged, and when, so the same night is
+    #: never logged twice. No foreign key, for the reason ``matched_suggestion_id`` has none.
+    #: Migration 078.
+    logged_suggestion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    logged_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<MovieNightSession {self.id} {self.status}>"
@@ -96,6 +103,10 @@ class MovieNightParticipant(Base, UUIDPrimaryKeyMixin):
     joined_at_utc: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
+    #: AE10 (#355): when this person last had the night open — its reads, votes and
+    #: suggestions stamp it — so the others can see "choosing now". Null until they open it.
+    #: Migration 078.
+    last_seen_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
 
 class MovieNightSuggestion(Base, UUIDPrimaryKeyMixin):

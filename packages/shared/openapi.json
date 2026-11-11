@@ -8487,6 +8487,17 @@
    },
    "MatchResponse": {
     "properties": {
+     "loggedAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Loggedat"
+     },
      "movieId": {
       "anyOf": [
        {
@@ -8499,6 +8510,13 @@
       ],
       "title": "Movieid"
      },
+     "places": {
+      "items": {
+       "$ref": "#/components/schemas/CopyPlaceResponse"
+      },
+      "title": "Places",
+      "type": "array"
+     },
      "posterPath": {
       "anyOf": [
        {
@@ -8509,6 +8527,17 @@
        }
       ],
       "title": "Posterpath"
+     },
+     "runtimeMinutes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Runtimeminutes"
      },
      "title": {
       "title": "Title",
@@ -9192,6 +9221,13 @@
        "$ref": "#/components/schemas/MovieNightSessionResponse"
       },
       "title": "Items",
+      "type": "array"
+     },
+     "people": {
+      "items": {
+       "$ref": "#/components/schemas/PersonResponse"
+      },
+      "title": "People",
       "type": "array"
      },
      "total": {
@@ -10354,6 +10390,17 @@
    },
    "ParticipantResponse": {
     "properties": {
+     "added": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Added",
+      "type": "integer"
+     },
+     "choosingNow": {
+      "default": false,
+      "title": "Choosingnow",
+      "type": "boolean"
+     },
      "displayName": {
       "title": "Displayname",
       "type": "string"
@@ -10367,6 +10414,17 @@
       "default": false,
       "title": "Invited",
       "type": "boolean"
+     },
+     "lastSeen": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lastseen"
      }
     },
     "required": [
@@ -13839,7 +13897,7 @@
     "type": "object"
    },
    "SessionCreateRequest": {
-    "description": "§8.3's \"session creation with filters\", in Batch 12's smart-collection shape.",
+    "description": "§8.3's \"session creation with filters\", in Batch 12's smart-collection shape.\n\nAE10 (#355): the filters are ``underTwoHours``, ``inNeitherDiary`` and ``fourK``\n(booleans) and ``genre`` (a TMDB genre name), in place of the year box; ``userIds`` are\nwho is watching, sent the night as it starts. Omitted, nobody is sent it, as before.",
     "properties": {
      "filters": {
       "additionalProperties": true,
@@ -13857,6 +13915,14 @@
        }
       ],
       "title": "Plannedstart"
+     },
+     "userIds": {
+      "items": {
+       "format": "uuid",
+       "type": "string"
+      },
+      "title": "Userids",
+      "type": "array"
      }
     },
     "title": "SessionCreateRequest",
@@ -18070,6 +18136,21 @@
       },
       "title": "Cast",
       "type": "array"
+     },
+     "dealtAs": {
+      "anyOf": [
+       {
+        "enum": [
+         "worthARewatch",
+         "inNeitherDiary"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dealtas"
      },
      "genres": {
       "items": {
@@ -24150,7 +24231,7 @@
   },
   "/api/v1/movie-night": {
    "get": {
-    "description": "The caller's sessions, newest first.",
+    "description": "The caller's sessions, newest first, and who a new one can be sent to.\n\nNights nobody touched that are due to close are closed first (AE10's proposal E): the\nlist is where a forgotten night is noticed, so it is where it closes.",
     "operationId": "list_sessions_api_v1_movie_night_get",
     "responses": {
      "200": {
@@ -24175,7 +24256,7 @@
     ]
    },
    "post": {
-    "description": "§8.3 — start a movie night. The creator is its first participant.",
+    "description": "§8.3 — start a movie night. The creator is its first participant.\n\n**AE10 (#355), proposal A: who is watching is picked as it starts, and the push goes at\nonce**, as \"Propose a trip\" does. Of the 11 nights since 10 Sep only two ever had a\nsecond person: the night stalled at getting the other person in.",
     "operationId": "create_session_api_v1_movie_night_post",
     "requestBody": {
      "content": {
@@ -24270,6 +24351,7 @@
   },
   "/api/v1/movie-night/{session_id}": {
    "get": {
+    "description": "One night. Reading it closes it if nobody touched it and it is due (AE10's proposal\nE), and says the caller has it open (proposal C): the night page reads it again every\nminute while it is on screen.",
     "operationId": "read_session_api_v1_movie_night__session_id__get",
     "parameters": [
      {
@@ -24318,7 +24400,7 @@
   },
   "/api/v1/movie-night/{session_id}/candidates": {
    "get": {
-    "description": "Tonight's list — **Batch S7 rebuilt this from a deck into a shortlist.**\n\nBatch 35 dealt each person a random hand of films from the collection and hid what\nthey had swiped. `DECISIONS.md` #157 replaced the input side: anyone suggests, everyone\nsees the same list, and a film outside the Archive can be on it.\n\n**The card answers \"what is this and have they seen it\"** before a swipe — cast,\nruntime, genres, where it streams if nobody owns it, and which of the *other*\nparticipants have watched it and when.",
+    "description": "Tonight's list — **Batch S7 rebuilt this from a deck into a shortlist.**\n\nBatch 35 dealt each person a random hand of films from the collection and hid what\nthey had swiped. `DECISIONS.md` #157 replaced the input side: anyone suggests, everyone\nsees the same list, and a film outside the Archive can be on it.\n\n**The card answers \"what is this and have they seen it\"** before a swipe — cast,\nruntime, genres, where it streams if nobody owns it, and which of the *other*\nparticipants have watched it and when. Since AE10 a film the night dealt also says why\nit is there (``dealtAs``), and reading the list says the caller has the night open.",
     "operationId": "list_candidates_api_v1_movie_night__session_id__candidates_get",
     "parameters": [
      {
@@ -24329,18 +24411,6 @@
        "format": "uuid",
        "title": "Session Id",
        "type": "string"
-      }
-     },
-     {
-      "in": "query",
-      "name": "limit",
-      "required": false,
-      "schema": {
-       "default": 30,
-       "maximum": 100,
-       "minimum": 1,
-       "title": "Limit",
-       "type": "integer"
       }
      }
     ],
@@ -24428,7 +24498,7 @@
   },
   "/api/v1/movie-night/{session_id}/events": {
    "get": {
-    "description": "§8.4's realtime sync. `LISTEN`/`NOTIFY` over SSE, per `DECISIONS.md` #113.",
+    "description": "§8.4's realtime sync. `LISTEN`/`NOTIFY` over SSE, per `DECISIONS.md` #113.\n\nOpening the stream says the caller has the night open (AE10's proposal C); the write is\ncommitted before streaming starts, so no request connection is held by the stream.",
     "operationId": "session_events_api_v1_movie_night__session_id__events_get",
     "parameters": [
      {
@@ -24468,6 +24538,55 @@
      }
     ],
     "summary": "Session Events",
+    "tags": [
+     "movie-night"
+    ]
+   }
+  },
+  "/api/v1/movie-night/{session_id}/log": {
+   "post": {
+    "description": "AE10 (#355), proposal D — \"Log it for both of us\": the night's match, one viewing for\neach person in it, dated today.\n\nAllowed once the night has ended too: the film is watched after the match, and a night\nmay be ended before anyone remembers to log it. A second tap writes nothing. A film\nnobody owns gets its row from the suggestion's snapshot, with no copy.",
+    "operationId": "log_for_everyone_api_v1_movie_night__session_id__log_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "session_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Session Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MovieNightSessionResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Log For Everyone",
     "tags": [
      "movie-night"
     ]

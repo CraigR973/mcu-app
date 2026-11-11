@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   castMovieNightVote: vi.fn(),
   fetchMovieNight: vi.fn(),
   fetchMovieNightCandidates: vi.fn(),
+  logMovieNight: vi.fn(),
   sendMovieNight: vi.fn(),
   streamMovieNightEvents: vi.fn(),
 }))
@@ -130,7 +131,7 @@ describe('MovieNightSessionPage', () => {
   it('opens on the shortlist, one Add / Added control per film — Batch V3 (#228)', async () => {
     renderPage()
 
-    const list = within(await screen.findByRole('region', { name: /Stuck for ideas/ }))
+    const list = within(await screen.findByRole('region', { name: /From the shelf/ }))
     expect(list.getByRole('button', { name: /The Red Shoes 1948/, expanded: false })).not.toBeNull()
     const suggested = within(screen.getByRole('region', { name: /^Suggested/ }))
     expect(suggested.getByText(/Suggested by Mark · on MUBI/)).not.toBeNull()
@@ -146,7 +147,7 @@ describe('MovieNightSessionPage', () => {
   it('has no deck: no "Start swiping", no Skip, no "N of M" count (#228)', async () => {
     // Retired with the deck: Phase 8.4's swipe-like UI and #207's arrow-key rule.
     renderPage()
-    await screen.findByRole('region', { name: /Stuck for ideas/ })
+    await screen.findByRole('region', { name: /From the shelf/ })
 
     expect(screen.queryByRole('button', { name: /Start swiping/ })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull()
@@ -241,7 +242,7 @@ describe('MovieNightSessionPage', () => {
 
   it('does not vote from the list with an arrow key', async () => {
     renderPage()
-    await screen.findByRole('region', { name: /Stuck for ideas/ })
+    await screen.findByRole('region', { name: /From the shelf/ })
 
     fireEvent.keyDown(window, { key: 'ArrowRight' })
 
@@ -283,19 +284,19 @@ describe('MovieNightSessionPage', () => {
 
   it('shows no match banner when the session has none', async () => {
     renderPage()
-    await screen.findByRole('region', { name: /Stuck for ideas/ })
+    await screen.findByRole('region', { name: /From the shelf/ })
     expect(screen.queryByText("It's a match")).toBeNull()
   })
 })
 
 
-it('opens with Suggest a film, then people’s picks, then random picks', async () => {
+it('opens with Suggest a film, then people’s picks, then the films the night dealt — AE10', async () => {
   renderPage()
-  await screen.findByRole('region', { name: /Stuck for ideas/ })
+  await screen.findByRole('region', { name: /From the shelf/ })
   const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
   expect(headings[0]).toBe('Suggest a film')
   expect(headings[1]).toMatch(/^Suggested/)
-  expect(headings[2]).toMatch(/^Stuck for ideas/)
+  expect(headings[2]).toMatch(/^From the shelf/)
 })
 
 
@@ -346,4 +347,99 @@ it('says when a score and runtime are unavailable and keeps a Letterboxd search 
   expect(screen.getByText('Runtime unavailable.')).not.toBeNull()
   expect(screen.getByText(/score unavailable/)).not.toBeNull()
   expect(screen.getByRole('link', { name: 'Letterboxd' }).getAttribute('href')).toBe('https://letterboxd.com/search/The%20Red%20Shoes/')
+})
+
+describe('MovieNightSessionPage — AE10 (#355)', () => {
+  const WITH_MARK = {
+    ...NIGHT,
+    participantCount: 2,
+    people: [
+      { id: CRAIG, displayName: 'Craig', invited: false, added: 1, lastSeen: '2026-11-11T19:58:00Z', choosingNow: true },
+      { id: MARK, displayName: 'Mark', invited: true, added: 3, lastSeen: '2026-11-11T19:59:00Z', choosingNow: true },
+    ],
+    invitable: [],
+  }
+
+  it('says how far Mark has got, never which films (C)', async () => {
+    mocks.fetchMovieNight.mockResolvedValue(WITH_MARK)
+    renderPage()
+
+    const progress = within(await screen.findByRole('list', { name: 'How far everyone has got' }))
+    expect(progress.getByText('Mark has added 3 · choosing now')).not.toBeNull()
+    // Your own line is not drawn: "You've added 1" is the shortlist's.
+    expect(progress.queryByText(/Craig/)).toBeNull()
+  })
+
+  it('says when Mark has not opened it, and when he is not there now (C)', async () => {
+    mocks.fetchMovieNight.mockResolvedValue({
+      ...WITH_MARK,
+      people: [WITH_MARK.people[0], { ...WITH_MARK.people[1], added: 0, lastSeen: null, choosingNow: false }],
+    })
+    renderPage()
+    expect(await screen.findByText('Mark hasn’t opened it yet')).not.toBeNull()
+  })
+
+  it('reads the night again when a vote arrives, which names no film (C)', async () => {
+    mocks.fetchMovieNight.mockResolvedValue(WITH_MARK)
+    mocks.streamMovieNightEvents.mockImplementation(async function* () {
+      yield { kind: 'vote' }
+    })
+    renderPage()
+    await waitFor(() => expect(mocks.fetchMovieNight.mock.calls.length).toBeGreaterThan(1))
+    expect(mocks.fetchMovieNightCandidates).toHaveBeenCalledTimes(1)
+  })
+
+  it('says why each dealt film is on the list, under the filters it started with (B)', async () => {
+    mocks.fetchMovieNight.mockResolvedValue({ ...WITH_MARK, filters: { underTwoHours: true, genre: 'Horror' } })
+    const people = [
+      { personId: CRAIG, personName: 'Craig', lastWatchedAt: '2020-10-31', personalRating: 5 },
+      { personId: MARK, personName: 'Mark', lastWatchedAt: null, personalRating: null },
+    ]
+    mocks.fetchMovieNightCandidates.mockResolvedValue({
+      items: [
+        { ...RED_SHOES, dealtAs: 'worthARewatch', people },
+        { ...RED_SHOES, suggestionId: VOTED_ID, title: 'Alien', dealtAs: 'inNeitherDiary', people: people.map((p) => ({ ...p, lastWatchedAt: null, personalRating: null })) },
+      ],
+      total: 2,
+    })
+    renderPage()
+
+    const shelf = within(await screen.findByRole('region', { name: /From the shelf/ }))
+    expect(shelf.getByText('Worth a rewatch · Craig 5/5')).not.toBeNull()
+    expect(shelf.getByText('In neither diary')).not.toBeNull()
+    const chips = within(shelf.getByRole('list', { name: 'Started with' }))
+    expect(chips.getAllByRole('listitem').map((chip) => chip.textContent)).toEqual(['Under two hours', 'Horror'])
+  })
+
+  it('says at the match which shelf and how long, and logs it for both once (D)', async () => {
+    const match = {
+      movieId: MOVIE_ID, title: 'The Exorcist', year: 1973, posterPath: null, runtimeMinutes: 122,
+      places: [{ location: 'Lounge', section: 'Lounge', shelf: 'Left' }], loggedAt: null,
+    }
+    mocks.fetchMovieNight.mockResolvedValue({ ...WITH_MARK, match })
+    mocks.logMovieNight.mockResolvedValue({ ...WITH_MARK, match: { ...match, loggedAt: '2026-11-11T22:10:00Z' } })
+    renderPage()
+
+    const card = within((await screen.findByText("It's a match")).closest('[role="status"]') as HTMLElement)
+    expect(card.getByText('2h 2m')).not.toBeNull()
+    expect(card.getByRole('list', { name: 'Where the disc is' }).textContent).toContain('Lounge')
+    fireEvent.click(card.getByRole('button', { name: 'Log it for both of us' }))
+
+    await waitFor(() => expect(mocks.logMovieNight).toHaveBeenCalledWith(SESSION_ID))
+    expect(await screen.findByText(/Logged for both of you/)).not.toBeNull()
+    expect(screen.queryByRole('button', { name: 'Log it for both of us' })).toBeNull()
+  })
+
+  it('says a film nobody owns is not on the shelf, and says why logging failed (D)', async () => {
+    mocks.fetchMovieNight.mockResolvedValue({
+      ...WITH_MARK,
+      match: { movieId: null, title: 'Rented Film', year: 1999, posterPath: null, runtimeMinutes: null, places: [], loggedAt: null },
+    })
+    mocks.logMovieNight.mockRejectedValue(new Error('That film is in the Trash'))
+    renderPage()
+
+    expect(await screen.findByText('Not on the shelf')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Log it for both of us' }))
+    expect(await screen.findByText('That film is in the Trash')).not.toBeNull()
+  })
 })

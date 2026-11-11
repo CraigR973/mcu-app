@@ -292,6 +292,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # where one person may not name a film is not one (`DECISIONS.md` #157).
         "/api/v1/movie-night/{session_id}/suggestions",
         "/api/v1/movie-night/{session_id}/votes",
+        # AE10 (#355). "Log it for both of us": the match, one viewing for each person in the
+        # night. Anyone in it, as with votes; logged once.
+        "/api/v1/movie-night/{session_id}/log",
         "/api/v1/movie-night/{session_id}/events",
         # Batch 25. Admin writes, both read — a photo of a shelf is catalogue data.
         # The bytes have their own route so a gallery is cacheable images rather than

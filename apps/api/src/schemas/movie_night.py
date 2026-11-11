@@ -12,10 +12,16 @@ from src.schemas.wire import UtcDatetime, UtcDatetimeIn
 
 
 class SessionCreateRequest(BaseModel):
-    """§8.3's "session creation with filters", in Batch 12's smart-collection shape."""
+    """§8.3's "session creation with filters", in Batch 12's smart-collection shape.
+
+    AE10 (#355): the filters are ``underTwoHours``, ``inNeitherDiary`` and ``fourK``
+    (booleans) and ``genre`` (a TMDB genre name), in place of the year box; ``userIds`` are
+    who is watching, sent the night as it starts. Omitted, nobody is sent it, as before.
+    """
 
     filters: dict[str, Any] = Field(default_factory=dict)
     plannedStart: UtcDatetimeIn | None = None
+    userIds: list[uuid.UUID] = Field(default_factory=list)
 
 
 class PersonResponse(BaseModel):
@@ -27,6 +33,11 @@ class ParticipantResponse(PersonResponse):
     #: Batch T4 — whether tonight was sent to this person as a push, so the page can say
     #: "Sent to Mark" rather than offering to send it again.
     invited: bool = False
+    #: AE10 (#355), proposal C: how many films this person has added, never which, and
+    #: whether they have the night open now ("choosing now": seen in the last five minutes).
+    added: int = Field(default=0, ge=0)
+    lastSeen: UtcDatetime | None = None
+    choosingNow: bool = False
 
 
 class SendRequest(BaseModel):
@@ -39,12 +50,24 @@ class SendRequest(BaseModel):
     userIds: list[uuid.UUID] | None = None
 
 
+class CopyPlaceResponse(BaseModel):
+    location: str | None = None
+    section: str | None = None
+    shelf: str | None = None
+
+
 class MatchResponse(BaseModel):
     #: Null when the match is a film nobody owns, which Batch S7 made possible.
     movieId: uuid.UUID | None = None
     title: str
     year: int | None = None
     posterPath: str | None = None
+    #: AE10 (#355), proposal D: how long it runs and where each copy is, so the match says
+    #: which shelf to go to; empty for a film nobody owns.
+    runtimeMinutes: int | None = None
+    places: list[CopyPlaceResponse] = Field(default_factory=list)
+    #: When "Log it for both of us" logged this match; null until it has.
+    loggedAt: UtcDatetime | None = None
 
 
 class MovieNightSessionResponse(BaseModel):
@@ -75,6 +98,9 @@ class MovieNightSessionResponse(BaseModel):
 class MovieNightSessionListResponse(BaseModel):
     items: list[MovieNightSessionResponse]
     total: int = Field(ge=0)
+    #: AE10 (#355), proposal A: who a new night can be sent to as it starts — everyone who
+    #: can sign in, except the caller.
+    people: list[PersonResponse] = Field(default_factory=list)
 
 
 class WatchedByResponse(BaseModel):
@@ -94,12 +120,6 @@ class PersonFilmResponse(BaseModel):
     personName: str
     lastWatchedAt: date | None = None
     personalRating: float | None = Field(default=None, ge=0.5, le=5)
-
-
-class CopyPlaceResponse(BaseModel):
-    location: str | None = None
-    section: str | None = None
-    shelf: str | None = None
 
 
 class CandidateResponse(BaseModel):
@@ -140,6 +160,10 @@ class CandidateResponse(BaseModel):
     imdbVotes: int | None = Field(default=None, ge=0)
     imdbCheckedAt: UtcDatetime | None = None
     streamingLink: str | None = None
+    #: AE10 (#355), proposal B: why a film the night dealt is on it, read now: someone in the
+    #: night rated it 4½ or 5, or it is in nobody's diary. Null for a film somebody put
+    #: forward, and for one dealt before AE10 that is neither any more.
+    dealtAs: Literal["worthARewatch", "inNeitherDiary"] | None = None
 
 
 class CandidateListResponse(BaseModel):

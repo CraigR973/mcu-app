@@ -1782,6 +1782,11 @@ export const movieNightPersonSchema = z.object({
   displayName: z.string().min(1),
 })
 
+/** Where a copy is, as a movie night shows it. */
+export const movieNightPlaceSchema = z.object({
+  location: z.string().nullable(), section: z.string().nullable(), shelf: z.string().nullable(),
+})
+
 export const movieNightMatchSchema = z.object({
   /** Null when the match is a film nobody owns, which Batch S7 made possible. */
   movieId: z.string().uuid().nullable(),
@@ -1790,6 +1795,21 @@ export const movieNightMatchSchema = z.object({
    *  API without it yet. */
   year: z.number().int().nullable().default(null),
   posterPath: z.string().nullable(),
+  /** AE10 (#355), proposal D: how long it runs and where each copy is, so the match says which
+   *  shelf; empty for a film nobody owns. Defaulted for an answer cached before AE10. */
+  runtimeMinutes: z.number().int().nullable().default(null),
+  places: z.array(movieNightPlaceSchema).default([]),
+  /** When "Log it for both of us" logged this match; null until it has. */
+  loggedAt: z.string().nullable().default(null),
+})
+
+/** AE10 (#355), proposal C: someone in the night — how many films they have added, never
+ *  which, and whether they have it open now. Defaulted for an answer cached before AE10. */
+export const movieNightParticipantSchema = movieNightPersonSchema.extend({
+  invited: z.boolean(),
+  added: z.number().int().nonnegative().default(0),
+  lastSeen: z.string().nullable().default(null),
+  choosingNow: z.boolean().default(false),
 })
 
 export const movieNightSessionSchema = z.object({
@@ -1803,8 +1823,9 @@ export const movieNightSessionSchema = z.object({
   createdAt: z.string(),
   endedAt: z.string().nullable(),
   /** Batch T4 — who is in tonight, and whether each was sent it as a push. Defaulted, as
-   *  #205 explains, so a night cached before these existed still parses offline. */
-  people: z.array(movieNightPersonSchema.extend({ invited: z.boolean() })).default([]),
+   *  #205 explains, so a night cached before these existed still parses offline. Since AE10,
+   *  with how far each has got. */
+  people: z.array(movieNightParticipantSchema).default([]),
   /** Who could still be sent it. Empty once the night ends. */
   invitable: z.array(movieNightPersonSchema).default([]),
   /** Batch X12a: the film of the latest match, so a night opened from "It's a match" shows
@@ -1815,6 +1836,8 @@ export const movieNightSessionSchema = z.object({
 export const movieNightSessionListSchema = z.object({
   items: z.array(movieNightSessionSchema),
   total: z.number().int().nonnegative(),
+  /** AE10 (#355), proposal A: who a new night can be sent to as it starts. */
+  people: z.array(movieNightPersonSchema).default([]),
 })
 
 /** Who else in the session has seen a film, and when — Batch S7.
@@ -1851,9 +1874,7 @@ export const movieNightCandidateSchema = z.object({
     lastWatchedAt: z.string().nullable(),
     personalRating: z.number().min(0.5).max(5).nullable(),
   })).default([]),
-  locations: z.array(z.object({
-    location: z.string().nullable(), section: z.string().nullable(), shelf: z.string().nullable(),
-  })).default([]),
+  locations: z.array(movieNightPlaceSchema).default([]),
   imdbId: z.string().nullable().default(null),
   imdbRating: z.number().min(0).max(10).nullable().default(null),
   imdbVotes: z.number().int().nonnegative().nullable().default(null),
@@ -1864,6 +1885,9 @@ export const movieNightCandidateSchema = z.object({
   /** The caller's own swipe. **Only ever the caller's**: a movie night where each person
    *  can see the other's votes before deciding is not the same game. */
   myVote: z.boolean().nullable(),
+  /** AE10 (#355), proposal B: why a film the night dealt is on it — someone in the night
+   *  rated it 4½ or 5, or it is in nobody's diary. Null for a film somebody put forward. */
+  dealtAs: z.enum(['worthARewatch', 'inNeitherDiary']).nullable().default(null),
 })
 
 export const movieNightCandidateListSchema = z.object({
@@ -1884,6 +1908,8 @@ export type MovieNightCandidate = z.infer<typeof movieNightCandidateSchema>
 export type MovieNightCandidateList = z.infer<typeof movieNightCandidateListSchema>
 export type MovieNightWatchedBy = z.infer<typeof watchedBySchema>
 export type MovieNightMatch = z.infer<typeof movieNightMatchSchema>
+export type MovieNightParticipant = z.infer<typeof movieNightParticipantSchema>
+export type MovieNightPlace = z.infer<typeof movieNightPlaceSchema>
 export type MovieNightVoteResult = z.infer<typeof movieNightVoteResultSchema>
 
 // ---------------------------------------------------------------------------

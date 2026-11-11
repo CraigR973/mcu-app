@@ -56,7 +56,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from typing import Protocol
 
 import httpx
@@ -114,6 +114,9 @@ class ImportReport:
     #: Feed films whose TMDB id belongs to a film in the Trash: left alone, said here.
     in_trash: list[str] = field(default_factory=list)
     written: int = 0
+    #: AE10 (#355): of the entries written, how many were given to a viewing already logged
+    #: in the app (`claim_app_viewing`) instead of becoming a second row.
+    merged: int = 0
 
     @property
     def would_write(self) -> int:
@@ -132,7 +135,8 @@ class ImportReport:
             f"{len(self.films_added)} films\n"
             f"  ambiguous (offered)    {len(self.ambiguous)}\n"
             f"  not in the collection  {self.not_in_collection}\n"
-            f"  films to identify      {len(self.identifiable)}"
+            f"  films to identify      {len(self.identifiable)}\n"
+            f"  logged in the app      {self.merged} (given their Letterboxd viewing)"
         )
 
 
@@ -144,6 +148,50 @@ async def _existing_viewing_ids(db: AsyncSession, user_id: uuid.UUID) -> set[str
         )
     )
     return {value for value in rows if value is not None}
+
+
+#: How far apart a viewing logged in the app and its Letterboxd entry may be dated: a film
+#: finished after midnight is often logged on one side the day before the other.
+APP_VIEWING_WINDOW_DAYS = 1
+
+
+async def _app_viewings(db: AsyncSession, user_id: uuid.UUID) -> dict[uuid.UUID, list[WatchLog]]:
+    """This person's live viewings logged in the app (no Letterboxd viewing id), by film."""
+    pool: dict[uuid.UUID, list[WatchLog]] = {}
+    for row in await db.scalars(
+        select(WatchLog)
+        .where(
+            WatchLog.user_id == user_id,
+            WatchLog.letterboxd_viewing_id.is_(None),
+            WatchLog.deleted_at.is_(None),
+        )
+        .order_by(WatchLog.created_at, WatchLog.id)
+    ):
+        pool.setdefault(row.movie_id, []).append(row)
+    return pool
+
+
+def claim_app_viewing(
+    pool: dict[uuid.UUID, list[WatchLog]], movie_id: uuid.UUID, watched_at: date
+) -> WatchLog | None:
+    """The viewing logged in the app that this Letterboxd entry is, taken from ``pool``.
+
+    AE10 (#355): "Log it for both of us" writes a viewing in the app, and the person may log
+    the same evening on Letterboxd. The sync used to skip only viewing ids it already held, so
+    the two became two rows. Same person (the pool is theirs), same film, dated within
+    ``APP_VIEWING_WINDOW_DAYS``; the closest date first, then the earliest logged. Each viewing
+    is claimed once.
+    """
+    candidates = [
+        row
+        for row in pool.get(movie_id, [])
+        if abs((row.watched_at - watched_at).days) <= APP_VIEWING_WINDOW_DAYS
+    ]
+    if not candidates:
+        return None
+    chosen = min(candidates, key=lambda row: abs((row.watched_at - watched_at).days))
+    pool[movie_id].remove(chosen)
+    return chosen
 
 
 async def film_for_tmdb_id(
@@ -264,6 +312,7 @@ async def run_import(
     movies = list(await db.scalars(select(Movie).where(Movie.deleted_at.is_(None))))
     index = build_index(movies)
     seen = await _existing_viewing_ids(db, profile.id)
+    app_logged = await _app_viewings(db, profile.id)
 
     for entry in entries:
         already = entry.viewing_id in seen
@@ -312,7 +361,26 @@ async def run_import(
         elif not already:
             report.matched_identified += 1
 
-        if already or dry_run:
+        if already:
+            continue
+        # AE10 (#355): the same evening logged in the app is this viewing, not another one.
+        claimed = claim_app_viewing(app_logged, movie.id, entry.watched_at)
+        if claimed is not None:
+            report.merged += 1
+        if dry_run:
+            continue
+        if claimed is not None:
+            # Letterboxd is the person's own record of the evening: its date, rating and
+            # rewatch flag stand, and the row now carries its viewing id like any import.
+            claimed.letterboxd_viewing_id = entry.viewing_id
+            claimed.watched_at = entry.watched_at
+            claimed.is_rewatch = entry.is_rewatch
+            if entry.rating is not None:
+                claimed.personal_rating = entry.rating
+            if entry.tmdb_id is not None:
+                claimed.tmdb_id = entry.tmdb_id
+            seen.add(entry.viewing_id)
+            report.written += 1
             continue
 
         db.add(
@@ -340,6 +408,7 @@ async def run_import(
         dry_run=dry_run,
         entries=report.entries,
         written=report.written,
+        merged=report.merged,
         already=report.already_imported,
         ambiguous=len(report.ambiguous),
         films_added=len(report.films_added),

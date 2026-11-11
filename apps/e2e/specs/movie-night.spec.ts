@@ -5,27 +5,33 @@ import { filmId } from '../support/films.ts'
 import { expect, test } from '../support/test.ts'
 
 test.describe('movie night', () => {
-  test('Craig sends a night, the push opens it for Mark, they pick the same film and both see the match', async ({ signedIn, api }) => {
+  test('Craig starts a night for Mark, the push opens it for him, they pick the same film and both see the match', async ({ signedIn, api }) => {
     const craigPhone = await registerDevice(await api('Craig'), 'craig-phone')
     const markPhone = await registerDevice(await api('Mark'), 'mark-phone')
+    // Next December, so the night is still to come: since AE10 a planned night nobody touched
+    // closes two days after its planned start (#355), and December is GMT whatever the year.
+    const year = new Date().getUTCFullYear() + 1
 
     const craig = await signedIn('Craig')
     await craig.page.goto('/movie-night')
-    await craig.page.getByLabel('Planned date and time (optional)').fill('2026-11-01T20:30')
-    await craig.page.getByRole('button', { name: 'Start movie night' }).click()
+    await craig.page.getByLabel('Planned date and time (optional)').fill(`${String(year)}-12-01T20:30`)
+    // AE10 (#355), proposal A: who is watching is ticked as it starts, and the push goes at once.
+    await craig.page.getByRole('checkbox', { name: 'Mark' }).check()
+    await craig.page.getByRole('button', { name: 'Start and send to Mark' }).click()
     await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
     const nightUrl = new URL(craig.page.url()).pathname
-    await craig.page.getByRole('button', { name: 'Send to Mark' }).click()
+    await expect(craig.page.getByText('Sent to Mark')).toBeVisible()
+    await expect(craig.page.getByRole('button', { name: 'Send to Mark' })).toHaveCount(0)
 
     // What reached Mark's phone says which night to open.
     await expect.poll(() => pushesTo(markPhone).length, { message: 'a push to Mark' }).toBeGreaterThan(0)
     const [invite] = pushesTo(markPhone)
     expect(invite.title).toBe('Craig started a movie night')
     expect(invite.url).toBe(nightUrl)
-    expect(invite.body).toContain('Planned for 1 Nov 2026 at 20:30 GMT')
+    expect(invite.body).toContain(`Planned for 1 Dec ${String(year)} at 20:30 GMT`)
 
     // Both look at the same shortlist; Craig picks the first film on it.
-    const shortlist = craig.page.getByRole('region', { name: /Stuck for ideas/ })
+    const shortlist = craig.page.getByRole('region', { name: /From the shelf/ })
     const firstAdd = shortlist.getByRole('button', { name: /^Add / }).first()
     const film = (await firstAdd.innerText()).replace(/\s+/g, ' ').replace(/^Add\s*/, '').trim()
     await firstAdd.click()
@@ -67,7 +73,7 @@ test.describe('movie night', () => {
     await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
     const nightUrl = new URL(craig.page.url()).pathname
     await craig.page.getByRole('button', { name: 'Send to Mark' }).click()
-    const shortlist = craig.page.getByRole('region', { name: /Stuck for ideas/ })
+    const shortlist = craig.page.getByRole('region', { name: /From the shelf/ })
     const firstAdd = shortlist.getByRole('button', { name: /^Add / }).first()
     const film = (await firstAdd.innerText()).replace(/\s+/g, ' ').replace(/^Add\s*/, '').trim()
     await firstAdd.click()
@@ -84,12 +90,12 @@ test.describe('movie night', () => {
 })
 
 
-test('a film page adds a random pick to Suggested without losing its vote', async ({ signedIn }, testInfo) => {
+test('a film page adds a dealt pick to Suggested without losing its vote', async ({ signedIn }, testInfo) => {
   const craig = await signedIn('Craig')
   await craig.page.goto('/movie-night')
   await craig.page.getByRole('button', { name: 'Start movie night' }).click()
   await craig.page.setViewportSize({ width: 375, height: 812 })
-  const random = craig.page.getByRole('region', { name: /Stuck for ideas/ })
+  const random = craig.page.getByRole('region', { name: /From the shelf/ })
   const row = random.getByRole('listitem').first()
   const add = row.getByRole('button', { name: /^Add / })
   const title = (await add.innerText()).replace(/^Add\s*/, '').trim()
@@ -104,7 +110,7 @@ test('a film page adds a random pick to Suggested without losing its vote', asyn
   const headings = craig.page.getByRole('heading', { level: 2 })
   await expect(headings.nth(0)).toHaveText('Suggest a film')
   await expect(headings.nth(1)).toContainText('Suggested')
-  await expect(headings.nth(2)).toContainText('Stuck for ideas? A random shortlist')
+  await expect(headings.nth(2)).toContainText('From the shelf')
   await craig.page.screenshot({ path: testInfo.outputPath('aa4-night-375.png'), fullPage: false })
 })
 

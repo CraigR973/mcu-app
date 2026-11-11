@@ -19,11 +19,10 @@ from dataclasses import dataclass
 from datetime import date, datetime
 
 import structlog
-from sqlalchemy import Text, func, select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
-from src.models.collection_item import owned_film
 from src.models.movie import Movie
 from src.models.movie_night import (
     MovieNightParticipant,
@@ -34,6 +33,7 @@ from src.models.movie_night import (
 from src.models.notification import NotificationCategory
 from src.models.profile import Profile
 from src.models.watch_log import WatchLog
+from src.services.movie_night.deal import DEAL_SIZE, dealt_films
 from src.services.movie_night.realtime import CHANNEL, encode
 from src.services.notifications import deliver_pending, queue_notification
 from src.services.push_transport import push_sender
@@ -205,9 +205,11 @@ async def record_vote(
         )
     await db.flush()
 
-    # Told to the room without saying who voted or which way. A movie night where each
-    # person can see the other's swipes before deciding is not the same game.
-    await publish(db, session.id, "vote", {"suggestionId": str(suggestion.id)})
+    # Told to the room without saying who voted, which way, or on which film. A movie night
+    # where each person can see the other's swipes before deciding is not the same game, and
+    # since AE10 the night shows how many films each person has added: an event naming the
+    # film would tell the other phone which one that count just went up for (#355).
+    await publish(db, session.id, "vote", {})
 
     if not liked:
         return None
@@ -285,45 +287,36 @@ async def deliver_now(db: AsyncSession, user_ids: Iterable[uuid.UUID]) -> None:
 
 
 async def seeded_candidates(
-    db: AsyncSession, *, session: MovieNightSession, limit: int = 30
+    db: AsyncSession, *, session: MovieNightSession, limit: int = DEAL_SIZE
 ) -> list[Movie]:
-    """Films from the Archive to open the session with, honouring §8.3's filters.
+    """The films a night is dealt, without why each is there — `deal.dealt_films`.
 
     **The deck is the same for everyone, and Batch S7 is where that became true.** The
     docstring on Batch 35's `candidate_movies` claimed it was *"seeded per session so both
     people are shown the same deck in the same order"* and the query was
     ``order_by(func.random())`` with no seed — every call returned a different order, per
     person and per refetch (`DECISIONS.md` #157 names this as a defect to fix regardless).
+    The shuffle on ``md5(session_id || movie_id)`` that fixed it is unchanged by AE10, which
+    deals ten films for a reason instead of thirty at random (#355).
 
-    Ordering on ``md5(session_id || movie_id)`` gives a shuffle that is **stable per
-    session, different between sessions, and identical for everyone in one** — without
-    `setseed()`, which is connection state and would leak into whatever ran next on that
-    connection.
-
-    These become suggestions credited to nobody: Batch 35 dealt them, no one put them
+    These become suggestions credited to nobody: the night dealt them, no one put them
     forward.
     """
-    # The deck is the shelf: a film only watched or wanted has a row too (#269).
-    query = select(Movie).where(Movie.deleted_at.is_(None), owned_film())
-
-    filters = session.filters or {}
-    if isinstance(filters.get("decadeFrom"), int):
-        query = query.where(Movie.year >= filters["decadeFrom"])
-    if isinstance(filters.get("decadeTo"), int):
-        query = query.where(Movie.year <= filters["decadeTo"])
-    if isinstance(filters.get("minRating"), int | float):
-        query = query.where(Movie.tmdb_rating >= filters["minRating"])
-
-    shuffle = func.md5(func.concat(str(session.id), func.cast(Movie.id, Text)))
-    return list((await db.execute(query.order_by(shuffle).limit(limit))).scalars().all())
+    people = await participants(db, session.id)
+    return [
+        movie for movie, _ in await dealt_films(db, session=session, people=people, limit=limit)
+    ]
 
 
-async def ensure_seeded(db: AsyncSession, *, session: MovieNightSession, limit: int = 30) -> None:
-    """Fill a session's shortlist the first time somebody looks at it.
+async def ensure_seeded(
+    db: AsyncSession, *, session: MovieNightSession, limit: int = DEAL_SIZE
+) -> None:
+    """Fill a session's shortlist the first time somebody looks at it, or when it is sent.
 
     Seeding on demand rather than at creation keeps a session that nobody opened from
-    writing thirty rows, and means a session created before Batch S7 gets its shortlist
-    the moment it is next opened.
+    writing rows, and means a session created before Batch S7 gets its shortlist the
+    moment it is next opened. Since AE10 a night started for somebody is dealt as it is
+    sent, so "in neither diary" reads both people's diaries.
     """
     # Candidate loading and Send can arrive together, on different workers. Hold the
     # night's row before checking emptiness, as voting does, until the caller commits or

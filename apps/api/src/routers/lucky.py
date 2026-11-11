@@ -11,6 +11,8 @@ from src.models.watch_log import WatchLog
 from src.routers.movie_night import _session_for
 from src.routers.movies import Database, _enrich_list_items
 from src.schemas.lucky import LuckyRequest, LuckyResponse
+from src.services.movie_night.deal import NightFilters, night_filters
+from src.services.movie_night.sessions import participants
 
 router = APIRouter(prefix="/api/v1", tags=["feeling-lucky"])
 
@@ -37,14 +39,10 @@ async def deal_film(payload: LuckyRequest, user: CurrentUser, db: Database) -> L
         )
     if payload.sessionId is not None:
         night = await _session_for(db, payload.sessionId, user, must_be_open=True)
-        filters = night.filters or {}
-        # Same inclusive year/rating bounds as the night's seeded Archive shortlist.
-        if isinstance(filters.get("decadeFrom"), int):
-            query = query.where(Movie.year >= filters["decadeFrom"])
-        if isinstance(filters.get("decadeTo"), int):
-            query = query.where(Movie.year <= filters["decadeTo"])
-        if isinstance(filters.get("minRating"), int | float):
-            query = query.where(Movie.tmdb_rating >= filters["minRating"])
+        # The same filters as the night's own shortlist: AE10's four (under two hours, in
+        # neither diary, 4K, a genre) and the older year and rating bounds (#355).
+        people = await participants(db, night.id)
+        query = query.where(*night_filters(NightFilters.read(night.filters), people))
         # A random seed may be promoted; a person's existing suggestion is already taken.
         query = query.where(
             ~exists(
