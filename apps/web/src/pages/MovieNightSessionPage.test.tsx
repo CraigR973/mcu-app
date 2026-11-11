@@ -323,6 +323,22 @@ it('shows both people’s own watch and rating, shelf first, IMDb and a Letterbo
   expect(screen.getByText(/Information courtesy of/)).not.toBeNull()
 })
 
+it('opens each person’s page from their face and name, and You from the reader’s own — AE9', async () => {
+  mocks.fetchMovieNightCandidates.mockResolvedValue({ items: [{
+    ...RED_SHOES,
+    people: [
+      { personId: CRAIG, personName: 'Craig', lastWatchedAt: '2026-10-20', personalRating: 4.5 },
+      { personId: MARK, personName: 'Mark', lastWatchedAt: null, personalRating: null },
+    ],
+  }], total: 1 })
+  renderPage()
+  fireEvent.click(await screen.findByRole('button', { name: /The Red Shoes/, expanded: false }))
+  const people = within(screen.getByRole('list', { name: 'Watch history and personal ratings' }))
+  // Craig is reading: Mark's face and name open Mark's page; Craig's own open You.
+  expect(people.getByRole('link', { name: /Mark/ }).getAttribute('href')).toBe(`/people/${MARK}`)
+  expect(people.getByRole('link', { name: /Craig/ }).getAttribute('href')).toBe('/you')
+})
+
 it('says when a score and runtime are unavailable and keeps a Letterboxd search link', async () => {
   mocks.fetchMovieNightCandidates.mockResolvedValue({ items: [{ ...RED_SHOES, runtimeMinutes: null }], total: 1 })
   renderPage()

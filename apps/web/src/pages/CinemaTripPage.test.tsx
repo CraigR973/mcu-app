@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { detailFixture } from './cinema-films-fixture'
-import { ALEX, CINEMA_NOW, MARK, TRIP, tripFixture } from './cinema-trip-fixture'
+import { ALEX, CINEMA_NOW, CRAIG, MARK, TRIP, tripFixture } from './cinema-trip-fixture'
 
 const state = vi.hoisted(() => ({ online: true }))
 const api = vi.hoisted(() => ({
@@ -59,6 +59,16 @@ describe('a cinema trip, as an invitee reads it (AC5)', () => {
     expect(rows).toEqual(['CraigOrganising', 'AlexNo reply yet', 'Mark (you)No reply yet'])
     // An invitee has no organiser's controls.
     expect(screen.queryByRole('region', { name: 'Change the trip' })).toBeNull()
+  })
+
+  it('opens each person’s page from their name, and You from the reader’s own — AE9', async () => {
+    api.fetchCinemaTrip.mockResolvedValue(tripFixture())
+    setup()
+    const going = within(await screen.findByRole('region', { name: 'Who’s going' }))
+    // Mark is reading: the organiser's and Alex's names open their pages; his own opens You.
+    expect(going.getByRole('link', { name: 'Craig' }).getAttribute('href')).toBe(`/people/${CRAIG}`)
+    expect(going.getByRole('link', { name: 'Alex' }).getAttribute('href')).toBe(`/people/${ALEX}`)
+    expect(going.getByRole('link', { name: 'Mark (you)' }).getAttribute('href')).toBe('/you')
   })
 
   it('replies against the trip’s revision, and the answer redraws the page', async () => {
