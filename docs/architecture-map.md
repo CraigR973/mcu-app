@@ -620,3 +620,17 @@ flowchart TD
 `routers/people.py` is the one read, with `schemas/people.py`; `lib/people.personPath` decides
 where a name leads; `pages/PersonPage.tsx` draws it.
 
+## AE7, shipped 11 Nov (PR 148 `283d5bf`, PR 149 `9eeee8f`) — search that finds what you mean
+
+```mermaid
+flowchart TD
+    A["GET /search?q="] --> B["Alias? lotr, t2, mi ..."]
+    B --> C["search_fold the query"]
+    C --> D["Find: trigram on folded titles and names, full text"]
+    D --> E["Rank: same title, starts so, close in whole words, a person, starts a word, the text"]
+    E --> F["Same response as before"]
+```
+
+`services/search.py` builds both steps; migration 077 holds `search_fold()` and the four trigram
+indexes; `routers/movies.search_movies` adds the copy count and the total, as before.
+

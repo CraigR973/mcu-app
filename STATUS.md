@@ -2,8 +2,8 @@
 
 ## Now
 
-**11 Nov, 01:17 GMT: Group AE sitting 4 done; AE8 and AE9 shipped (PR 145 `d3fbaf6`, PR 146 `ce4b73a`)
-after sittings 1 and 2 (AE1 to AE6; the Omniplex's enable owed).** TMDB lookups have their
+**11 Nov, 03:00 GMT: Group AE sittings 1 to 4 done; AE7 shipped (PR 148 `283d5bf`, ranking fix
+PR 149 `9eeee8f`) after AE8 and AE9; the Omniplex's enable owed.** TMDB lookups have their
 own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
 after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
 a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
@@ -15,8 +15,10 @@ chips that book, past times hidden, All / None for the cinemas, and listings and
 (#360). A cinema film's page links to Letterboxd and IMDb, and Propose a trip says beside each
 person whether they have seen it (#361). Craig and Mark now share one Needs you, each item
 saying whose it is, their own first (#363). Each person has a page, read-only, that
-names and faces lead to (#365). Production health, readiness and the web's version report
-`ce4b73a`. Sitting 3's AE7 (search) is next, proved in CI (#362). Group AE is ten batches in five sittings in
+names and faces lead to (#365). Search finds what was meant through a typo, a
+missing accent or a hyphen: titles first, then people, then the text (#366). Production health,
+readiness and the web's version report `9eeee8f`. Only sitting 5 (AE10) remains, waiting for Craig's
+picks. Group AE is ten batches in five sittings in
 `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -477,6 +479,17 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **11 Nov, 03:00 GMT — AE7 shipped (PR 148, `283d5bfbd1eab264627d84bbe76fe6d455680adc`; ranking fix PR 149, `9eeee8f0b11d3a1074e34413615c568ab5137f49`;
+  #366); sittings 1 to 4 done.** Search that finds what you mean: migration 077 (`pg_trgm`,
+  `unaccent`, `search_fold()`, four trigram indexes), six tiers (the same title, starting so, close in
+  whole words, a person, a title that only starts a word like it, the text) and a short alias list.
+  Local gate green without a database (ruff, mypy, API 1,702, shared 206, web 964, builds); the
+  migration, the search tests and `ae7.spec.ts` ran in CI only (#362). PR 148's first CI run proved
+  the migration and the 21 search tests, but the spec's clean-up only moved its copies to the Trash,
+  so `import-search`'s count failed; a second commit cleaned up for good, then all seven jobs green.
+  Its read-back on production found "bond" opening on Of Human Bondage, Bonnie and Clyde,
+  Bonekickers and Rita, Sue and Bob Too, above the Bond films: PR 149 makes a title close only in
+  whole words, its seven jobs green. Health, readiness and version.json on `9eeee8f`. Read-only after deploy (`mcu_readonly`, the deployed search), 03:00 GMT: migration 077, `pg_trgm` 1.6 and `unaccent` 1.1 installed, and EXPLAIN shows the trigram indexes in use. Each 8 Nov search opens on the right films: godf and godfathr on The Godfather trilogy, jurasic on Jurassic Park, hitchcok on Hitchcock (2012) and the two Hitchcock series and then his films, spiderman on Spider-Man (2002), leon on Léon, lotr on the three Lord of the Rings films, and bond on the Bond films, Joan of Arc 30th. On the server godfathr takes 4 ms, hitchcok 13 ms and bond 61 ms.
 - **11 Nov, 01:17 GMT — AE9 shipped (PR 146, `ce4b73ac55a5116d22f896c79a35af4431d6b361`, #365); sitting 4 done.** A page for each
   person: films watched this year and ever, the last ten diary entries, copies added lately, wants
   and loans, read-only and with nothing from Settings; your own opens You; Needs you's labels, a

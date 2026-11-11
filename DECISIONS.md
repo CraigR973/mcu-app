@@ -7833,3 +7833,32 @@ contemporaneous.
        (#364), and tests for the trip and movie night links. The branch was already pushed, and a
        pushed branch is never rewritten.
 
+366. **AE7 shipped: how search finds what you mean (11 Nov, PR 148 `283d5bf`, ranking fix PR 149
+     `9eeee8f`).** Drafting choices under #355, open to Craig's overrule:
+     - **Six tiers, in order**: the same title (folded, also without a leading "The", "A" or "An",
+       also with the spaces taken out, so "spiderman" is Spider-Man); a title starting so; a title
+       close to it in whole words (`pg_trgm`'s strict word similarity, 0.5); a person close to it
+       (word similarity, 0.6), a director or a billed part or a character, the best billed first; a
+       title that only shares the start of a word with it; then the full-text match on cast, crew,
+       genre and plot, as before. Ties read the same every time: title, year, id.
+     - **Whole words decide "close", found on production (PR 149).** With word similarity alone,
+       any word starting "bon" scored exactly 0.6 against "bond", so Of Human Bondage and Bonnie and
+       Clyde came before every Bond film. Finding stays loose ("godf" still finds The Godfather, which
+       only the looser test reaches); only the order changed. Comparing whole words when finding as
+       well was rejected for that reason.
+     - **One folding on both sides, in the database**: `search_fold()` lowers, takes accents off
+       and turns every run of anything but letters and digits into one space. It names unaccent's
+       dictionary itself so it can be immutable, which the indexes need.
+     - **Two steps**: the films each index finds (folded titles and people's names by trigram, the
+       text by its full-text index), then ranking for those alone, so a keystroke stays quick.
+     - **Aliases are a fixed list in code**: lotr, hp, sw, esb, rotj, t2, mi, bttf and potc, each
+       searched as the title it stands for. The two-letter ones take those exact keystrokes in the
+       top bar ("mi" lists Mission: Impossible until a third letter is typed).
+     - **The response is unchanged**, so no zod change; no table, so no grant for the read-only or
+       backup roles. The restore runbook and the E2E README name the two extensions.
+     - **Proved in CI only** (#362): pgserver has neither extension, so the local end-to-end suite
+       now stops at migration 077 until Craig chooses how the Mac gets them (`OWNER-ACTIONS.md`).
+     - **Landed as three commits over two PRs**: the feature; the fix CI found for the spec's
+       clean-up (a plain `DELETE` on `collection_items` only moves a copy to the Trash); and the
+       ranking fix. No pushed branch was rewritten.
+
