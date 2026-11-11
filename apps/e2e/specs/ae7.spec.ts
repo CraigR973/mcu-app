@@ -15,11 +15,17 @@ const test = base.extend<{ shelf: void }>({
     ]
     db.sql(films.map(film => `INSERT INTO movies (id,title,original_title,year,media_type) VALUES (${sql(film.id)},${sql(film.title)},${sql(film.title)},${String(film.year)},'film');
       INSERT INTO collection_items (id,movie_id,formats,location,condition) VALUES (${sql(randomUUID())},${sql(film.id)},'["blu_ray"]'::jsonb,'Lounge','good');`).join('\n'))
+    const ids = films.map(film => sql(film.id)).join(',')
     try {
       await use()
     } finally {
-      db.sql(`DELETE FROM collection_items WHERE movie_id IN (${films.map(film => sql(film.id)).join(',')});
-        DELETE FROM movies WHERE id IN (${films.map(film => sql(film.id)).join(',')})`)
+      // A plain DELETE on collection_items only moves a copy to the Trash (migration 013's
+      // trigger), so the films would stay referenced: remove both for good, as AD1's spec does,
+      // and leave nothing behind for the next case's counts.
+      db.sql(`BEGIN; SET LOCAL app.permanent_delete = 'on';
+        DELETE FROM collection_items WHERE movie_id IN (${ids});
+        DELETE FROM movies WHERE id IN (${ids}); COMMIT`)
+      expect(db.scalar(`SELECT count(*) FROM movies WHERE id IN (${ids})`)).toBe('0')
     }
   },
 })
