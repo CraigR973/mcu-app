@@ -7805,3 +7805,16 @@ contemporaneous.
      - **The read-back used the app's own role in a READ ONLY transaction**: the read loads
        profiles, whose PIN-hash column the read-only role cannot see.
 
+364. **CI's end-to-end job runs on Ubuntu 24.04, pinned (11 Nov, PR 147, `86ca201`).** GitHub moved
+     `ubuntu-latest` to Ubuntu 26.04 on 10 Nov. Playwright 1.60.0 has no browser builds for it, so
+     the E2E job failed at `playwright install` before any case ran; AE9's PR 146 met it first.
+     - **The E2E job is pinned to `ubuntu-24.04`**, the image the suite was last proved on. The six
+       other jobs already pass on 26.04 and stay on `ubuntu-latest`, as does the weekly backup.
+     - **Rejected: upgrading Playwright inside the fix.** New builds of all three engines, a
+       lockfile change and a new local browser download, in a change whose only job was to get
+       the gate running again.
+     - **Unpin with the Playwright upgrade that supports 26.04**, on its own branch, proved by a
+       full E2E run on `ubuntu-latest`.
+     - Closed out on its own before AE9 continued, as a red on `main` must be. AE9's branch, already
+       pushed, took the fix by merging `main`, not by a rebase, so nothing was force-pushed.
+

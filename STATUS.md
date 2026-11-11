@@ -476,6 +476,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **11 Nov, 00:21 GMT — CI's end-to-end job pinned to Ubuntu 24.04 (PR 147, `86ca20119378ee82b3d4e1b881f79aa59b2bf331`, #364).**
+  GitHub's `ubuntu-latest` became Ubuntu 26.04 late on 10 Nov, and Playwright 1.60.0 installs no
+  browsers there, so AE9's PR met an E2E job that stopped before its first case; its six other jobs
+  passed on 26.04. Main's 19:54 UTC run was the last on 24.04, green. The E2E job now runs on
+  `ubuntu-24.04`; the other six, and the weekly backup, stay on `ubuntu-latest`. PR 147's seven
+  jobs green; on 24.04 Chromium 108, Firefox 107 and WebKit 106 passed with only the three
+  documented skips, and the jobs 9. Health, readiness and version.json on `86ca201`.
 - **10 Nov, 19:54 GMT — Session handoff, mid sitting 4.** AE9 (a page for each person) is built on
   `feat/ae9-person-pages`: three wip commits on `71596ca`, unpushed, its PR body in
   `scratchpad/ae9-pr-body.md`. Its local gate had passed ruff and mypy when the session stopped;
