@@ -98,7 +98,9 @@ test('AE10 a night nobody touched for two days closes itself when nights are rea
   try {
     await craig.get('/movie-night')
     expect(db.scalar(`SELECT status FROM movie_night_sessions WHERE id = ${sql(night)}`)).toBe('ended')
-    expect(db.scalar(`SELECT ended_at_utc = created_at + interval '2 days' FROM movie_night_sessions WHERE id = ${sql(night)}`)).toBe('t')
+    // Closed when it became due, not when it was noticed. A count, not a boolean: the harness
+    // reads a boolean back as "True", not psql's "t".
+    expect(db.scalar(`SELECT count(*) FROM movie_night_sessions WHERE id = ${sql(night)} AND ended_at_utc = created_at + interval '2 days'`)).toBe('1')
     const { page } = await signedIn('Craig')
     await page.goto(`/movie-night/${night}`)
     await expect(page.getByText(/this one has ended/)).toBeVisible()
