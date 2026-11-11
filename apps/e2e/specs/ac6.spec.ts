@@ -1,5 +1,5 @@
 import { exerciseCinemaDigest } from '../support/cinema-digest.ts'
-import { expect, PINS, test } from '../support/test.ts'
+import { expect, PINS, settleEveryPage, test } from '../support/test.ts'
 
 test('AC6 scheduled cinema digest opens New this week, both themes at 375 px, and retains its settings', async ({ api, signedIn, db, browser }, testInfo) => {
   const fixture = await exerciseCinemaDigest(await api('Craig'), await api('Mark'), db)
@@ -21,6 +21,7 @@ test('AC6 scheduled cinema digest opens New this week, both themes at 375 px, an
       await context.close()
     }
     const signedOut = await browser.newContext({ serviceWorkers: 'block' })
+    settleEveryPage(signedOut)
     const entry = await signedOut.newPage()
     await entry.goto(fixture.url)
     await entry.getByLabel('Name').fill('Craig')
@@ -33,7 +34,12 @@ test('AC6 scheduled cinema digest opens New this week, both themes at 375 px, an
     await page.goto('/settings/notifications')
     await expect(page.getByRole('switch', { name: 'Cinemas', exact: true })).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByRole('switch', { name: 'Older films only' })).toHaveAttribute('aria-checked', 'true')
-    await page.getByRole('switch', { name: 'Cinemas', exact: true }).click()
+    const cinemas = page.getByRole('switch', { name: 'Cinemas', exact: true })
+    await cinemas.click()
+    // The switch moves only when the server has answered, so this is the save landing. Older films
+    // only is disabled while any save is in flight, so on its own it proved nothing: on 10 Nov
+    // WebKit's reload cancelled the save it had seen go out (#367).
+    await expect(cinemas).toHaveAttribute('aria-checked', 'false')
     await expect(page.getByRole('switch', { name: 'Older films only' })).toBeDisabled()
     await page.reload()
     await expect(page.getByRole('switch', { name: 'Cinemas', exact: true })).toHaveAttribute('aria-checked', 'false')

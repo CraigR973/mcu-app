@@ -4,6 +4,7 @@ import { test as base, expect, type BrowserContext, type Page } from '@playwrigh
 import { CONTROL_ORIGIN, PINS, RUN_DB, WORLD_DIR, type Person } from '../harness/env.ts'
 import { dbtool } from '../harness/stack.ts'
 import { Api, login, type Tokens } from './api.ts'
+import { settleEveryPage } from './settle.ts'
 import { world } from './world.ts'
 
 // Signing in is limited to five a quarter-hour per person, charged even when it works. A case
@@ -40,6 +41,12 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  // The plain `page` comes from this context: it too waits to settle before it is left.
+  context: async ({ context }, use) => {
+    settleEveryPage(context)
+    await use(context)
+  },
+
   signedIn: async ({ browser }, use) => {
     const opened: BrowserContext[] = []
     await use(async (person, options) => {
@@ -49,6 +56,8 @@ export const test = base.extend<Fixtures>({
       // without one; the offline cases ask for it.
       const context = await browser.newContext({ serviceWorkers: options?.worker ? 'allow' : 'block' })
       opened.push(context)
+      // WebKit cancels a page's loads when a navigation starts, so none starts mid-load (#367).
+      settleEveryPage(context)
       await context.addInitScript((t) => {
         try {
           localStorage.setItem('mcu.accessToken', t.accessToken)
@@ -104,5 +113,5 @@ export const test = base.extend<Fixtures>({
   ],
 })
 
-export { expect, PINS }
+export { expect, PINS, settleEveryPage }
 export type { Person }

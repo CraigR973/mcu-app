@@ -174,9 +174,11 @@ test('cinemas is reachable from Home and mobile You while retaining five bottom 
   await page.getByRole('link', { name: 'You: every other page, and your account' }).click()
   await page.getByRole('link', { name: 'At the cinema', exact: true }).click()
   await expect(page).toHaveURL(/\/movie-night\/cinema$/)
-  // The old address still arrives.
+  // The old address still arrives, at the screen and not only its address: the address changes
+  // before the screen's code has loaded, and leaving then cancelled that code in WebKit (#367).
   await page.goto('/cinemas')
   await expect(page).toHaveURL(/\/movie-night\/cinema$/)
+  await expect(page.getByRole('region', { name: 'At the cinema' })).toBeVisible()
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/dashboard')
   const sidebar = page.getByRole('navigation', { name: 'Application destinations' })
