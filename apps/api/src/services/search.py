@@ -1,15 +1,19 @@
 """Search that finds what you mean — AE7 (#355).
 
 The search page and the top bar ask one question: which films on the shelf does this mean? A
-title answers first: the same title, then one that starts so, then one close to it (a typo, a
-missing accent or hyphen). A person answers next: a director, a cast member or a character whose
-name is close to it ("hitchcok"; "bond" for James Bond), the best billed first. The full-text match
-on cast, crew, genre and plot answers last, as it alone did before.
+title answers first: the same title, then one that starts so, then one close to it in whole words
+(a typo, a missing accent or hyphen). A person answers next: a director, a cast member or a
+character whose name is close to it ("hitchcok"; "bond" for James Bond), the best billed first.
+Then a title that only shares the start of a word with it, and last the full-text match on cast,
+crew, genre and plot, as it alone did before.
 
 Every comparison folds both sides with the database's own ``search_fold()`` (migration 077):
 lower case, no accents, every run of anything but letters and digits one space. "Spider-Man" and
 "spiderman" also meet with the spaces taken out. ``pg_trgm``'s ``<%`` operator (word similarity,
-its threshold 0.6 by default) is the "close" test, and the trigram indexes serve it.
+its threshold 0.6 by default) finds what a query could mean, and the trigram indexes serve it.
+A title is "close" only by ``<<%`` (strict word similarity, 0.5), which compares whole words: on
+production on 11 Nov, ``<%`` alone called "Bonnie and Clyde" and "Of Human Bondage" close to
+"bond", above the Bond films, as any word starting "bon" scores exactly its 0.6.
 """
 
 from __future__ import annotations
@@ -35,8 +39,9 @@ ALIASES: dict[str, str] = {
     "potc": "pirates of the caribbean",
 }
 
-#: The order answers come in: a title the same, one starting so, one close; a person; the text.
-EXACT, STARTS, CLOSE, PERSON, TEXT = 1, 2, 3, 4, 5
+#: The order answers come in: a title the same, one starting so, one close in whole words; a
+#: person; a title that only shares the start of a word; the text.
+EXACT, STARTS, CLOSE, PERSON, NEAR, TEXT = 1, 2, 3, 4, 5, 6
 
 
 def searched(query: str) -> str:
@@ -52,6 +57,10 @@ def _fold(
 
 def _close(query: ColumnElement[str], target: ColumnElement[str]) -> ColumnElement[bool]:
     return query.op("<%")(target)
+
+
+def _close_in_words(query: ColumnElement[str], target: ColumnElement[str]) -> ColumnElement[bool]:
+    return query.op("<<%")(target)
 
 
 def ranked(query: str, *filters: ColumnElement[bool]) -> Select[tuple[Movie, int, float, float]]:
@@ -122,13 +131,16 @@ def ranked(query: str, *filters: ColumnElement[bool]) -> Select[tuple[Movie, int
             *(name.startswith(compact_q) for name in compact),
         ),
     )
-    close = and_(some, or_(_close(q, title), _close(q, original)))
+    close = and_(some, or_(_close_in_words(q, title), _close_in_words(q, original)))
     named = people.c.movie_id.is_not(None)
+    # Found by the looser test alone: it shares the start of a word, as "Bonnie" does "bond".
+    near = and_(some, or_(_close(q, title), _close(q, original)))
     tier = case(
         (exact, EXACT),
         (starts, STARTS),
         (close, CLOSE),
         (named, PERSON),
+        (near, NEAR),
         else_=TEXT,
     ).label("tier")
     word = func.greatest(func.word_similarity(q, title), func.word_similarity(q, original))
@@ -136,11 +148,13 @@ def ranked(query: str, *filters: ColumnElement[bool]) -> Select[tuple[Movie, int
     one = case(
         (or_(exact, starts, close), word),
         (named, people.c.closeness),
+        (near, word),
         else_=func.ts_rank_cd(Movie.search_vector, tsquery),
     ).label("rank_one")
     two = case(
         (or_(exact, starts, close), whole),
         (named, -people.c.billing),
+        (near, whole),
         else_=0.0,
     ).label("rank_two")
     return (

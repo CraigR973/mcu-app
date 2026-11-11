@@ -62,6 +62,9 @@ async def shelf(api_session: AsyncSession) -> dict[str, Movie]:
         ("GoldenEye", 1995, "James Bond takes on a rogue agent."),
         ("Moonraker", 1979, "Bond follows a space shuttle."),
         ("Joan of Arc", 1948, None),
+        # Titles that only start a word like "bond": production put them first on 11 Nov.
+        ("Of Human Bondage", 1934, None),
+        ("Bonnie and Clyde", 1967, None),
         ("The Thing", 1982, None),
         ("The Thing", 2011, None),
     ]:
@@ -116,6 +119,18 @@ async def test_bond_lists_the_bond_films_before_joan_of_arc(
     assert found.index("Joan of Arc (1948)") > max(
         found.index("GoldenEye (1995)"), found.index("Moonraker (1979)")
     )
+
+
+async def test_bond_puts_the_bond_films_before_titles_that_only_start_like_it(
+    client: AsyncClient, shelf: dict[str, Movie]
+) -> None:
+    """A word starting "bon" is close enough to be found, but a title is close only in whole
+    words, so "Of Human Bondage" and "Bonnie and Clyde" follow every film the name is in."""
+    found = await titles(client, "bond")
+    bond_films = max(found.index("GoldenEye (1995)"), found.index("Moonraker (1979)"))
+    for title in ("Of Human Bondage (1934)", "Bonnie and Clyde (1967)"):
+        assert found.index(title) > bond_films
+        assert found.index(title) > found.index("Joan of Arc (1948)")
 
 
 async def test_a_title_ranks_before_a_person_and_both_before_the_plot(
