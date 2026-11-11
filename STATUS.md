@@ -2,13 +2,14 @@
 
 ## Now
 
-**11 Nov, 03:00 GMT: Group AE sittings 1 to 4 done; AE7 shipped (PR 148 `283d5bf`, ranking fix
-PR 149 `9eeee8f`) after AE8 and AE9; the Omniplex's enable owed.** TMDB lookups have their
-own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
-after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
-a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
-(#359). **Owed after the 11 Nov 08:00 UTC run:** its coverage read, its one enable (#355) and the
-read-back. Closest to complete names what each set is missing, and a missing film can be set not
+**11 Nov, 09:19 GMT: the Omniplex on Renfrew Street is switched on, a tenth cinema; Group AE
+sittings 1 to 4 done, AE4's owed step included.** The 08:00 UTC run (08:04–08:05 GMT) read it while
+off: 311 showings over seven days (11–17 Nov), as the four ODEONs on the same CinemaTimes source.
+The existing enable then switched on exactly one cinema, audited to Craig (#355, #359), and both
+people's At the cinema list carries its 311 times, each with a ticket link. TMDB lookups have their
+own 120 requests a run beside the cinema sites' unchanged 120 (that run: 32 and 52, none left
+queued); "Access Film Club:", a full stop after an anniversary bracket and CBeebies pantos read as
+asked. Closest to complete names what each set is missing, and a missing film can be set not
 to count (#358); Highlights opens on Recently added (#357); a second disc asks "one box or a
 separate copy?" (#356). At the cinema now opens on today: a sticky date strip, each film's times by cinema as
 chips that book, past times hidden, All / None for the cinemas, and listings and events folded
@@ -16,9 +17,9 @@ chips that book, past times hidden, All / None for the cinemas, and listings and
 person whether they have seen it (#361). Craig and Mark now share one Needs you, each item
 saying whose it is, their own first (#363). Each person has a page, read-only, that
 names and faces lead to (#365). Search finds what was meant through a typo, a
-missing accent or a hyphen: titles first, then people, then the text (#366). Production health,
-readiness and the web's version report `9eeee8f`. Only sitting 5 (AE10) remains, waiting for Craig's
-picks. Group AE is ten batches in five sittings in
+missing accent or a hyphen: titles first, then people, then the text (#366). Production health
+and readiness were on `34539fe` when the Omniplex was switched on. Only sitting 5 (AE10) remains,
+waiting for Craig's picks. Group AE is ten batches in five sittings in
 `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -479,6 +480,22 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **11 Nov, 09:19 GMT — The Omniplex switched on, AE4's owed step (#355, #359).** The 08:00 UTC
+  run (08:04–08:05 GMT, `partial` as on the four mornings before) read ten cinemas, the Omniplex
+  among them while off: 311 showings added, seven days observed (11–17 Nov), none failed. By the
+  enable step's own test (observed, not failed, read within 30 hours, today or later) it had seven
+  fresh accepted days, as each of the four ODEONs had, and no earlier enable in `admin_actions`.
+  At 09:19:31 GMT the existing command, `refresh_cinemas --enable --confirm-count 1` with Craig as
+  actor, run inside the live API container over `railway ssh` as AB6's enable was, switched on
+  exactly one cinema: `{"changed": 1}`, one `admin_actions` row (Craig, `collectionEnabled` false
+  to true). No manual refresh; nothing else enabled. Read-only after (`mcu_readonly`, READ ONLY
+  transactions), 09:19–09:22 GMT: the Omniplex on and no cinema left awaiting a first enable; Craig's
+  and Mark's films lists, as the deployed code (`34539fe`) builds them, each carry its 311 times
+  across 29 films, all with a ticket link, and every cinema's times match the 2,266 stored showings
+  still to start; the run's report (its own log line) says `siteRequests` 52 and `metadataRequests`
+  32, 84 in all, with 0 lookups pending; the nine others unchanged (on, one audit each from 3 Nov,
+  the same showing counts). The web's cinema filter starts with every cinema, so the Omniplex shows
+  for both without a change of filter.
 - **11 Nov, 03:00 GMT — AE7 shipped (PR 148, `283d5bfbd1eab264627d84bbe76fe6d455680adc`; ranking fix PR 149, `9eeee8f0b11d3a1074e34413615c568ab5137f49`;
   #366); sittings 1 to 4 done.** Search that finds what you mean: migration 077 (`pg_trgm`,
   `unaccent`, `search_fold()`, four trigram indexes), six tiers (the same title, starting so, close in

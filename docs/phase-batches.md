@@ -5579,7 +5579,7 @@ batch sets its sitting's effort. Resolve an unavailable model with Craig.
 | Sitting | Ordered work and checkpoints | Claude Code / Codex |
 |---|---|---|
 | 1 | AE1 → AE2 → AE3 | Opus 5.5 `high` / GPT-5.6 Sol High |
-| 2 | AE4 → AE5 → AE6; AE4's owed enable and read-back the morning after it deploys | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
+| 2 | AE4 → AE5 → AE6; AE4's owed enable and read-back the morning after it deploys (done 11 Nov, 09:19 GMT) | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
 | 3 | AE7 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
 | 4 | AE8 → AE9 | Opus 5.5 `high` / GPT-5.6 Sol High |
 | 5 | **checkpoint: Craig picks from AE10's sketch** → AE10 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
@@ -5597,7 +5597,7 @@ stop (the movie night picks); one live write (enabling the Omniplex, covered by 
 | ~~AE1~~ | ~~A copy's formats: one box or a separate copy (point 10), 🟢 ~1.5 h~~ | ~~Sonnet 5.5 `high` / GPT-5.6 Terra High~~ | **shipped** 9 Nov: PR 139, merge `aa4242ebf248841cd975e3fb9ca2bec617768766` |
 | ~~AE2~~ | ~~Home: the rewatch card, the estimate note, Highlights opens on Recently added (points 1, 2, 15, 17), 🟢 ~2.5 h~~ | ~~Sonnet 5.5 `high` / GPT-5.6 Terra High~~ | **shipped** 10 Nov: PR 140, merge `f0827ff09cdb989d8215f07c90b12ae28965693c` |
 | ~~AE3~~ | ~~Closest to complete names what is missing; a film can be set not to count (point 3), 🟡 ~3 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 10 Nov: PR 141, merge `1b19579866b170241553c1f37987e8b153966198` |
-| ~~AE4~~ | ~~Cinema sources: TMDB's own budget, three title patterns, the Omniplex (points 7, 18), 🔴 3–5 h~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 10 Nov: PR 142, merge `ae36c41130d213820270a682fd3609598d2584b4`; the Omniplex's one enable is owed after the next morning run |
+| ~~AE4~~ | ~~Cinema sources: TMDB's own budget, three title patterns, the Omniplex (points 7, 18), 🔴 3–5 h~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 10 Nov: PR 142, merge `ae36c41130d213820270a682fd3609598d2584b4`; the Omniplex switched on 11 Nov, 09:19 GMT, and read back |
 | ~~AE5~~ | ~~The day-by-day cinema view, All / None, folded sections (points 4, 8, 13), 🟡 ~3 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 10 Nov: PR 143, merge `8641036fd8a813ba34abf59d75ddd2a4d31198df` |
 | ~~AE6~~ | ~~Cinema film page: IMDb and Letterboxd; who has seen it when inviting (points 5, 6), 🟡 ~2.5 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 10 Nov: PR 144, merge `4b93f06d72bb3467b32cb687cdc36e86f0143051` |
 | ~~AE7~~ | ~~Search that finds what you mean (point 12), 🔴 3–4 h~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 11 Nov: PR 148, merge `283d5bfbd1eab264627d84bbe76fe6d455680adc`; ranking fix PR 149, `9eeee8f0b11d3a1074e34413615c568ab5137f49` |
@@ -5723,14 +5723,25 @@ whose only missing films do not count is complete and leaves the row. Audited as
 ### AE4 — Cinema sources: TMDB's own budget, three title patterns, the Omniplex 🔴
 
 **Shipped 10 Nov, 10:25 GMT: PR 142, merge `ae36c41130d213820270a682fd3609598d2584b4`; production health and readiness on it.** Every
-criterion below is met but the owed morning step. TMDB lookups have their own 120 a run beside the
+criterion below is met, the owed morning step included (11 Nov). TMDB lookups have their own 120 a run beside the
 sites' unchanged 120, and the run report records both. The three titles read as asked. The
 Omniplex is a tenth cinema (migration 076, switched off). Found while building: the morning run
 read only switched-on cinemas, so a new one could never earn the fresh coverage the enable step
 needs. A cinema awaiting its first enable is now read beside a switched-on cinema on its own source,
-and stays out of every view and the digest until enabled (#359). Read-only after deploy (`mcu_readonly`): migration 076, ten cinemas with nine switched on, and the Omniplex off with no enable in `admin_actions`, so the 11 Nov 08:00 UTC run reads it. **Owed after the 11 Nov 08:00 UTC
-run:** a read-only check of its coverage, the existing enable for exactly one cinema (#355 is the
-word), and the read-back.
+and stays out of every view and the digest until enabled (#359). Read-only after deploy (`mcu_readonly`): migration 076, ten cinemas with nine switched on, and the Omniplex off with no enable in `admin_actions`, so the 11 Nov 08:00 UTC run reads it.
+
+**Owed step done 11 Nov, 09:19 GMT (#355 the word).** Coverage, read-only: the 08:00 UTC run
+(08:04–08:05 GMT) read the Omniplex while off, 311 showings, seven days observed (11–17 Nov), none
+failed, so seven fresh accepted days by the enable step's own test, as each ODEON had; no earlier
+enable. Enable: the existing `refresh_cinemas --enable --confirm-count 1`, actor Craig, run inside
+the live API container over `railway ssh` as AB6's was, at 09:19:31 GMT: `{"changed": 1}` and one
+`admin_actions` row (Craig, `collectionEnabled` false to true). No manual refresh; nothing else
+enabled. Read-back, read-only (`mcu_readonly`, READ ONLY transactions; the cinema view loads no
+profile), 09:19–09:22 GMT: the venue on, nothing left awaiting a first enable; Craig's and Mark's
+films lists, as the deployed code (`34539fe`) builds them, each carry its 311 times across 29 films,
+all with a ticket link, and every cinema's times match the 2,266 stored showings still to start;
+the lookup queue at 0 pending; the run report's `siteRequests` 52 and `metadataRequests` 32, each
+within its 120; the nine unchanged (on, one audit each from 3 Nov, the same showing counts).
 
 - **Budget (#355, changing AC3's 48 in #335):** TMDB lookups get their own cap of 120 requests a
   run, separate from the unchanged 120-request ceiling on cinema-site reads, which the programme
