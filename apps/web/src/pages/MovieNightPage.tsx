@@ -212,10 +212,15 @@ function AtHome() {
           >
             {/* AE10 (#355), proposal A: who is watching, as "Propose a trip" asks; nobody is
                 ticked until you tick them, and whoever is ticked is sent it as it starts. */}
-            <fieldset className="space-y-2">
+            <fieldset className="space-y-2" aria-busy={state === 'loading'}>
               <legend className="field-label">Who’s watching</legend>
               {state === 'loading' ? (
-                <p className="text-sm text-muted-foreground">Finding who can be sent it…</p>
+                // One row, the picker's own height, while the people load: with two people the
+                // list is one row, so nothing below it moves when they arrive. A Start tapped
+                // as they arrived used to land on the space the button had just left (CI, 11 Nov).
+                <ul className="rounded-md border border-border" aria-label="Who can be sent it">
+                  <li className="flex min-h-12 items-center pl-3 text-sm text-muted-foreground">Finding who can be sent it…</li>
+                </ul>
               ) : (
                 <PeoplePicker
                   people={people.map((person) => ({ profileId: person.id, displayName: person.displayName, isYou: false }))}

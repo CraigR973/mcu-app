@@ -178,3 +178,16 @@ describe('MovieNightPage — AE10 (#355)', () => {
     )
   })
 })
+
+it('keeps one row’s room for who is watching while it loads, so Start does not move (AE10)', async () => {
+  let answer!: (value: unknown) => void
+  mocks.fetchMovieNights.mockReturnValue(new Promise((resolve) => { answer = resolve }))
+  renderPage()
+
+  const waiting = await screen.findByRole('list', { name: 'Who can be sent it' })
+  expect(within(waiting).getAllByRole('listitem')).toHaveLength(1)
+  expect(waiting.querySelector('li')?.className).toContain('min-h-12')
+  answer({ items: [], total: 0, people: [{ id: '22222222-2222-4222-8222-222222222222', displayName: 'Mark' }] })
+  expect(await screen.findByRole('checkbox', { name: 'Mark' })).not.toBeNull()
+  expect(screen.queryByRole('list', { name: 'Who can be sent it' })).toBeNull()
+})
