@@ -7818,3 +7818,18 @@ contemporaneous.
      - Closed out on its own before AE9 continued, as a red on `main` must be. AE9's branch, already
        pushed, took the fix by merging `main`, not by a rebase, so nothing was force-pushed.
 
+365. **AE9 shipped: a page for each person (11 Nov, PR 146, `ce4b73a`).** Drafting choices under #355,
+     open to Craig's overrule:
+     - **Open to anyone signed in, read-only**, with exactly these fields: name, films watched this
+       year and ever, the last ten diary entries, the last ten copies added and still owned, wants
+       (twenty, and the total) and the discs they have or asked for. Nothing from Settings.
+     - **Counts are different films**, this calendar year in London; a rewatch counts once.
+     - **Your own page opens You**, without a request; an inactive profile is not found.
+     - **Needs you's label is a link of its own**, beside the row's; Most rewatched's names sit
+       below the film card, outside its link, each with an additive `personId`.
+     - **The read-back used the app's own role in a READ ONLY transaction**, as the read loads a
+       profile whose PIN-hash column the read-only role cannot see.
+     - **Landed as three commits, not one**: the feature, a merge of `main` for the CI runner fix
+       (#364), and tests for the trip and movie night links. The branch was already pushed, and a
+       pushed branch is never rewritten.
+

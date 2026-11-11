@@ -607,3 +607,16 @@ flowchart TD
 `routers/needs_you.py` works out each item's owner (`shelf_keepers`, `needs_you_items`,
 `shared_trips`); `services/assigned_reviews` widens reads with `shared_with`, never writes.
 
+## AE9, shipped 11 Nov (PR 146, `ce4b73a`) — a page for each person
+
+```mermaid
+flowchart TD
+    A[Needs you label / trip people / movie night people / Most rewatched names] --> B{Is it you?}
+    B -->|Yes| C[You]
+    B -->|No| D["/people/id"]
+    D --> E["GET /people/id: counts, diary, added, wants, loans"]
+```
+
+`routers/people.py` is the one read, with `schemas/people.py`; `lib/people.personPath` decides
+where a name leads; `pages/PersonPage.tsx` draws it.
+

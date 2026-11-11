@@ -2,8 +2,8 @@
 
 ## Now
 
-**10 Nov, 19:39 GMT: Group AE sitting 4 under way; AE8 shipped (PR 145, `d3fbaf6`) after sittings 1
-and 2 (AE1 to AE6; the Omniplex's enable owed).** TMDB lookups have their
+**11 Nov, 01:17 GMT: Group AE sitting 4 done; AE8 and AE9 shipped (PR 145 `d3fbaf6`, PR 146 `ce4b73a`)
+after sittings 1 and 2 (AE1 to AE6; the Omniplex's enable owed).** TMDB lookups have their
 own 120 requests a run beside the cinema sites' unchanged 120; "Access Film Club:", a full stop
 after an anniversary bracket and CBeebies pantos read as asked; the Omniplex on Renfrew Street is
 a tenth cinema, read by the morning run while it awaits its first enable and hidden until then
@@ -14,8 +14,9 @@ separate copy?" (#356). At the cinema now opens on today: a sticky date strip, e
 chips that book, past times hidden, All / None for the cinemas, and listings and events folded
 (#360). A cinema film's page links to Letterboxd and IMDb, and Propose a trip says beside each
 person whether they have seen it (#361). Craig and Mark now share one Needs you, each item
-saying whose it is, their own first (#363). Production health, readiness and the web's version
-report `d3fbaf6`. AE9 (a page for each person) is next, then sitting 3's AE7 (#362). Group AE is ten batches in five sittings in
+saying whose it is, their own first (#363). Each person has a page, read-only, that
+names and faces lead to (#365). Production health, readiness and the web's version report
+`ce4b73a`. Sitting 3's AE7 (search) is next, proved in CI (#362). Group AE is ten batches in five sittings in
 `docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
 (`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
@@ -476,6 +477,15 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **11 Nov, 01:17 GMT — AE9 shipped (PR 146, `ce4b73ac55a5116d22f896c79a35af4431d6b361`, #365); sitting 4 done.** A page for each
+  person: films watched this year and ever, the last ten diary entries, copies added lately, wants
+  and loans, read-only and with nothing from Settings; your own opens You; Needs you's labels, a
+  trip's people, movie night's people and Most rewatched's names lead to it. Local gate green
+  (API 2,783 on Postgres, web 964, shared 206; AE9, AE8, AC1, AD1, AC5, movie night, cinemas, AC2
+  and AE2 in Chromium and Firefox, where AC1's and AC2's first cases timed out while the Mac
+  swapped and passed on rerun). CI's first run met the runner change fixed by #364; with that fix
+  merged in and a commit testing the trip and movie night links, its seven jobs green. Health,
+  readiness and version.json on `ce4b73a`. Read-only after deploy (the app's own role in a READ ONLY transaction), 01:17 GMT: Craig reads Mark's page as 201 films this year and 918 ever, ten diary entries to 9 Nov, his ten latest copies (of 60 added in the app), no wants and no discs; Mark reads Craig's as 64 this year and 501 ever, ten diary entries to 27 Oct, no copies added in the app, 10 wants and the 2 discs he has. Every count matches the tables.
 - **11 Nov, 00:21 GMT — CI's end-to-end job pinned to Ubuntu 24.04 (PR 147, `86ca20119378ee82b3d4e1b881f79aa59b2bf331`, #364).**
   GitHub's `ubuntu-latest` became Ubuntu 26.04 late on 10 Nov, and Playwright 1.60.0 installs no
   browsers there, so AE9's PR met an E2E job that stopped before its first case; its six other jobs
