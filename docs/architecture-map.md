@@ -634,3 +634,20 @@ flowchart TD
 `services/search.py` builds both steps; migration 077 holds `search_fold()` and the four trigram
 indexes; `routers/movies.search_movies` adds the copy count and the total, as before.
 
+## AE10, shipped 11 Nov (PR 151 `6c62136`) — movie night that reaches a match
+
+```mermaid
+flowchart TD
+    A["Start form: who is watching, filters"] --> B["POST /movie-night: night, people, push at once"]
+    B --> C["Deal: up to 4 rewatch picks, the rest in neither diary"]
+    C --> D["Night page: shortlist, why each film, Mark has added 3"]
+    D --> E["Match: shelf, running time"]
+    E --> F["POST /movie-night/id/log: one viewing each"]
+    F --> G["Letterboxd import claims it, no second row"]
+    H["List or open nights"] --> I["Close untouched nights two days on"]
+```
+
+`services/movie_night/deal.py` deals and holds the filters (Feeling lucky reads them too);
+`presence.py` stamps and counts; `diary.py` logs the match; `closing.py` closes untouched nights;
+`services/letterboxd/importer.claim_app_viewing` merges; migration 078 holds the three columns.
+

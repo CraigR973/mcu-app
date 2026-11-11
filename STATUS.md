@@ -2,6 +2,17 @@
 
 ## Now
 
+**11 Nov, 23:04 GMT: AE10 shipped, movie night that reaches a match (PR 151 `6c62136`, #368);
+Group AE is done, all ten batches.** Craig picked all five proposals. A night is dealt ten films,
+not thirty at random: up to four someone in it rated 4½ or 5, the rest in neither diary, each
+saying why, under the start form's new filters (Under two hours, In neither diary, 4K, a genre),
+which Feeling lucky on the night keeps to as well. Who is watching is ticked as it starts and
+pushed at once. The night says "Mark has added 3 · choosing now", never which films. The match
+names the shelf and running time and logs it for both; the Letterboxd sync gives its entry to that
+viewing instead of doubling it. A night nobody voted on closes two days after it started or its
+planned start, when nights are read. Read back on production at 23:05 GMT through the read-only role: migration 078's three columns are readable by the read-only and backup roles, and `invite_token` is still withheld; the open 6 Nov night, untouched, closes at the first visit to Movie night, which nobody had made yet. Not checked yet: a real phone, and the first real
+night with the new list.
+
 **11 Nov, 17:42 GMT: WebKit's four end-to-end flakes of 10 Nov are fixed (PR 150, #367).** WebKit
 cancels everything a page has in flight the moment a navigation starts. So the harness's `goto`
 and `reload` now wait for the page to settle, and AC6 and the cinemas case wait for what they
@@ -24,10 +35,10 @@ person whether they have seen it (#361). Craig and Mark now share one Needs you,
 saying whose it is, their own first (#363). Each person has a page, read-only, that
 names and faces lead to (#365). Search finds what was meant through a typo, a
 missing accent or a hyphen: titles first, then people, then the text (#366). Production health
-and readiness were on `34539fe` when the Omniplex was switched on. Only sitting 5 (AE10) remains,
-waiting for Craig's picks. Group AE is ten batches in five sittings in
-`docs/phase-batches.md` (#355); AE10's movie night sketch is with Craig for his picks
-(`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`). Mark's answers on Contagion, King Arthur
+and readiness were on `34539fe` when the Omniplex was switched on. Sitting 5 (AE10) followed the
+same evening, on Craig's picks. Group AE is ten batches in five sittings in
+`docs/phase-batches.md` (#355); AE10's movie night sketch is
+`docs/reviews/ae10-movie-night-sketch-2026-11-09.md`. Mark's answers on Contagion, King Arthur
 and Silent Running are in `OWNER-ACTIONS.md`.
 
 **9 Nov, 18:33 GMT: Mark's Letterboxd username is saved at Craig's explicit request (#354).**
@@ -494,6 +505,22 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **11 Nov, 23:04 GMT — AE10 shipped (PR 151, `6c621366431684a83e11afd164cecacd263ee450`; #368); Group AE done.** Movie night
+  that reaches a match, all five of Craig's picks, built B, A, D, C, E; migration 078 (three
+  nullable columns, granted column by column to the read-only and backup roles). Local gate green
+  (ruff, mypy, API 1,703 without a database, 136 movie night, Feeling lucky, Letterboxd and watch
+  history tests on the throwaway Postgres with the columns added by hand, shared 209, web 973,
+  builds); the migration, the database suite and `ae10.spec.ts` in CI only (#362). CI's first run
+  failed the new spec's closing case (a boolean read back as "True", not "t") and, in WebKit
+  only, Home's Feeling lucky, whose click sent no request (passed on both later runs; trace lost
+  when GitHub's artifact service failed, so a new WebKit flake on record, not a fix). GitHub's
+  Actions incident then stranded the second run's two runs in the queue for 50 minutes; they
+  could be neither cancelled nor re-run, so CI was dispatched by hand on the same commit. That run
+  found a real bug: the start form's Start moved down 30 px as "Who's watching" loaded, and
+  Firefox's quick click in the profile picture case missed it; the form now holds one picker
+  row's height while loading. Third run: all seven jobs green, E2E Chromium 117, Firefox 116 (+1
+  documented skip), WebKit 115 (+2), jobs 9. Fast-forwarded to main; health, readiness and
+  version.json on `6c62136`. Read back on production at 23:05 GMT through the read-only role: migration 078's three columns are readable by the read-only and backup roles, and `invite_token` is still withheld; the open 6 Nov night, untouched, closes at the first visit to Movie night, which nobody had made yet.
 - **11 Nov, 17:42 GMT — WebKit's four end-to-end flakes fixed (PR 150, `e100508533d4d0d8ecbce36de79da293ac27c906`, #367).**
   The four 10 Nov failures (AE2's cinema case, AE4's sign-out, AC1's Needs you, AC6's settings) had
   one cause, read from their traces: WebKit cancels everything a page has in flight when a

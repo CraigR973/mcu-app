@@ -7921,3 +7921,44 @@ contemporaneous.
        in-page. The browser's poster requests still reach the real image.tmdb.org: the fake world
        covers the Python processes only.
 
+368. **AE10 shipped: movie night that reaches a match (11 Nov, PR 151 `6c62136`).** Craig picked all
+     five proposals of the 9 Nov sketch and gave his go on the data changes the same day. Drafting
+     choices under #355, open to his overrule:
+     - **Ten dealt, for a reason**: up to four films someone in the night rated 4½ or 5 (Home's
+       "Worth a rewatch", per person), the rest in nobody in the night's diary, never TV, in the
+       same stable shuffle (#157). A film somebody put forward is never dealt and sits above. Each
+       dealt film says why, read when the list is read: "Worth a rewatch · Craig 5/5", "In neither
+       diary" (what the app knows, not "unseen"). Mark rates nothing (#159), so in practice the
+       rewatch picks are Craig's.
+     - **Filters on the start form, not the night**: Under two hours (a known running time of 120
+       minutes or less; unknown is left out), In neither diary, 4K (an owned 4K copy) and one
+       genre, stored in the night's filters beside the older year and rating keys, still
+       honoured. On the night they show as chips. Changing them on the night was rejected: it
+       would re-deal a list someone had voted on. Feeling lucky on a night keeps to them too.
+     - **Who is watching, nobody ticked**, as "Propose a trip" (#345); the button says "Start and
+       send to Mark" once he is. The night is dealt after they are added, so both diaries count;
+       a name that cannot be sent refuses the start rather than sending fewer. While the people
+       load the form holds one picker row's height, so Start does not move (CI, 11 Nov).
+     - **"Choosing now" from the database**: `movie_night_participants.last_seen_utc`, stamped by
+       the night's reads, votes, suggestions and stream; the night page reads the session every
+       minute while it is on screen; seen in the last five minutes is choosing now. The live
+       stream alone was rejected: a phone's stream drops and reconnects too often. Only a count of
+       each person's added films is shown, and the live vote event no longer names the film, so
+       the count cannot be tied to the film just added.
+     - **"Log it for both of us"**: one viewing per person in the night, dated that day in London,
+       a rewatch for whoever had a viewing already; `logged_suggestion_id` and `logged_at_utc` on
+       the night make a second tap write nothing. Allowed after the night ends. A film nobody owns
+       gets its row with no copy, as the sync already does (#269); a film in the Trash is refused.
+     - **The Letterboxd import claims an app-logged viewing**: the same person and film, within a
+       day (closest date first), gets the entry's viewing id, date, rating and rewatch flag
+       instead of a second row; a dry run claims nothing; the one-off diary backfill script is
+       unchanged. Production had no app-logged viewings when it shipped.
+     - **Untouched nights close when nights are read**: an open night with no votes closes two
+       days after it started, or after its planned start; `ended_at_utc` is when it became due.
+       Run by the list, a night's page, an invite and anything that changes a night; no new job.
+       A night anyone voted on stays open until ended.
+     - **Proved in CI only** (#362) for the migration, the database suite and the browser spec;
+       three commits on the branch (the feature, the spec's boolean check, the Start fix), no
+       pushed branch rewritten. CI was once dispatched by hand after GitHub's Actions incident
+       stranded the PR's runs.
+
