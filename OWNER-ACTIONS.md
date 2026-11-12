@@ -5,7 +5,8 @@ someone else's website, a device, or a choice that isn't an agent's to make. Age
 **read this and stop**, not work around anything on it.
 
 Tick a box when evidence establishes completion and say so in `STATUS.md`'s Log.
-Current-state reconciliation: **8 Nov 2026**, from read-only production and audit records.
+Current-state reconciliation: **8 Nov 2026**, from read-only production and audit records;
+the cinema digest's delivery and Mark's first sync read back **12 Nov**.
 Older dated sections retain historical instructions; the current summary below takes precedence.
 
 *Numbers
@@ -50,7 +51,8 @@ save time above is the database clock captured by the update, not that old times
 No additional feed request, Sync now, manual job, watch write, film creation or notification
 ran. First eligible natural slot: **10 Nov 08:00 UTC/GMT**, provided no intervening sync.
 The deployed weekly importer can read RSS, add deduplicated watches and create bare films;
-its actual scheduled outcome remains unproved. The preflight's stricter transport caps do
+its first scheduled run, 10 Nov 08:04 UTC, read 50 entries and wrote 42 (8 already
+imported, none ambiguous, no error; read back 12 Nov). The preflight's stricter transport caps do
 not apply to this existing natural path. Clearing the username stops future selection,
 not rows already imported. Historical backfill, corrections, identities, Mark's review
 answers and real-phone acceptance remain separate. No new batch or automation.
@@ -68,10 +70,13 @@ The documentation handoff is committed locally without another deployment or bat
 - **Mark review cards deployed (9 Nov, PR 138, #353):** three exact assignments/audits
   are live, no notification. Mark's real answers and phone acceptance remain open.
   The bounded preflight succeeded and Craig explicitly authorised the username save,
-  completed 9 Nov18:33 UTC (#354). Await natural sync; no historical apply or further build.
-- **Watch history first:** Mark's username was saved 9 Nov18:33 UTC; no sync exists yet. Craig's weekly
-  cron runs successfully. Saved plans have 638 non-doubtful viewing IDs absent today
-  (Craig 480, Mark 158); all seven proposed watch corrections remain on their old films.
+  completed 9 Nov18:33 UTC (#354). His first natural sync followed on 10 Nov; no historical
+  apply or further build.
+- **Watch history first:** Mark's username was saved 9 Nov 18:33 UTC, and his first natural
+  sync ran 10 Nov 08:04 UTC: 50 read, 42 written, 8 already imported, no error (972 → 1,014
+  active watches; read back 12 Nov). Craig's weekly cron runs successfully. Saved plans had
+  638 non-doubtful viewing IDs absent on 8 Nov (Craig 480, Mark 158), before Mark's sync,
+  so recount them first; all seven proposed watch corrections remain on their old films.
   Prepare current duplicates/targets and exact scope before approving any live write or
   provider read; the old 651-row plan is not a current write count.
 - **Small catalogue choices:** Shetland - Series 5 is the sole unmatched owned title;
@@ -80,8 +85,9 @@ The documentation handoff is committed locally without another deployment or bat
 - **Price charts:** 46 cron days and three numerical history qualifiers now exist; the
   documented Dead Man's Shoes 1940/2004 association still needs review. No chart build,
   identity correction or history rewrite is authorised by this read-back.
-- **Natural/phone acceptance:** AC6's 8 Nov digest evaluated empty, so positive delivery
-  and phone receipt/tap remain open. AC3's eight future Rocky reruns are now read back.
+- **Natural/phone acceptance:** AC6's scheduled digest has gone to both people every
+  morning since 9 Nov (read back 12 Nov: every notification sent, one device each), so only
+  your phone receipt and its tap remain open. AC3's eight future Rocky reruns are now read back.
   AC5's first real trip, genuine Mark-addition/loan pushes and remaining device observations
   stay separate. Craig's accepted iPhone launch/header/Search checks are complete.
 - **Future/deferred:** AA10c from 25 Nov with sufficient sales evidence; 22c and email
@@ -100,12 +106,15 @@ No implementation, provider request, live write or close-out is included in this
   this repair; no production calendar token was rotated as a test. Natural digest/phone
   observations below remain open.
 
-- **Daily cinema digest (AC6) — deployed 7 Nov; positive acceptance open.**
+- **Daily cinema digest (AC6) — deployed 7 Nov; scheduled delivery proved 9–12 Nov; your
+  receipt and tap open.**
   First natural refresh completed 8 Nov at 08:04 UTC, partial coverage, all nine venue
   observations successful. The 8 Nov digest evaluated 0 qualifying appearances; outbox and
-  claims remain 0. Empty-day silence is proved, not positive transport. Wait for a genuine
-  qualifying scheduled message, never a test refresh/send. Receipt and the tap into New
-  this week remain yours. AC3's post-8-Nov classification read-back is now complete:
+  claims remain 0. Empty-day silence is proved. **12 Nov read-back:** the 9, 10, 11 and 12 Nov
+  refreshes each found qualifying films (1, 4, 4 and 2) and sent one digest to each person;
+  every notification is `sent`, delivered to one device. Positive transport is proved;
+  never a test refresh/send. Receipt on your phone and the tap into New this week remain
+  yours. AC3's post-8-Nov classification read-back is now complete:
   eight future Rocky reruns. AC5's first real trip stays separate.
 
 - **Cinema trips (AC5, shipped 7 Nov, #346) — on your phone, when there's a film you want to
@@ -925,11 +934,15 @@ up.
 be **exported explicitly**, as the commands above do. `set -a; source …` truncates it at the
 `&` and the script then fails against `localhost` (`DECISIONS.md` #191).*
 
-### 1j. Watch history — Craig's weekly sync runs; Mark's setup remains open
+### 1j. Watch history — both weekly syncs run; the backfill and corrections remain open
 
 **Read back 8 Nov:** Craig's stored username is `CraigR973`; his 8 Nov cron completed,
 50 read / 50 already imported / 0 written / no error. Weekly runs also exist on 18 Oct,
 25 Oct and 1 Nov. No extra manual sync is required to prove that cron works.
+
+**Read back 12 Nov:** the username was saved 9 Nov at Craig's word (#354), and Mark's first
+natural sync ran 10 Nov 08:04 UTC: 50 read, 42 written, 8 already imported, no error, so his
+setup is done. The 8 Nov paragraph below is history.
 
 Mark's username is **null** and he has **no sync record**. The known intended username
 `markr973` is not evidence that it was saved. His setup remains an owner data checkpoint.

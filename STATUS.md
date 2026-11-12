@@ -2,6 +2,20 @@
 
 ## Now
 
+**12 Nov, 19:45 GMT: two records corrected from read-only production reads; nothing in the app
+changed.** The daily cinema digest (AC6) has sent for real. Each morning from 9 to 12 Nov the
+08:00 UTC refresh found new films, and both people got one digest, every notification `sent`
+and delivered to one device: 1, 4, 4 and 2 films (Focker-In-Law; Coyote vs. Acme, How to Rob a
+Bank, The Polar Express, We, The Hated + Q&A; Enemy, Hadota, Momo, Pressure; Mookuthi Amman 2,
+Whispers in the Woods). So AC6's scheduled delivery is proved; only Craig's phone receipt and
+the tap into New this week remain. Mark's first natural Letterboxd sync ran on 10 Nov at
+08:04 UTC: 50 entries, 42 written, 8 already imported, none ambiguous, no error, so his active
+watches went from 972 to 1,014, each new one carrying its viewing ID. Craig's last sync is still
+8 Nov's (0 written). The saved backfill comparison (Mark 158 absent) predates Mark's sync, so it
+is recounted before any proposal; a watch-history recovery proposal started in its own session
+on 12 Nov, nothing merged. The 6 Nov movie night is still open: nobody has opened Movie night
+since AE10 shipped.
+
 **11 Nov, 23:04 GMT: AE10 shipped, movie night that reaches a match (PR 151 `6c62136`, #368);
 Group AE is done, all ten batches.** Craig picked all five proposals. A night is dealt ten films,
 not thirty at random: up to four someone in it rated 4½ or 5, the rest in neither diary, each
@@ -45,8 +59,8 @@ and Silent Running are in `OWNER-ACTIONS.md`.
 A guarded one-row update saved `markr973` at 18:33:28 UTC; independent read-only verification
 passed at 18:33:29. Mark remains an active viewer, sync count 0 and active watches 972.
 No impersonation, permission change, feed request, manual sync/job, watch write or film create.
-First eligible natural run: 10 Nov 08:00 UTC/GMT, assuming no intervening sync. Its actual
-outcome remains unproved; later imports can add watches and bare films. Historical backfill,
+First eligible natural run: 10 Nov 08:00 UTC/GMT. It ran at 08:04 UTC and wrote 42
+(read back 12 Nov, above); later imports can add watches and bare films. Historical backfill,
 doubtful entries and corrections remain separate fresh dry-run/approval scopes.
 
 **Release complete:** Mark's three review cards and Add a copy repair are live (PR 138, #353).
@@ -67,8 +81,8 @@ Report: `docs/reviews/ad1-release-and-mark-setup-checkpoints-2026-11-09.md`.
 venue observations successful, 29 metadata lookups pending. AC3's owed positive read-back
 is now proved: eight confirmed future Rocky reruns across four ODEONs. AC6 evaluated an
 empty 8 Nov day; at 11:55 GMT appearances/outbox/claims remain 0/0/0. The 7 Nov missed-day
-marker is separate. Keep AC6 unstruck pending a genuine qualifying scheduled digest and
-Craig's phone receipt/tap; no test send. Ramayana, Tabby McTat and The Devils remain for
+marker is separate. Qualifying scheduled digests followed on 9–12 Nov (above); keep AC6
+unstruck pending Craig's phone receipt/tap; no test send. Ramayana, Tabby McTat and The Devils remain for
 cinema identity review. AC5's first real trip and phone observations remain separate.
 
 **Re-pricing:** the 1 Nov AA10b campaign finished with 0 failed/0 remaining pairs. Its
@@ -77,9 +91,10 @@ cinema identity review. AC5's first real trip and phone observations remain sepa
 Before £16,867.11 covered 1,469 copies; the comparison includes scope and sales-evidence
 changes. No extra Home press is needed. AA10c remains from 25 Nov and evidence-gated.
 
-**Genuine older work:** Mark's Letterboxd username was saved 9 Nov18:33 UTC and he has no sync record;
-Craig's weekly cron is healthy, including 8 Nov. Of 651 saved non-doubtful backfill entries,
-638 viewing IDs are absent (Craig 480, Mark 158); all seven saved watch corrections remain
+**Genuine older work:** Mark's Letterboxd username was saved 9 Nov 18:33 UTC and his first
+sync wrote 42 viewings on 10 Nov; Craig's weekly cron is healthy, including 8 Nov. Of 651
+saved non-doubtful backfill entries, 638 viewing IDs were absent on 8 Nov (Craig 480, Mark
+158), before Mark's sync; all seven saved watch corrections remain
 on their old films. These are stale-plan comparisons, not approved live-write counts.
 
 **Current owner queues:** one unmatched owned title (Shetland - Series 5), one visible
@@ -89,20 +104,20 @@ Price charts now have 46 real cron days and three wants with two-shop/two-day hi
 but Dead Man's Shoes still points to the documented wrong 1940 identity. Review that
 association before treating it as the third trustworthy film or starting the chart build.
 
-Positive cinema evidence can be read after
-a later natural run; no new automation was created. Current register:
+Positive cinema delivery was read back on 12 Nov
+(above); no new automation was created. Current register:
 `docs/reviews/outstanding-work-reconciled-2026-11-08.md`. Earlier time-qualified reports
 remain unchanged.
 
 ## Next
 
 **Group AC implementation is deployed through AC6 and the separate calendar repair.**
-AC3's post-8-Nov rerun classification read-back is complete. AC6's positive scheduled
-delivery/phone acceptance and AC5's first real trip remain open; these do not authorise
+AC3's post-8-Nov rerun classification read-back is complete. AC6's scheduled delivery is
+proved (9–12 Nov); its phone receipt/tap and AC5's first real trip remain open; these do not authorise
 another implementation batch. Onboarding more people still needs its own plan.
 
 **Remaining active work:** X5's watch-history data checkpoints, current catalogue/spec
-judgements, natural positive cinema delivery evidence, and real-device observations in
+judgements, and real-device observations in
 `OWNER-ACTIONS.md`. Group X's implementation, Batch 38, V9 and Z1 are already shipped/built;
 the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
 with the scope caveat in Now. AA10c stays at its separate 25 Nov evidence gate.
@@ -505,6 +520,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **12 Nov, 19:45 GMT — records corrected from production reads (read-only).** The cinema
+  digest (AC6) sent a qualifying digest to both people each morning from 9 to 12 Nov, every
+  notification `sent` to one device (1, 4, 4, 2 films): scheduled delivery proved, phone
+  receipt/tap still Craig's. Mark's first natural Letterboxd sync, 10 Nov 08:04 UTC: 50 read,
+  42 written, 8 already imported, no error (active watches 972 → 1,014). STATUS, OWNER-ACTIONS
+  and the batch list said neither had happened; corrected in place, the 8 Nov register left as
+  written. No live write, provider call or code change.
 - **11 Nov, 23:04 GMT — AE10 shipped (PR 151, `6c621366431684a83e11afd164cecacd263ee450`; #368); Group AE done.** Movie night
   that reaches a match, all five of Craig's picks, built B, A, D, C, E; migration 078 (three
   nullable columns, granted column by column to the read-only and backup roles). Local gate green
