@@ -1,5 +1,25 @@
 # Watch-history recovery proposal — 12 Nov 2026
 
+## Outcome, 12 Nov 20:30 UTC
+
+**Craig said "Yes to 1–3". The writes are done and read back clean (#369).**
+
+- **Backup and re-check:** a backup was run by hand (run 43299415327, restore drill passed),
+  then a fresh re-check matched this proposal entry by entry.
+- **Yours:** 488 written (480 + 8 now plain), 371 films added and filled in from TMDB, 13
+  already recorded, 0 skipped.
+- **Mark's:** 161 written (155 + 6), 45 films added (28 were already added by yours), 3
+  already recorded, 0 skipped.
+- **Corrections:** 7 moved, 5 films added. TMDB: 421 detail requests, 0 failures.
+- **Read-back:** each approved entry is written once, on the planned film, with its date,
+  rating, rewatch flag and TMDB id. No doubtful entry was written. Watches: yours 1,110,
+  Mark's 1,175.
+
+Decision 4 was not taken: 87 doubtful entries and 8 doubtful corrections wait for a later pass.
+The proposal below is unchanged from when it was approved.
+
+---
+
 **For Craig's decision. Nothing has been written, fetched or applied.** Live rows were read
 19:44–19:52 UTC on 12 Nov through the read-only role. Sources: `docs/reviews/outstanding-work-reconciled-2026-11-08.md`
 §1, `OWNER-ACTIONS.md` 1j and X5 in `docs/phase-batches.md`.

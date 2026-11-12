@@ -2,6 +2,21 @@
 
 ## Now
 
+**12 Nov, 20:30 GMT: the watch-history backfill and the seven watch corrections are written, at
+Craig's word (#369).** Craig said "Yes to 1–3" to
+`docs/reviews/watch-history-recovery-proposal-2026-11-12.md`. A backup was run by hand first
+(run 43299415327, dump and restore drill passed, 20:22 UTC), and a fresh read-only re-check
+matched the proposal entry by entry. X5's own commands then wrote 488 of Craig's diary entries
+and 161 of Mark's: the 635 re-checked entries plus the 14 now-plain doubtful ones, from amended
+copies of the 14 Oct plans. They added 421 films with no copies, each filled in from TMDB (421
+detail requests, 0 failures), and moved the 7 misattributed watches to their real films. Read back
+through the read-only role: every approved entry is written once, on the planned film, with its
+date, rewatch flag, rating and TMDB id; no doubtful entry was written; no watch's TMDB id disagrees
+with its film's. Watches: Craig 622 → 1,110, Mark 1,014 → 1,175. Films watched ever: 501 → 931 and
+918 → 1,071. Owned films in neither diary: 764 → 669. Production stayed on `18c9c5c` with
+`db: ok`. Still open, for a later pass at Craig's word: 87 doubtful diary entries (Craig 75, Mark 12) and the 8
+doubtful corrections.
+
 **12 Nov, 19:45 GMT: two records corrected from read-only production reads; nothing in the app
 changed.** The daily cinema digest (AC6) has sent for real. Each morning from 9 to 12 Nov the
 08:00 UTC refresh found new films, and both people got one digest, every notification `sent`
@@ -91,11 +106,11 @@ cinema identity review. AC5's first real trip and phone observations remain sepa
 Before £16,867.11 covered 1,469 copies; the comparison includes scope and sales-evidence
 changes. No extra Home press is needed. AA10c remains from 25 Nov and evidence-gated.
 
-**Genuine older work:** Mark's Letterboxd username was saved 9 Nov 18:33 UTC and his first
-sync wrote 42 viewings on 10 Nov; Craig's weekly cron is healthy, including 8 Nov. Of 651
-saved non-doubtful backfill entries, 638 viewing IDs were absent on 8 Nov (Craig 480, Mark
-158), before Mark's sync; all seven saved watch corrections remain
-on their old films. These are stale-plan comparisons, not approved live-write counts.
+**Genuine older work:** both weekly Letterboxd syncs run (Craig's last on 8 Nov, Mark's first
+on 10 Nov). The X5 backfill and its seven corrections were written on 12 Nov (#369). What
+remains is 87 doubtful diary entries and 8 doubtful corrections. They are tiered in the
+private `.letterboxd-export/recovery-2026-11-12/doubtful-review.csv` on the Mac, for a later
+pass at Craig's word.
 
 **Current owner queues:** one unmatched owned title (Shetland - Series 5), one visible
 doubt (Titanic 1953 versus the disc page's 1997), and 419 disc-spec choices. The three
@@ -116,7 +131,7 @@ AC3's post-8-Nov rerun classification read-back is complete. AC6's scheduled del
 proved (9–12 Nov); its phone receipt/tap and AC5's first real trip remain open; these do not authorise
 another implementation batch. Onboarding more people still needs its own plan.
 
-**Remaining active work:** X5's watch-history data checkpoints, current catalogue/spec
+**Remaining active work:** X5's doubtful diary entries (a later pass), current catalogue/spec
 judgements, and real-device observations in
 `OWNER-ACTIONS.md`. Group X's implementation, Batch 38, V9 and Z1 are already shipped/built;
 the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
@@ -520,6 +535,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **12 Nov, 20:30 GMT — watch-history backfill and corrections written, at Craig's word (#369).**
+  The proposal was prepared read-only (19:44 UTC reads); Craig replied "Yes to 1–3". Backup
+  run 43299415327 passed its drill at 20:22 UTC, and the re-check at 20:23 was identical.
+  `import_watch_history apply` ran on the amended plans (Craig `598b8acf…`, Mark `b9a864a3…`;
+  originals unchanged). Craig: 488 written, 371 films added and filled, 13 already recorded,
+  0 skipped (20:24–20:28 UTC). Mark: 161 written, 45 films, 3 already recorded, 0 skipped
+  (20:29). `repoint_watches apply`: 7 moved, 5 films (20:30). The read-back is clean (Now).
+  87 doubtful entries and 8 doubtful corrections are left for a later pass. No code change.
 - **12 Nov, 19:45 GMT — records corrected from production reads (read-only).** The cinema
   digest (AC6) sent a qualifying digest to both people each morning from 9 to 12 Nov, every
   notification `sent` to one device (1, 4, 4, 2 films): scheduled delivery proved, phone

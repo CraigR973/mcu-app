@@ -7962,3 +7962,35 @@ contemporaneous.
        pushed branch rewritten. CI was once dispatched by hand after GitHub's Actions incident
        stranded the PR's runs.
 
+369. **X5's live data steps: the backfill and the seven corrections are written; the doubtful
+     entries wait (12 Nov).** Craig replied "Yes to 1–3" to the read-only proposal
+     `docs/reviews/watch-history-recovery-proposal-2026-11-12.md`:
+     - **1, the backfill:** the 14 Oct plans, re-checked against that evening's rows. The check
+       counted presence by viewing id (soft-deleted rows included), found no target gone or in
+       the Trash, no row for the same film within a day, the same film under today's title rule,
+       and no app-logged viewing. Writes: Craig 480, Mark 155. New films with no copies, filled
+       in from TMDB: 416.
+     - **2, the corrections:** the seven saved moves (six Mark's, one Craig's). Five targets
+       needed a new film row.
+     - **3, the 14 now-plain doubtful entries** (Craig 8, Mark 6): on 14 Oct two catalogue rows
+       answered to their titles; since X10 one does, with the exact year, and it is owned. They
+       went in through amended copies of the plans (`craig-backfill-amended.json`
+       `598b8acf…`, `mark-backfill-amended.json` `b9a864a3…`, in the gitignored
+       `.letterboxd-export/recovery-2026-11-12/`), each changed entry becoming `owned` on that
+       row. Only those 14 entries and four fields differ from the originals, which are unchanged.
+     - **How it ran:** first a backup by hand (run 43299415327, restore drill passed), then a
+       re-check identical to the proposal, then X5's own commands on the Mac. Craig: 488
+       written, 371 films, 13 already recorded, 0 skipped. Mark: 161, 45 films (28 of his were
+       Craig's too), 3, 0. Corrections: 7 moved, 5 films. TMDB: 421 detail requests, 0
+       failures, no searches. Read back through the read-only role: each approved entry
+       written once, with its film, date, rewatch flag, rating and TMDB id; no doubtful entry
+       written; no watch's TMDB id disagrees with its film's.
+     - **No source read was needed.** Mark's 9 Nov preflight copy reached back to 1 Sep, and his
+       diary file ends on 14 Sep (13 of 13 overlapping entries unchanged). Craig's 18 Oct sync
+       reached back to 22 Feb, and his file ends on 9 Sep. So every unrecorded viewing was in
+       the plans. Not covered by any source: an old viewing back-logged on Letterboxd after
+       15 Sep, because the feed is ordered by viewing date.
+     - **Left for a later pass (decision 4, not taken):** 87 doubtful entries (Craig 75, Mark
+       12) and the 8 doubtful corrections, tiered privately in `doubtful-review.csv`. Writing any
+       of them needs Craig's word, entry by entry or by tier.
+

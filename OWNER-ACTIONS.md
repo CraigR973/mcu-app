@@ -72,13 +72,10 @@ The documentation handoff is committed locally without another deployment or bat
   The bounded preflight succeeded and Craig explicitly authorised the username save,
   completed 9 Nov18:33 UTC (#354). His first natural sync followed on 10 Nov; no historical
   apply or further build.
-- **Watch history first:** Mark's username was saved 9 Nov 18:33 UTC, and his first natural
-  sync ran 10 Nov 08:04 UTC: 50 read, 42 written, 8 already imported, no error (972 → 1,014
-  active watches; read back 12 Nov). Craig's weekly cron runs successfully. Saved plans had
-  638 non-doubtful viewing IDs absent on 8 Nov (Craig 480, Mark 158), before Mark's sync,
-  so recount them first; all seven proposed watch corrections remain on their old films.
-  Prepare current duplicates/targets and exact scope before approving any live write or
-  provider read; the old 651-row plan is not a current write count.
+- **Watch history:** both weekly syncs run. The backfill and the seven corrections were
+  written 12 Nov at Craig's word (#369): Craig 488 and Mark 161 diary entries, 421 films with
+  no copies, 7 watches moved; read back clean. Left for a later pass at his word: 87 doubtful
+  entries (Craig 75, Mark 12) and 8 doubtful corrections (1j).
 - **Small catalogue choices:** Shetland - Series 5 is the sole unmatched owned title;
   Titanic (1953) is the sole visible doubt, against a 1997 disc page. Disc specs has
   419 choices. The three Y5 TV-copy moves are already done and must not be repeated.
@@ -934,7 +931,22 @@ up.
 be **exported explicitly**, as the commands above do. `set -a; source …` truncates it at the
 `&` and the script then fails against `localhost` (`DECISIONS.md` #191).*
 
-### 1j. Watch history — both weekly syncs run; the backfill and corrections remain open
+### 1j. Watch history — backfill and corrections done 12 Nov; the doubtful entries remain
+
+**Done 12 Nov, at Craig's word ("Yes to 1–3", #369).** These followed the read-only proposal
+`docs/reviews/watch-history-recovery-proposal-2026-11-12.md`, a hand-run backup (run
+43299415327, drill passed) and an identical re-check. X5's commands wrote 488 of Craig's and
+161 of Mark's dated diary entries: the 635 re-checked ones plus 14 that had become plain. They
+added 421 films with no copies, all filled in from TMDB, and moved the 7 misattributed
+watches. Read back through the read-only role: every approved entry is written once, on the
+planned film; no doubtful entry was written; 0 duplicates.
+
+- [ ] **Still Craig's: 87 doubtful diary entries (Craig 75, Mark 12) and 8 doubtful
+      corrections.** Decision 4 of the proposal is a later pass. Its list is tiered in the
+      private `.letterboxd-export/recovery-2026-11-12/doubtful-review.csv` on the Mac. Of the
+      87, 48 are likely (TMDB offered one film from the diary's year; 21 of those need a TMDB
+      look first), and 39 are real choices. Mark knows his own best. Nothing is lost by
+      waiting: the diary files and the feeds overlap for both people.
 
 **Read back 8 Nov:** Craig's stored username is `CraigR973`; his 8 Nov cron completed,
 50 read / 50 already imported / 0 written / no error. Weekly runs also exist on 18 Oct,

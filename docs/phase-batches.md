@@ -3470,7 +3470,15 @@ snapshot for now on 12 Oct, which is why X4 precedes X5.
 - **Guard:** the monthly drill.
 - Tests for any code (the manifest comparison). Gate green.
 
-### ~~X5 — Watch history: films not owned, the backfill, the year rule~~ 🔴 **shipped 2026-10-14 (`19c9aad`, [#69](https://github.com/CraigR973/mcu-app/pull/69)); its live data steps wait for Craig's word**
+### ~~X5 — Watch history: films not owned, the backfill, the year rule~~ 🔴 **shipped 2026-10-14 (`19c9aad`, [#69](https://github.com/CraigR973/mcu-app/pull/69)); live data steps done 12 Nov (#369), the doubtful entries wait for Craig**
+**12 Nov, 20:30 GMT: the backfill and the corrections are written, at Craig's word (#369).**
+The proposal is `docs/reviews/watch-history-recovery-proposal-2026-11-12.md`. After a backup
+(run 43299415327) and an identical re-check, Craig 488 and Mark 161 diary entries were
+written: the 635 re-checked entries plus 14 now plain, from amended plan copies. 421 films
+with no copies were added and filled in from TMDB, and the 7 misattributed watches were moved.
+Read back clean. Open: 87 doubtful entries and 8 doubtful corrections (`OWNER-ACTIONS.md` 1j).
+The paragraphs below are history.
+
 **8 Nov live reconciliation:** Mark's username is null/no sync; Craig's weekly cron is
 healthy. **12 Nov:** Mark's username was saved 9 Nov (#354) and his first natural sync ran
 10 Nov 08:04 UTC: 50 read, 42 written, 8 already imported, no error; recount his absent IDs
