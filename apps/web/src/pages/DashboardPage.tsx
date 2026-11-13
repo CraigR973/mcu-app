@@ -4,6 +4,7 @@ import { CalendarHeart, Pin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { useAuth } from '@/context/auth'
+import { useInPlaceScroll } from '@/hooks/useInPlaceScroll'
 
 import { HomeBanner } from '@/components/brand/HomeBanner'
 import { CinemaStrip } from '@/components/dashboard/CinemaStrip'
@@ -69,6 +70,8 @@ export default function DashboardPage() {
   // A completion set opens in place of Home, because the panel *is* the page while it is
   // open; otherwise the reader loses their place in a long page on the way back (W2).
   const [openSetId, setOpenSetId] = useState<string | null>(null)
+  // AF4 (#372): the set opens at its top, and its back control puts Home where it was.
+  const openSet = useInPlaceScroll(setOpenSetId, openSetId)
 
   const memoriesQuery = useQuery({ queryKey: ['memories', 'on-this-day'], queryFn: fetchOnThisDayMemories })
   const rewatchQuery = useQuery({ queryKey: ['memories', 'rewatch-suggestions'], queryFn: fetchRewatchSuggestions })
@@ -98,7 +101,7 @@ export default function DashboardPage() {
   if (openSetId !== null) {
     return (
       <div className="page-shell-narrow">
-        <CompletionSetPanel setId={openSetId} onBack={() => setOpenSetId(null)} backLabel="Home" />
+        <CompletionSetPanel setId={openSetId} onBack={() => openSet(null)} backLabel="Home" />
       </div>
     )
   }
@@ -174,7 +177,7 @@ export default function DashboardPage() {
           </Shelf>
         ) : null}
 
-        <CompletionShelf onOpen={setOpenSetId} />
+        <CompletionShelf onOpen={openSet} />
 
         {/* AC4: this week's films at the cinema, after everything above has taken its own. */}
         <CinemaStrip lineup={lineup} settled={lineupSettled} homeLayoutPending={homeLayoutPending} />

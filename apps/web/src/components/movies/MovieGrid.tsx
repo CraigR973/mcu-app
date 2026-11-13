@@ -76,7 +76,7 @@ export function MovieGrid({ movies, isLoading }: Props) {
   return (
     <div
       ref={containerRef}
-      className="min-h-0 flex-1 overflow-y-auto"
+      data-scroll-memory="archive-grid" className="min-h-0 flex-1 overflow-y-auto"
       style={{ contain: 'strict' }}
     >
       <div style={{ height: virtualizer.getTotalSize() + 96, position: 'relative' }}>

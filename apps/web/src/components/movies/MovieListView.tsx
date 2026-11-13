@@ -76,7 +76,7 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
         )}
       </div>
 
-      <div ref={parentRef} className="min-h-0 flex-1 overflow-y-auto" aria-busy={isLoading}>
+      <div ref={parentRef} data-scroll-memory="archive-list" className="min-h-0 flex-1 overflow-y-auto" aria-busy={isLoading}>
         <div style={{ height: rowVirtualizer.getTotalSize() + 96, position: 'relative' }}>
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const positioning = { position: 'absolute' as const, top: virtualRow.start, left: 0, right: 0, height: rowHeight }

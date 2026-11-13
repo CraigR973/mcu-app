@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Bot, Command, Plus } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { ScrollMemory } from '@/components/layouts/ScrollMemory'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
 import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
@@ -202,7 +203,9 @@ export default function AppLayout({ children }: Props) {
         {/* Batch X3: mends this phone's notifications on open; says when they stopped. */}
         <PushHealthBanner />
 
-        <main id="main-content" className="min-h-0 flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0" tabIndex={-1}>
+        {/* AF4 (#372): each step in history keeps its place in here, and Back puts it back. */}
+        <ScrollMemory />
+        <main id="main-content" data-scroll-memory="main" className="min-h-0 flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0" tabIndex={-1}>
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

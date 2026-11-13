@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, RefreshCw } from 'lucide-react'
 import type { CompletionSet } from '@mcu/shared'
 
+import { useInPlaceScroll } from '@/hooks/useInPlaceScroll'
 import { Button } from '@/components/ui/button'
 import { CompletionSetPanel } from '@/components/insights/CompletionSetPanel'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -91,8 +92,10 @@ export function CompletionSets({ onOpenChange }: { onOpenChange?: (open: boolean
     },
   })
 
+  // AF4 (#372): a set opens at its top, and closing it puts the list back where it was.
+  const openInPlace = useInPlaceScroll(setOpenSetId, openSetId)
   function open(id: string | null) {
-    setOpenSetId(id)
+    openInPlace(id)
     onOpenChange?.(id !== null)
   }
 
