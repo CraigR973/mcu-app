@@ -151,7 +151,9 @@ function sameTitle(title: string): string {
 }
 
 /**
- * AC4's strip: this week's films at the cinema, each with a poster, in At the cinema's own order.
+ * AC4's strip: this week's films at the cinema, each with a poster. Since AF3 (#372) the week's
+ * older films lead, soonest showing first, as most are one-off screenings; then the rest in At the
+ * cinema's own order, the widest first.
  *
  * **It comes last on Home, so it takes what the rows above have left** (AC2's rule, #338): a film
  * already on Home is left out of the strip, matched by its catalogue film or, for a film the
@@ -175,7 +177,9 @@ export function cinemaStrip(lineup: HomeLineup, films: CinemaFilms | undefined, 
     if (film.movieId) movies.add(film.movieId)
     titles.add(sameTitle(film.title))
   }
-  return cinemaSections(films, { run: 'all', day: null, venueIds: null }, now).thisWeek
+  const lines = cinemaSections(films, { run: 'all', day: null, venueIds: null }, now).thisWeek
     .filter(({ card }) => card.posterPath && !(card.movieId && movies.has(card.movieId)) && !titles.has(sameTitle(card.title)))
-    .slice(0, ROW)
+  const older = lines.filter((line) => line.run === 'olderFilm')
+    .sort((a, b) => Date.parse(a.next.at) - Date.parse(b.next.at) || a.card.title.localeCompare(b.card.title, 'en-GB'))
+  return [...older, ...lines.filter((line) => line.run !== 'olderFilm')].slice(0, ROW)
 }

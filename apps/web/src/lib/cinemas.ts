@@ -289,10 +289,17 @@ export function listingState(card: Pick<CinemaCard, 'kind' | 'identityStatus'>):
   return 'Not matched yet'
 }
 
-/** Movie night's At the cinema view, and a film's page under it (AC4). */
+/** Movie night's At the cinema view, and a film's page under it (AC4). Since AF3 (#372) a film's
+ *  page opens on the day picked in the view when its link carries one. */
 export const CINEMA_VIEW_PATH = '/movie-night/cinema'
-export function cinemaFilmPath(key: string): string {
-  return `${CINEMA_VIEW_PATH}/${key}`
+export function cinemaFilmPath(key: string, day?: string | null): string {
+  return `${CINEMA_VIEW_PATH}/${key}${day ? `?day=${day}` : ''}`
+}
+
+/** A day named in an address: `YYYY-MM-DD`, still to come. Anything else, "all" and a day gone
+ *  included, names no day (AF3, #372). */
+export function addressDay(value: string | null, today: string): string | null {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= today ? value : null
 }
 
 // ---------------------------------------------------------------------------

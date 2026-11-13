@@ -119,7 +119,7 @@ async function phone(signedIn: (person: 'Craig' | 'Mark') => Promise<Session>, p
 
 const noSidewaysScroll = (session: Session) => session.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
 
-test('AE5 At the cinema opens on today, each film’s times by cinema with past ones gone, the strip held on scroll, at 375 px in both themes for both people', async ({ signedIn, week }, testInfo) => {
+test('AE5 At the cinema opens on All days (AF3), a day shows each film’s times by cinema with past ones gone, the strip held on scroll, at 375 px in both themes for both people', async ({ signedIn, week }, testInfo) => {
   for (const person of ['Craig', 'Mark'] as const) {
     for (const theme of ['light', 'dark'] as const) {
       const session = await phone(signedIn, person, theme, week.morning)
@@ -128,10 +128,16 @@ test('AE5 At the cinema opens on today, each film’s times by cinema with past 
       await page.goto('/movie-night/cinema')
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       const strip = page.getByRole('group', { name: 'Day' })
+      // AF3 (#372): All films, All days with nothing in the address, All days leading the strip.
+      await expect(strip.getByRole('button').first()).toHaveText('All days')
+      await expect(strip.getByRole('button', { name: 'All days', exact: true })).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByRole('region', { name: 'This week', exact: true })).toBeVisible()
+      await page.screenshot({ path: testInfo.outputPath(`ae5-all-days-${name}-375.png`) })
       const today = strip.getByRole('button', { name: dayLabel(week.plus(1)), exact: true })
-      await expect(today).toHaveAttribute('aria-pressed', 'true')
       await expect(today).toHaveText('Today')
-      await expect(strip.getByRole('button').last()).toHaveText('All days')
+      await today.click()
+      await expect(today).toHaveAttribute('aria-pressed', 'true')
+      await expect(page).toHaveURL(new RegExp(`\\?day=${week.plus(1)}$`))
       // The strip leads, before the run and the cinemas.
       expect(await strip.evaluate(element => Boolean(element.compareDocumentPosition(document.querySelector('[role="group"][aria-label="Run"]') as Node) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true)
 
@@ -178,12 +184,12 @@ test('AE5 At the cinema opens on today, each film’s times by cinema with past 
       await expect(page.getByRole('checkbox')).toHaveCount(10)
       await page.getByRole('button', { name: 'None', exact: true }).click()
       await expect(page.getByText('Select at least one cinema.', { exact: true })).toBeVisible()
-      await expect(page).toHaveURL(/\?cinema=none$/)
+      await expect(page).toHaveURL(/cinema=none$/)
       await expect(page.getByRole('checkbox', { checked: true })).toHaveCount(0)
       await page.screenshot({ path: testInfo.outputPath(`ae5-none-${name}-375.png`) })
       await page.getByRole('button', { name: 'All', exact: true }).click()
       await expect(page.getByRole('checkbox', { checked: true })).toHaveCount(10)
-      await expect(page).toHaveURL(/\/movie-night\/cinema$/)
+      await expect(page).toHaveURL(new RegExp(`/movie-night/cinema\\?day=${week.plus(1)}$`))
       await page.getByText(/^Cinemas · all 10/).click()
 
       // Opened, the listing and the event read as before.
@@ -203,7 +209,7 @@ test('AE5 a day picked stays in the address, an empty day says so, a day past tw
     const name = `${person.toLowerCase()}-${theme}`
     await page.goto('/movie-night/cinema')
     const strip = page.getByRole('group', { name: 'Day' })
-    await expect(strip.getByRole('button', { name: dayLabel(week.plus(1)), exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(strip.getByRole('button', { name: 'All days', exact: true })).toHaveAttribute('aria-pressed', 'true')
 
     // Day 3: GFT and Vue list only to day 2, so its film shows at the two cinemas that list it.
     await strip.getByRole('button', { name: dayLabel(week.plus(3)), exact: true }).click()
@@ -228,9 +234,9 @@ test('AE5 a day picked stays in the address, an empty day says so, a day past tw
     expect(await noSidewaysScroll(session)).toBe(true)
     await page.screenshot({ path: testInfo.outputPath(`ae5-empty-day-${name}-375.png`) })
 
-    // Today needs no word in the address.
+    // Today is named in the address too, since every day at once is the default (AF3).
     await strip.getByRole('button', { name: dayLabel(week.plus(1)), exact: true }).click()
-    await expect(page).toHaveURL(/\/movie-night\/cinema$/)
+    await expect(page).toHaveURL(new RegExp(`\\?day=${week.plus(1)}$`))
     await expect(page.getByRole('region', { name: dayLabel(week.plus(1)), exact: true }).getByRole('article', { name: LANTERN })).toBeVisible()
     // 21:00 with the page left open: every time today has started, so the view says so.
     await page.clock.fastForward(week.evening.getTime() - week.morning.getTime())

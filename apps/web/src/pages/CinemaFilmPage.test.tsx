@@ -28,13 +28,19 @@ function Where() {
   return <output aria-label="Address">{useLocation().pathname}</output>
 }
 
-function setup(key = 'tmdb-1417') {
+function Search() {
+  return <output aria-label="Search">{useLocation().search}</output>
+}
+
+/** AF3 (#372): the page opens on the film's first day, so a case about every day asks for "all". */
+function setup(key = 'tmdb-1417', search = '?day=all') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const tree = () => (
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[`/movie-night/cinema/${key}`]}>
+      <MemoryRouter initialEntries={[`/movie-night/cinema/${key}${search}`]}>
         <Routes><Route path="/movie-night/cinema/:key" element={<CinemaFilmPage />} /></Routes>
         <Where />
+        <Search />
       </MemoryRouter>
     </QueryClientProvider>
   )
@@ -306,5 +312,42 @@ describe('a trip from a film’s page (AC5, #345)', () => {
     const yours = await screen.findByRole('region', { name: 'Your trips' })
     expect(within(yours).getByRole('link').getAttribute('href')).toBe(`/movie-night/trips/${TRIP}`)
     expect(within(yours).getByText('You: No reply yet · 1 going · 2 no reply yet')).toBeTruthy()
+  })
+})
+
+describe('a film’s day strip — AF3 (#372), as At the cinema has it', () => {
+  const strip = () => within(screen.getByRole('group', { name: 'Day' }))
+
+  it('opens on the film’s first day, with All days first and only the days it is on', async () => {
+    setup('tmdb-1417', '')
+    expect(await screen.findByRole('region', { name: 'Today · Tue 3 Nov' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Tomorrow · Wed 4 Nov' })).toBeNull()
+    expect(strip().getAllByRole('button').map((button) => button.textContent)).toEqual(['All days', 'Today', 'Tomorrow'])
+    expect(strip().getByRole('button', { name: 'Tue 3 Nov' }).getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('opens on the day picked on At the cinema, carried in the link', async () => {
+    setup('tmdb-1417', '?day=2026-11-04')
+    expect(await screen.findByRole('region', { name: 'Tomorrow · Wed 4 Nov' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Today · Tue 3 Nov' })).toBeNull()
+    expect(strip().getByRole('button', { name: 'Wed 4 Nov' }).getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('opens on the first day when the day carried is not one the film is on', async () => {
+    setup('tmdb-1417', '?day=2026-11-09')
+    expect(await screen.findByRole('region', { name: 'Today · Tue 3 Nov' })).toBeTruthy()
+  })
+
+  it('swaps the day in place, keeping it in the address, and shows every day on All days', async () => {
+    setup('tmdb-1417', '')
+    await screen.findByRole('region', { name: 'Today · Tue 3 Nov' })
+    fireEvent.click(strip().getByRole('button', { name: 'Wed 4 Nov' }))
+    expect(screen.getByRole('region', { name: 'Tomorrow · Wed 4 Nov' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Today · Tue 3 Nov' })).toBeNull()
+    expect(screen.getByLabelText('Search').textContent).toBe('?day=2026-11-04')
+    fireEvent.click(strip().getByRole('button', { name: 'All days' }))
+    expect(screen.getByRole('region', { name: 'Today · Tue 3 Nov' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Tomorrow · Wed 4 Nov' })).toBeTruthy()
+    expect(screen.getByLabelText('Search').textContent).toBe('?day=all')
   })
 })

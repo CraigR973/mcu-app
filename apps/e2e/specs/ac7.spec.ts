@@ -179,8 +179,10 @@ test('A cinema release showing at one of the nine opens its film page, and back 
   await page.getByRole('region', { name: 'Cinema releases by month' }).getByRole('link', { name: new RegExp(TITLES.showing) }).click()
   await expect(page).toHaveURL(new RegExp(`/movie-night/cinema/tmdb-${SHOWING}$`))
   await expect(page.getByRole('heading', { level: 1, name: TITLES.showing })).toBeVisible()
-  await expect(page.getByText('Vue Glasgow St Enoch').first()).toBeVisible()
-  await expect(page.getByText('Glasgow Film Theatre').first()).toBeVisible()
+  // AF3 (#372): the page opens on the film's first day; both cinemas' times are All days.
+  await page.getByRole('group', { name: 'Day' }).getByRole('button', { name: 'All days', exact: true }).click()
+  await expect(page.getByRole('listitem', { name: 'Vue Glasgow St Enoch' }).first()).toBeVisible()
+  await expect(page.getByRole('listitem', { name: 'Glasgow Film Theatre' }).first()).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('ac7-film-page-mark-dark-375.png') })
   await page.goBack()
   await expect(page).toHaveURL(new RegExp(`/calendar/cinema\\?month=${releases.cinemaMonth}$`))

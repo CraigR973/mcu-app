@@ -120,7 +120,7 @@ describe('homeLineup — AC2 (#337)', () => {
   })
 })
 
-describe('cinemaStrip — AC4, last on Home', () => {
+describe('cinemaStrip — AC4, last on Home; older films first since AF3', () => {
   const now = Date.parse('2026-11-03T17:00:00Z')
   it('shows this week’s films with posters, widest first, never listings, events or later films', () => {
     const strip = cinemaStrip(homeLineup({}), filmsFixture(), now)
@@ -129,6 +129,17 @@ describe('cinemaStrip — AC4, last on Home', () => {
     expect(cinemaStrip(homeLineup({}), unposted, now).map((line) => line.card.title)).toEqual(['A current first run'])
     expect(cinemaStrip(homeLineup({}), undefined, now)).toEqual([])
   })
+  it('leads with the week’s older films, soonest first, ahead of wider new releases (AF3, #372)', () => {
+    const cinema = filmsFixture()
+    const [favourite, firstRun] = cinema.films
+    // The first run now shows at both cinemas, the favourite at one: wider, so first before AF3.
+    firstRun.slots.push({ ...firstRun.slots[0], venueId: favourite.slots[0].venueId })
+    favourite.slots = [favourite.slots[1]]
+    // A second rerun, tomorrow at one cinema; the favourite is tonight, so it stays first.
+    cinema.films.push({ ...favourite, key: 'tmdb-1418', title: 'Another old one', tmdbId: 1418, movieId: null, posterPath: '/old.jpg', slots: [{ ...favourite.slots[0], localDate: '2026-11-04', startsAtUtc: ['2026-11-04T19:00:00Z'], times: [{ at: '2026-11-04T19:00:00Z', bookingUrl: null, formats: [] }] }] })
+    expect(cinemaStrip(homeLineup({}), cinema, now).map((line) => line.card.title)).toEqual(['A returning favourite', 'Another old one', 'A current first run'])
+  })
+
   it('takes what the rows above it left: by catalogue film, and by title for a film not held', () => {
     const cinema = filmsFixture()
     cinema.films[0].movieId = id(1)

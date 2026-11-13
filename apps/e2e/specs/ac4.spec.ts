@@ -125,7 +125,7 @@ test('At the cinema reads film first at 375px, both themes and both people, with
   for (const person of ['Craig', 'Mark'] as const) {
     for (const theme of ['light', 'dark']) {
       const { page } = await phone(signedIn, person, theme)
-      // AE5: today is the default; every day at once is "All days".
+      // AF3 (#372): every day at once is the default; AE5's "all" still reads as it.
       await page.goto('/movie-night/cinema?day=all')
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       const week = page.getByRole('region', { name: 'This week' })
@@ -157,6 +157,9 @@ test('At the cinema reads film first at 375px, both themes and both people, with
       await horse.getByRole('link').click()
       await expect(page.getByRole('heading', { name: 'Wild Horse Nine', level: 1 })).toBeVisible()
       await expect(page).toHaveURL(/\/movie-night\/cinema\/tmdb-9100002$/)
+      // AF3 (#372): a film's page opens on its first day; every showing is All days.
+      await page.getByRole('group', { name: 'Day' }).getByRole('button', { name: 'All days', exact: true }).click()
+      await expect(page).toHaveURL(/\/movie-night\/cinema\/tmdb-9100002\?day=all$/)
       const tomorrow = page.getByRole('region', { name: /^Tomorrow · / })
       await expect(tomorrow.getByRole('listitem', { name: /Cineworld|Vue/ })).toHaveCount(2)
       await expect(tomorrow.getByRole('link', { name: '21:00 IMAX, check tickets at Vue Glasgow St Enoch' })).toBeVisible()
@@ -237,9 +240,13 @@ test('Home shows this week’s cinema films as a poster strip, for both people i
       await expect(page.getByRole('list', { name: 'The collection in numbers' })).toBeVisible()
       await expect(strip.getByRole('link', { name: 'At the cinema', exact: true })).not.toHaveAttribute('aria-disabled', 'true')
       const cards = strip.getByRole('list', { name: 'This week at the cinema' }).getByRole('listitem')
-      await expect(cards).toHaveCount(3)
-      await expect(cards.first()).toContainText('Wild Horse Nine')
-      await expect(cards.first()).toContainText('First run3 cinemas')
+      // AF3 (#372): the week's older film leads, then the rest widest first, then See all.
+      await expect(cards).toHaveCount(4)
+      await expect(cards.first()).toContainText('Rocky')
+      await expect(cards.first()).toContainText('Rerun2 cinemas')
+      await expect(cards.nth(1)).toContainText('Wild Horse Nine')
+      await expect(cards.nth(1)).toContainText('First run3 cinemas')
+      await expect(cards.last().getByRole('link', { name: 'See all films at the cinema' })).toHaveAttribute('href', '/movie-night/cinema')
       await strip.scrollIntoViewIfNeeded()
       expect(await noSidewaysScroll(page)).toBe(true)
       await page.screenshot({ path: testInfo.outputPath(`ac4-home-${person.toLowerCase()}-${theme}-375.png`) })

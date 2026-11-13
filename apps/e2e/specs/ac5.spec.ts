@@ -137,7 +137,7 @@ for (const theme of ['light', 'dark'] as const) {
     if (theme === 'light') {
       await craig.goto('/movie-night')
       await craig.getByRole('region', { name: 'Plan a cinema trip' }).getByRole('link', { name: 'See what’s on' }).click()
-      // AE5: the view opens on today; the film's first time is tomorrow's.
+      // AF3 (#372): the view opens on All days; picking the day of the film's first time opens the film on it.
       await craig.getByRole('group', { name: 'Day' }).getByRole('button', { name: quay.day, exact: true }).click()
       await craig.getByRole('link', { name: TITLE, exact: true }).click()
     } else {

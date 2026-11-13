@@ -97,7 +97,8 @@ describe('At the cinema, film first (AC4)', () => {
     const favourite = within(grid('This week')).getByRole('article', { name: 'A returning favourite' })
     expect(within(favourite).getByText('ODEON Kilmarnock')).toBeTruthy()
     expect(screen.queryByRole('article', { name: 'An uncertain programme' })).toBeNull()
-    expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?day=all&cinema=odeon-kilmarnock')
+    // AF3 (#372): every day at once is the default, so it needs no word in the address.
+    expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?cinema=odeon-kilmarnock')
     fireEvent.click(screen.getByRole('checkbox', { name: 'ODEON Kilmarnock' }))
     expect(screen.getByText('Select at least one cinema.')).toBeTruthy()
     expect(screen.queryAllByRole('article')).toHaveLength(0)
@@ -182,11 +183,20 @@ it('does not turn a missing New this week field into an empty programme claim', 
 describe('At the cinema, day by day (AE5)', () => {
   const dayGroup = () => within(screen.getByRole('group', { name: 'Day' }))
 
-  it('opens on today, the strip first, each film’s times by cinema, each time booking', async () => {
+  it('opens All films, All days with nothing in the address (AF3, #372), the strip first, All days leading', async () => {
     setup()
+    expect(await screen.findByRole('region', { name: 'This week' })).toBeTruthy()
+    expect(dayGroup().getAllByRole('button')[0].textContent).toBe('All days')
+    expect(dayGroup().getByRole('button', { name: 'All days' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('group', { name: 'Programme view' }).querySelector('[aria-pressed="true"]')?.textContent).toBe('All films')
+    expect(screen.queryByRole('region', { name: 'Tue 3 Nov' })).toBeNull()
+    expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema')
+  })
+
+  it('opens a picked day, each film’s times by cinema, each time booking, its films opening on that day', async () => {
+    setup('/movie-night/cinema?day=2026-11-03')
     const today = await screen.findByRole('region', { name: 'Tue 3 Nov' })
     expect(dayGroup().getByRole('button', { name: 'Tue 3 Nov' }).getAttribute('aria-pressed')).toBe('true')
-    expect(dayGroup().getAllByRole('button').at(-1)?.textContent).toBe('All days')
     // The strip leads: it comes before the run filter.
     const strip = screen.getByRole('group', { name: 'Day' }), run = screen.getByRole('group', { name: 'Run' })
     expect(strip.compareDocumentPosition(run) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -197,18 +207,20 @@ describe('At the cinema, day by day (AE5)', () => {
     expect(within(odeon).getByRole('link', { name: 'Book 21:00 IMAX at ODEON Kilmarnock' })).toBeTruthy()
     // Listings keep their own folded rows; the day has no film grid of next times.
     expect(screen.queryByRole('region', { name: 'This week' })).toBeNull()
-    expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema')
+    expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?day=2026-11-03')
+    // AF3: the film's page opens on the day picked here.
+    expect(within(favourite).getByRole('link', { name: 'A returning favourite' }).getAttribute('href')).toBe('/movie-night/cinema/tmdb-1417?day=2026-11-03')
   })
 
   it('hides times already past today, and offers tomorrow when none are left', async () => {
     vi.mocked(Date.now).mockReturnValue(Date.parse('2026-11-03T20:30:00Z'))
-    setup()
+    setup('/movie-night/cinema?day=2026-11-03')
     const favourite = await screen.findByRole('article', { name: 'A returning favourite' })
     expect(within(favourite).queryByRole('list', { name: 'Times at Vue Glasgow St Enoch' })).toBeNull()
     expect(within(favourite).getByRole('list', { name: 'Times at ODEON Kilmarnock' })).toBeTruthy()
     cleanup()
     vi.mocked(Date.now).mockReturnValue(Date.parse('2026-11-03T22:30:00Z'))
-    setup()
+    setup('/movie-night/cinema?day=2026-11-03')
     expect(await screen.findByText('Nothing more today')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'See tomorrow' }))
     expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?day=2026-11-04')
@@ -216,34 +228,41 @@ describe('At the cinema, day by day (AE5)', () => {
 
   it('greys a day with nothing showing, and keeps the day in the address', async () => {
     setup()
-    await screen.findByRole('region', { name: 'Tue 3 Nov' })
+    await screen.findByRole('region', { name: 'This week' })
     expect(dayGroup().getByRole('button', { name: 'Sat 7 Nov' }).getAttribute('title')).toBe('Nothing showing')
     expect(dayGroup().getByRole('button', { name: 'Thu 5 Nov' }).getAttribute('title')).toBeNull()
     fireEvent.click(dayGroup().getByRole('button', { name: 'Thu 5 Nov' }))
     expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?day=2026-11-05')
     expect(within(screen.getByRole('region', { name: 'Thu 5 Nov' })).getByRole('article', { name: 'A current first run' })).toBeTruthy()
+    // Today is named too, since every day at once is the default (AF3).
     fireEvent.click(dayGroup().getByRole('button', { name: 'Tue 3 Nov' }))
+    expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema?day=2026-11-03')
+    fireEvent.click(dayGroup().getByRole('button', { name: 'All days' }))
     expect(screen.getByLabelText('Address').textContent).toBe('/movie-night/cinema')
   })
 
   it('books nothing offline: the times stay, as plain chips', async () => {
     state.online = false
-    setup()
+    setup('/movie-night/cinema?day=2026-11-03')
     const favourite = await screen.findByRole('article', { name: 'A returning favourite' })
     expect(within(favourite).queryAllByRole('link', { name: /^Book / })).toHaveLength(0)
     expect(within(within(favourite).getByRole('list', { name: 'Times at ODEON Kilmarnock' })).getByText('21:00')).toBeTruthy()
   })
 
-  it('reads a day already gone in the address as today', async () => {
+  it('reads a day already gone in the address, and AE5’s "all", as every day (AF3)', async () => {
     setup('/movie-night/cinema?day=2026-11-01')
-    expect(await screen.findByRole('region', { name: 'Tue 3 Nov' })).toBeTruthy()
-    expect(dayGroup().getByRole('button', { name: 'Tue 3 Nov' }).getAttribute('aria-pressed')).toBe('true')
+    expect(await screen.findByRole('region', { name: 'This week' })).toBeTruthy()
+    expect(dayGroup().getByRole('button', { name: 'All days' }).getAttribute('aria-pressed')).toBe('true')
+    cleanup()
+    setup('/movie-night/cinema?day=all')
+    expect(await screen.findByRole('region', { name: 'This week' })).toBeTruthy()
+    expect(dayGroup().getByRole('button', { name: 'All days' }).getAttribute('aria-pressed')).toBe('true')
   })
 
   it('says when today’s films are over, even with a listing still to start', async () => {
     // 21:30: both of the favourite's times are gone; the uncertain listing at 22:00 is not.
     vi.mocked(Date.now).mockReturnValue(Date.parse('2026-11-03T21:30:00Z'))
-    setup()
+    setup('/movie-night/cinema?day=2026-11-03')
     expect(await screen.findByText('Nothing more today')).toBeTruthy()
     expect(screen.getByText('Every film listed for today has started. Listings not matched yet and events are below.')).toBeTruthy()
     expect(within(grid('Not matched to a film yet')).getByRole('heading').textContent).toBe('Not matched to a film yet · 1')
@@ -252,10 +271,10 @@ describe('At the cinema, day by day (AE5)', () => {
 
   it('runs the strip to the furthest listing, and a day past one cinema’s list shows the others', async () => {
     setup()
-    await screen.findByRole('region', { name: 'Tue 3 Nov' })
+    await screen.findByRole('region', { name: 'This week' })
     const days = dayGroup().getAllByRole('button')
-    // Today to the last showing (12 Nov), then All days; Vue lists only to 4 Nov.
-    expect(days.map((day) => day.textContent)).toEqual(['Today', 'Tomorrow', 'Thu 5', 'Fri 6', 'Sat 7', 'Sun 8', 'Mon 9', 'Tue 10', 'Wed 11', 'Thu 12', 'All days'])
+    // All days first (AF3), then today to the last showing (12 Nov); Vue lists only to 4 Nov.
+    expect(days.map((day) => day.textContent)).toEqual(['All days', 'Today', 'Tomorrow', 'Thu 5', 'Fri 6', 'Sat 7', 'Sun 8', 'Mon 9', 'Tue 10', 'Wed 11', 'Thu 12'])
     fireEvent.click(dayGroup().getByRole('button', { name: 'Thu 5 Nov' }))
     const thursday = screen.getByRole('region', { name: 'Thu 5 Nov' })
     expect(within(thursday).queryByRole('list', { name: 'Times at Vue Glasgow St Enoch' })).toBeNull()
@@ -271,7 +290,7 @@ describe('At the cinema, day by day (AE5)', () => {
     const favourite = data.films[0]
     favourite.slots.push(...more.map((venue, n) => ({ ...favourite.slots[0], venueId: venue.id, startsAtUtc: [`2026-11-03T${String(18 + (n % 4))}:15:00Z`], times: [{ at: `2026-11-03T${String(18 + (n % 4))}:15:00Z`, bookingUrl: null, formats: [] }] })))
     state.fetch.mockResolvedValue(data)
-    setup()
+    setup('/movie-night/cinema?day=2026-11-03')
     const card = await screen.findByRole('article', { name: 'A returning favourite' })
     expect(within(card).getAllByRole('list', { name: /^Times at / })).toHaveLength(10)
     fireEvent.click(screen.getByText('Cinemas · all 10'))
@@ -285,7 +304,7 @@ describe('At the cinema, day by day (AE5)', () => {
 
   it('ticks every cinema or none at once', async () => {
     setup()
-    await screen.findByRole('region', { name: 'Tue 3 Nov' })
+    await screen.findByRole('region', { name: 'This week' })
     fireEvent.click(screen.getByText('Cinemas · all 2'))
     fireEvent.click(screen.getByRole('button', { name: 'None' }))
     expect(screen.getByText('Select at least one cinema.')).toBeTruthy()

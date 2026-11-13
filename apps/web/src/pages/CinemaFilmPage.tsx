@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Clapperboard, Disc3, ExternalLink, Eye, Info, Theater, Ticket } from 'lucide-react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
+import { DayStrip } from '@/components/cinemas/DayStrip'
 import { ProgrammeCoverage, ProgrammeLink } from '@/components/cinemas/ProgrammeCoverage'
 import { ProposeTrip } from '@/components/cinemas/ProposeTrip'
 import { TripCard } from '@/components/cinemas/TripCard'
@@ -18,6 +19,7 @@ import { ApiError, fetchCinemaFilm, fetchCinemaTrips, type CinemaFilmDetail } fr
 import { tripsForFilm } from '@/lib/cinema-trips'
 import { cinemaFilmLinks } from '@/lib/external-links'
 import {
+  addressDay,
   CINEMA_VIEW_PATH,
   chipFormats,
   cinemaFilmPath,
@@ -186,6 +188,7 @@ function horizonPhrase(groups: { day: string; venues: ProgrammeVenue[] }[]): str
  */
 export default function CinemaFilmPage() {
   const { key = '' } = useParams()
+  const [params] = useSearchParams()
   const { profile } = useAuth()
   const online = useOnlineStatus()
   const [now, tick] = useProgrammeClock()
@@ -209,8 +212,8 @@ export default function CinemaFilmPage() {
   useEffect(() => {
     if (!detail || !profile || detail.film.key === key) return
     queryClient.setQueryData(['cinema-film', profile.id, detail.film.key], detail)
-    navigate(cinemaFilmPath(detail.film.key), { replace: true })
-  }, [detail, key, navigate, profile, queryClient])
+    navigate(cinemaFilmPath(detail.film.key, params.get('day')), { replace: true })
+  }, [detail, key, navigate, params, profile, queryClient])
 
   const connected = online && !query.isError
   const today = londonDate(now)
@@ -245,9 +248,25 @@ function FilmShowings({ detail, now, today, online, connected, onLapsed, isAdmin
   detail: Detail; now: number; today: string; online: boolean; connected: boolean; onLapsed: () => void; isAdmin: boolean
 }) {
   const { film } = detail
+  const [params, setParams] = useSearchParams()
   // A time that has started leaves the page, as it leaves the list, without a new answer.
   const showings = detail.showings.filter((showing) => Date.parse(showing.startsAtUtc) > now)
   const days = byDayThenCinema(detail.venues, showings)
+  // AF3 (#372): At the cinema's strip, here too. The page opens on the day picked there, carried
+  // in the link, or on the film's first day; "all" is every day, as before AF3.
+  const dayList = days.map(([day]) => day)
+  const asked = params.get('day')
+  const carried = addressDay(asked, today)
+  const picked = asked === 'all' ? null : carried && dayList.includes(carried) ? carried : (dayList[0] ?? null)
+  const shownDays = picked === null ? days : days.filter(([day]) => day === picked)
+  function pickDay(day: string | null) {
+    // Replaced, not added: Back leaves the film's page in one step, whatever was picked on it.
+    setParams((current) => {
+      const next = new URLSearchParams(current)
+      next.set('day', day ?? 'all')
+      return next
+    }, { replace: true })
+  }
   const venueIds = [...new Set(showings.map((showing) => showing.venueId))]
   const next = showings[0]
   const nextVenue = next ? detail.venues.find((venue) => venue.id === next.venueId) : undefined
@@ -343,7 +362,8 @@ function FilmShowings({ detail, now, today, online, connected, onLapsed, isAdmin
         ) : null}
         {days.length ? <p className="text-xs text-muted-foreground">Each time opens the cinema’s own page to check tickets.</p> : null}
       </div>
-      {days.map(([day, cinemas]) => (
+      {dayList.length ? <DayStrip days={dayList} selected={picked} today={today} onPick={pickDay} /> : null}
+      {shownDays.map(([day, cinemas]) => (
         <section key={day} aria-labelledby={`day-${day}`} className="space-y-3">
           <h2 id={`day-${day}`} className="section-heading text-lg">{dayHeading(day, today)}</h2>
           <ul className="space-y-4">

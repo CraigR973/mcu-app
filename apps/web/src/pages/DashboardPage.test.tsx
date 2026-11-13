@@ -533,8 +533,10 @@ describe('At the cinema on Home — AC4', () => {
     const strip = await screen.findByRole('region', { name: 'At the cinema' })
     expect(within(strip).getByRole('link', { name: 'At the cinema' }).getAttribute('href')).toBe('/movie-night/cinema')
     const cards = within(within(strip).getByRole('list', { name: 'This week at the cinema' })).getAllByRole('listitem')
-    expect(cards.map((card) => card.textContent)).toEqual(['A returning favouriteRerun2 cinemas', 'A current first runFirst runODEON Kilmarnock'])
+    // The rerun leads (AF3, #372); the row ends with a way to every film this week.
+    expect(cards.map((card) => card.textContent)).toEqual(['A returning favouriteRerun2 cinemas', 'A current first runFirst runODEON Kilmarnock', 'See all films'])
     expect(within(cards[0]).getByRole('link').getAttribute('href')).toBe('/movie-night/cinema/tmdb-1417')
+    expect(within(cards[2]).getByRole('link', { name: 'See all films at the cinema' }).getAttribute('href')).toBe('/movie-night/cinema')
     expect(headings().at(-1)).toBe('At the cinema')
     vi.restoreAllMocks()
   })

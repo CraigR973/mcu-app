@@ -108,6 +108,7 @@ describe('MovieNightPage — AC4', () => {
     const plan = await screen.findByRole('region', { name: 'Plan a cinema trip' })
     const start = screen.getByRole('heading', { name: 'Start a screening' }).closest('section')!
     expect(plan.parentElement).toBe(start.parentElement)
+    // AF3 (#372, snag 8): the bare address, which since AF3 opens on All films, All days.
     expect(within(plan).getByRole('link', { name: 'See what’s on' }).getAttribute('href')).toBe('/movie-night/cinema')
     expect(screen.queryByText(/Past screenings/)).toBeNull()
   })

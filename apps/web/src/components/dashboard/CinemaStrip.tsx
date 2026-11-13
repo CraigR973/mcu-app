@@ -11,7 +11,8 @@ import { cinemaStrip, type HomeLineup } from '@/lib/home-films'
 
 /**
  * Home's "At the cinema" — AC4: a poster strip of this week's films, where AB7 had a line of
- * text. It shares At the cinema's read, so opening the view after Home costs nothing more.
+ * text. It shares At the cinema's read, so opening the view after Home costs nothing more. Since
+ * AF3 (#372) the week's older films lead, and the row ends with a way to all of them.
  *
  * Until the cinemas' films have posters — before AC3's morning matching, or when the read fails —
  * it is the way in that it was. Either way the way in is a link called "At the cinema", held
@@ -81,6 +82,19 @@ export function CinemaStrip({ lineup, settled, homeLayoutPending }: { lineup: Ho
             />
           )
         })}
+        {/* AF3 (#372): the rest of the week is a tap away, at the end of the row. */}
+        <li className="w-24 shrink-0 snap-start sm:w-28">
+          <Link
+            to={CINEMA_VIEW_PATH}
+            aria-disabled={homeLayoutPending || undefined}
+            onClick={hold}
+            aria-label="See all films at the cinema"
+            className="group flex aspect-[2/3] w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border bg-card p-2 text-center text-xs font-semibold text-primary transition-colors hover:border-primary/50 hover:bg-muted"
+          >
+            <ChevronRight className="h-5 w-5" aria-hidden />
+            See all films
+          </Link>
+        </li>
       </ShelfRow>
     </section>
   )

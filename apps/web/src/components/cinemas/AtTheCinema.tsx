@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, Clapperboard, Eye, Info, RefreshCw, Theater } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { CHIP, CHIP_OFF, CHIP_ON } from '@/components/cinemas/chip-styles'
+import { DayStrip } from '@/components/cinemas/DayStrip'
 import { ProgrammeCoverage, ProgrammeLink } from '@/components/cinemas/ProgrammeCoverage'
 import { Poster } from '@/components/movies/Poster'
 import { Button } from '@/components/ui/button'
@@ -11,6 +13,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useProgrammeClock } from '@/hooks/useProgrammeClock'
 import { fetchCinemaFilms } from '@/lib/api'
 import {
+  addressDay,
   cinemaFilmPath,
   chipFormats,
   cinemaSections,
@@ -43,9 +46,6 @@ import { queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
 const RUNS = Object.keys(RELEASE_LABELS) as ReleaseFilter[]
-const CHIP = 'touch-target inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors'
-const CHIP_ON = 'border-primary bg-primary text-primary-foreground'
-const CHIP_OFF = 'border-border bg-card text-foreground hover:border-primary/40'
 
 /** The filters, read from the address so a film page's back arrow returns to the same view. */
 function readFilters(params: URLSearchParams, data: CinemaFilms | undefined, today: string): CinemaFilters {
@@ -54,9 +54,10 @@ function readFilters(params: URLSearchParams, data: CinemaFilms | undefined, tod
   const cinemas = params.getAll('cinema')
   return {
     run: RUNS.includes(run as ReleaseFilter) ? (run as ReleaseFilter) : 'all',
-    // AE5 (#355): today unless the address names a day still to come, or "all" for every day
-    // at once. A day already gone (a link kept from last week) is today.
-    day: day === 'all' ? null : day && /^\d{4}-\d{2}-\d{2}$/.test(day) && day >= today ? day : today,
+    // AF3 (#372, superseding #360's default of today): every day at once unless the address
+    // names a day still to come, today included. "all", AE5's word for every day, and a day
+    // already gone (a link kept from last week) read as every day.
+    day: addressDay(day, today),
     venueIds: cinemas.length === 0 ? null : (data?.venues ?? []).filter((venue) => cinemas.includes(venue.slug)).map((venue) => venue.id),
   }
 }
@@ -154,9 +155,10 @@ const TIME_CHIP = 'inline-flex min-h-11 items-center gap-1 rounded-md border px-
 
 /** One film on one day: its poster and title, then each cinema's times as chips — AE5. A chip
  *  opens the ticket page while AB7's rule allows; otherwise it is the time alone. */
-function DayFilmCard({ film, venues, now, online }: { film: DayFilm; venues: Map<string, ProgrammeVenue>; now: number; online: boolean }) {
+function DayFilmCard({ film, day, venues, now, online }: { film: DayFilm; day: string; venues: Map<string, ProgrammeVenue>; now: number; online: boolean }) {
   const badge = runBadge(film.run, film.runReason)
-  const path = cinemaFilmPath(film.card.key)
+  // AF3: the film's page opens on the day picked here.
+  const path = cinemaFilmPath(film.card.key, day)
   return (
     <li>
       <article aria-label={film.card.title} className="archive-panel flex gap-3 p-3">
@@ -210,7 +212,7 @@ function DayView({ day, films, venues, now, online }: { day: string; films: DayF
         <p className="shrink-0 text-xs text-muted-foreground">{films.length.toLocaleString('en-GB')} {films.length === 1 ? 'film' : 'films'}</p>
       </div>
       <ul className="space-y-3">
-        {films.map((film) => <DayFilmCard key={film.card.key} film={film} venues={venues} now={now} online={online} />)}
+        {films.map((film) => <DayFilmCard key={film.card.key} film={film} day={day} venues={venues} now={now} online={online} />)}
       </ul>
     </section>
   )
@@ -308,8 +310,8 @@ export function AtTheCinema() {
     update((next) => (run === 'all' ? next.delete('run') : next.set('run', run)))
   }
   function setDay(day: string | null) {
-    // Today is the default, so it needs no word in the address; every day at once is "all".
-    update((next) => (day === null ? next.set('day', 'all') : day === today ? next.delete('day') : next.set('day', day)))
+    // Every day at once is the default, so it needs no word in the address (AF3).
+    update((next) => (day === null ? next.delete('day') : next.set('day', day)))
   }
   function setAllCinemas(all: boolean) {
     update((next) => {
@@ -331,27 +333,8 @@ export function AtTheCinema() {
 
   return (
     <section aria-label="At the cinema" className="space-y-6">
-      {data && !newOnly ? (
-        // AE5 (#355, point 4): the date strip leads, and stays while the films scroll under it.
-        <div className="sticky top-0 z-10 -mx-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          <div role="group" aria-label="Day" className="flex gap-2 overflow-x-auto pb-1">
-            {days.map((day) => (
-              <button
-                key={day}
-                type="button"
-                aria-pressed={filters.day === day}
-                aria-label={dayAndDate(day)}
-                title={showing.has(day) ? undefined : 'Nothing showing'}
-                onClick={() => setDay(day)}
-                className={cn(CHIP, filters.day === day ? CHIP_ON : CHIP_OFF, !showing.has(day) && filters.day !== day && 'border-dashed text-muted-foreground opacity-60')}
-              >
-                {shortDay(day, today)}
-              </button>
-            ))}
-            <button type="button" aria-pressed={filters.day === null} onClick={() => setDay(null)} className={cn(CHIP, filters.day === null ? CHIP_ON : CHIP_OFF)}>All days</button>
-          </div>
-        </div>
-      ) : null}
+      {/* AE5 (#355, point 4): the date strip leads, and stays while the films scroll under it. */}
+      {data && !newOnly ? <DayStrip days={days} selected={filters.day} today={today} showing={showing} onPick={setDay} /> : null}
       {data ? (
         <div className="space-y-3" aria-label="Filters" role="group">
           <div role="group" aria-label="Programme view" className="flex flex-wrap gap-2">
