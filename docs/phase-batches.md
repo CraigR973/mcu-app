@@ -5991,7 +5991,7 @@ and no live write.
 |---|---|---|---|
 | ~~AF1~~ | ~~Needs you: Mark puts every disc back; Needs attention folded in (snags 1, 2), 🟡 3–4 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 153, merge `057086f5dcbdeab1c5bddd7742e54c261dc78383` |
 | ~~AF2~~ | ~~Closest to complete: names on Home, a tidy set page (snag 3), 🟡 2–3 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 154, merge `06eb33033926581d00a0e29c73c058d8d526e994` |
-| AF3 | At the cinema: All days by default, older films first on Home, a film's day strip (snags 5–8), 🟡 ~3.5 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| ~~AF3~~ | ~~At the cinema: All days by default, older films first on Home, a film's day strip (snags 5–8), 🟡 ~3.5 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 155, merge `aeb2dbbfffc8c5e7e4d7f3c0a8c1c86dc87c04ad` |
 | AF4 | Back keeps your place (snag 4), 🟡 3–4 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
 
 **About 12–15 hours of agent work**, plus 30–60 minutes of gate per batch (2–4 hours across the
@@ -6086,6 +6086,11 @@ row at 320, 375 and 390 px (AE3's end-to-end case).
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
 
 ### AF3 — At the cinema: All days by default, older films first on Home, a film's day strip 🟡
+
+**Shipped 13 Nov, 22:49 GMT: PR 155, merge `aeb2dbbfffc8c5e7e4d7f3c0a8c1c86dc87c04ad` (#375); production health and readiness on it.**
+Every criterion below is met. Every way into At the cinema, Movie night's "See what's on"
+included, opens on All films, All days; Home's strip leads with the week's older films and ends
+with See all; a film's page has the day strip, opening on the day carried or its first day.
 
 - **Opens on All films, All days (snags 6 and 8):** every way in with no day in the address
   (Home's strip and card, Movie night's tab and "See what's on", the menu, a film page's "See what

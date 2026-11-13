@@ -8106,3 +8106,26 @@ contemporaneous.
        the two buttons stay apart and inside their row at 320, 375 and 390 px; screenshots looked
        at in both themes. CI's seven jobs on PR 154.
      - **Production**: API and web on `06eb330` with `db: ok` at 21:02 GMT. Not seen yet: either phone.
+
+375. **AF3 shipped: At the cinema opens on All films, All days; Home's strip leads with older
+     films; a film's page has the day strip (13 Nov, PR 155, `aeb2dbb`).** Drafting choices under
+     #372, open to Craig's overrule:
+     - **No day in the address is All days** (superseding #360's default of today). A picked day,
+       today included, is `?day=YYYY-MM-DD`; AE5's `?day=all` and a day already gone read as All
+       days. "Nothing more today" shows only when today is picked. Every way in (Home's strip and
+       card, Movie night's tab and "See what's on", the menu, a film page's "See what is on") uses
+       the bare address, so each opens on All days with no change of its own.
+     - **All days leads the strip**, so the default choice is in sight on a phone rather than at the
+       far end of a fortnight of chips. The strip is one shared piece for both pages.
+     - **A film's page has the strip, with only the days the film is on**, plus All days. It opens on
+       the day picked on At the cinema (a day's film links carry it), or otherwise on the film's
+       first day; a picked day replaces the address, so Back leaves the film's page in one step.
+       A day carried that the film is not on opens its first day.
+     - **Home's strip: the week's older films first, soonest showing first**, then the rest in At the
+       cinema's order (widest first), twelve posters and then a "See all films" tile that opens At
+       the cinema.
+     - **Proved:** `pnpm -r test` (shared 209, web 989); web lint, typecheck and build; AE5, AC4, AC5,
+       AC7, AE6, the cinemas case and Home's layout case in Chromium on the Mac, two fixed on the way
+       (AC4's Home strip now leads with the rerun and ends with See all; AC7's film page picks All
+       days to see both cinemas). CI's seven jobs on PR 155.
+     - **Production**: API and web on `aeb2dbb` with `db: ok` at 22:49 GMT. Not seen yet: either phone.

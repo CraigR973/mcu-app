@@ -2,6 +2,12 @@
 
 ## Now
 
+**13 Nov, 22:49 GMT: AF3 shipped, At the cinema opens on All days (PR 155, `aeb2dbb`, #375);
+Group AF continues with AF4.** Every way into At the cinema, Movie night's "See what's on"
+included, opens on All films, All days, All days leading the strip. A film's page has the same
+strip, opening on the day picked or its first day. Home's strip leads with the week's older films,
+soonest first, and ends with a See all tile. Production API and web on `aeb2dbb`, `db: ok`.
+
 **13 Nov, 21:02 GMT: AF2 shipped, Closest to complete tidied (PR 154, `06eb330`, #374); Group AF
 continues with AF3.** On Home each set is one block that opens it, naming up to three missing
 films and "+N", with no buttons. A set's page is padded once and lists its missing films with
@@ -584,6 +590,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 22:49 GMT — AF3 shipped (PR 155, `aeb2dbbfffc8c5e7e4d7f3c0a8c1c86dc87c04ad`, #375).** At the cinema opens on All
+  days; a film's page has the day strip; Home's strip leads with older films. Local: `pnpm -r
+  test` (web 989, shared 209), lint, typecheck, build; AE5, AC4, AC5, AC7, AE6, cinemas and
+  Home's layout case in Chromium. CI's seven jobs passed; production on the merge.
 - **13 Nov, 21:02 GMT — AF2 shipped (PR 154, `06eb33033926581d00a0e29c73c058d8d526e994`, #374).** Closest to complete names what
   is missing on Home with no buttons; a set's page is a list with room for both buttons. Local:
   `pnpm -r test` (web 983, shared 209), lint, typecheck, build; AE3 and Home's layout case in
