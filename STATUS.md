@@ -2,6 +2,13 @@
 
 ## Now
 
+**13 Nov, 10:01 GMT: the Mac's throwaway Postgres now runs search's migration and everything
+after it (#370, closing #362).** At Craig's word, `pg_trgm` 1.6 and `unaccent` 1.1 were compiled
+from the official PostgreSQL 16.2 source (24.7 MB, SHA-256 checked) against pgserver's own
+`pg_config`, and installed into it: 14 files added, none replaced. A fresh local database migrated to 078 and back to base; the full API suite passed against it (2,844 tests, none skipped, in 3 min 20 s, where 1,140 of them used to skip on the Mac); and the end-to-end suite ran in Chromium on the Mac again, the first time since search's migration: 111 of 117 passed in 30.5 minutes, and the 6 that failed passed when re-run on their own (7 of 7 in 1.8 minutes), so a full local run is not yet a clean gate and CI stays the authority. After a venv rebuild,
+which removes them, `scripts/pgserver-extensions.sh` puts them back. Nothing in production
+changed, and CI stays the authority: pgserver is 16.2, CI runs 17.
+
 **12 Nov, 20:30 GMT: the watch-history backfill and the seven watch corrections are written, at
 Craig's word (#369).** Craig said "Yes to 1–3" to
 `docs/reviews/watch-history-recovery-proposal-2026-11-12.md`. A backup was run by hand first
@@ -172,7 +179,10 @@ it renders — and report what was observed rather than what passed.
    650 of them skip locally (11 Oct) and run only in CI; run the suite with `env -u
    DATABASE_URL`. A throwaway local Postgres does work: `pgserver` 16.2 is in the API venv,
    and the wave 1 review ran the 60 assistant tests against one (its scripts are in
-   `scratchpad/wave-1/r3/probes/`, gitignored). Do **not** point them at production Neon to
+   `scratchpad/wave-1/r3/probes/`, gitignored). **Since 13 Nov pgserver carries `pg_trgm` and
+   `unaccent` (#370)**, so a throwaway database migrates to head and the whole suite runs
+   against it; a venv rebuild removes them, so run `scripts/pgserver-extensions.sh` again.
+   Do **not** point them at production Neon to
    get local coverage. A test fixture bug on 2026-09-09 used an unresolvable host and was
    caught only because CI ran it against real Postgres; against Neon it would have passed and
    shipped hidden behind a green local run.
@@ -352,9 +362,10 @@ it renders — and report what was observed rather than what passed.
     our own front end. Corrected at close-out. **Read the alias list from
     `vercel inspect`; never assume the project name is the domain.** `DECISIONS.md` #23.
 
-15. **There is no local Postgres and no Docker on this machine.** Migration changes and
-    the DB-backed lockout tests cannot be run here at all — they skip locally and only
-    execute in CI. Both of Batch 3's CI failures were migration defects invisible to a
+15. **There is no Docker and no system Postgres on this machine.** *(Corrected 13 Nov: the
+    API venv's pgserver is a throwaway local Postgres, and with #370's extensions it runs
+    every migration and the DB-backed tests; gotcha 3 says how.)* Without it, migration
+    changes and the DB-backed lockout tests skip locally and only execute in CI. Both of Batch 3's CI failures were migration defects invisible to a
     green local gate. **Treat a green local run as silent about anything touching SQL.**
 
 16. **The first real write against real data is its own test stage.** Batch 4's gate was
@@ -535,6 +546,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 10:01 GMT — pgserver gains `pg_trgm` and `unaccent` (#370, closing #362).** Built
+  with PGXS from the checked 16.2 source, at Craig's word; 14 files added to pgserver, none
+  replaced. A fresh local database migrated to 078 and back to base; the full API suite passed against it (2,844 tests, none skipped, in 3 min 20 s, where 1,140 of them used to skip on the Mac); and the end-to-end suite ran in Chromium on the Mac again, the first time since search's migration: 111 of 117 passed in 30.5 minutes, and the 6 that failed passed when re-run on their own (7 of 7 in 1.8 minutes), so a full local run is not yet a clean gate and CI stays the authority. New `scripts/pgserver-extensions.sh` repeats it after a venv rebuild. No
+  production change.
 - **12 Nov, 20:30 GMT — watch-history backfill and corrections written, at Craig's word (#369).**
   The proposal was prepared read-only (19:44 UTC reads); Craig replied "Yes to 1–3". Backup
   run 43299415327 passed its drill at 20:22 UTC, and the re-check at 20:23 was identical.

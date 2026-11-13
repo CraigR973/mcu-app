@@ -13,12 +13,15 @@ Older dated sections retain historical instructions; the current summary below t
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
-## A local Postgres for search — 10 Nov (#362)
+## ~~A local Postgres for search~~ — done 13 Nov (#362, #370)
 
 Nothing in production waits on this. It decides whether the Mac can run the end-to-end suite
 once AE7 (search) merges; CI runs it either way.
 
-- [ ] **Approve one download, or say no.** AE7 needs Postgres's `pg_trgm` and `unaccent`
+- [x] **Done 13 Nov at Craig's word ("lets do number 4"), #370.** Both extensions are built
+      into pgserver from the checked 16.2 source by `scripts/pgserver-extensions.sh`; run it
+      again after any rebuild of the API venv, which removes them. A fresh local database migrated to 078 and back to base; the full API suite passed against it (2,844 tests, none skipped, in 3 min 20 s, where 1,140 of them used to skip on the Mac); and the end-to-end suite ran in Chromium on the Mac again, the first time since search's migration: 111 of 117 passed in 30.5 minutes, and the 6 that failed passed when re-run on their own (7 of 7 in 1.8 minutes), so a full local run is not yet a clean gate and CI stays the authority.
+- ~~**Approve one download, or say no.**~~ AE7 needs Postgres's `pg_trgm` and `unaccent`
       extensions. The Mac's local throwaway Postgres (pgserver, in the API's venv) ships
       neither, and Homebrew has no ready build for Intel macOS 13. An agent can download the
       PostgreSQL 16.2 source (about 24 MB, from postgresql.org, checked against its published

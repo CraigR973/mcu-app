@@ -23,8 +23,11 @@ against one.
 
 **Since migration 077 (AE7, #355) the server needs Postgres's `pg_trgm` and `unaccent`
 extensions**, which search depends on. CI's service container has both. pgserver, below, ships
-neither, so on the Mac the harness stops at migration 077 until a server with them is used
-(`OWNER-ACTIONS.md` says how one can be had); until then this suite runs in CI.
+neither; `scripts/pgserver-extensions.sh` builds both into it (#370). Run it once, and again
+after any rebuild of the API venv, which removes them. On Craig's Mac (Intel, four cores) a
+full Chromium run took 30.5 minutes on 13 Nov, against about 7 in CI, and 6 of its 117 cases
+failed there that passed when re-run on their own and pass in CI, so a full local run is not
+yet a clean gate; CI stays the authority.
 
 ```bash
 # once per sitting: a local server (pgserver is in the API venv); keep the path short

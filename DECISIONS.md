@@ -7994,3 +7994,19 @@ contemporaneous.
        12) and the 8 doubtful corrections, tiered privately in `doubtful-review.csv`. Writing any
        of them needs Craig's word, entry by entry or by tier.
 
+370. **The Mac's pgserver gains `pg_trgm` and `unaccent` (13 Nov, at Craig's word, closing #362).**
+     Since migration 077 (AE7) a local throwaway database stopped at 076, so every batch's
+     migration, database tests and end-to-end suite were proved in CI only.
+     - **How:** `scripts/pgserver-extensions.sh` downloads the official PostgreSQL 16.2 source
+       (24.7 MB, its SHA-256 pinned in the script), extracts only `contrib/pg_trgm` and
+       `contrib/unaccent`, and builds them with PGXS against pgserver's own `pg_config`, server
+       headers and `postgres` binary, with this Mac's SDK in place of the one named in pgserver's
+       build settings. It adds 14 files to pgserver and replaces none.
+     - **Rejected:** building the whole server (pgserver already ships the headers and PGXS, so
+       only the two modules are needed); Homebrew (no ready build for Intel macOS 13, #362); a
+       second server such as Postgres.app (another install to keep, and not what the harness and
+       the tests start).
+     - **Proved:** A fresh local database migrated to 078 and back to base; the full API suite passed against it (2,844 tests, none skipped, in 3 min 20 s, where 1,140 of them used to skip on the Mac); and the end-to-end suite ran in Chromium on the Mac again, the first time since search's migration: 111 of 117 passed in 30.5 minutes, and the 6 that failed passed when re-run on their own (7 of 7 in 1.8 minutes), so a full local run is not yet a clean gate and CI stays the authority.
+     - **Limits:** pgserver is 16.2 and CI runs 17, so CI stays the authority. A venv rebuild or a
+       pgserver upgrade removes the modules; the script refuses a pgserver that is not 16.2 until
+       that version's source and checksum are pinned.
