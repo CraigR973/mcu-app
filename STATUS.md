@@ -2,6 +2,17 @@
 
 ## Now
 
+**13 Nov, 18:20 GMT: Craig's 8 snags are reconciled, and Group AF is drafted for his go (#372).**
+Nothing in the app changed. The report is `docs/reviews/feedback-reconciliation-2026-11-13.md`,
+read from the code at `c7b460c` and live data through the read-only role. Craig answered its
+decisions: every put-back is Mark's (Halloween and The Silence of the Lambs, returned by Craig on
+12 Nov, still read "You" for both people under #363); Needs attention folds into Needs you as App
+rows for Craig; Home's Closest to complete names what is missing, with its buttons on the set's
+page; Home's cinema strip leads with the week's older films (7 on 13 Nov, each at one cinema).
+Group AF in `docs/phase-batches.md` is four batches in one sitting, about 12–15 hours of agent
+work: AF1 Needs you, AF2 Closest to complete, AF3 At the cinema (All days by default, a film's day
+strip), AF4 Back keeps your place. It waits for Craig's go; this docs commit is pushed at the go.
+
 **13 Nov, 15:03 GMT: main's dependency audit is green again (PR 152, `73e825e`, #371).** Two
 advisories against `soupsieve`, BeautifulSoup's CSS selector engine, were published on 12 Nov and
 turned the audit red on `c7b460c`: CVE-2026-126190 (polynomial-time descendant combinator, CVSS
@@ -141,6 +152,9 @@ Positive cinema delivery was read back on 12 Nov
 remain unchanged.
 
 ## Next
+
+**Group AF, Craig's 13 Nov snags, is drafted and waits for his go (#372):** AF1 → AF2 → AF3 → AF4
+in one sitting, from a clean `main` with this plan's docs commit pushed first.
 
 **Group AC implementation is deployed through AC6 and the separate calendar repair.**
 AC3's post-8-Nov rerun classification read-back is complete. AC6's scheduled delivery is
@@ -555,6 +569,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 18:20 GMT — Craig's 8 snags reconciled; Group AF drafted (#372).** Read-only: code at
+  `c7b460c`, live loans, cinema runs and health checks through the read-only role. Craig's
+  answers: every put-back is Mark's; Needs attention into Needs you; Closest to complete's buttons
+  off Home; older films first in Home's cinema strip. Four batches wait for his go. Docs only,
+  committed on `main`, not pushed.
 - **13 Nov, 15:03 GMT — soupsieve 2.9.2 → 4.1 (PR 152, `73e825e49e58d1228882defe3cf4ca0db7e20ae3`, #371).** Main's audit failed
   on `c7b460c` over CVE-2026-126190 and CVE-2026-126192, both published 12 Nov; 2.10 fixes only
   the second, so 4.1. Only `soupsieve`'s lines changed in both locks. No selector in the code or

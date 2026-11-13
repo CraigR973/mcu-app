@@ -8029,3 +8029,27 @@ contemporaneous.
      - **Proved:** only `soupsieve`'s lines change in both locks; ruff, mypy and the full API suite
        on a local Postgres (2,844, among them 252 for the scrapers, the deals feed and the cinema
        parsers); CI's seven jobs passed on PR 152, the audit and the browser tests in all three browsers included; production API and web were on `73e825e` at 15:03 GMT with `db: ok`. Its first real pages are tonight's 03:00 price scrape and the 08:00 cinema refresh.
+
+372. **Craig's 13 Nov snags: his answers, and Group AF drafted for his go (13 Nov).** Craig sent
+     eight snags one at a time; they were reconciled against the code and live data in
+     `docs/reviews/feedback-reconciliation-2026-11-13.md`. He answered its five decisions the
+     same evening:
+     - **Every put-back is Mark's** ("it will always be Mark that puts it back"): the report's
+       alternative, not its recommendation (the other keeper, only when a keeper borrowed the
+       disc). The record agrees: all four loans ever were Craig's, and Mark shelved the two Craig
+       returned on 28 Oct. Supersedes #363's first bullet for putting a disc back; handing one
+       over and chasing an overdue loan keep #363's rule.
+     - **Needs attention folds into Needs you**, for Craig only, as rows labelled App, with a Tell
+       Craig line as a row labelled Mark, with Clear. Supersedes Batch X2's separate row on Home;
+       the daily check and the API stay as they are. On 13 Nov it held one item, and Tell Craig
+       had never been used.
+     - **Home's Closest to complete names what each set is missing, with no buttons**; Want and
+       Doesn't count stay on the set's page, which becomes a list. Supersedes AE3's buttons on
+       Home (#358).
+     - **Home's cinema strip leads with older films**, then the rest, then a See all tile.
+     - **"All good to plan the other batches":** Group AF is drafted in `docs/phase-batches.md`.
+       As with #355, a plan is not a go; the build waits for his word.
+     - **Needing no choice, from the snags themselves:** At the cinema opens on All films, All
+       days, superseding #360's default of today; a film's page gets the same day strip; "See
+       what's on" follows the new default; Back returns to where you had scrolled.
+     - The drafting choices, open to Craig's overrule, are listed under Group AF.

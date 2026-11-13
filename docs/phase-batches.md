@@ -5503,6 +5503,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: ~~AB3~~ (`5cfa467`) · 3: ~~AB4~~ (`df6824a`) · 4: ~~AB5~~ (`b9f7dd7`, report) · 5: ~~AB6~~ (`72ff0bd`) → ~~AB7~~ (`190906ac`) | By sitting: Group AB table | By sitting: Group AB table | **All five sittings complete; sitting5 complete4Nov under327/330/334.** Sittings1–4 retain AB1/ad2c992, AB2/c187ed7 and separate seeding repair PR120/bf0eb36; AB3/5cfa467 with genuine push receipt still owner acceptance; AB4/df6824a with native production iPhone/header/Search/themes/keyboard and approved cold-launch/re-add accepted; AB5 report PR123/b9f7dd7 accepted313 with feasibility then unproved. Standing334 covers separate prerequisite repairs PR126/127, accepted public-page-first amendment and real all-nine source gates. AB6 PR125/72ff0bd/final354f34c: exact all7 gates/deploy, fresh63GET/all200/1838-row source artifact/three corroborated mappings/import/enable9/roles/core counts/both-profile reads; failed prefixes not spliced. AB7 PR128/bf70319 plus same-branch observed-format fix67d22ec and causal Home readiness190906ac: all ten local/exact manual41753476409 all7/C70/F69+1/W68+2/jobs6/all18 cinema cases, actual both-profile/theme/16-filter production reads and exact API/web/full readiness. Current4–17Nov1,617 future showings/141 groups, New0/Older0/all Unclassified, partial horizons/unknown identity/year/source age explicit. Source fees0/resources unpriced; next scheduled/future access unproved. No new PR, source pass, destructive catalogue/diary write, unrelated hosting change, AA10c or other sitting. Exact final main stamp in PR128. |
 | **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6's scheduled digest sent for real on 9–12 Nov (read back 12 Nov), so only Craig's phone receipt/tap stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
+| **AF** | AF1 → AF2 → AF3 → AF4, one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); waiting for his go.** AF4 comes last because its end-to-end cases walk the pages AF2 and AF3 change. The checkout must be clean before AF1. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -5965,3 +5966,141 @@ missed it. The migration, the full database suite and `ae10.spec.ts` were proved
 - Fixed whatever he picks: the other person's votes stay hidden until a match (#157); no push is
   sent twice; a closed night keeps its history.
 - Size 4–8 h, by the picks.
+
+## Group AF — Craig's 13 Nov snags, drafted 13 Nov
+
+**Drafted 13 Nov from Craig's 8 snags and his answers (#372). Waiting for his go.** The snags and
+their reconciliation against the code and live data are in
+`docs/reviews/feedback-reconciliation-2026-11-13.md`; a phone copy of this plan is
+`docs/reviews/group-af-plan-2026-11-13.md`. Four batches in one sitting: one branch and PR per
+batch with normal verification and automatic close-out (#24), clean `main` between batches,
+sequential, no stacked branches.
+
+**Before AF1 the checkout must be clean** (close-out conditions 3 and 4). At 18:20 GMT on 13 Nov
+it held only this plan's docs commit (the report, #372, this section, `STATUS.md`), committed and
+not yet pushed: it is pushed at the go, before AF1 branches. `main` is green: PR 152 (`73e825e`,
+#371) turned the dependency audit green at 15:03 GMT.
+
+Settings: Deep = Opus 5.5 / GPT-5.6 Sol. The order is by value and dependency: AF1 is the mislabel
+Craig sees every day at the top of Home; AF2 is Home's next card; AF3 is the cinema; AF4 touches
+every page, and its end-to-end cases walk AF2's set page and AF3's cinema pages, so it comes last.
+Cost: four PRs, each with the full local gate, seven-job CI and a production deploy; no owner stop
+and no live write.
+
+| Batch | Scope and size | Claude Code / Codex | Status |
+|---|---|---|---|
+| AF1 | Needs you: Mark puts every disc back; Needs attention folded in (snags 1, 2), 🟡 3–4 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AF2 | Closest to complete: names on Home, a tidy set page (snag 3), 🟡 2–3 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AF3 | At the cinema: All days by default, older films first on Home, a film's day strip (snags 5–8), 🟡 ~3.5 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AF4 | Back keeps your place (snag 4), 🟡 3–4 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
+
+**About 12–15 hours of agent work**, plus 30–60 minutes of gate per batch (2–4 hours across the
+four).
+
+*Why those settings.* AF1 changes the API's rule for who owns an item and what both people see at
+the top of Home: Deep High, as AE8 was. AF2 and AF3 are layout and design judgement on screens both
+people use daily: Deep High for the premium bar, as AE5 was. AF4 is Extra High: it touches
+navigation on every page, a restore at the wrong moment jumps the page under a thumb, and its hard
+cases (pages still loading, the Archive's virtual grid, filters that replace the address) fail
+silently.
+
+*Choices made while drafting, open to Craig's overrule.*
+
+- **Every put-back is Mark's**, whoever borrowed the disc and whoever recorded it back (#372).
+  Handing a disc over stays as #363 has it: Mark's when Craig asked for it, each keeper's own
+  otherwise. Chasing an overdue loan stays each keeper's own.
+- **Loans is unchanged:** either person can still confirm a disc shelved there; only Needs you's
+  owner, label and wording change. If Mark's profile were ever inactive, a put-back falls back to
+  each keeper's own rather than vanishing.
+- **App rows sit after Craig's own items and before Mark's**, in amber, each opening where its
+  Needs attention line opens now, or saying what to do where there is nowhere to open. "The daily
+  check has not run" is an App row too. A Tell Craig line is a row labelled Mark, with Clear beside
+  it. The Needs you page lists App rows for Craig too. A failed read of the app's checks leaves the
+  App rows out, as a failed read hides Needs attention today.
+- **Home's Closest to complete keeps three sets.** Each block is name, count and bar, then one line
+  naming up to three missing films and "+N"; the whole block opens the set.
+- **The set page lists missing films** with a small poster, title and year (wrapping), TMDB as a
+  small link, then Want and Doesn't count side by side; "Add all N to Wanted" under the Missing
+  heading; padded once; Not counted and On the shelf unchanged.
+- **Home's cinema strip:** older films soonest showing first, then the rest in today's order
+  (widest first); twelve posters, then a See all tile; films already elsewhere on Home still left
+  out.
+- **At the cinema's address:** no day means All days; a picked day, today included, is
+  `?day=YYYY-MM-DD`; `?day=all` and a day already gone read as All days. "Nothing more today"
+  shows only when today is picked.
+- **A film's page:** a strip of only the days the film is on, plus All days. It opens on the day
+  picked on the main page, carried in the film's link, or otherwise on the film's first day. A
+  picked day replaces the address rather than adding to history, so Back leaves the film page in
+  one step.
+- **Back keeps your place on Back and Forward only.** A newly opened page starts at the top; a
+  filter change keeps the place; a link to a heading still scrolls to it. Positions last for the
+  browser session, so they survive a reload but not closing the app.
+
+### AF1 — Needs you: Mark puts every disc back; Needs attention folded in 🟡
+
+- **Every put-back is Mark's (snag 1, #372):** a disc back but not shelved is Mark's item. Mark
+  sees "Put back {film}", labelled You. Craig sees "Mark to put back {film} · Returned {date} ·
+  goes to {shelf}", labelled Mark (the label opens Mark's page), after his own items. Supersedes
+  #363's first bullet for putting a disc back.
+- Handing over and chasing an overdue loan keep #363's rule. Loans is unchanged.
+- **One Needs you for Craig (snag 2, #372):** Home's top has one card: his own items, then each of
+  the daily check's problems as a row labelled App, then Mark's items. Each App row goes where its
+  Needs attention line went. A Tell Craig line is a row labelled Mark, with Clear. The count and
+  "See all" include them. The separate Needs attention card is gone.
+- **Mark's Home is unchanged:** no App rows, and the app's checks stay readable by Craig alone.
+- The put-back rule is the API's; the App rows are web only, from the reads Home already makes.
+- Regress: AB1, AC1 and Tell Craig's end-to-end cases move to the merged card (an expectation
+  change by #372, not a route to green); AE8's ownership cases; 375 px in both themes for both
+  people.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA. The API's own Needs you
+  read for each person, run against production in a READ ONLY transaction as AE8's read-back was
+  (#363), shows the two discs Craig returned on 12 Nov as Mark's, unless Mark has shelved them by
+  then.
+
+### AF2 — Closest to complete: names on Home, a tidy set page 🟡
+
+- **Home (snag 3, #372):** three sets, each one block: name, count and bar, then one line,
+  "Missing: {film}, {film}, {film} +N", titles whole up to the line's width. No buttons; the block
+  opens the set. Supersedes AE3's buttons on Home (#358).
+- **The set page:** padded once on a phone. Missing films are a list: a small poster, title and
+  year (wrapping, never cut), a small TMDB link, then Want (Craig's) and Doesn't count side by
+  side. "Add all N to Wanted" sits under the Missing heading. Not counted and On the shelf are
+  unchanged.
+- **Nothing bunches:** at 320, 375 and 390 px no button overlaps another or leaves its row,
+  checked by hit-testing in the end-to-end case, as AE's 375 px checks do.
+- Mark sees no Want, as now, and his Doesn't count works from the set page.
+- AE3's end-to-end case moves its Doesn't count click to the set page (#372).
+- Web only; no API change.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AF3 — At the cinema: All days by default, older films first on Home, a film's day strip 🟡
+
+- **Opens on All films, All days (snags 6 and 8):** every way in with no day in the address
+  (Home's strip and card, Movie night's tab and "See what's on", the menu, a film page's "See what
+  is on") opens on All days: This week, then Coming up, then listings and events. The strip stays
+  pinned at the top. Supersedes #360's default.
+- **Home's strip leads with older films (snag 5, #372):** older films first, soonest showing first,
+  then the rest as now; up to twelve posters, then a See all tile opening At the cinema.
+- **A film's page has the strip (snag 7):** one shared strip for both pages: the days the film is
+  on, plus All days; a day shows that day's cinemas and times; it opens as the drafting choice
+  above says.
+- Propose a trip and Your trips are unchanged.
+- AE5, AC4 and AC5's end-to-end cases change from "opens on today" to All days (#372).
+- Web only; no API change.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AF4 — Back keeps your place 🟡
+
+- **Back returns you to where you were (snag 4):** the phone's back arrow, a page's own back
+  button, and the browser's Back and Forward put the page where it was once it is drawn. A newly
+  opened page starts at the top. A filter change that replaces the address keeps the place. A link
+  to a heading still scrolls to it.
+- It covers the app's scrolling panel on every page, the Archive's grid and list (a scroll box of
+  their own), and a completion set opened in place of Home.
+- A page that has grown shorter since lands as far down as it can, and does not jump later.
+- End-to-end in all three browsers: Archive → film → Back; Home → set → Back; At the cinema → film
+  → Back; a newly opened page starts at the top.
+- CI's WebKit is not iOS Safari: a check on Craig's phone goes into `OWNER-ACTIONS.md` at
+  close-out.
+- Web only.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
