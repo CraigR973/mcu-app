@@ -3,32 +3,33 @@ import { Target } from 'lucide-react'
 import type { CompletionSet } from '@mcu/shared'
 
 import { ShelfHeading, ShelfLink } from '@/components/dashboard/Shelf'
-import { DoesNotCount, WantFilm } from '@/components/insights/CompletionFilmActions'
 import { StatePanel } from '@/components/ui/state-panel'
-import { useAuth } from '@/context/auth'
 import { completionCountLabel, fetchCompletionInsights, setTypeLabel } from '@/lib/api'
 import { closestToComplete } from '@/lib/home'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
-/** How many sets Home shows; the rest are one tap away on the full view. */
 /** AC2: the three closest, as a list; the full view has the rest. */
 const SHOWN = 3
 
+/** How many missing films a set names on Home; the rest are "+N" and its page. */
+const NAMED = 3
+
 /**
- * One set, opening its page, then what it is missing — AE3 (#355, point 3): up to three films
- * named, each with Want (Craig's; Wanted is shared) and "Doesn't count", and "+N more" opening
- * the set. A set whose only missing films do not count is complete, and leaves the row.
+ * One set as one block that opens it — AF2 (#372, superseding AE3's buttons on Home, #358): its
+ * name, how much is on the shelf and a bar, then one line naming what it is missing, up to three
+ * films and "+N". Want and "Doesn't count" are on the set's page, where they have room. A set
+ * whose only missing films do not count is complete, and leaves the row.
  */
-function SetRow({ set, onOpen, canWant }: { set: CompletionSet; onOpen: () => void; canWant: boolean }) {
-  const named = set.missingFilms
+function SetRow({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
+  const named = set.missingFilms.slice(0, NAMED)
   const more = set.missingCount - named.length
   return (
-    <li className="py-1">
+    <li>
       <button
         type="button"
         onClick={onOpen}
-        className="touch-target block w-full rounded-md py-2 text-left transition-colors hover:text-primary"
+        className="touch-target block w-full rounded-md py-3 text-left transition-colors hover:text-primary"
       >
         <span className="flex items-baseline justify-between gap-3 text-sm">
           <span className="min-w-0 truncate font-semibold text-foreground">{set.setName}</span>
@@ -50,33 +51,23 @@ function SetRow({ set, onOpen, canWant }: { set: CompletionSet; onOpen: () => vo
             style={{ width: `${String(set.percentComplete)}%` }}
           />
         </span>
+        {/* Only where the answer names films: an older answer names none, and the line above
+            already says how many. "+N" stays in sight however long the titles run. */}
+        {named.length > 0 ? (
+          <span className="mt-2 flex items-start gap-2 text-xs leading-5">
+            <span className="line-clamp-2 min-w-0 flex-1 text-foreground">
+              <span className="text-muted-foreground">Missing: </span>
+              {named.map((film) => `${film.title}${film.year ? ` (${String(film.year)})` : ''}`).join(', ')}
+            </span>
+            {more > 0 ? <span className="shrink-0 font-semibold text-primary">+{more}</span> : null}
+          </span>
+        ) : null}
       </button>
-      {named.length > 0 ? (
-        <ul aria-label={`Missing from ${set.setName}`} className="mb-1 space-y-1">
-          {named.map((film) => (
-            <li key={film.tmdbId} className="flex min-h-11 items-center gap-1.5 text-xs">
-              <span className="min-w-0 flex-1 truncate text-foreground" title={film.title}>
-                {film.title}
-                {film.year ? <span className="text-muted-foreground"> ({film.year})</span> : null}
-              </span>
-              <WantFilm tmdbId={film.tmdbId} wanted={film.wanted} canAdd={canWant} />
-              <DoesNotCount setId={set.id} film={film} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {/* Only beside named films: an older answer names none, and its row already says how many. */}
-      {more > 0 && named.length > 0 ? (
-        <button type="button" onClick={onOpen} className="touch-target mb-1 text-xs font-semibold text-primary underline-offset-2 hover:underline">
-          +{more} more
-        </button>
-      ) : null}
     </li>
   )
 }
 
 export function CompletionShelf({ onOpen }: { onOpen: (setId: string) => void }) {
-  const { profile } = useAuth()
   // The same key as the full view's unfiltered list, so the two share one request.
   const query = useQuery({
     queryKey: ['completion-insights', ''],
@@ -110,7 +101,7 @@ export function CompletionShelf({ onOpen }: { onOpen: (setId: string) => void })
 
   // AC2: a short list rather than a sideways row, so Home's rows stay at most four.
   return (
-    <section aria-labelledby="home-completion" className="archive-panel space-y-2 p-4">
+    <section aria-labelledby="home-completion" className="archive-panel space-y-1 p-4">
       <ShelfHeading
         id="home-completion"
         title="Closest to complete"
@@ -122,7 +113,7 @@ export function CompletionShelf({ onOpen }: { onOpen: (setId: string) => void })
         {closestToComplete(sets)
           .slice(0, SHOWN)
           .map((set) => (
-            <SetRow key={set.id} set={set} onOpen={() => onOpen(set.id)} canWant={profile?.role === 'admin'} />
+            <SetRow key={set.id} set={set} onOpen={() => onOpen(set.id)} />
           ))}
       </ul>
     </section>

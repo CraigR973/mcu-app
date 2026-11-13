@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Bookmark, Check, ExternalLink, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { Poster } from '@/components/movies/Poster'
 import { Button } from '@/components/ui/button'
 import {
   addManyWanted,
@@ -64,7 +65,7 @@ function BulkAddMissing({ tmdbIds }: { tmdbIds: number[] }) {
       ) : (
         <Button type="button" size="sm" variant="outline" onClick={() => setConfirming(true)}>
           <Bookmark className="h-4 w-4" />
-          Add {tmdbIds.length} missing to wanted
+          {tmdbIds.length === 1 ? 'Add 1 to Wanted' : `Add all ${String(tmdbIds.length)} to Wanted`}
         </Button>
       )}
       {add.data ? (
@@ -100,7 +101,9 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
   const set = setQuery.data
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-8">
+    // AF2 (#372): padded once. Home and the list of sets already hold the panel in the page's
+    // own padding; a second 16 px each side left a phone's three columns 100 px wide.
+    <div className="space-y-5">
       <button
         type="button"
         onClick={onBack}
@@ -136,62 +139,41 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
             </div>
           </div>
 
-          {profile?.role === 'admin' ? <BulkAddMissing tmdbIds={set.films.filter((film) => !film.owned && film.counts).map((film) => film.tmdbId)} /> : null}
-
           <section aria-labelledby="completion-missing" className="space-y-3">
             <h2 id="completion-missing" className="text-lg font-semibold">Missing films</h2>
             {set.films.some((film) => !film.owned && film.counts) ? null : (
               <p className="text-sm text-muted-foreground">None: every film that counts is on the shelf.</p>
             )}
-            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-            {set.films.filter((film) => !film.owned && film.counts).map((film) => {
-              const card = (
-                <div className="space-y-1">
-                  <div className="relative">
-                    <img
-                      src={posterUrl(film.posterPath, 'w185')}
-                      alt=""
-                      loading="lazy"
-                      className={cn(
-                        'aspect-[2/3] w-full rounded object-cover',
-                        film.owned ? '' : 'opacity-40 grayscale',
-                      )}
-                    />
-                    {film.owned ? (
-                      <span className="absolute right-1 top-1 rounded-full bg-primary p-1 text-primary-foreground" aria-label="Owned">
-                        <Check className="h-3 w-3" aria-hidden />
-                      </span>
-                    ) : null}
+            {profile?.role === 'admin' ? <BulkAddMissing tmdbIds={set.films.filter((film) => !film.owned && film.counts).map((film) => film.tmdbId)} /> : null}
+            {/* AF2 (#372): a list, not a poster grid. A phone's grid columns were narrower than
+                "Add to Wanted", which spilled into the next film. Each film has the row's width:
+                its title wraps rather than being cut, and its buttons sit side by side beneath,
+                wrapping onto a second line on the narrowest phones rather than overlapping. */}
+            <ul className="divide-y divide-border">
+              {set.films.filter((film) => !film.owned && film.counts).map((film) => (
+                <li key={film.tmdbId} aria-label={film.title} className="flex gap-3 py-3">
+                  <Poster path={film.posterPath} title={film.title} size="w92" decorative className="h-[4.5rem] w-12 shrink-0 rounded-sm border border-border opacity-60 grayscale" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <p className="break-words text-sm font-semibold text-foreground" title={film.title}>
+                      {film.title}
+                      {film.year ? <span className="font-normal text-muted-foreground"> ({film.year})</span> : null}
+                    </p>
+                    <a
+                      href={`https://www.themoviedb.org/movie/${String(film.tmdbId)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+                    >
+                      TMDB <ExternalLink className="h-3 w-3" aria-hidden />
+                    </a>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <WantFilm tmdbId={film.tmdbId} wanted={film.wanted} canAdd={profile?.role === 'admin'} label="Add to Wanted" />
+                      {/* AE3: lost films, TV episodes and other versions, in this set only. */}
+                      <DoesNotCount setId={set.id} film={film} />
+                    </div>
                   </div>
-                  <p
-                    className={cn(
-                      'truncate text-xs',
-                      film.owned ? 'text-foreground' : 'text-muted-foreground',
-                    )}
-                    title={film.title}
-                  >
-                    {film.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{film.year ?? '—'}</p>
-                  <a
-                    href={`https://www.themoviedb.org/movie/${String(film.tmdbId)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
-                  >
-                    TMDB <ExternalLink className="h-3 w-3" aria-hidden />
-                  </a>
-                  <WantFilm tmdbId={film.tmdbId} wanted={film.wanted} canAdd={profile?.role === 'admin'} label="Add to Wanted" />
-                  {/* AE3: lost films, TV episodes and other versions, in this set only. */}
-                  <DoesNotCount setId={set.id} film={film} />
-                </div>
-              )
-              return (
-                <li key={film.tmdbId}>
-                  {card}
                 </li>
-              )
-            })}
+              ))}
             </ul>
           </section>
 

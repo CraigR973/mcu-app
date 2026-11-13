@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -66,50 +66,47 @@ afterEach(() => {
   auth.role = 'admin'
 })
 
-describe('Closest to complete on Home — AE3 (#355, point 3)', () => {
-  it('names what each set is missing, up to three, with +N more opening the set', async () => {
+describe('Closest to complete on Home — AE3 (#355, point 3), tidied by AF2 (#372)', () => {
+  it('names what each set is missing, up to three, with +N for the rest, in one block that opens the set', async () => {
     const { onOpen } = renderShelf()
-    const hitchcock = within(await screen.findByRole('list', { name: 'Missing from Alfred Hitchcock' }))
-    expect(hitchcock.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      expect.stringContaining('The Mountain Eagle (1926)'),
-      expect.stringContaining('The Pleasure Garden (1925)'),
-      expect.stringContaining('Downhill (1927)'),
-    ])
-    fireEvent.click(screen.getByRole('button', { name: '+3 more' }))
+    const hitchcock = await screen.findByRole('button', { name: /Alfred Hitchcock/ })
+    expect(hitchcock.textContent).toContain('Missing: The Mountain Eagle (1926), The Pleasure Garden (1925), Downhill (1927)')
+    expect(within(hitchcock).getByText('+3')).not.toBeNull()
+    fireEvent.click(hitchcock)
     expect(onOpen).toHaveBeenCalledWith(HITCHCOCK.id)
-    // Eastwood's one missing film is named, so there is nothing more to open.
-    expect(screen.queryByRole('button', { name: '+0 more' })).toBeNull()
+    // Eastwood's one missing film is named, so there is no "+N".
+    const eastwood = screen.getByRole('button', { name: /Clint Eastwood/ })
+    expect(eastwood.textContent).toContain('Missing: Piano Blues (2003)')
+    expect(eastwood.textContent).not.toMatch(/\+\d/)
   })
 
-  it('offers Craig Want through the existing Wanted path, and reads Wanted for one already wanted', async () => {
-    api.addWanted.mockResolvedValue({})
-    renderShelf()
-    const eastwood = within(await screen.findByRole('list', { name: 'Missing from Clint Eastwood' }))
-    fireEvent.click(eastwood.getByRole('button', { name: 'Want' }))
-    await waitFor(() => expect(api.addWanted).toHaveBeenCalledWith({ tmdbId: 54321 }))
-    const kubrick = within(screen.getByRole('list', { name: 'Missing from Stanley Kubrick' }))
-    expect(kubrick.getByText('Wanted')).not.toBeNull()
-    expect(kubrick.queryByRole('button', { name: 'Want' })).toBeNull()
+  it('has no buttons inside a set for Craig or Mark: Want and Doesn’t count are on its page', async () => {
+    for (const role of ['admin', 'viewer'] as const) {
+      auth.role = role
+      renderShelf()
+      const section = within((await screen.findByRole('heading', { name: 'Closest to complete' })).closest('section') as HTMLElement)
+      // One button per set, and nothing else to press.
+      expect(section.getAllByRole('button')).toHaveLength(3)
+      expect(section.queryByRole('button', { name: 'Want' })).toBeNull()
+      expect(section.queryByRole('button', { name: /Doesn’t count/ })).toBeNull()
+      expect(api.addWanted).not.toHaveBeenCalled()
+      expect(api.excludeCompletionFilm).not.toHaveBeenCalled()
+      cleanup()
+    }
   })
 
-  it('gives Mark "Doesn’t count" but not Want, as Wanted is Craig’s to add to', async () => {
-    auth.role = 'viewer'
-    api.excludeCompletionFilm.mockResolvedValue({ ...EASTWOOD, films: [] })
-    const { client } = renderShelf()
-    const eastwood = within(await screen.findByRole('list', { name: 'Missing from Clint Eastwood' }))
-    expect(eastwood.queryByRole('button', { name: 'Want' })).toBeNull()
-    const refreshed = vi.spyOn(client, 'invalidateQueries')
-    fireEvent.click(eastwood.getByRole('button', { name: /Doesn’t count/ }))
-    await waitFor(() => expect(api.excludeCompletionFilm).toHaveBeenCalledWith(EASTWOOD.id, 54321))
-    // The row reads again, so a set now complete leaves it.
-    await waitFor(() => expect(refreshed).toHaveBeenCalledWith({ queryKey: ['completion-insights'] }))
-  })
-
-  it('says so when it cannot be saved', async () => {
-    api.excludeCompletionFilm.mockRejectedValue(new Error('The archive had a problem.'))
-    renderShelf()
-    const eastwood = within(await screen.findByRole('list', { name: 'Missing from Clint Eastwood' }))
-    fireEvent.click(eastwood.getByRole('button', { name: /Doesn’t count/ }))
-    expect(await eastwood.findByRole('alert')).not.toBeNull()
+  it('names no films for a set whose answer names none, as an older API sends', async () => {
+    api.fetchCompletionInsights.mockResolvedValue({ items: [{ ...HITCHCOCK, missingFilms: [] }], total: 1, oldestRefresh: null })
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter>
+          <CompletionShelf onOpen={vi.fn()} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    const hitchcock = await screen.findByRole('button', { name: /Alfred Hitchcock/ })
+    expect(hitchcock.textContent).toContain('6 missing')
+    expect(hitchcock.textContent).not.toContain('Missing:')
   })
 })

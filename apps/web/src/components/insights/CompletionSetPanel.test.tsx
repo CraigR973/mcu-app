@@ -115,6 +115,46 @@ describe('CompletionSetPanel — AE3, a film that does not count (#355, point 3)
   it('leaves films that do not count out of Add all missing to Wanted', async () => {
     auth.role = 'admin'
     renderPanel({ ...SET, films: [{ ...SET.films[0], wanted: false }, SET.films[1], MOUNTAIN_EAGLE] })
-    expect(await screen.findByRole('button', { name: /Add 1 missing to wanted/ })).not.toBeNull()
+    expect(await screen.findByRole('button', { name: 'Add 1 to Wanted' })).not.toBeNull()
+  })
+})
+
+describe('CompletionSetPanel — AF2 (#372): missing films as a list, with room for both buttons', () => {
+  const MORE = [
+    { tmdbId: 2753, title: 'The Mountain Eagle', year: 1926, posterPath: null, owned: false, movieId: null, wanted: false, counts: true },
+    { tmdbId: 2754, title: 'The Pleasure Garden', year: 1925, posterPath: null, owned: false, movieId: null, wanted: false, counts: true },
+  ]
+
+  it('gives each missing film a row of its own, its title whole, with Craig’s two buttons in it', async () => {
+    auth.role = 'admin'
+    renderPanel({ ...SET, films: [...SET.films, ...MORE], missingCount: 3 })
+    const missing = within(await screen.findByRole('region', { name: 'Missing films' }))
+    const rows = missing.getAllByRole('listitem')
+    expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual(['Psycho', 'The Mountain Eagle', 'The Pleasure Garden'])
+    const eagle = within(missing.getByRole('listitem', { name: 'The Mountain Eagle' }))
+    expect(eagle.getByText('The Mountain Eagle').className).not.toContain('truncate')
+    expect(eagle.getByRole('button', { name: 'Add to Wanted' })).not.toBeNull()
+    expect(eagle.getByRole('button', { name: /Doesn’t count/ })).not.toBeNull()
+    // Psycho is wanted already: it says so, with Doesn't count still beside it.
+    const psycho = within(missing.getByRole('listitem', { name: 'Psycho' }))
+    expect(psycho.getByText('Wanted')).not.toBeNull()
+    expect(psycho.getByRole('button', { name: /Doesn’t count/ })).not.toBeNull()
+    // Every film still to add, all at once, under the heading.
+    expect(missing.getByRole('button', { name: 'Add all 3 to Wanted' })).not.toBeNull()
+  })
+
+  it('lets the two buttons wrap rather than overlap on the narrowest phones', async () => {
+    auth.role = 'admin'
+    renderPanel({ ...SET, films: [...SET.films, ...MORE], missingCount: 3 })
+    const missing = within(await screen.findByRole('region', { name: 'Missing films' }))
+    const buttons = missing.getAllByRole('button', { name: /Doesn’t count/ })[0].closest('div')
+    expect(buttons?.className).toContain('flex-wrap')
+  })
+
+  it('is padded once, inside the page’s own padding', async () => {
+    renderPanel()
+    const back = await screen.findByRole('button', { name: 'All sets' })
+    const panel = back.parentElement as HTMLElement
+    expect(panel.className).not.toMatch(/\bp-4\b|\bmd:p-8\b/)
   })
 })
