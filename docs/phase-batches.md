@@ -5990,7 +5990,7 @@ and no live write.
 | Batch | Scope and size | Claude Code / Codex | Status |
 |---|---|---|---|
 | ~~AF1~~ | ~~Needs you: Mark puts every disc back; Needs attention folded in (snags 1, 2), 🟡 3–4 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 153, merge `057086f5dcbdeab1c5bddd7742e54c261dc78383` |
-| AF2 | Closest to complete: names on Home, a tidy set page (snag 3), 🟡 2–3 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| ~~AF2~~ | ~~Closest to complete: names on Home, a tidy set page (snag 3), 🟡 2–3 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 154, merge `06eb33033926581d00a0e29c73c058d8d526e994` |
 | AF3 | At the cinema: All days by default, older films first on Home, a film's day strip (snags 5–8), 🟡 ~3.5 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
 | AF4 | Back keeps your place (snag 4), 🟡 3–4 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
 
@@ -6065,6 +6065,11 @@ five people's items rather than in their place.
   then.
 
 ### AF2 — Closest to complete: names on Home, a tidy set page 🟡
+
+**Shipped 13 Nov, 21:02 GMT: PR 154, merge `06eb33033926581d00a0e29c73c058d8d526e994` (#374); production health and readiness on it.**
+Every criterion below is met. Home's sets are one block each, naming what is missing; a set's
+page lists its missing films with Want and Doesn't count side by side, apart and inside their
+row at 320, 375 and 390 px (AE3's end-to-end case).
 
 - **Home (snag 3, #372):** three sets, each one block: name, count and bar, then one line,
   "Missing: {film}, {film}, {film} +N", titles whole up to the line's width. No buttons; the block

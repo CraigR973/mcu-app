@@ -2,6 +2,12 @@
 
 ## Now
 
+**13 Nov, 21:02 GMT: AF2 shipped, Closest to complete tidied (PR 154, `06eb330`, #374); Group AF
+continues with AF3.** On Home each set is one block that opens it, naming up to three missing
+films and "+N", with no buttons. A set's page is padded once and lists its missing films with
+Want and Doesn't count side by side, wrapping rather than overlapping on the narrowest phones.
+Production API and web on `06eb330`, `db: ok`. Not seen yet: either phone.
+
 **13 Nov, 20:10 GMT: AF1 shipped, Mark puts every disc back and Needs attention is part of Needs
 you (PR 153, `057086f`, #373); Group AF continues with AF2.** Craig's Needs you now reads "Mark to
 put back Halloween" and "… The Silence of the Lambs", labelled Mark; Mark's reads them as his own
@@ -578,6 +584,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 21:02 GMT — AF2 shipped (PR 154, `06eb33033926581d00a0e29c73c058d8d526e994`, #374).** Closest to complete names what
+  is missing on Home with no buttons; a set's page is a list with room for both buttons. Local:
+  `pnpm -r test` (web 983, shared 209), lint, typecheck, build; AE3 and Home's layout case in
+  Chromium. CI's seven jobs passed; production health, readiness and web on the merge.
 - **13 Nov, 20:10 GMT — AF1 shipped (PR 153, `057086f5dcbdeab1c5bddd7742e54c261dc78383`, #373).**
   Every put-back is Mark's in Needs you; Needs attention folds into Craig's Needs you as App rows.
   Local: ruff, mypy, the full API suite on pgserver (2,837 passed), web 980 and shared 209, AB1, AC1,

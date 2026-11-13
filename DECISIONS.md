@@ -8088,3 +8088,21 @@ contemporaneous.
        API's own Needs you read in a READ ONLY transaction: Craig's holds Halloween and The Silence
        of the Lambs as Mark's to put back, and Mark's holds them as his own. Not seen yet: either
        phone.
+
+374. **AF2 shipped: Closest to complete names what is missing on Home; a set's page is a tidy
+     list (13 Nov, PR 154, `06eb330`).** Drafting choices under #372, open to Craig's overrule:
+     - **Home keeps three sets, each one block that opens it**: name, count and bar, then one line
+       naming up to three missing films with their years, "+N" kept in sight at the end however
+       long the titles run (two lines at most). No buttons on Home, for either person.
+     - **A set's page is padded once**: Home and the list of sets already hold it in the page's
+       own padding, and the second 16 px each side had left a phone's grid columns 100 px wide.
+     - **Missing films are a list, not a grid**: a small greyed poster, title and year whole, a
+       small TMDB link, then "Add to Wanted" (Craig's) and "Doesn't count" side by side, wrapping
+       onto a second line on the narrowest phones rather than overlapping.
+     - **"Add all N to Wanted" sits under the Missing heading**, worded "Add 1 to Wanted" for one.
+     - **Not counted and On the shelf are unchanged.**
+     - **Proved:** `pnpm -r test` (shared 209, web 983); web lint, typecheck and build; AE3 and
+       Home's layout case in Chromium on the Mac, AE3 now acting from the set's page and checking
+       the two buttons stay apart and inside their row at 320, 375 and 390 px; screenshots looked
+       at in both themes. CI's seven jobs on PR 154.
+     - **Production**: API and web on `06eb330` with `db: ok` at 21:02 GMT. Not seen yet: either phone.
