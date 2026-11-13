@@ -8129,3 +8129,34 @@ contemporaneous.
        (AC4's Home strip now leads with the rerun and ends with See all; AC7's film page picks All
        days to see both cinemas). CI's seven jobs on PR 155.
      - **Production**: API and web on `aeb2dbb` with `db: ok` at 22:49 GMT. Not seen yet: either phone.
+
+376. **AF4 shipped: Back keeps your place (13 Nov, PR 156, `c2f080e`).** Drafting choices under #372,
+     open to Craig's overrule:
+     - **Places are kept per step in history, for each scroll region**: the app's own panel, where
+       every page scrolls, and the Archive's grid, list and compact views, which scroll in boxes
+       of their own. A region is any element marked `data-scroll-memory`.
+     - **Written as the reader scrolls**, so the last place is never lost to a page already
+       replaced; kept in memory and in the browser session (sixty steps), so a reload keeps it and
+       closing the app does not.
+     - **Back and Forward put each region back** once its page is drawn, frame by frame for up to
+       2.5 seconds while it loads, then hold it for 0.4 seconds, so a component that sets its own
+       scroll as it mounts (the Archive's virtual grid starts at the top) is put right. Any wheel,
+       touch, key or press stops it, so it never fights the reader. A page grown shorter lands as
+       far down as it can.
+     - **A newly opened page starts at the top**; one whose link names a heading opens at it.
+       **A replaced address (a filter, a matched listing) keeps the place.**
+     - **A page opened afresh is history's "default" step**, which an earlier visit to another page
+       may have used: its old places are forgotten rather than restored. The Home case found this
+       on the Mac, as a Home that came back 384 px too far down.
+     - **A completion set opened in place of Home or the list of sets** opens at its top, and its
+       back control puts the page where it was; while it is open, history keeps the page's place,
+       not the panel's.
+     - **Proved:** unit tests for the memory and the router side (12); `pnpm -r test` (shared 209,
+       web 1,001); web lint, typecheck and build; four end-to-end cases in Chromium on the Mac
+       (Archive → film → the phone's back arrow; At the cinema → film → the browser's Back; Home →
+       set → its Home button; a filter keeps the place), then the full Chromium suite (121 passed).
+       CI's seven jobs on PR 156, the cases in all three browsers.
+     - **Not proved:** iOS Safari and the Home Screen app, which CI's WebKit is not;
+       `OWNER-ACTIONS.md` asks Craig to try it.
+     - **Production**: API and web on `c2f080e` with `db: ok` at 23:29 GMT.
+

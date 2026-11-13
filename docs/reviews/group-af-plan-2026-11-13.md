@@ -1,6 +1,8 @@
 # Group AF: the plan for your 13 Nov snags
 
-**Waiting for your go.** Drafted 13 Nov from your 8 snags and your answers (#372). Four batches
+**Done 13 Nov: all four batches are live** (AF1 `057086f`, AF2 `06eb330`, AF3 `aeb2dbb`, AF4
+`c2f080e`; #373–#376). What is left is trying them on your phone (`OWNER-ACTIONS.md`). Drafted
+13 Nov from your 8 snags and your answers (#372). Four batches
 in one sitting, one after another. Each runs the full checks, then merges and deploys on its own,
 as Group AE did. The full plan is Group AF in `docs/phase-batches.md`.
 

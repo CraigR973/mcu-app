@@ -13,6 +13,21 @@ Older dated sections retain historical instructions; the current summary below t
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
+## Try Group AF on your phone — 13 Nov (#372)
+
+Everything here is live and proved in CI's three browsers; none of it has been seen on a real
+phone, and CI's WebKit is not iOS Safari. Nothing is blocked on it.
+
+- [ ] **Needs you (AF1).** Halloween and The Silence of the Lambs read "Mark to put back …",
+      labelled Mark; the app's problems are rows labelled App; there is no Needs attention card.
+- [ ] **Closest to complete (AF2).** Each set on Home is one block naming what is missing; tap
+      one, and Want and Doesn't count sit side by side with room.
+- [ ] **At the cinema (AF3).** It opens on All days from Home and from Movie night's "See what's
+      on"; a film's page has the day strip; Home's strip starts with the older films.
+- [ ] **Back keeps your place (AF4).** In the Home Screen app: scroll well down the Archive, open
+      a film, tap the back arrow, and land where you were; the same from At the cinema and from a
+      set opened on Home. Tell an agent if it lands anywhere else.
+
 ## ~~A local Postgres for search~~ — done 13 Nov (#362, #370)
 
 Nothing in production waits on this. It decides whether the Mac can run the end-to-end suite

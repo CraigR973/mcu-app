@@ -5503,7 +5503,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: ~~AB3~~ (`5cfa467`) · 3: ~~AB4~~ (`df6824a`) · 4: ~~AB5~~ (`b9f7dd7`, report) · 5: ~~AB6~~ (`72ff0bd`) → ~~AB7~~ (`190906ac`) | By sitting: Group AB table | By sitting: Group AB table | **All five sittings complete; sitting5 complete4Nov under327/330/334.** Sittings1–4 retain AB1/ad2c992, AB2/c187ed7 and separate seeding repair PR120/bf0eb36; AB3/5cfa467 with genuine push receipt still owner acceptance; AB4/df6824a with native production iPhone/header/Search/themes/keyboard and approved cold-launch/re-add accepted; AB5 report PR123/b9f7dd7 accepted313 with feasibility then unproved. Standing334 covers separate prerequisite repairs PR126/127, accepted public-page-first amendment and real all-nine source gates. AB6 PR125/72ff0bd/final354f34c: exact all7 gates/deploy, fresh63GET/all200/1838-row source artifact/three corroborated mappings/import/enable9/roles/core counts/both-profile reads; failed prefixes not spliced. AB7 PR128/bf70319 plus same-branch observed-format fix67d22ec and causal Home readiness190906ac: all ten local/exact manual41753476409 all7/C70/F69+1/W68+2/jobs6/all18 cinema cases, actual both-profile/theme/16-filter production reads and exact API/web/full readiness. Current4–17Nov1,617 future showings/141 groups, New0/Older0/all Unclassified, partial horizons/unknown identity/year/source age explicit. Source fees0/resources unpriced; next scheduled/future access unproved. No new PR, source pass, destructive catalogue/diary write, unrelated hosting change, AA10c or other sitting. Exact final main stamp in PR128. |
 | **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6's scheduled digest sent for real on 9–12 Nov (read back 12 Nov), so only Craig's phone receipt/tap stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
-| **AF** | AF1 → AF2 → AF3 → AF4, one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); waiting for his go.** AF4 comes last because its end-to-end cases walk the pages AF2 and AF3 change. The checkout must be clean before AF1. |
+| **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -5969,7 +5969,7 @@ missed it. The migration, the full database suite and `ae10.spec.ts` were proved
 
 ## Group AF — Craig's 13 Nov snags, drafted 13 Nov
 
-**Drafted 13 Nov from Craig's 8 snags and his answers (#372). Waiting for his go.** The snags and
+**Drafted 13 Nov from Craig's 8 snags and his answers (#372). Go given 13 Nov ("Go"); done 13 Nov, all four batches shipped.** The snags and
 their reconciliation against the code and live data are in
 `docs/reviews/feedback-reconciliation-2026-11-13.md`; a phone copy of this plan is
 `docs/reviews/group-af-plan-2026-11-13.md`. Four batches in one sitting: one branch and PR per
@@ -5992,7 +5992,7 @@ and no live write.
 | ~~AF1~~ | ~~Needs you: Mark puts every disc back; Needs attention folded in (snags 1, 2), 🟡 3–4 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 153, merge `057086f5dcbdeab1c5bddd7742e54c261dc78383` |
 | ~~AF2~~ | ~~Closest to complete: names on Home, a tidy set page (snag 3), 🟡 2–3 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 154, merge `06eb33033926581d00a0e29c73c058d8d526e994` |
 | ~~AF3~~ | ~~At the cinema: All days by default, older films first on Home, a film's day strip (snags 5–8), 🟡 ~3.5 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 155, merge `aeb2dbbfffc8c5e7e4d7f3c0a8c1c86dc87c04ad` |
-| AF4 | Back keeps your place (snag 4), 🟡 3–4 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
+| ~~AF4~~ | ~~Back keeps your place (snag 4), 🟡 3–4 h~~ | ~~Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High~~ | **shipped** 13 Nov: PR 156, merge `c2f080e0ddbd33c35acbe4a3d13fc4f373de064f` |
 
 **About 12–15 hours of agent work**, plus 30–60 minutes of gate per batch (2–4 hours across the
 four).
@@ -6107,6 +6107,12 @@ with See all; a film's page has the day strip, opening on the day carried or its
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
 
 ### AF4 — Back keeps your place 🟡
+
+**Shipped 13 Nov, 23:29 GMT: PR 156, merge `c2f080e0ddbd33c35acbe4a3d13fc4f373de064f` (#376); production health and readiness on it.**
+Every criterion below is met in CI's three browsers; iOS Safari and the Home Screen app are
+Craig's to try (`OWNER-ACTIONS.md`). The Archive's virtual grid resets itself to the top as it
+mounts, so a restored place is held briefly and put back; a page opened afresh forgets history's
+"default" step, which an earlier visit may have used.
 
 - **Back returns you to where you were (snag 4):** the phone's back arrow, a page's own back
   button, and the browser's Back and Forward put the page where it was once it is drawn. A newly

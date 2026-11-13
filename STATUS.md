@@ -2,6 +2,13 @@
 
 ## Now
 
+**13 Nov, 23:29 GMT: Group AF is done: AF4 shipped, Back keeps your place (PR 156, `c2f080e`,
+#376).** Back and Forward put each page back where it was scrolled: the app's panel, and the
+Archive's grid, list and compact views, which scroll in boxes of their own. A newly opened page
+starts at the top; a filter keeps the place; a set opened on Home goes back to where Home was.
+Craig's eight snags of 13 Nov are all shipped (#372–#376). Not seen yet: either phone, and iOS
+Safari for AF4, which CI's WebKit is not (`OWNER-ACTIONS.md`, "Try Group AF on your phone").
+
 **13 Nov, 22:49 GMT: AF3 shipped, At the cinema opens on All days (PR 155, `aeb2dbb`, #375);
 Group AF continues with AF4.** Every way into At the cinema, Movie night's "See what's on"
 included, opens on All films, All days, All days leading the strip. A film's page has the same
@@ -174,8 +181,8 @@ remain unchanged.
 
 ## Next
 
-**Group AF, Craig's 13 Nov snags, is drafted and waits for his go (#372):** AF1 → AF2 → AF3 → AF4
-in one sitting, from a clean `main` with this plan's docs commit pushed first.
+**Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
+(`OWNER-ACTIONS.md`).
 
 **Group AC implementation is deployed through AC6 and the separate calendar repair.**
 AC3's post-8-Nov rerun classification read-back is complete. AC6's scheduled delivery is
@@ -590,6 +597,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 23:29 GMT — AF4 shipped (PR 156, `c2f080e0ddbd33c35acbe4a3d13fc4f373de064f`, #376); Group AF done.** Back keeps
+  your place. Local: unit tests for the memory and the router side, `pnpm -r test` (web 1,001,
+  shared 209), lint, typecheck, build; four end-to-end cases, then the full Chromium suite (121
+  passed). CI's seven jobs passed; production on the merge.
 - **13 Nov, 22:49 GMT — AF3 shipped (PR 155, `aeb2dbbfffc8c5e7e4d7f3c0a8c1c86dc87c04ad`, #375).** At the cinema opens on All
   days; a film's page has the day strip; Home's strip leads with older films. Local: `pnpm -r
   test` (web 989, shared 209), lint, typecheck, build; AE5, AC4, AC5, AC7, AE6, cinemas and
