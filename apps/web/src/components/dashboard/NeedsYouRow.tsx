@@ -16,9 +16,19 @@ import { formatLondonDateTime } from '@/lib/utils'
 /** How many items the row shows before it points at Needs you for the rest. */
 const SHOWN = 5
 
-/** Home's five, and any App row past them: what has stopped is never left to "See all" (AF1). */
+/** Craig's app problems and the lines sent to him: Needs attention's rows before AF1. */
+function fromTheApp(row: NeedsYouRowData): boolean {
+  return row.kind === 'app' || row.kind === 'note'
+}
+
+/**
+ * What Home shows — AF1 (#372): five of the people's items, as before, and every one of Craig's
+ * app rows on top of them, as Needs attention showed them all. So nothing that has stopped is
+ * left to "See all", and the app's rows never push the other keeper's items off Home.
+ */
 function shownOnHome(rows: NeedsYouRowData[]): NeedsYouRowData[] {
-  return [...rows.slice(0, SHOWN), ...rows.slice(SHOWN).filter((row) => row.kind === 'app')]
+  const kept = new Set(rows.filter((row) => !fromTheApp(row)).slice(0, SHOWN).map((row) => row.key))
+  return rows.filter((row) => fromTheApp(row) || kept.has(row.key))
 }
 
 /** AC2: the person's next planned screening, beside what needs them, from the same read. */

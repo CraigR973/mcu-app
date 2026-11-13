@@ -373,6 +373,32 @@ describe('AF1 (#372): Mark puts every disc back, and Craig’s Needs attention i
     expect(within(row).getByRole('link', { name: 'See all 7 on Needs you' })).toBeTruthy()
   })
 
+  it('shows every app row on top of Home’s five, so they never push Mark’s items off Home', async () => {
+    auth.craig = true
+    api.fetchNeedsYou.mockResolvedValue({
+      items: [
+        ...Array.from({ length: 3 }, (_, index) => item({ movieTitle: `Own ${String(index)}`, loanId: `own-${String(index)}`, owner: craig })),
+        ...Array.from({ length: 3 }, (_, index) => item({ movieTitle: `Marks ${String(index)}`, loanId: `mark-${String(index)}`, owner: mark })),
+      ],
+    })
+    api.fetchAttention.mockResolvedValue({
+      checkedAt: null,
+      items: ['job:cron-ebay', 'job:cron-scrape', 'check:stale'].map((key) => problem(key, `Problem ${key}`)),
+    })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    await vi.waitFor(() => expect(within(row).getByText('Problem check:stale')).toBeTruthy())
+    const words = within(row).getAllByRole('listitem').map((entry) => entry.textContent ?? '')
+    // Five of the people's items, as before AF1: Craig's three, then two of Mark's, with the
+    // three app rows between them.
+    expect(words).toHaveLength(8)
+    expect(words.slice(0, 3).every((text) => text.includes('Own'))).toBe(true)
+    expect(words.slice(3, 6).every((text) => text.includes('Problem'))).toBe(true)
+    expect(words[6]).toContain('Mark to put back Marks 0')
+    expect(words[7]).toContain('Mark to put back Marks 1')
+    expect(within(row).getByRole('link', { name: 'See all 9 on Needs you' })).toBeTruthy()
+  })
+
   it('shows the app’s problems with nothing else waiting', async () => {
     auth.craig = true
     api.fetchAttention.mockResolvedValue({ checkedAt: null, items: [problem('database:size', 'The database is 80% full.')] })
