@@ -8010,3 +8010,22 @@ contemporaneous.
      - **Limits:** pgserver is 16.2 and CI runs 17, so CI stays the authority. A venv rebuild or a
        pgserver upgrade removes the modules; the script refuses a pgserver that is not 16.2 until
        that version's source and checksum are pinned.
+
+371. **soupsieve 2.9.2 → 4.1 for two advisories (13 Nov, PR 152 `73e825e`).** CVE-2026-126190
+     (GHSA-mmhr-3c5m-f64f, polynomial-time matching in the descendant combinator, CVSS 7.5) and
+     CVE-2026-126192 (GHSA-4j63-6c4x-wfg4, quadratic `:has()` with a sibling combinator) were
+     published on 12 Nov and failed main's dependency audit on `c7b460c`. `soupsieve` is
+     BeautifulSoup's CSS selector engine: the price scrapers, the deals feed and the cinema parsers
+     match selectors with it on pages they fetch, so the exposure was a slow scrape, not a breach.
+     - **Why 4.1, not 2.10:** 2.10 fixes only the low one, so the audit would have stayed red. 4.1
+       was the latest release, and OSV listed nothing against it.
+     - **What a new selector must respect from now on:** `:has()` is CSS-strict by default (no
+       combinators inside it and no `:has()` within `:has()`); custom selectors must be defined in
+       dependency order; a template's contents are not part of the document; an iframe's contents
+       are ordinary children. None of these was in use on 13 Nov, in the code or in the 10 shop
+       selectors stored in production.
+     - **Rejected:** telling the audit to ignore the advisories (weakening the gate), and waiting
+       (every push red meanwhile).
+     - **Proved:** only `soupsieve`'s lines change in both locks; ruff, mypy and the full API suite
+       on a local Postgres (2,844, among them 252 for the scrapers, the deals feed and the cinema
+       parsers); CI's seven jobs passed on PR 152, the audit and the browser tests in all three browsers included; production API and web were on `73e825e` at 15:03 GMT with `db: ok`. Its first real pages are tonight's 03:00 price scrape and the 08:00 cinema refresh.

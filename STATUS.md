@@ -2,6 +2,15 @@
 
 ## Now
 
+**13 Nov, 15:03 GMT: main's dependency audit is green again (PR 152, `73e825e`, #371).** Two
+advisories against `soupsieve`, BeautifulSoup's CSS selector engine, were published on 12 Nov and
+turned the audit red on `c7b460c`: CVE-2026-126190 (polynomial-time descendant combinator, CVSS
+7.5) and CVE-2026-126192 (quadratic `:has()`). `soupsieve` went from 2.9.2 to 4.1 in both locks,
+and nothing else changed. Its 3.0 and 4.0 breaking changes (a stricter `:has()`, template and
+iframe contents) touch no selector in the code and none of the 10 shop selectors stored in
+production. The full API suite passed locally on 4.1 (2,844 tests, 252 of them for the scrapers,
+the deals feed and the cinema parsers). CI's seven jobs passed on PR 152, the audit and the browser tests in all three browsers included; production API and web were on `73e825e` at 15:03 GMT with `db: ok`. Its first real pages are tonight's 03:00 price scrape and the 08:00 cinema refresh.
+
 **13 Nov, 10:01 GMT: the Mac's throwaway Postgres now runs search's migration and everything
 after it (#370, closing #362).** At Craig's word, `pg_trgm` 1.6 and `unaccent` 1.1 were compiled
 from the official PostgreSQL 16.2 source (24.7 MB, SHA-256 checked) against pgserver's own
@@ -546,6 +555,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 15:03 GMT — soupsieve 2.9.2 → 4.1 (PR 152, `73e825e49e58d1228882defe3cf4ca0db7e20ae3`, #371).** Main's audit failed
+  on `c7b460c` over CVE-2026-126190 and CVE-2026-126192, both published 12 Nov; 2.10 fixes only
+  the second, so 4.1. Only `soupsieve`'s lines changed in both locks. No selector in the code or
+  the 10 stored shop selectors uses what 3.0 and 4.0 changed. Local: ruff, mypy, the full API
+  suite on a local Postgres (2,844). CI's seven jobs passed on PR 152, the audit and the browser tests in all three browsers included; production API and web were on `73e825e` at 15:03 GMT with `db: ok`. Its first real pages are tonight's 03:00 price scrape and the 08:00 cinema refresh. The Mac installed only `soupsieve`, hash-checked; a full
+  dev-lock install still fails on `cryptography` 50.0.1 (gotcha 28).
 - **13 Nov, 10:01 GMT — pgserver gains `pg_trgm` and `unaccent` (#370, closing #362).** Built
   with PGXS from the checked 16.2 source, at Craig's word; 14 files added to pgserver, none
   replaced. A fresh local database migrated to 078 and back to base; the full API suite passed against it (2,844 tests, none skipped, in 3 min 20 s, where 1,140 of them used to skip on the Mac); and the end-to-end suite ran in Chromium on the Mac again, the first time since search's migration: 111 of 117 passed in 30.5 minutes, and the 6 that failed passed when re-run on their own (7 of 7 in 1.8 minutes), so a full local run is not yet a clean gate and CI stays the authority. New `scripts/pgserver-extensions.sh` repeats it after a venv rebuild. No
