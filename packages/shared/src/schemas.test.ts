@@ -2459,14 +2459,19 @@ describe('Batch X2 — what needs attention, and where deals come from', () => {
       ],
       checkedAt: '2026-10-13T08:00:00Z',
     }
-    // Batch X12a added `noteId`, defaulted to null for a problem the check found.
+    // Batch X12a added `noteId`, and AF1 who sent a line and its words, all defaulted to null
+    // for a problem the check found.
+    const unsent = { noteId: null, fromProfileId: null, fromName: null, body: null }
     expect(attentionSchema.parse(attention)).toEqual({
       ...attention,
-      items: attention.items.map((item) => ({ ...item, noteId: null })),
+      items: attention.items.map((item) => ({ ...item, ...unsent })),
     })
     const noteId = '3f2504e0-4f89-41d3-9a0c-0305e82c3401'
     const note = { key: `note:${noteId}`, message: 'Mark says: hello', since: '2026-10-18T10:00:00Z', noteId }
-    expect(attentionSchema.parse({ items: [note], checkedAt: null }).items[0]).toEqual(note)
+    // An API before AF1 sends a line without its sender.
+    expect(attentionSchema.parse({ items: [note], checkedAt: null }).items[0]).toEqual({ ...note, fromProfileId: null, fromName: null, body: null })
+    const sent = { ...note, fromProfileId: '3f2504e0-4f89-41d3-9a0c-0305e82c3402', fromName: 'Mark', body: 'hello' }
+    expect(attentionSchema.parse({ items: [sent], checkedAt: null }).items[0]).toEqual(sent)
     expect(() => attentionSchema.parse({ items: [{ key: 'x', message: '', since: null }], checkedAt: null })).toThrow()
   })
 

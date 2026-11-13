@@ -2775,7 +2775,8 @@ export type EbayWatching = z.infer<typeof ebayWatchingSchema>
 export type EbaySelling = z.infer<typeof ebaySellingSchema>
 
 // ---------------------------------------------------------------------------
-// Needs attention (Batch X2) — DS44-01, UX48-02: what has stopped, for Craig
+// Needs attention (Batch X2) — DS44-01, UX48-02: what has stopped, for Craig; App rows in
+// his Needs you since AF1 (#372)
 // ---------------------------------------------------------------------------
 
 export const attentionItemSchema = z.object({
@@ -2787,6 +2788,11 @@ export const attentionItemSchema = z.object({
   /** Batch X12a: set on a line a person sent with "Tell Craig", which Craig clears. Defaulted
    *  for an API without it yet. */
   noteId: z.string().uuid().nullable().default(null),
+  /** AF1 (#372): on a line, who sent it and their words alone, so Needs you labels the row with
+   *  them. Defaulted for an API without them yet. */
+  fromProfileId: z.string().uuid().nullable().default(null),
+  fromName: z.string().nullable().default(null),
+  body: z.string().nullable().default(null),
 })
 
 export const attentionSchema = z.object({

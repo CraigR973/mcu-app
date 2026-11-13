@@ -18,7 +18,8 @@ Days = Annotated[int, Field(ge=0)]
 
 class NeedsYouOwner(BaseModel):
     """Whose item it is — AE8 (#355): the web says "You" on the reader's own, the other's name
-    on theirs. A shelf job both keepers can do is each keeper's own."""
+    on theirs. Putting a disc back is Mark's (AF1, #372); the other shelf jobs both keepers can
+    do are each keeper's own."""
 
     profileId: uuid.UUID
     name: str
@@ -49,7 +50,8 @@ class NeedsYouLoanItem(BaseModel):
     #: Days since it went out, on an overdue item; null otherwise.
     daysOut: Days | None
     #: AE8: whose item it is. The reader's own for a shelf job, chasing an overdue loan
-    #: included; the other keeper's on a loan they borrowed or a request the reader made.
+    #: included; the other keeper's on a loan they borrowed or a request the reader made. AF1
+    #: (#372): Mark's on every disc to put back.
     owner: NeedsYouOwner | None = None
 
 

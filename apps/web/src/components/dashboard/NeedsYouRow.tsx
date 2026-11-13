@@ -5,15 +5,21 @@ import type { NextScreening, NextTrip } from '@mcu/shared'
 
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
-import { fetchNeedsYou } from '@/lib/api'
+import { fetchAttention, fetchNeedsYou } from '@/lib/api'
+import { attentionRows } from '@/lib/attention'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { needsYouRows } from '@/lib/needs-you'
+import { needsYouRows, type NeedsYouRowData } from '@/lib/needs-you'
 import { nextTripWords, tripIsSooner, tripPath } from '@/lib/cinema-trips'
 import { NeedsYouList } from './NeedsYouList'
 import { formatLondonDateTime } from '@/lib/utils'
 
-/** How many items the row shows before it points at Loans for the rest. */
+/** How many items the row shows before it points at Needs you for the rest. */
 const SHOWN = 5
+
+/** Home's five, and any App row past them: what has stopped is never left to "See all" (AF1). */
+function shownOnHome(rows: NeedsYouRowData[]): NeedsYouRowData[] {
+  return [...rows.slice(0, SHOWN), ...rows.slice(SHOWN).filter((row) => row.kind === 'app')]
+}
 
 /** AC2: the person's next planned screening, beside what needs them, from the same read. */
 function NextScreeningCard({ screening }: { screening: NextScreening }) {
@@ -67,47 +73,64 @@ function NextTripCard({ trip }: { trip: NextTrip }) {
  * The API decides who sees what from the loan rows on every read, so a disc confirmed shelved
  * leaves everyone's row at once. Hidden while it loads and when there is nothing to do; a
  * failed or offline read says so, because a hidden row would read as "nothing needs you".
- * Craig's operational "Needs attention" row is separate and stays his alone. Since AC2 the
+ * Craig's operational problems stay his alone (AF1 below). Since AC2 the
  * next planned screening sits with it, from the same read (#337). Since AC5 cinema trips come
  * first, soonest showing first, and the next trip takes the slot when it is sooner (#345).
  * Since AE8 the people who keep the shelves see each other's items too, each saying whose it is,
- * their own first; five show here and Needs you lists every one (#355).
+ * their own first; five show here and Needs you lists every one (#355). Since AF1 (#372) Craig's
+ * "Needs attention" is part of it: the app's problems as rows labelled App after his own items,
+ * and the lines sent to him, from the attention read Home already makes. Mark never asks for it.
  */
 export function NeedsYouRow() {
   const { profile } = useAuth()
+  const admin = profile?.role === 'admin'
   const query = useQuery({
     queryKey: ['needs-you', profile?.id],
     queryFn: fetchNeedsYou,
     enabled: Boolean(profile),
   })
+  // The same key as Home's own read, so this asks for nothing more. A failed read leaves the App
+  // rows out, as it hid Needs attention: Home's other rows say when the archive is unreachable.
+  const attention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: admin })
+  const app = admin && attention.data ? attentionRows(attention.data, profile?.id) : []
   const items = query.data?.items ?? []
   const trips = query.data?.trips ?? []
   const reviews = query.data?.reviews ?? []
   const screening = query.data?.nextScreening ?? null
   const nextTrip = query.data?.nextTrip ?? null
   const state = listState(query, items.length === 0 && trips.length === 0 && reviews.length === 0 && screening === null && nextTrip === null)
-  if (!profile || state === 'loading' || state === 'empty') return null
-  if (state === 'offline') {
-    return <StatePanel compact tone="offline" title="What needs you is not cached here" description="Reconnect to see which discs are waiting on you." />
-  }
-  if (state === 'error') {
-    return (
-      <StatePanel
-        compact
-        tone="error"
-        title="Could not check what needs you"
-        description={queryErrorMessage(query.error, 'Could not load the discs waiting on you.')}
-      />
-    )
+  if (!profile || state === 'loading') return null
+  if (state === 'empty' && app.length === 0) return null
+  if (state === 'offline' || state === 'error') {
+    const panel = state === 'offline'
+      ? <StatePanel compact tone="offline" title="What needs you is not cached here" description="Reconnect to see which discs are waiting on you." />
+      : (
+        <StatePanel
+          compact
+          tone="error"
+          title="Could not check what needs you"
+          description={queryErrorMessage(query.error, 'Could not load the discs waiting on you.')}
+        />
+      )
+    // What has stopped still shows when only the other read failed.
+    return app.length > 0 ? <div className="space-y-3">{panel}<NeedsYouCard rows={app} /></div> : panel
   }
   const top = tripIsSooner(nextTrip, screening)
     ? <NextTripCard trip={nextTrip} />
     : screening ? <NextScreeningCard screening={screening} /> : null
-  if (items.length === 0 && trips.length === 0 && reviews.length === 0) return top
-  const rows = needsYouRows({ items, trips, reviews }, profile)
-  const shown = rows.slice(0, SHOWN)
+  const rows = needsYouRows({ items, trips, reviews }, profile, app)
+  if (rows.length === 0) return top
   return (
     <div className="space-y-3">
+      <NeedsYouCard rows={rows} />
+      {top}
+    </div>
+  )
+}
+
+function NeedsYouCard({ rows }: { rows: NeedsYouRowData[] }) {
+  const shown = shownOnHome(rows)
+  return (
     <section aria-labelledby="needs-you-heading" className="archive-panel p-4">
       <h2 id="needs-you-heading" className="flex items-center gap-2 font-display text-base font-semibold text-foreground">
         <ListChecks aria-hidden className="size-4 text-primary" />
@@ -124,7 +147,5 @@ export function NeedsYouRow() {
         </Link>
       ) : null}
     </section>
-    {top}
-    </div>
   )
 }

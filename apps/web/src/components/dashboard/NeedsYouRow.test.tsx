@@ -1,20 +1,22 @@
 // @vitest-environment happy-dom
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NeedsYouItem } from '@mcu/shared'
 
-const auth = vi.hoisted(() => ({ signedIn: true }))
+const auth = vi.hoisted(() => ({ signedIn: true, craig: false }))
 vi.mock('@/context/auth', () => ({
   useAuth: () => ({
-    profile: auth.signedIn
-      ? { id: 'p-mark', displayName: 'Mark', role: 'viewer', hasPin: true, onboardingCompleted: true }
-      : null,
+    profile: !auth.signedIn
+      ? null
+      : auth.craig
+        ? { id: 'p-craig', displayName: 'Craig', role: 'admin', hasPin: true, onboardingCompleted: true }
+        : { id: 'p-mark', displayName: 'Mark', role: 'viewer', hasPin: true, onboardingCompleted: true },
   }),
 }))
 
-const api = vi.hoisted(() => ({ fetchNeedsYou: vi.fn() }))
+const api = vi.hoisted(() => ({ fetchNeedsYou: vi.fn(), fetchAttention: vi.fn(), clearCraigNote: vi.fn() }))
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   ...api,
@@ -59,7 +61,10 @@ function renderRow() {
 
 beforeEach(() => {
   auth.signedIn = true
+  auth.craig = false
   api.fetchNeedsYou.mockResolvedValue({ items: [] })
+  api.fetchAttention.mockResolvedValue({ items: [], checkedAt: null })
+  api.clearCraigNote.mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -283,4 +288,104 @@ it('shows an assigned review on Home even without loans or trips', async () => {
   renderRow()
   expect((await screen.findByRole('link', { name: /Check Titanic/ })).getAttribute('href')).toBe('/needs-you?review=review-1')
   expect(screen.getByText('Answered — awaiting correction')).not.toBeNull()
+})
+
+describe('AF1 (#372): Mark puts every disc back, and Craig’s Needs attention is part of Needs you', () => {
+  const craig = { profileId: 'p-craig', name: 'Craig' }
+  const mark = { profileId: 'p-mark', name: 'Mark' }
+  const NOTE = '3f2504e0-4f89-41d3-9a0c-0305e82c3601'
+  const problem = (key: string, message: string) => ({
+    key, message, since: '2026-11-06T08:00:00Z', noteId: null, fromProfileId: null, fromName: null, body: null,
+  })
+
+  it('tells Craig a disc he gave back is Mark’s to put back, labelled Mark', async () => {
+    auth.craig = true
+    api.fetchNeedsYou.mockResolvedValue({ items: [item({ movieTitle: 'Halloween', borrowerIsYou: true, owner: mark })] })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    const [entry] = within(row).getAllByRole('listitem')
+    expect(within(entry).getAllByRole('link')[0].textContent).toContain('Mark to put back Halloween')
+    expect(entry.textContent).toContain('Returned 28 Oct · goes to Front 2nd')
+    expect(within(entry).getByRole('link', { name: 'Mark’s: open their page' }).getAttribute('href')).toBe('/people/p-mark')
+  })
+
+  it('puts Craig’s app problems after his own items and before Mark’s, labelled App', async () => {
+    auth.craig = true
+    api.fetchNeedsYou.mockResolvedValue({
+      items: [
+        item({ kind: 'overdue', movieTitle: 'Glass Orchard', loanId: 'loan-glass', borrowerName: 'Dave', lentDate: '2026-10-18', returnedDate: null, daysOut: 26, owner: craig }),
+        item({ movieTitle: 'Halloween', loanId: 'loan-halloween', owner: mark }),
+      ],
+    })
+    api.fetchAttention.mockResolvedValue({
+      checkedAt: '2026-11-13T08:00:00Z',
+      items: [
+        problem('identify:year-doubt', '1 identified film has a disc page or review for another year.'),
+        problem('check:stale', 'The daily check has not run since 11 Nov.'),
+      ],
+    })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    await vi.waitFor(() => expect(within(row).getAllByRole('listitem')).toHaveLength(4))
+    const entries = within(row).getAllByRole('listitem')
+    const words = entries.map((entry) => entry.textContent ?? '')
+    expect(words[0]).toContain('Ask Dave for Glass Orchard')
+    expect(words[1]).toContain('1 identified film has a disc page')
+    expect(words[2]).toContain('The daily check has not run')
+    expect(words[3]).toContain('Mark to put back Halloween')
+    // An App row opens where its Needs attention line did; one with nowhere to open says why.
+    expect(within(entries[1]).getByRole('link').getAttribute('href')).toBe('/identify#identify-doubts-heading')
+    expect(entries[1].textContent).toContain('Since 6 Nov · Open films in doubt')
+    expect(within(entries[2]).queryByRole('link')).toBeNull()
+    expect(entries[2].textContent).toContain('Railway')
+    expect(within(entries[1]).getByText('App')).toBeTruthy()
+    expect(within(row).getByText('4')).toBeTruthy()
+    // No card of its own any more.
+    expect(screen.queryByRole('heading', { name: 'Needs attention' })).toBeNull()
+  })
+
+  it('shows Craig a line from Mark as Mark’s row, which he clears', async () => {
+    auth.craig = true
+    api.fetchAttention.mockResolvedValue({
+      checkedAt: null,
+      items: [{ key: `note:${NOTE}`, message: 'Mark says: the Alien disc is in the Lounge', since: '2026-11-12T10:00:00Z', noteId: NOTE, fromProfileId: 'p-mark', fromName: 'Mark', body: 'the Alien disc is in the Lounge' }],
+    })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    const [line] = within(row).getAllByRole('listitem')
+    expect(line.textContent).toContain('the Alien disc is in the Lounge')
+    expect(line.textContent).toContain('Tell Craig · 12 Nov')
+    expect(within(line).getByRole('link', { name: 'Mark’s: open their page' }).getAttribute('href')).toBe('/people/p-mark')
+    fireEvent.click(within(line).getByRole('button', { name: /Clear/ }))
+    await vi.waitFor(() => expect(api.clearCraigNote).toHaveBeenCalledWith(NOTE))
+  })
+
+  it('never leaves what has stopped to See all, past Home’s five', async () => {
+    auth.craig = true
+    api.fetchNeedsYou.mockResolvedValue({
+      items: Array.from({ length: 6 }, (_, index) => item({ movieTitle: `Film ${String(index)}`, loanId: `loan-${String(index)}`, owner: craig })),
+    })
+    api.fetchAttention.mockResolvedValue({ checkedAt: null, items: [problem('job:cron-ebay', 'The eBay job has not run since 10 Nov.')] })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    await vi.waitFor(() => expect(within(row).getByText(/The eBay job has not run/)).toBeTruthy())
+    expect(within(row).getAllByRole('listitem')).toHaveLength(6)
+    expect(within(row).getByRole('link', { name: 'See all 7 on Needs you' })).toBeTruthy()
+  })
+
+  it('shows the app’s problems with nothing else waiting', async () => {
+    auth.craig = true
+    api.fetchAttention.mockResolvedValue({ checkedAt: null, items: [problem('database:size', 'The database is 80% full.')] })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    expect(within(row).getByText('The database is 80% full.')).toBeTruthy()
+  })
+
+  it('never asks the API for the app’s problems for Mark', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [item({ owner: mark })] })
+    renderRow()
+    await screen.findByRole('region', { name: /Needs you/ })
+    expect(api.fetchAttention).not.toHaveBeenCalled()
+    expect(screen.queryByText('App')).toBeNull()
+  })
 })

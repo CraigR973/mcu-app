@@ -575,6 +575,40 @@
    },
    "AttentionItemResponse": {
     "properties": {
+     "body": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Body"
+     },
+     "fromName": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fromname"
+     },
+     "fromProfileId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fromprofileid"
+     },
      "key": {
       "title": "Key",
       "type": "string"
@@ -9571,7 +9605,7 @@
     "type": "object"
    },
    "NeedsYouOwner": {
-    "description": "Whose item it is — AE8 (#355): the web says \"You\" on the reader's own, the other's name\non theirs. A shelf job both keepers can do is each keeper's own.",
+    "description": "Whose item it is — AE8 (#355): the web says \"You\" on the reader's own, the other's name\non theirs. Putting a disc back is Mark's (AF1, #372); the other shelf jobs both keepers can\ndo are each keeper's own.",
     "properties": {
      "name": {
       "title": "Name",
@@ -19262,7 +19296,7 @@
   },
   "/api/v1/attention/notes": {
    "post": {
-    "description": "A line from the person asking, for Craig's \"Needs attention\" (Batch X12a).\n\nOpen to both people, so it works for Craig too; the You page offers it to Mark.",
+    "description": "A line from the person asking, for Craig's Needs you (Batch X12a; a row there since AF1).\n\nOpen to both people, so it works for Craig too; the You page offers it to Mark.",
     "operationId": "tell_craig_api_v1_attention_notes_post",
     "requestBody": {
      "content": {

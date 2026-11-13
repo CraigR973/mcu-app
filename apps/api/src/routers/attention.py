@@ -1,4 +1,5 @@
-"""Home's "Needs attention" row, for Craig — Batch X2 (DS44-01, UX48-02).
+"""What has stopped, for Craig — Batch X2 (DS44-01, UX48-02). Since AF1 (#372) Home shows these
+as rows labelled App in Craig's Needs you, and a "Tell Craig" line as a row from its sender.
 
 **It reads operational problems the daily check recorded**
 (`services/health_checks.py`, run at 08:00 inside the reminders job), so it works when push
@@ -49,6 +50,9 @@ async def attention(_user: AdminUser, db: Database) -> AttentionResponse:
             message=f"{name or 'Someone'} says: {note.body}",
             since=note.created_utc,
             noteId=note.id,
+            fromProfileId=note.from_user_id if name else None,
+            fromName=name,
+            body=note.body,
         )
         for note, name in notes
     ]
@@ -74,7 +78,7 @@ MAX_OPEN_NOTES = 5
 
 @router.post("/attention/notes", status_code=status.HTTP_204_NO_CONTENT)
 async def tell_craig(payload: NoteRequest, user: CurrentUser, db: Database) -> None:
-    """A line from the person asking, for Craig's "Needs attention" (Batch X12a).
+    """A line from the person asking, for Craig's Needs you (Batch X12a; a row there since AF1).
 
     Open to both people, so it works for Craig too; the You page offers it to Mark.
     """

@@ -32,7 +32,8 @@ test('Needs you gives each person their own jobs, opens the exact place, and cle
     await expect(row.getByRole('link', { name: /Put back Paper Moons Over Leeds/ })).toBeVisible()
     await expect(row.getByRole('link', { name: /Ask Craig for Glass Orchard/ })).toContainText('Lent')
     await expect(row.getByRole('link', { name: /Ask Craig for Glass Orchard/ })).toContainText('out 20 days, no due date')
-    // The two rows are separate: Mark keeps the shelves but has no operational row of Craig's.
+    // Mark keeps the shelves but none of Craig's app problems: no App rows (AF1, #372).
+    await expect(row.getByText('App', { exact: true })).toHaveCount(0)
     await expect(markPage.getByRole('heading', { name: 'Needs attention' })).toHaveCount(0)
     await row.screenshot({ path: testInfo.outputPath(`ac1-mark-${theme}-375.png`) })
   }
@@ -42,7 +43,9 @@ test('Needs you gives each person their own jobs, opens the exact place, and cle
   await craigPage.goto('/dashboard')
   const craigRow = craigPage.getByRole('region', { name: /Needs you/ })
   await expect(craigRow.getByRole('link', { name: /Give back Glass Orchard/ })).toContainText("You've had it since")
-  await expect(craigRow.getByRole('link', { name: /Put back Paper Moons Over Leeds/ })).toBeVisible()
+  // AF1 (#372): Mark puts every disc back, so Craig reads it as Mark's, after his own.
+  await expect(craigRow.getByRole('link', { name: /Mark to put back Paper Moons Over Leeds/ })).toBeVisible()
+  await expect(craigRow.getByRole('listitem').filter({ hasText: 'Mark to put back Paper Moons Over Leeds' }).getByRole('link', { name: 'Mark’s: open their page' })).toBeVisible()
 
   // Mark taps his job: Loans opens on To put back with that disc's own confirm flow open.
   await markPage.getByRole('region', { name: /Needs you/ }).getByRole('link', { name: /Put back Paper Moons Over Leeds/ }).click()
@@ -62,7 +65,7 @@ test('Needs you gives each person their own jobs, opens the exact place, and cle
   await expect(markPage.getByRole('link', { name: /Put back Paper Moons Over Leeds/ })).toHaveCount(0)
   await craigPage.reload()
   await expect(craigPage.getByRole('region', { name: /Needs you/ }).getByRole('link', { name: /Give back Glass Orchard/ })).toBeVisible()
-  await expect(craigPage.getByRole('link', { name: /Put back Paper Moons Over Leeds/ })).toHaveCount(0)
+  await expect(craigPage.getByRole('link', { name: /put back Paper Moons Over Leeds/i })).toHaveCount(0)
   const loans = await craig.get<{ items: { id: string; movieTitle: string; state: string; section: string | null; shelf: string | null }[] }>('/loans')
   expect(loans.items.find((loan) => loan.id === moons.id)).toMatchObject({ state: 'shelved', section: 'Front', shelf: '4th' })
 
@@ -73,5 +76,7 @@ test('Needs you gives each person their own jobs, opens the exact place, and cle
   await craig.patch(`/loans/${glass.id}`, { state: 'shelved' })
   await craigPage.reload()
   await expect(craigPage.getByRole('list', { name: 'The collection in numbers' })).toBeVisible()
-  await expect(craigPage.getByRole('region', { name: /Needs you/ })).toHaveCount(0)
+  // Nothing of these loans is left for Craig. His Needs you can still hold the app's problems
+  // (App rows, AF1 #372), so it is the loans' rows that are gone, not the card.
+  await expect(craigPage.getByRole('region', { name: /Needs you/ }).getByRole('listitem').filter({ hasText: /Glass Orchard|Paper Moons Over Leeds/ })).toHaveCount(0)
 })

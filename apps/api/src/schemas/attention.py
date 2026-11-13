@@ -1,4 +1,7 @@
-"""The Home row's "Needs attention" — Batch X2 (DS44-01, UX48-02)."""
+"""What the daily check found and the lines sent to Craig — Batch X2 (DS44-01, UX48-02).
+
+Since AF1 (#372) they are rows in Craig's Needs you rather than a row of their own.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +23,11 @@ class AttentionItemResponse(BaseModel):
     #: Batch X12a: set on a line a person sent with "Tell Craig", which Craig clears; null on
     #: a problem the daily check found, which clears itself when the problem goes.
     noteId: uuid.UUID | None = None
+    #: AF1 (#372): on a line, who sent it and what they said, so Needs you can label the row
+    #: with them and show their words alone. ``message`` keeps "<name> says: …" for older builds.
+    fromProfileId: uuid.UUID | None = None
+    fromName: str | None = None
+    body: str | None = None
 
 
 class NoteRequest(BaseModel):

@@ -490,6 +490,10 @@ async def test_home_lists_the_problems_and_a_check_that_has_stopped(db: AsyncSes
                 "message": "The daily check hasn't run yet.",
                 "since": None,
                 "noteId": None,
+                # AF1 (#372): a line's sender and words, null on a problem the check found.
+                "fromProfileId": None,
+                "fromName": None,
+                "body": None,
             }
         ],
         "checkedAt": None,
@@ -625,6 +629,15 @@ async def test_a_line_from_mark_lands_in_craigs_row_until_he_clears_it(db: Async
         (note,) = [item for item in items if item["noteId"]]
         assert note["message"] == f"{mark.display_name} says: The Alien disc is in the Lounge"
         assert note["key"] == f"note:{note['noteId']}"
+        # AF1 (#372): who sent it and their words alone, for a row of its own in Needs you.
+        assert note["fromProfileId"] == str(mark.id)
+        assert note["fromName"] == mark.display_name
+        assert note["body"] == "The Alien disc is in the Lounge"
+        assert all(
+            item["fromProfileId"] is None and item["body"] is None
+            for item in items
+            if not item["noteId"]
+        )
 
         assert (await client.delete(f"/api/v1/attention/notes/{note['noteId']}")).status_code == 204
         again = (await client.get("/api/v1/attention")).json()["items"]

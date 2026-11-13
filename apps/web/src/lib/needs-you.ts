@@ -43,9 +43,11 @@ export function needsYouCopy(item: NeedsYouItem): { title: string; detail: strin
 }
 
 /** Another keeper's loan item, as the reader reads it (AE8): a request the reader made is the
- *  other keeper's to hand over; a disc the other keeper has is still the reader's to ask for. */
+ *  other keeper's to hand over; a disc the other keeper has is still the reader's to ask for.
+ *  Since AF1 (#372) every disc to put back is Mark's, so Craig reads it as his. */
 function othersLoanCopy(item: NeedsYouItem, owner: string): { title: string; detail: string; to: string } {
   const base = needsYouCopy(item)
+  if (item.kind === 'putBack') return { ...base, title: `${owner} to put back ${item.movieTitle}` }
   if (item.kind !== 'handOver') return base
   const by = item.neededBy ? ` · needed by ${formatDayMonth(item.neededBy)}` : ''
   return { ...base, title: `${owner} to hand over ${item.movieTitle}`, detail: `You asked for it${by}` }
@@ -59,17 +61,21 @@ const REVIEW_STATUS: Record<string, string> = {
 /** One row on Home's Needs you and on the Needs you page (AE8, #355). */
 export interface NeedsYouRowData {
   key: string
-  kind: 'trip' | 'loan' | 'review'
+  /** AF1 (#372): `app` is a problem the daily check found, `note` a line sent to Craig. */
+  kind: 'trip' | 'loan' | 'review' | 'app' | 'note'
   title: string
   detail: string
-  to: string
+  /** Where the row opens; null for an App row with nowhere to open, and for a line to Craig. */
+  to: string | null
   poster: string | null
   film: string
-  /** "You", or whose item it is. */
+  /** "You", whose item it is, "App", or who sent a line. */
   label: string
   own: boolean
-  /** AE9: whose page the label opens; null when not known. */
+  /** AE9: whose page the label opens; null when not known, and on an App row. */
   ownerId: string | null
+  /** AF1: a line to Craig, which he clears from the row. */
+  noteId?: string | null
 }
 
 type Review = Pick<AssignedReview, 'id' | 'title' | 'question' | 'status'> & Partial<Pick<AssignedReview, 'assignedTo' | 'assigneeName'>>
@@ -78,10 +84,14 @@ type Review = Pick<AssignedReview, 'id' | 'title' | 'question' | 'status'> & Par
  * Everything on Needs you as rows, the reader's own first — AE8 (#355). The people who keep the
  * shelves see each other's items too: each says whose it is, in its words for the reader, and
  * opens its page, where only its owner can act (loans, which both keepers act on, aside).
+ *
+ * AF1 (#372): Craig's app problems and the lines sent to him (`attentionRows`) come after his own
+ * items and before Mark's.
  */
 export function needsYouRows(
   data: { items?: NeedsYouItem[]; trips?: NeedsYou['trips']; reviews?: Review[] },
   reader: { id: string; displayName?: string } | null | undefined,
+  app: NeedsYouRowData[] = [],
 ): NeedsYouRowData[] {
   const mine = (id: string | null | undefined) => !id || id === reader?.id
   const rows: NeedsYouRowData[] = [
@@ -107,6 +117,6 @@ export function needsYouRows(
       }
     }),
   ]
-  return [...rows.filter((row) => row.own), ...rows.filter((row) => !row.own)]
+  return [...rows.filter((row) => row.own), ...app, ...rows.filter((row) => !row.own)]
 }
 

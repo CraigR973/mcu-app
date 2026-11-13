@@ -11,6 +11,11 @@ on an item, except the shelf jobs both keepers already do. Another keeper's cine
 shows only on a trip the reader is on, as trips are their members' alone (#345). Anyone else
 still sees only their own. Nobody is pushed about another person's item: this is a read.
 
+**Mark puts every disc back** (AF1, #372, superseding #363 for putting a disc back): a disc
+back but not shelved is his item, whoever borrowed it and whoever recorded it back, so Craig
+reads "Mark to put back …" after his own items. Loans still lets either keeper confirm it
+shelved. Handing a disc over and chasing an overdue loan keep #363's rule.
+
 **Who sees what** (#335):
 
 - A disc back but not shelved, and a disc asked for and waiting to be handed over, go to the
@@ -139,6 +144,8 @@ async def needs_you_items(
     keeper = keeps_the_shelves(person)
     reader = owner(person)
     others = [k for k in keepers or [] if k.id != person.id] if keeper else []
+    # AF1 (#372): whoever puts discs back. With Mark not active, each keeper's own, as before.
+    shelver = next((k for k in keepers or [] if k.id == MARK_PROFILE_ID), None)
     found: list[tuple[tuple[bool, int, date, str], NeedsYouLoanItem]] = []
     for loan, item, movie in await _current_loans(db):
         state = loan_state(loan)
@@ -147,6 +154,8 @@ async def needs_you_items(
         whose = reader
         if state == "back" and keeper:
             kind, since = "putBack", loan.returned_date or today
+            if shelver is not None:
+                whose = owner(shelver)
         elif state == "asked_for" and keeper and not yours:
             kind, since = "handOver", loan.needed_by_date or today
         elif state == "asked_for" and keeper and others:

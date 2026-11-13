@@ -541,7 +541,8 @@ async def test_the_keepers_share_one_list_each_item_owned_their_own_first(
     client_as: Callable[[str], AsyncClient],
 ) -> None:
     """AE8 (#355): a shelf job is each keeper's own; a loan the other keeper borrowed is theirs
-    to give back, and the reader still sees it, after their own. Anyone else sees only theirs."""
+    to give back, and the reader still sees it, after their own. Anyone else sees only theirs.
+    AF1 (#372): putting a disc back is Mark's, so Craig reads it after his own, as Mark's."""
     put_back = await _loan(
         api_session,
         await _disc(api_session, "A Put Back"),
@@ -575,8 +576,8 @@ async def test_the_keepers_share_one_list_each_item_owned_their_own_first(
     craig, mark = names[people["craig"].id], names[people["mark"].id]
     assert read(await _row(client_as("craig"), *loans)) == [
         ("overdue", "C Third Has It", craig),
-        ("putBack", "A Put Back", craig),
         ("overdue", "B Mark Has It", mark),
+        ("putBack", "A Put Back", mark),
     ]
     mark_row = await _row(client_as("mark"), *loans)
     assert read(mark_row) == [
@@ -587,3 +588,81 @@ async def test_the_keepers_share_one_list_each_item_owned_their_own_first(
     assert mark_row[0]["borrowerIsYou"] is True
     third = names[people["third"].id]
     assert read(await _row(client_as("third"), *loans)) == [("overdue", "C Third Has It", third)]
+
+
+async def test_mark_puts_every_disc_back_whoever_borrowed_it_af1(
+    api_session: AsyncSession,
+    people: dict[str, Profile],
+    client_as: Callable[[str], AsyncClient],
+) -> None:
+    """AF1 (#372): "it will always be Mark that puts it back". A disc Craig borrowed and gave
+    back, and one a friend outside the app returned, are both Mark's to put back: his own on his
+    row, labelled Mark on Craig's, after Craig's own items."""
+    craig_gave_back = await _loan(
+        api_session,
+        await _disc(api_session, "A Craig Gave Back"),
+        state="back",
+        borrower=people["craig"],
+        lent_days_ago=26,
+        returned_days_ago=1,
+    )
+    friend_returned = await _loan(
+        api_session,
+        await _disc(api_session, "B Dave Returned"),
+        state="back",
+        borrower=None,
+        lent_days_ago=10,
+        returned_days_ago=3,
+    )
+    craig_chases = await _loan(
+        api_session,
+        await _disc(api_session, "C Dave Has It"),
+        state="out",
+        borrower=None,
+        lent_days_ago=20,
+        due_in_days=-4,
+    )
+    loans = (craig_gave_back, friend_returned, craig_chases)
+    names = {person.id: person.display_name for person in people.values()}
+    craig, mark = names[people["craig"].id], names[people["mark"].id]
+
+    def read(row: list[dict[str, Any]]) -> list[tuple[str, str, str]]:
+        return [(e["kind"], e["movieTitle"], e["owner"]["name"]) for e in row]
+
+    craig_row = await _row(client_as("craig"), *loans)
+    assert read(craig_row) == [
+        ("overdue", "C Dave Has It", craig),
+        ("putBack", "B Dave Returned", mark),
+        ("putBack", "A Craig Gave Back", mark),
+    ]
+    assert {e["owner"]["profileId"] for e in craig_row[1:]} == {str(people["mark"].id)}
+    # Still the borrower's own words: Craig borrowed it, and nothing else about it changes.
+    assert craig_row[2]["borrowerIsYou"] is True
+    assert read(await _row(client_as("mark"), *loans)) == [
+        ("overdue", "C Dave Has It", mark),
+        ("putBack", "B Dave Returned", mark),
+        ("putBack", "A Craig Gave Back", mark),
+    ]
+
+
+async def test_with_mark_not_active_a_put_back_stays_each_keeper_s_own_af1(
+    api_session: AsyncSession,
+    people: dict[str, Profile],
+    client_as: Callable[[str], AsyncClient],
+) -> None:
+    """AF1 (#372): with nobody to give it to, a disc to put back stays the reader's own rather
+    than vanishing from the row."""
+    back = await _loan(
+        api_session,
+        await _disc(api_session, "Put Back Anyway"),
+        state="back",
+        borrower=people["craig"],
+        lent_days_ago=5,
+        returned_days_ago=1,
+    )
+    people["mark"].is_active = False
+    await api_session.flush()
+
+    [entry] = await _row(client_as("craig"), back)
+    assert entry["kind"] == "putBack"
+    assert entry["owner"]["profileId"] == str(people["craig"].id)

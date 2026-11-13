@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
-import { answerReview, assignReview, fetchAssignedReviews, fetchNeedsYou, fetchReviewProposals } from '@/lib/api'
+import { answerReview, assignReview, fetchAssignedReviews, fetchAttention, fetchNeedsYou, fetchReviewProposals } from '@/lib/api'
+import { attentionRows } from '@/lib/attention'
 import { needsYouRows } from '@/lib/needs-you'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
@@ -95,11 +96,15 @@ function MarkAssignmentPanel() {
 }
 
 /** AE8 (#355): every item on Needs you, Home's five and the rest, each saying whose it is, the
- *  reader's own first. One read, shared with Home's row. */
+ *  reader's own first. One read, shared with Home's row. Since AF1 (#372) Craig's list carries
+ *  the app's problems and the lines sent to him, as Home's does. */
 function EverythingWaiting() {
   const { profile } = useAuth()
+  const admin = profile?.role === 'admin'
   const query = useQuery({ queryKey: ['needs-you', profile?.id], queryFn: fetchNeedsYou, enabled: Boolean(profile) })
-  const rows = query.data ? needsYouRows(query.data, profile) : []
+  const attention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: admin })
+  const app = admin && attention.data ? attentionRows(attention.data, profile?.id) : []
+  const rows = query.data ? needsYouRows(query.data, profile, app) : []
   const state = listState(query, rows.length === 0)
   return (
     <section aria-labelledby="needs-you-everything" className="archive-panel p-4">
@@ -126,7 +131,9 @@ export default function AssignedReviewsPage() {
   return (
     <div className="page-shell-narrow space-y-5">
       <PageHeader eyebrow={admin ? 'Catalogue review' : 'Your account'} title="Needs you"
-        description="Loans, cinema trips and reviews waiting, yours first. Only the person an item is for can act on it, except loans, which either of you can." />
+        description={admin
+          ? 'Loans, cinema trips and reviews waiting, yours first, with the app’s problems. Only the person an item is for can act on it, except loans, which either of you can.'
+          : 'Loans, cinema trips and reviews waiting, yours first. Only the person an item is for can act on it, except loans, which either of you can.'} />
       <nav aria-label="Other Needs you actions" className="flex gap-4 text-sm text-primary">
         <Link to="/loans">Loans</Link><Link to="/movie-night">Cinema trips</Link>
       </nav>

@@ -59,8 +59,8 @@ function DestinationGroup({ group }: { group: NavGroup }) {
 }
 
 /**
- * "Tell Craig" (Batch X12a, UX48-05): a line to Craig that lands in his Home "Needs attention"
- * row, for Mark, who had no way to say "this is wrong" from inside the app.
+ * "Tell Craig" (Batch X12a, UX48-05): a line to Craig that lands on his Home, since AF1 (#372) as
+ * a row of his Needs you, for Mark, who had no way to say "this is wrong" from inside the app.
  */
 function TellCraig() {
   const [message, setMessage] = useState('')

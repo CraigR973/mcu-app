@@ -26,13 +26,16 @@ test('AB1 reconciles historical warnings and clears a real doubt when it is kept
     for (const theme of ['dark', 'light']) {
       await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
       await page.goto('/dashboard')
-      const attention = page.getByRole('region', { name: 'Needs attention' })
+      const attention = page.getByRole('region', { name: /Needs you/ })
       await expect(attention.getByText('1 Identify proposal has waited more than a fortnight.', { exact: false })).toBeVisible()
       await expect(attention.getByText(/1 identified film has a disc page/)).toBeVisible()
       await expect(attention.getByText(/48 historical/)).toHaveCount(0)
+      // AF1 (#372): rows of Craig's Needs you, labelled App, with no card of their own.
+      await expect(attention.getByText('App', { exact: true }).first()).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Needs attention' })).toHaveCount(0)
       await page.screenshot({ path: testInfo.outputPath(`ab1-attention-${theme}-375.png`) })
     }
-    await page.getByRole('link', { name: 'Open films in doubt', exact: true }).click()
+    await page.getByRole('region', { name: /Needs you/ }).getByRole('link', { name: /Open films in doubt/ }).click()
     const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'AB1 actionable film (2000)', exact: true }) })
     await expect(card).toBeVisible()
     await card.getByRole('button', { name: "It’s right", exact: true }).click()
@@ -71,15 +74,16 @@ test('AB1 actions open the real settings panels and job controls, with honest de
     ] as const
     for (const [link, role, name, content] of destinations) {
       await page.goto('/dashboard')
-      const attention = page.getByRole('region', { name: 'Needs attention' })
-      await attention.getByRole('link', { name: link, exact: true }).click()
+      const attention = page.getByRole('region', { name: /Needs you/ })
+      // AF1: each App row is the link, named by its message and where it opens.
+      await attention.getByRole('link', { name: new RegExp(link) }).click()
       const destination = page.getByRole(role, { name, exact: true })
       await expect(destination).toBeVisible()
       if (role === 'tab') await expect(destination).toHaveAttribute('aria-selected', 'true')
       await expect(page.getByRole('main').getByText(content, { exact: false }).first()).toBeVisible()
     }
     await page.goto('/dashboard')
-    const attention = page.getByRole('region', { name: 'Needs attention' })
+    const attention = page.getByRole('region', { name: /Needs you/ })
     const otherPhone = attention.getByRole('listitem').filter({ hasText: `person:${mark}:notifications` })
     await expect(otherPhone.getByRole('link')).toHaveCount(0)
     await expect(otherPhone).toContainText('on their own phone')

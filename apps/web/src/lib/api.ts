@@ -2789,7 +2789,7 @@ export async function fetchDeals(filters: DealFilters = {}): Promise<DealList> {
   return parseResponse(await authFetch(`/deals${suffix}`), dealListSchema)
 }
 
-/** Batch X2: what the daily check found, for Home's "Needs attention" row. Admin only. */
+/** Batch X2: what the daily check found; since AF1 (#372) App rows of Craig's Needs you. Admin only. */
 export async function fetchAttention(): Promise<Attention> {
   return parseResponse(await authFetch('/attention'), attentionSchema)
 }
@@ -2799,7 +2799,7 @@ export async function fetchNeedsYou(): Promise<NeedsYou> {
   return parseResponse(await authFetch('/needs-you'), needsYouSchema)
 }
 
-/** Batch X12a: a line from the person signed in to Craig's "Needs attention" row. */
+/** Batch X12a: a line from the person signed in to Craig, a row of his Needs you since AF1. */
 export async function tellCraig(message: string): Promise<void> {
   const response = await authFetch('/attention/notes', {
     method: 'POST',

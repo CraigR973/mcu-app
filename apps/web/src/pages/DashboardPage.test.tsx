@@ -26,7 +26,7 @@ const api = vi.hoisted(() => ({
   fetchCompletionSet: vi.fn(),
   fetchSmartCollections: vi.fn(),
   fetchActivity: vi.fn(),
-  // Batch X2: Home's "Needs attention" row, for the admin. Nothing wrong here.
+  // Batch X2: what has stopped, for the admin; App rows of Needs you since AF1. Nothing wrong here.
   fetchAttention: vi.fn().mockResolvedValue({ items: [], checkedAt: null }),
   // AC1: Home's "Needs you" row, for everyone. Nothing to do here unless a test says so.
   fetchNeedsYou: vi.fn().mockResolvedValue({ items: [] }),
@@ -500,16 +500,17 @@ describe('Needs you, at the top for everyone — AC1 (#335)', () => {
     expect(api.fetchAttention).not.toHaveBeenCalled()
   })
 
-  it('sits above Craig’s own Needs attention, which is unchanged', async () => {
+  it('carries Craig’s app problems as App rows of Needs you, with no card of their own (AF1, #372)', async () => {
     api.fetchNeedsYou.mockResolvedValue({ items: [PUT_BACK] })
     api.fetchAttention.mockResolvedValue({
       checkedAt: '2026-11-04T08:00:00Z',
-      items: [{ key: 'check:stale', message: 'The daily check has not run.', since: null, noteId: null }],
+      items: [{ key: 'check:stale', message: 'The daily check has not run.', since: null, noteId: null, fromProfileId: null, fromName: null, body: null }],
     })
     renderHome()
     const needsYou = await screen.findByRole('region', { name: 'Needs you' })
-    const attention = await screen.findByRole('heading', { level: 2, name: 'Needs attention' })
-    expect(needsYou.compareDocumentPosition(attention)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    await waitFor(() => expect(within(needsYou).getByText('The daily check has not run.')).toBeTruthy())
+    expect(within(needsYou).getByText('App')).toBeTruthy()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Needs attention' })).toBeNull()
   })
 
   it('holds Feeling lucky until Needs you has arrived, so a tap cannot land on a moving row', async () => {

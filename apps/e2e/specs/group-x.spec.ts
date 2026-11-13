@@ -2,7 +2,7 @@ import { API_ORIGIN } from '../harness/env.ts'
 import { expect, test } from '../support/test.ts'
 
 test.describe('what Group X built', () => {
-  test('Tell Craig: a line from Mark reaches Craig\'s Needs attention row, and only Craig can clear it', async ({ signedIn, api }) => {
+  test('Tell Craig: a line from Mark reaches Craig\'s Needs you as Mark\'s row, and only Craig can clear it', async ({ signedIn, api }) => {
     const mark = await signedIn('Mark')
     await mark.page.goto('/you')
     const line = `The Alien disc is in the Lounge, not the Garage (${Date.now()})`
@@ -12,14 +12,16 @@ test.describe('what Group X built', () => {
 
     const craig = await signedIn('Craig')
     await craig.page.goto('/dashboard')
-    const row = craig.page.getByRole('region', { name: 'Needs attention' })
+    // AF1 (#372): a row of Needs you, labelled with who sent it, rather than a card of its own.
+    const row = craig.page.getByRole('region', { name: /Needs you/ })
     await expect(row.getByText(line)).toBeVisible()
+    await expect(row.getByRole('listitem').filter({ hasText: line }).getByRole('link', { name: 'Mark’s: open their page' })).toBeVisible()
 
     // It is Craig's to read: Mark's own token is refused the list.
     const markApi = await api('Mark')
     await expect(markApi.get('/attention')).rejects.toThrow(/403/)
 
-    await row.getByRole('listitem').filter({ hasText: line }).getByRole('button').first().click()
+    await row.getByRole('listitem').filter({ hasText: line }).getByRole('button', { name: /Clear/ }).click()
     await expect(row.getByText(line)).toHaveCount(0)
   })
 

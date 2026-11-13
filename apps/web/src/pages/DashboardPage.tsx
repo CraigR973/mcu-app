@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/auth'
 
 import { HomeBanner } from '@/components/brand/HomeBanner'
-import { AttentionRow } from '@/components/dashboard/AttentionRow'
 import { CinemaStrip } from '@/components/dashboard/CinemaStrip'
 import { CollectionLedger } from '@/components/dashboard/CollectionLedger'
 import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
@@ -39,7 +38,8 @@ import { DISC_WINDOW_DAYS } from '@/lib/releases'
  * Home — AC2's one ledger and varied modules, Craig's pick A (#337).
  *
  * In page order: the banner (T1, the photo letters with live type); what needs the person and
- * their next screening (AC1); Craig's "Needs attention"; the collection as one ledger; one
+ * their next screening (AC1), with Craig's app problems in it since AF1 (#372); the collection
+ * as one ledger; one
  * featured film with Feeling lucky inside it; then three poster rows (Coming to disc,
  * Highlights' tabs, For you), the sets closest to complete as a short list, and the cinemas.
  * At most four sideways rows, with AC4's cinema strip; one short caption each.
@@ -62,8 +62,9 @@ export default function DashboardPage() {
   // AC1: "Needs you" arrives above everything, so it is part of the first layout too.
   const homeNeedsYou = useQuery({ queryKey: ['needs-you', profile?.id], queryFn: fetchNeedsYou, enabled: Boolean(profile) })
   const homeLayoutPending = homeStats.isLoading || homeValue.isLoading || homeAttention.isLoading || homeNeedsYou.isLoading
-  // AC2: the two rows above the ledger arrive before anything under them is drawn, so nothing
-  // is pushed down when they do. On 4 Nov, Craig's "Needs attention" moved the ledger 142 px.
+  // AC2: what sits above the ledger arrives before anything under it is drawn, so nothing is
+  // pushed down when it does. On 4 Nov, Craig's "Needs attention" moved the ledger 142 px; since
+  // AF1 its problems are rows of Needs you, which waits for both reads.
   const topSettled = !homeNeedsYou.isLoading && !homeAttention.isLoading
   // A completion set opens in place of Home, because the panel *is* the page while it is
   // open; otherwise the reader loses their place in a long page on the way back (W2).
@@ -117,11 +118,9 @@ export default function DashboardPage() {
       {!topSettled ? <div aria-hidden className="h-[32rem] animate-pulse rounded-lg bg-muted/40" /> : null}
       <div className={topSettled ? 'space-y-9' : 'hidden'}>
         {/* AC1 (#335): what the person signed in can act on now, and since AC2 their next
-            screening. Hidden when there is nothing. */}
+            screening. Since AF1 (#372) Craig's app problems are rows of it, labelled App.
+            Hidden when there is nothing. */}
         <NeedsYouRow />
-
-        {/* Batch X2: what has stopped, for Craig. Hidden when all is well and for Mark. */}
-        <AttentionRow />
 
         <CollectionLedger />
 
