@@ -2,6 +2,15 @@
 
 ## Now
 
+**13 Nov, 20:10 GMT: AF1 shipped, Mark puts every disc back and Needs attention is part of Needs
+you (PR 153, `057086f`, #373); Group AF continues with AF2.** Craig's Needs you now reads "Mark to
+put back Halloween" and "… The Silence of the Lambs", labelled Mark; Mark's reads them as his own
+(read back on production through the API's own read, read only). Craig's Needs attention card is
+gone: each problem the daily check finds is a row of his Needs you labelled App, on top of the five
+people's items, and a Tell Craig line is a row from its sender with Clear. Mark's Home is
+unchanged. CI's first run caught App rows pushing Mark's items off Home; fixed in the same PR.
+Production API and web on `057086f`, `db: ok`. Not seen yet: either phone.
+
 **13 Nov, 18:20 GMT: Craig's 8 snags are reconciled, and Group AF is drafted for his go (#372).**
 Nothing in the app changed. The report is `docs/reviews/feedback-reconciliation-2026-11-13.md`,
 read from the code at `c7b460c` and live data through the read-only role. Craig answered its
@@ -569,6 +578,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **13 Nov, 20:10 GMT — AF1 shipped (PR 153, `057086f5dcbdeab1c5bddd7742e54c261dc78383`, #373).**
+  Every put-back is Mark's in Needs you; Needs attention folds into Craig's Needs you as App rows.
+  Local: ruff, mypy, the full API suite on pgserver (2,837 passed), web 980 and shared 209, AB1, AC1,
+  AE8, AE9 and Tell Craig in Chromium. CI's first run failed AE8 in all three browsers (App rows
+  filled Home's five); fixed, then all seven jobs passed. Production health, readiness and web on
+  `057086f`; the two returned discs read back as Mark's.
 - **13 Nov, 18:20 GMT — Craig's 8 snags reconciled; Group AF drafted (#372).** Read-only: code at
   `c7b460c`, live loans, cinema runs and health checks through the read-only role. Craig's
   answers: every put-back is Mark's; Needs attention into Needs you; Closest to complete's buttons

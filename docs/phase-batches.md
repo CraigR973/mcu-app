@@ -5989,7 +5989,7 @@ and no live write.
 
 | Batch | Scope and size | Claude Code / Codex | Status |
 |---|---|---|---|
-| AF1 | Needs you: Mark puts every disc back; Needs attention folded in (snags 1, 2), 🟡 3–4 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| ~~AF1~~ | ~~Needs you: Mark puts every disc back; Needs attention folded in (snags 1, 2), 🟡 3–4 h~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 13 Nov: PR 153, merge `057086f5dcbdeab1c5bddd7742e54c261dc78383` |
 | AF2 | Closest to complete: names on Home, a tidy set page (snag 3), 🟡 2–3 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
 | AF3 | At the cinema: All days by default, older films first on Home, a film's day strip (snags 5–8), 🟡 ~3.5 h | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
 | AF4 | Back keeps your place (snag 4), 🟡 3–4 h | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
@@ -6037,6 +6037,13 @@ silently.
   browser session, so they survive a reload but not closing the app.
 
 ### AF1 — Needs you: Mark puts every disc back; Needs attention folded in 🟡
+
+**Shipped 13 Nov: PR 153, merge `057086f5dcbdeab1c5bddd7742e54c261dc78383` (#373); production health and readiness on it.** Every
+criterion below is met. Read back at 20:10 GMT through the API's own read in a READ ONLY
+transaction: Craig's Needs you holds Halloween and The Silence of the Lambs as Mark's to put back,
+and Mark's holds them as his own. CI's first full end-to-end run found App rows pushing Mark's items off
+Home's five (AE8, all three browsers); fixed in the same PR, so App rows now come on top of the
+five people's items rather than in their place.
 
 - **Every put-back is Mark's (snag 1, #372):** a disc back but not shelved is Mark's item. Mark
   sees "Put back {film}", labelled You. Craig sees "Mark to put back {film} · Returned {date} ·

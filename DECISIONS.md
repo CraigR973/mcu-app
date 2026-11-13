@@ -8053,3 +8053,38 @@ contemporaneous.
        days, superseding #360's default of today; a film's page gets the same day strip; "See
        what's on" follows the new default; Back returns to where you had scrolled.
      - The drafting choices, open to Craig's overrule, are listed under Group AF.
+
+373. **AF1 shipped: Mark puts every disc back, and Needs attention is part of Needs you (13 Nov,
+     PR 153, `057086f`).** Drafting choices under #372, open to Craig's overrule:
+     - **A put-back's owner is Mark, found by his stable id among the active shelf keepers**
+       (#306), whoever borrowed the disc and whoever recorded it back. With Mark not active it
+       stays each keeper's own, rather than leaving the row. Loans is unchanged: either keeper can
+       still confirm a disc shelved there.
+     - **App rows come from the attention read Home already makes**, so Home asks for nothing new,
+       and Mark's Needs you never asks for it. They sit after Craig's own items and before Mark's,
+       amber, each opening where its Needs attention line opened, or saying what to do where there
+       is nowhere to open.
+     - **App rows come on top of Home's five people's items, never in their place**: Home shows
+       five of the people's items, as before, and every App row and line besides, as Needs
+       attention showed them all. So what has stopped is never only behind "See all", and the app's
+       rows never push Mark's items off Home. The count and the Needs you page include them.
+     - **A Tell Craig line is a row from its sender, in their words, with Clear.** The attention
+       read gains `fromProfileId`, `fromName` and `body`, additive and zod-defaulted; `message`
+       keeps "<name> says: …" for an older build. Clear's words are in its accessible name only, so
+       the page never shows the line twice.
+     - **A failed Needs you read still shows the App rows**, under its error panel; a failed
+       attention read leaves them out, as it hid Needs attention before.
+     - **The Needs attention card is gone** (its component deleted); its map of where each check
+       opens moved beside the rows that use it.
+     - **Proved:** the full API suite against the Mac's pgserver at 078 (2,837 passed, 9 skipped);
+       `pnpm -r test` (shared 209, web 980); web lint, typecheck and build; AB1, AC1, AE8, AE9 and
+       Tell Craig in Chromium on the Mac, two fixed on the way (AC1's last check now looks for the
+       loans' rows, since Craig's card can hold App rows; Clear's repeated words). CI's first full
+       run then failed AE8 in all three browsers: with several of the check's problems open, App rows
+       filled Home's five and pushed "Ask Mark for …" behind "See all" (the rule above is the fix,
+       `057086f`). CI's seven jobs then passed on PR 153, the browser tests in all three browsers
+       included.
+     - **Read back on production at 20:10 GMT**, API and web on `057086f` with `db: ok`, through the
+       API's own Needs you read in a READ ONLY transaction: Craig's holds Halloween and The Silence
+       of the Lambs as Mark's to put back, and Mark's holds them as his own. Not seen yet: either
+       phone.
