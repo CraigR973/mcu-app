@@ -1,3 +1,5 @@
+import type { VirtualItem } from '@tanstack/react-virtual'
+
 /**
  * Back keeps your place — AF4 (#372, snag 4).
  *
@@ -119,11 +121,17 @@ export function restore(positions: Positions): () => void {
       const element = document.querySelector<HTMLElement>(`[data-scroll-memory="${region}"]`)
       if (!element) continue
       const reach = element.scrollHeight - element.clientHeight
-      if (Math.abs(element.scrollTop - Math.min(top, reach)) > 1) element.scrollTop = Math.min(top, reach)
+      const target = Math.min(top, reach)
+      const at = reached.get(region)
+      // Until the place is reached, it is set each frame. Once reached, only a jump of half a
+      // screen or more is undone (the virtual grid resetting itself to the top): a smaller move
+      // is the grid keeping the same films in view as it measures its rows, and is left alone.
+      if (at === undefined ? Math.abs(element.scrollTop - target) > 1 : Math.abs(element.scrollTop - target) > element.clientHeight / 2) {
+        element.scrollTop = target
+      }
       if (reach < top - 1) continue
-      const at = reached.get(region) ?? now
-      reached.set(region, at)
-      if (now - at >= HOLD_FOR_MS) pending.delete(region)
+      reached.set(region, at ?? now)
+      if (now - (at ?? now) >= HOLD_FOR_MS) pending.delete(region)
     }
     if (pending.size === 0 || now - started > RESTORE_FOR_MS) {
       stop()
@@ -155,4 +163,22 @@ export function scrollToHeading(id: string): () => void {
 /** The app's own scrolling panel, where every page but the Archive's views scrolls. */
 export function mainPanel(): HTMLElement | null {
   return document.querySelector<HTMLElement>('[data-scroll-memory="main"]')
+}
+
+/**
+ * The Archive grid's layout for a step in history: its columns and the rows it has measured.
+ * The grid guesses a row's height until it draws it, so a grid laid out afresh puts the same
+ * pixel place over different films. Given back on Back, the grid is laid out as it was and its
+ * remembered place shows the same films. Kept for this visit only.
+ */
+const layouts = new Map<string, { columns: number; rows: VirtualItem[] }>()
+
+export function keepLayout(key: string, columns: number, rows: VirtualItem[]): void {
+  layouts.delete(key)
+  layouts.set(key, { columns, rows: rows.slice() })
+  while (layouts.size > KEPT) layouts.delete(layouts.keys().next().value as string)
+}
+
+export function keptLayout(key: string): { columns: number; rows: VirtualItem[] } | undefined {
+  return layouts.get(key)
 }

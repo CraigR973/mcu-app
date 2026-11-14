@@ -33,3 +33,14 @@ it('offers no action when all nights have ended', async () => {
   await waitFor(() => expect(mocks.fetchMovieNights).toHaveBeenCalled())
   expect(screen.queryByRole('button', { name: 'Add to movie night' })).toBeNull()
 })
+it('adds to the night just started, not an older one from a list read before it (13 Nov)', async () => {
+  const older = { id: 'older', status: 'open', createdAt: '2026-11-13T19:00:00Z', plannedStart: null }
+  const started = { id: 'started', status: 'open', createdAt: '2026-11-13T20:00:00Z', plannedStart: null }
+  // The page opens on the old list; by the tap, the API lists the new night first.
+  mocks.fetchMovieNights.mockResolvedValueOnce({ items: [older] }).mockResolvedValue({ items: [started, older] })
+  mocks.suggestMovieNightFilm.mockResolvedValue({ items: [], total: 0 })
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: 'Add to movie night' }))
+  await waitFor(() => expect(mocks.suggestMovieNightFilm).toHaveBeenCalledWith('started', { movieId: 'film' }))
+  expect(await screen.findByText('Opened the night')).not.toBeNull()
+})

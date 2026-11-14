@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { fetchMovieNights, suggestMovieNightFilm } from '@/lib/api'
+import { nightForFilm } from '@/lib/movie-nights'
 import { queryErrorMessage } from '@/lib/query-state'
 import { formatDateTime } from '@/lib/utils'
 
@@ -12,14 +13,19 @@ export function AddToMovieNight({ movieId }: { movieId: string }) {
   const [nightId, setNightId] = useState('')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const nights = useQuery({ queryKey: ['movie-nights'], queryFn: fetchMovieNights })
+  // Read again as the page opens: a night started a moment ago is not in a list read before it.
+  const nights = useQuery({ queryKey: ['movie-nights'], queryFn: fetchMovieNights, refetchOnMount: 'always' })
   const openNights = (nights.data?.items ?? []).filter((night) => night.status === 'open')
   const chosen = openNights.find((night) => night.id === nightId)?.id ?? openNights[0]?.id ?? ''
   const add = useMutation({
-    mutationFn: () => suggestMovieNightFilm(chosen, { movieId }),
-    onSuccess: (list) => {
-      queryClient.setQueryData(['movie-night-candidates', chosen], list)
-      navigate(`/movie-night/${chosen}`)
+    // The night picked, or the newest open night as it is now, never one from an older list.
+    mutationFn: async () => {
+      const night = await nightForFilm(queryClient, openNights.some((open) => open.id === nightId) ? nightId : '')
+      return { night, list: await suggestMovieNightFilm(night, { movieId }) }
+    },
+    onSuccess: ({ night, list }) => {
+      queryClient.setQueryData(['movie-night-candidates', night], list)
+      navigate(`/movie-night/${night}`)
     },
   })
   return (

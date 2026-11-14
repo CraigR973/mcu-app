@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import type { MovieNightSessionList } from '@mcu/shared'
+import { withNewNight } from '@/lib/movie-nights'
 import { cn, formatDateTime, londonDate } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Clapperboard, Link2, Loader2, Popcorn, Sofa, Square } from 'lucide-react'
@@ -115,6 +117,8 @@ function AtHome() {
       return when ? createMovieNight(filters, when) : createMovieNight(filters)
     },
     onSuccess: (session) => {
+      // At the top of the list on the phone at once, as well as read again (see movie-nights.ts).
+      queryClient.setQueryData<MovieNightSessionList>(['movie-nights'], (list) => withNewNight(list, session))
       void queryClient.invalidateQueries({ queryKey: ['movie-nights'] })
       navigate(`/movie-night/${session.id}`)
     },

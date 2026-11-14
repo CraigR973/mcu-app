@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigationType } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { MovieCard } from './MovieCard'
 import { SkeletonCard } from './SkeletonCard'
 import type { MovieListItem } from '@/lib/api'
 import { StatePanel } from '@/components/ui/state-panel'
+import { keepLayout, keptLayout, remembered } from '@/lib/scroll-memory'
 
 const CARD_MIN_WIDTH = 152
 const GAP = 16
@@ -16,7 +18,12 @@ interface Props {
 
 export function MovieGrid({ movies, isLoading }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [columns, setColumns] = useState(4)
+  // AF4 (#372): on Back, the grid as it was laid out, so its remembered place shows the same
+  // films; on a new visit, laid out afresh from the top.
+  const { key } = useLocation()
+  const back = useNavigationType() === 'POP'
+  const [kept] = useState(() => (back ? keptLayout(key) : undefined))
+  const [columns, setColumns] = useState(kept?.columns ?? 4)
   const containerWidthRef = useRef(640)
 
   useEffect(() => {
@@ -55,12 +62,21 @@ export function MovieGrid({ movies, isLoading }: Props) {
     estimateSize,
     overscan: 4,
     measureElement: (el) => el.getBoundingClientRect().height,
+    initialOffset: () => (back ? remembered(key)?.['archive-grid'] ?? 0 : 0),
+    ...(kept ? { initialMeasurementsCache: kept.rows } : {}),
   })
 
-  // Re-measure all rows when columns change
+  // Re-measure all rows when columns change; not as the grid first mounts, which would drop the
+  // rows kept for Back (AF4).
+  const measuredColumns = useRef(columns)
   useEffect(() => {
+    if (measuredColumns.current === columns) return
+    measuredColumns.current = columns
     virtualizer.measure()
   }, [columns]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the layout as the grid leaves, for Back to lay it out the same way (AF4).
+  useEffect(() => () => keepLayout(key, measuredColumns.current, virtualizer.measurementsCache), [key, virtualizer])
 
   if (!isLoading && movies.length === 0) {
     return (

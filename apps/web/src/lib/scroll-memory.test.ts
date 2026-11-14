@@ -73,6 +73,15 @@ describe('scroll memory — AF4 (#372)', () => {
     expect(grid.scrollTop).toBe(1500)
   })
 
+  it('leaves alone the small moves the grid makes to keep the same films in view', () => {
+    const grid = region('archive-grid', 6000)
+    restore({ 'archive-grid': 1400 })
+    // The grid measures the rows above and moves 45 px to keep the same films where they were.
+    grid.scrollTop = 1445
+    vi.advanceTimersToNextFrame()
+    expect(grid.scrollTop).toBe(1445)
+  })
+
   it('waits for a region not drawn yet, such as the Archive’s grid behind its first read', () => {
     restore({ 'archive-grid': 1500 })
     const grid = region('archive-grid', 6000)

@@ -94,6 +94,8 @@ test('a film page adds a dealt pick to Suggested without losing its vote', async
   const craig = await signedIn('Craig')
   await craig.page.goto('/movie-night')
   await craig.page.getByRole('button', { name: 'Start movie night' }).click()
+  await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
+  const tonight = craig.page.url()
   await craig.page.setViewportSize({ width: 375, height: 812 })
   const random = craig.page.getByRole('region', { name: /From the shelf/ })
   const row = random.getByRole('listitem').first()
@@ -103,6 +105,8 @@ test('a film page adds a dealt pick to Suggested without losing its vote', async
   await row.getByRole('button', { expanded: false }).click()
   await row.getByRole('link', { name: 'Open its page' }).click()
   await craig.page.getByRole('button', { name: 'Add to movie night' }).click()
+  // To the night just started, not an older open one from a list read before it (13 Nov).
+  await expect(craig.page).toHaveURL(tonight)
   const suggested = craig.page.getByRole('region', { name: /^Suggested/ })
   await expect(suggested.getByRole('button', { name: `Added ${title}` })).toBeVisible()
   await expect(suggested.getByText(/Suggested by Craig/)).toBeVisible()

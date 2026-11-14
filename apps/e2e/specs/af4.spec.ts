@@ -40,8 +40,10 @@ test('AF4 Back from a film puts the Archive grid where it was, and the film open
   await page.goto('/movies')
   const grid = page.locator('[data-scroll-memory="archive-grid"]')
   await expect(grid.getByRole('link').first()).toBeVisible()
-  const before = await scrollTo(grid, 1400)
+  await scrollTo(grid, 1400)
   const film = await linkInView(grid)
+  // Where the grid is as the film is tapped: what Back has to come back to.
+  const before = await grid.evaluate(element => element.scrollTop)
   await page.mouse.click(film.x, film.y)
   await expect(page).toHaveURL(new RegExp(`${film.href}$`))
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
@@ -51,9 +53,13 @@ test('AF4 Back from a film puts the Archive grid where it was, and the film open
   // The phone's back arrow goes back through history.
   await page.getByRole('banner', { name: 'Top bar' }).getByRole('button', { name: 'Back' }).click()
   await expect(page).toHaveURL(/\/movies$/)
-  await expect.poll(() => grid.evaluate(element => element.scrollTop)).toBeGreaterThanOrEqual(before - 2)
-  expect(await grid.evaluate(element => element.scrollTop)).toBeLessThanOrEqual(before + 2)
-  expect((await linkInView(grid)).href).toBe(film.href)
+  // The film tapped is back where it was on the screen, and the grid where it was.
+  const tapped = grid.locator(`a[href="${film.href}"]`)
+  await expect.poll(async () => {
+    const box = await tapped.boundingBox()
+    return box ? Math.abs(box.y + box.height / 2 - film.y) : Number.POSITIVE_INFINITY
+  }).toBeLessThanOrEqual(2)
+  expect(Math.abs((await grid.evaluate(element => element.scrollTop)) - before)).toBeLessThanOrEqual(2)
   await page.screenshot({ path: testInfo.outputPath('af4-archive-back-375.png') })
 })
 

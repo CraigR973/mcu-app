@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { nightForFilm } from '@/lib/movie-nights'
 import { formatDateTime } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Bookmark, Check, ExternalLink, HelpCircle, Loader2, Popcorn } from 'lucide-react'
@@ -88,7 +89,8 @@ export default function ExternalFilmPage() {
     enabled: valid,
   })
   const film = filmQuery.data
-  const nights = useQuery({ queryKey: ['movie-nights'], queryFn: fetchMovieNights })
+  // Read again as the page opens: a night started a moment ago is not in a list read before it.
+  const nights = useQuery({ queryKey: ['movie-nights'], queryFn: fetchMovieNights, refetchOnMount: 'always' })
   const openNights = (nights.data?.items ?? []).filter((night) => night.status === 'open')
 
   useEffect(() => {
@@ -104,16 +106,19 @@ export default function ExternalFilmPage() {
   })
 
   const suggest = useMutation({
-    mutationFn: (sessionId: string) => {
+    // The night picked, or the newest open night as it is now, never one from an older list.
+    mutationFn: async (picked: string) => {
       if (!film) throw new Error('The film has not loaded yet.')
-      return suggestMovieNightFilm(
-        sessionId,
+      const night = await nightForFilm(queryClient, picked)
+      await suggestMovieNightFilm(
+        night,
         film.movieId
           ? { movieId: film.movieId }
           : { tmdbId: film.tmdbId, title: film.title, year: film.year, posterPath: film.posterPath },
       )
+      return night
     },
-    onSuccess: (_list, sessionId) => navigate(`/movie-night/${sessionId}`),
+    onSuccess: (night) => navigate(`/movie-night/${night}`),
   })
 
   const state = valid ? listState(filmQuery, false) : 'error'
@@ -195,7 +200,7 @@ export default function ExternalFilmPage() {
                     ))}
                   </select>
                 ) : null}
-                <Button type="button" variant="outline" onClick={() => suggest.mutate(chosenNight)} disabled={suggest.isPending || !chosenNight}>
+                <Button type="button" variant="outline" onClick={() => suggest.mutate(openNights.some((open) => open.id === nightId) ? nightId : '')} disabled={suggest.isPending || !chosenNight}>
                   <Popcorn className="h-4 w-4" aria-hidden /> Add to movie night
                 </Button>
               </span>
