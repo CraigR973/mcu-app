@@ -56,6 +56,8 @@ or performed a **destructive data or history operation**. Those stay explicit.
     sections — 451 lines — leaving those references pointing at nothing; restored in
     `cdb7def`. Check `grep -n '^## ' STATUS.md` after editing: it must still list
     **Now, Next, Gotchas, Log**.
-11. Commit the docs, push `main`.
+11. Commit the docs, push `main`, and **wait for `main`'s runs on the merge and on that
+    commit**: they are the next batch's condition 4. A red one is fixed first, on its own
+    `fix/` branch (#377: on 13 Nov a red close-out run went unread and AF3 began on it).
 12. Report what shipped, and **every failure encountered on the way** — including ones fixed
     on the first attempt.

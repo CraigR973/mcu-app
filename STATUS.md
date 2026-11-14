@@ -2,6 +2,15 @@
 
 ## Now
 
+**14 Nov, 13:01 GMT: the two browser cases that turned `main` red during Group AF are fixed
+(PR 157, `addf6f9`, #377).** Main's end-to-end job had failed on AF1's and Group AF's
+close-out runs. Movie night was a real bug: a film page could add a film to an older open
+night, from a list of nights read before the newest was started; it now reads the newest
+night as the button is tapped. AF4's Archive restore now lays the grid out as it was, so the
+film tapped comes back to the same place on screen. AF3 had begun on a red `main` (close-out
+condition 4); close-out step 11 now waits for `main`'s runs on the merge and the docs commit.
+Production API and web on `addf6f9`, `db: ok`.
+
 **13 Nov, 23:29 GMT: Group AF is done: AF4 shipped, Back keeps your place (PR 156, `c2f080e`,
 #376).** Back and Forward put each page back where it was scrolled: the app's panel, and the
 Archive's grid, list and compact views, which scroll in boxes of their own. A newly opened page
@@ -597,6 +606,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **14 Nov, 13:01 GMT — main's red during Group AF fixed (PR 157, `addf6f9853ba58ef99e06abbf0593a2d45e3d67a`, #377).** A film
+  page adds to the night just started; Back lays the Archive grid out as it was. Local: `pnpm
+  -r test` (web 1,007, shared 209), lint, typecheck, build; movie night ×20, AF4's cases
+  ×5 in Chromium. CI's seven jobs on the PR; production on the merge.
 - **13 Nov, 23:29 GMT — AF4 shipped (PR 156, `c2f080e0ddbd33c35acbe4a3d13fc4f373de064f`, #376); Group AF done.** Back keeps
   your place. Local: unit tests for the memory and the router side, `pnpm -r test` (web 1,001,
   shared 209), lint, typecheck, build; four end-to-end cases, then the full Chromium suite (121

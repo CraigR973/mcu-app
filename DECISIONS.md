@@ -8160,3 +8160,32 @@ contemporaneous.
        `OWNER-ACTIONS.md` asks Craig to try it.
      - **Production**: API and web on `c2f080e` with `db: ok` at 23:29 GMT.
 
+377. **Main's red during Group AF fixed (14 Nov, PR 157, `addf6f9`).** Main's end-to-end job failed
+     on the runs for AF1's close-out (`318aa5a`) and Group AF's (`1d922be`); each batch's PR had
+     passed CI, and so had main's run on each batch's merge.
+     - **Movie night, Chromium, on both runs: a real bug.** A film page chose its night from the
+       list of nights already on the phone, which could predate a night just started, so "Add to
+       movie night" put the film on an older open night and opened that night. The failing run's
+       trace showed the suggestion posted to a different night from the one started. Now the night
+       is the one picked, or else the newest open night read from the API as the button is tapped;
+       both film pages read the list again as they open; starting a night puts it at the top of the
+       list on the phone at once. On the Mac the case failed once in fifteen runs before and passed
+       twenty of twenty after; it now also checks the film lands on the night just started.
+     - **AF4's Archive case, WebKit, on Group AF's run.** The grid guesses row heights until it
+       draws them, so a grid laid out afresh puts the same pixel place over different films, and it
+       moves to keep its films in view as it measures. The grid now keeps its layout (columns and
+       measured rows) for Back and starts from it and the remembered place, re-measuring only when
+       its columns change; the restore undoes only a jump of half a screen or more. The case reads
+       the place as the film is tapped and checks the film is back where it was on the screen.
+     - **A slip, owned.** No one read main's run on AF1's close-out, red at 20:37 GMT on 13 Nov.
+       AF2's PR was already in CI; AF3 began after it, which close-out condition 4 forbids. Main's
+       next runs passed, because the case failed only sometimes, so the red was found on 14 Nov,
+       after Group AF's close-out failed the same way. Close-out step 11 ended at "push `main`" and
+       never waited for that run. It now waits for `main`'s runs on the merge and on the docs
+       commit, and a red one is fixed first, on its own `fix/` branch.
+     - **Proved:** `pnpm -r test` (shared 209, web 1,007); web lint, typecheck and build; movie
+       night ×20 and each AF4 case ×5 in Chromium on the Mac, 19 of 20 for AF4: the twentieth lost
+       the harness's own sign-in to a dropped local connection (`ECONNRESET`) before its page
+       opened. CI's seven jobs on PR 157, the browser cases in all three browsers.
+     - **Production**: API and web on `addf6f9` with `db: ok` at 13:01 GMT.
+
