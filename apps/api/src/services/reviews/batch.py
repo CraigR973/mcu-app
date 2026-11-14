@@ -1,6 +1,9 @@
 """The reviews batch — Batch V9, `DECISIONS.md` #228 and #241 within #110 and #202.
 
-**Three phases, in this order, each bounded:**
+**First it forgets what was looked up for a film whose match has since been corrected**
+(#378): each such row answered another film, and is looked up again below as if new.
+
+**Then three phases, in this order, each bounded:**
 
 1. **Search, on Brave.** Each wanted film without a review row for a site gets one search per
    site, up to :data:`SEARCHES_PER_RUN`, within :data:`MONTHLY_REVIEW_SEARCHES` (the cap of
@@ -30,11 +33,12 @@ from typing import Literal
 
 import httpx
 import structlog
-from sqlalchemy import func, select, update
+from sqlalchemy import Text, cast, delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
+from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.reviews import FilmReview, ReviewRun
@@ -108,6 +112,60 @@ class Want:
     title: str
     year: int | None
     format_code: str | None
+
+
+# ---------------------------------------------------------------------------
+# Forgetting what answered another film
+# ---------------------------------------------------------------------------
+
+#: The audited changes that make a film another film: a correction of its match, wherever
+#: it was made, and an undo of one (`services/identification.py`).
+CORRECTIONS = ("identify", "undo_identify")
+
+
+async def forget_reviews_of_corrected_films(db: AsyncSession) -> int:
+    """Forget each review row found before its film's match was last corrected (#378).
+
+    A row answers the film as it stood when it was found: its title and year are what was
+    searched for, and what a page's year was checked against. A correction makes it another
+    film, so the row answers the wrong one, and nothing else would ever look again: only an
+    old ``none`` is searched again. Dead Man's Shoes, wanted as the 1940 film while the shops
+    sold the 2004 one, kept a ``mismatch`` for good; Bad Lieutenant, corrected to the 2009
+    film, kept the 1992 film's score. Forgotten, a row is searched, seeded or read again
+    tonight, as for a film with none.
+
+    A merge is left alone: the film merged into is still the film it was, and its reviews
+    still answer it. Returns how many rows were forgotten. Does not commit.
+    """
+    corrected = (
+        select(
+            AdminAction.target_id.label("movie_id"),
+            func.max(AdminAction.created_at).label("corrected_utc"),
+        )
+        .where(
+            AdminAction.target_table == Movie.__tablename__,
+            AdminAction.changes["kind"].astext.in_(CORRECTIONS),
+            AdminAction.changes["merge"].astext.is_(None),
+        )
+        .group_by(AdminAction.target_id)
+        .subquery()
+    )
+    stale = (
+        select(FilmReview.id)
+        .join(corrected, corrected.c.movie_id == cast(FilmReview.movie_id, Text))
+        .where(FilmReview.found_utc < corrected.c.corrected_utc)
+    )
+    forgotten = (
+        (
+            await db.execute(
+                delete(FilmReview).where(FilmReview.id.in_(stale)).returning(FilmReview.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    await db.flush()
+    return len(forgotten)
 
 
 # ---------------------------------------------------------------------------
@@ -682,10 +740,12 @@ async def work_run(
     searches_per_run: int = SEARCHES_PER_RUN,
     fetches_per_run: int = FETCHES_PER_RUN,
 ) -> ReviewRun:
-    """The nightly batch: search, seed, read; then record how it ended."""
+    """The nightly batch: forget, search, seed, read; then record how it ended."""
     run_id = run.id
+    forgotten = 0
     try:
         now = clock()
+        forgotten = await forget_reviews_of_corrected_films(db)
         due = await wants_to_search(db, now=now)
         budget = await search_budget(db, now=now, per_run=searches_per_run)
         searching = await search_phase(db, run, searcher, due, budget=budget, clock=clock)
@@ -718,6 +778,7 @@ async def work_run(
     logger.info(
         "review_run_finished",
         status=run.status,
+        forgotten=forgotten,
         searches=run.searches,
         found=run.found,
         fetched=run.fetched,

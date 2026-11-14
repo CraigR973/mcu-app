@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
+from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem
 from src.models.identify import IdentifyDoubt
 from src.models.movie import Movie
@@ -34,9 +35,12 @@ from src.models.specs_backfill import SpecCandidate, SpecLookup
 from src.models.specs_state import SpecsIntegrationState
 from src.models.wanted import WantedItem
 from src.routers.movies import get_tmdb_client
+from src.services.identification import identify_film, undo_identification
 from src.services.reviews import batch
 from src.services.specs.backfill import searches_this_month
 from src.services.specs.search import BraveError, SearchHit, hits_from_payload
+from src.tmdb.models import Credits
+from src.tmdb.models import Movie as TmdbMovie
 
 FIXTURES = Path(__file__).parent / "fixtures"
 REVIEW_PAGE = (FIXTURES / "bluray_com_review_page_4k.html").read_text(encoding="utf-8")
@@ -566,6 +570,178 @@ async def _scored(
         )
     )
     await db.flush()
+
+
+async def _looked_up(
+    db: AsyncSession,
+    movie: Movie,
+    site: str,
+    status: str,
+    *,
+    found: datetime = NOW - timedelta(days=10),
+    **fields: object,
+) -> FilmReview:
+    """A review row as a night left it, looked up at ``found``; a scored one with its scores."""
+    if status == "scored":
+        fields = {
+            "scores": [{"heading": "Overall", "score": 4.0}],
+            "overall": Decimal("4.0"),
+            "out_of": 5,
+            "scores_read_utc": found,
+            **fields,
+        }
+    row = FilmReview(
+        id=uuid.uuid4(),
+        movie_id=movie.id,
+        site=site,
+        format_code="4k_uhd",
+        status=status,
+        found_via="brave",
+        found_utc=found,
+        **fields,
+    )
+    db.add(row)
+    await db.flush()
+    return row
+
+
+async def _corrected(
+    db: AsyncSession,
+    movie: Movie,
+    *,
+    at: datetime = NOW - timedelta(days=1),
+    kind: str = "identify",
+    **changes: object,
+) -> None:
+    """A correction of the film's match, audited as `services/identification.py` audits one."""
+    db.add(
+        AdminAction(
+            id=uuid.uuid4(),
+            user_id=None,
+            action_type="update",
+            target_table="movies",
+            target_id=str(movie.id),
+            changes={"kind": kind, **changes},
+            created_at=at,
+        )
+    )
+    await db.flush()
+
+
+def _tmdb(title: str, year: int) -> TmdbMovie:
+    """TMDB's record of a film, as a correction on the film's page fetches it."""
+    return TmdbMovie(
+        id=990_378_001,
+        title=title,
+        original_title=title,
+        overview=f"{title}, as TMDB describes it.",
+        release_date=f"{year}-06-01",
+        runtime=90,
+        vote_count=100,
+        vote_average=7.0,
+        credits=Credits(cast=[], crew=[]),
+    )
+
+
+class TestACorrectedFilm:
+    """#378: a film whose match is corrected is looked up again, as the film it now is."""
+
+    async def test_a_want_corrected_to_another_year_is_searched_and_read_again(
+        self, db: AsyncSession
+    ) -> None:
+        """Dead Man's Shoes, wanted as the 1940 film while the shops sold the 2004 one."""
+        movie = await _film(db, year=1990)
+        movie_id = movie.id
+        await _want(db, movie, "4k_uhd")
+        await _looked_up(
+            db,
+            movie,
+            "bluray_com",
+            "mismatch",
+            url=US_4K,
+            note="The page is for a 2002 film and this one is from 1990, "
+            "so its review was not used.",
+        )
+        await _looked_up(db, movie, "avforums", "found", url=AVFORUMS_4K)
+        # Answered once, as the wrong film: nothing would ever look again.
+        assert await batch.wants_to_search(db, now=NOW) == []
+
+        movie.year = 2002
+        await _corrected(db, movie)
+        brave, site = FakeBrave(), Site()
+
+        run = await _nightly(db, brave, site)
+
+        rows = await _reviews(db, movie_id)
+        assert {key: (row.status, row.url, row.found_utc) for key, row in rows.items()} == {
+            "bluray_com:4k_uhd": ("scored", US_4K, NOW),
+            "avforums:4k_uhd": ("found", AVFORUMS_4K, NOW),
+        }
+        assert rows["bluray_com:4k_uhd"].overall == Decimal("4.0")
+        assert (brave.search_calls, site.asked) == (2, [US_4K])
+        assert (run.status, run.searches, run.scored) == ("finished", 2, 1)
+
+    async def test_only_what_was_found_before_the_last_correction_is_forgotten(
+        self, db: AsyncSession
+    ) -> None:
+        """Bad Lieutenant, corrected to the 2009 film after the 1992 film's review was read."""
+        corrected = await _film(db, "Bad Lieutenant", 1992)
+        other = await _film(db, "Heat", 1995)
+        await _looked_up(db, corrected, "bluray_com", "scored", url=US_4K)
+        since = await _looked_up(db, corrected, "avforums", "found", url=AVFORUMS_4K, found=NOW)
+        untouched = await _looked_up(db, other, "bluray_com", "no_review", url=UK_4K)
+        await _corrected(db, corrected, at=NOW - timedelta(days=20))
+        await _corrected(db, corrected, at=NOW - timedelta(days=5))
+
+        assert await batch.forget_reviews_of_corrected_films(db) == 1
+
+        left = await db.scalars(
+            select(FilmReview.id).where(FilmReview.movie_id.in_([corrected.id, other.id]))
+        )
+        assert set(left) == {since.id, untouched.id}
+
+    async def test_a_merge_and_other_audited_changes_are_not_corrections(
+        self, db: AsyncSession
+    ) -> None:
+        """The film merged into is the film it was; a film set aside keeps its title."""
+        merged_into = await _film(db, "Misery", 1990)
+        set_aside = await _film(db, "Shetland", 2013)
+        await _looked_up(db, merged_into, "bluray_com", "scored", url=US_4K)
+        await _looked_up(db, set_aside, "bluray_com", "none")
+        await _corrected(db, merged_into, merge={"sourceId": str(uuid.uuid4())})
+        await _corrected(db, set_aside, kind="set_aside")
+
+        assert await batch.forget_reviews_of_corrected_films(db) == 0
+
+    async def test_a_correction_on_the_film_s_page_and_its_undo_are_both_read(
+        self, db: AsyncSession
+    ) -> None:
+        """The audit the rule reads is the one identification really writes, and its undo's."""
+        movie = await _film(db, "Dead Man's Shoes", 1940)
+        await _looked_up(db, movie, "bluray_com", "mismatch", url=US_4K)
+
+        done = await identify_film(
+            db, movie, _tmdb("Dead Man's Shoes", 2004), by=None, how="film_page"
+        )
+
+        assert done.film.year == 2004
+        assert await batch.forget_reviews_of_corrected_films(db) == 1
+
+        # Looked up as the 2004 film, after the correction and before its undo.
+        await _looked_up(
+            db,
+            movie,
+            "bluray_com",
+            "scored",
+            url=US_4K,
+            found=done.audit.created_at + timedelta(microseconds=1),
+        )
+        assert await batch.forget_reviews_of_corrected_films(db) == 0
+
+        restored = await undo_identification(db, done.audit.id, by=None)
+
+        assert restored.year == 1940
+        assert await batch.forget_reviews_of_corrected_films(db) == 1
 
 
 class TestThePagesShowTheReviews:
