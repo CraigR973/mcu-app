@@ -2,6 +2,14 @@
 
 ## Now
 
+**14 Nov, 14:49 GMT: a corrected film's reviews are looked up again (PR 158, `558d48d`,
+#378).** The nightly reviews batch now forgets each review found before its film's match was
+last corrected, and looks it up again. Tonight's run (about 02:00 UTC) redoes 2 live rows:
+Bad Lieutenant: Port of Call New Orleans, which shows the 1992 film's score, and Salem's
+Lot's verdict, reached as the 2024 film. Read both back on 15 Nov. Dead Man's Shoes waits on
+Craig correcting its match to the 2004 film on its page (`OWNER-ACTIONS.md`); Batch 21 then
+has its third film. Production API and web on `558d48d`, `db: ok`.
+
 **14 Nov, 13:01 GMT: the two browser cases that turned `main` red during Group AF are fixed
 (PR 157, `addf6f9`, #377).** Main's end-to-end job had failed on AF1's and Group AF's
 close-out runs. Movie night was a real bug: a film page could add a film to an older open
@@ -204,8 +212,8 @@ judgements, and real-device observations in
 the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
 with the scope caveat in Now. AA10c stays at its separate 25 Nov evidence gate.
 
-**Build backlog:** Batch 21's numerical history gate now passes, but the wanted-film
-identity discrepancy must be settled first. Sale pagination (22c) and email (33–34) stay
+**Build backlog:** Batch 21's numerical history gate now passes; its third film,
+Dead Man's Shoes, waits on Craig correcting its match (`OWNER-ACTIONS.md`, #378). Sale pagination (22c) and email (33–34) stay
 parked/deprioritised. A new build or multi-batch review needs its own scope and go.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -606,6 +614,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **14 Nov, 14:49 GMT — a corrected film's reviews are looked up again (PR 158, `558d48da172c142d9b55096ab97da828575d1740`,
+  #378).** Local: the full API suite against a throwaway Postgres (2,841 passed), ruff,
+  format, mypy; `pnpm -r test` (web 1,007, shared 209), lint, typecheck, build. CI's
+  seven jobs on the PR; production on the merge.
 - **14 Nov, 13:01 GMT — main's red during Group AF fixed (PR 157, `addf6f9853ba58ef99e06abbf0593a2d45e3d67a`, #377).** A film
   page adds to the night just started; Back lays the Archive grid out as it was. Local: `pnpm
   -r test` (web 1,007, shared 209), lint, typecheck, build; movie night ×20, AF4's cases

@@ -8189,3 +8189,34 @@ contemporaneous.
        opened. CI's seven jobs on PR 157, the browser cases in all three browsers.
      - **Production**: API and web on `addf6f9` with `db: ok` at 13:01 GMT.
 
+378. **A corrected film's reviews are looked up again (14 Nov, PR 158, `558d48d`).** Built at
+     Craig's word ("Yes, build it"), after a read-only look at Dead Man's Shoes the same day.
+     - **The defect.** A review row answers the film as it stood when it was found: its title and
+       year are what Brave was asked for, and what a Blu-ray.com page's year was checked against.
+       Correcting a film's match made the row an answer about another film, and nothing looked
+       again, since only an old `none` is searched again. Live on 14 Nov: Dead Man's Shoes, wanted
+       as the 1940 film (TMDB 416920) while Second Sight and Zavvi sell the 2004 one, had its
+       Blu-ray.com page rejected as a 2004 film; Bad Lieutenant: Port of Call New Orleans,
+       corrected from the 1992 film on 16 Oct, showed the 1992 film's score; Salem's Lot,
+       corrected from 2024 to 1979 on 15 Oct, kept a verdict reached as the 2024 film.
+     - **The rule.** The nightly reviews batch first forgets each row found before its film's
+       latest `identify` or `undo_identify` audit, and looks it up again that night within the
+       existing caps. A merge is left alone: the film merged into is the film it was. No schema
+       change.
+     - **Rejected:** clearing the rows inside the correction itself. It misses corrections already
+       made, or made before this shipped, and ties identification to reviews, whose undo would
+       then have to restore them.
+     - **Not covered:** until that night, a film's page still shows a review found before its
+       correction (at most a day).
+     - **First effect:** on 14 Nov the rule matched 2 live rows (Bad Lieutenant's score and
+       Salem's Lot's verdict) of 394 audited corrections, in about 13 ms. Dead Man's Shoes joins
+       when Craig corrects its match on its page (`OWNER-ACTIONS.md`); Batch 21 then has its third
+       film.
+     - **Proved:** 4 new tests, the Dead Man's Shoes shape failing without the fix; the full API
+       suite against a throwaway Postgres 16 on the Mac (2,841 passed); ruff, format, mypy;
+       `pnpm -r test` (shared 209, web 1,007), web lint, typecheck and build; CI's seven jobs
+       on PR 158.
+     - **Production**: API and web on `558d48d` with `db: ok` at 14:49 GMT. First real run: the
+       reviews batch at about 02:00 UTC on 15 Nov; read Bad Lieutenant's and Salem's Lot's rows
+       back after it.
+

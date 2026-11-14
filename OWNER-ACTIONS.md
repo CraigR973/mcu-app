@@ -13,6 +13,14 @@ Older dated sections retain historical instructions; the current summary below t
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
+## Correct Dead Man's Shoes' match — 14 Nov (#378)
+
+- [ ] **Open Dead Man's Shoes from Wanted, tap Correct match, and pick Dead Man's Shoes
+      (2004).** It is wanted as the 1940 film, while Second Sight and Zavvi sell the 2004 one.
+      Its 51 shop prices stay with the want, and the correction can be undone on Identify
+      films. That night's reviews batch looks its review up again (#378); Batch 21's price
+      charts then have their third film.
+
 ## Try Group AF on your phone — 13 Nov (#372)
 
 Everything here is live and proved in CI's three browsers; none of it has been seen on a real
