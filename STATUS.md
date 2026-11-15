@@ -2,6 +2,15 @@
 
 ## Now
 
+**15 Nov, 22:43 GMT: a corrected film's discs are looked up again (PR 160, `6910e14`,
+#380).** A spec batch now forgets each disc page the matcher chose before the film's match
+was last corrected, and searches the disc again. Tonight's batch (about 02:00 UTC) redoes 9
+discs: Salem's Lot, which shows the 2024 film's 4K disc's specs, and 8 in Craig's Disc specs
+queue sent back for the year of the film they were wrongly identified as. Read them back on
+16 Nov, with Salem's Lot's review. #378's first night: Bad Lieutenant's 1992 4K score is
+gone and Salem's Lot was looked up again. Production API and web on
+`6910e14`, `db: ok`.
+
 **15 Nov, 10:49 GMT: main's red on AF4's At the cinema case fixed (PR 159, `962f96c`,
 #379).** Main's end-to-end job had failed in WebKit on both runs after PR 158. Back was
 right: the case read the place before Playwright's click scrolled the film's link again and
@@ -621,6 +630,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **15 Nov, 22:43 GMT — a corrected film's discs are looked up again (PR 160, `6910e14f88f05decf8fd8138fdbb0ca16ba3735b`,
+  #380).** Local: the full gate against a throwaway Postgres (API 2,846 passed, web 1,007,
+  shared 209). CI's seven jobs on the PR; production on the merge.
 - **15 Nov, 10:49 GMT — main's red on AF4's At the cinema case fixed (PR 159, `962f96c57d56a6626ae63d72584c917c4f08851b`,
   #379).** Local: each AF4 case five times in Chromium and in Firefox, 40 of 40; e2e
   typecheck; the full gate (API 2,841 passed, web 1,007, shared 209). CI's seven jobs on the

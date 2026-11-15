@@ -8249,3 +8249,39 @@ contemporaneous.
        skips), which cannot run on the Mac (Playwright has no build for macOS 13).
      - **Production**: API and web on `962f96c` with `db: ok` at 10:49 GMT.
 
+380. **A corrected film's discs are looked up again (15 Nov, PR 160, `6910e14`).** The specs
+     counterpart of #378, built at Craig's word ("The 1979 film"), after reading back the first
+     night of #378.
+     - **The defect.** A disc's Blu-ray.com page answers the film as it stood when the page was
+       chosen: the search used its title, the matcher judged the results by it, and the fetch
+       checked the page's year against its year. A correction made the film another, and nothing
+       looked again. Live on 15 Nov: Salem's Lot, corrected from the 2024 film to the 1979 one on
+       15 Oct (Craig: his 4K disc is the 1979 film), kept the specs of the 2024 film's 4K page,
+       read on 27 Sep, and #378's run refused that page's review as a 2024 film for good, since
+       an owned film's review is seeded only from its disc's page. Eight discs (Alice in
+       Wonderland, Band of Brothers, Cloak and Dagger, Neighbors, No Way Out, The Bridge on the
+       River Kwai, The Halfway House, The Harder They Fall), sent back on 24–26 Sep because the
+       page's year was not the year of the film they were then wrongly identified as, stayed in
+       Craig's queue after the corrections of 15–16 Oct made each page's year the film's.
+     - **The rule.** A spec batch, as it starts and only when it can search, forgets each lookup
+       the matcher decided before the film's latest `identify` or `undo_identify` (not a merge):
+       the lookup and its kept results, the fields its page gave the disc, and a Blu-ray.com
+       review seeded from that page unless another owned copy still has it. The disc is then
+       searched again under the film as it is now. What counts as a correction now lives in
+       `services/identification.py` (`latest_corrections`), shared with #378.
+     - **Left alone:** a page Craig chose or a disc he skipped; a page chosen after the
+       correction; a disc never given a page (Batch T10 and the second look handle those).
+     - **Rejected:** a one-off data fix for Salem's Lot: it misses the eight and every
+       correction to come.
+     - **Not covered:** until that night's batch, the disc still shows the old page's details
+       (at most a day).
+     - **First effect:** read-only on 15 Nov, the rule matches exactly 9 owned discs and Salem's
+       Lot's one seeded review; the first batch, about 02:00 UTC on 16 Nov, spends 9 Brave
+       searches on them (the cap is 150 a night). Read them back after it.
+     - **Proved:** 5 new tests (Salem's Lot's shape fails without the fix; the eight's shape
+       with the real film-page correction, tried once and not again; what a correction does not
+       reach left alone; a review another copy seeds kept; no key, nothing forgotten); #378's
+       tests and forget-all's with the shared code; the full gate on the Mac against a throwaway
+       Postgres 16 (API 2,846 passed, web 1,007, shared 209); CI's seven jobs on PR 160.
+     - **Production**: API and web on `6910e14` with `db: ok` at 22:43 GMT.
+
