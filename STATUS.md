@@ -2,6 +2,13 @@
 
 ## Now
 
+**15 Nov, 10:49 GMT: main's red on AF4's At the cinema case fixed (PR 159, `962f96c`,
+#379).** Main's end-to-end job had failed in WebKit on both runs after PR 158. Back was
+right: the case read the place before Playwright's click scrolled the film's link again and
+tapped it lower down. AF4's cases now read the place at the tap itself and draw their posters,
+so none falls back to the placeholder mid-case. Test-only. Production API and web on
+`962f96c`, `db: ok`.
+
 **14 Nov, 14:49 GMT: a corrected film's reviews are looked up again (PR 158, `558d48d`,
 #378).** The nightly reviews batch now forgets each review found before its film's match was
 last corrected, and looks it up again. Tonight's run (about 02:00 UTC) redoes 2 live rows:
@@ -614,6 +621,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **15 Nov, 10:49 GMT — main's red on AF4's At the cinema case fixed (PR 159, `962f96c57d56a6626ae63d72584c917c4f08851b`,
+  #379).** Local: each AF4 case five times in Chromium and in Firefox, 40 of 40; e2e
+  typecheck; the full gate (API 2,841 passed, web 1,007, shared 209). CI's seven jobs on the
+  PR, WebKit included; production on the merge.
 - **14 Nov, 14:49 GMT — a corrected film's reviews are looked up again (PR 158, `558d48da172c142d9b55096ab97da828575d1740`,
   #378).** Local: the full API suite against a throwaway Postgres (2,841 passed), ruff,
   format, mypy; `pnpm -r test` (web 1,007, shared 209), lint, typecheck, build. CI's

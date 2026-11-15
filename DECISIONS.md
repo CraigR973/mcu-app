@@ -8220,3 +8220,32 @@ contemporaneous.
        reviews batch at about 02:00 UTC on 15 Nov; read Bad Lieutenant's and Salem's Lot's rows
        back after it.
 
+379. **Main's red on AF4's At the cinema case fixed (15 Nov, PR 159, `962f96c`).** Main's
+     end-to-end job failed in WebKit on both runs after PR 158 (`558d48d`, `268d722`), on one
+     case, "AF4 Back from a film at the cinema puts At the cinema where it was". It had passed on
+     PR 158's run and on the four earlier runs of 14 Nov. Fixed first, on its own branch, as
+     close-out step 11 requires (#377). Test-only: no app code changed.
+     - **Back was right; the case read the place too early.** The failing run's trace: the case
+       scrolled the film's link into view and read 857. Playwright's click found the link moving
+       ("element is not stable"), scrolled it into view again, to 693, and tapped it there. Back
+       came back to 693 and stayed. The first red run's numbers fit the same cause the other way
+       round: it read 804, and Back came back to 857 (its trace was not downloaded).
+     - **What moved the link:** the fake world has no posters, so each falls back to the
+       placeholder, and in WebKit a poster doing that is drawn square for a frame (about 107 px
+       tall, not 160), moving the cards around it while Playwright waits.
+     - **The rule:** a case that checks where Back lands reads the place at the tap itself
+       (`apps/e2e/support/scroll-place.ts`: a click listener records the scroll box's place as
+       the tap lands), and draws its posters as the phone does (`posters()`, already in five
+       specs), so none falls back mid-case. The Home set case had the same shape and gets both;
+       the Archive case, which already taps by coordinates (#377), draws posters too. The cinema
+       case now also checks the tap opened the film's page. The check stays within 2 px.
+       `apps/e2e/README.md` carries the rule for new cases.
+     - **Rejected:** loosening the check, or retrying the case: a flaky case is a defect.
+     - **Not changed:** in WebKit, a poster that fails to load is drawn square for a frame before
+       the placeholder shows. Real posters load from TMDB, so the phones should rarely see it.
+     - **Proved:** each AF4 case five times in Chromium and in Firefox on the Mac, 40 of 40; the
+       e2e typecheck; the rest of the local gate, with no app code changed (API 2,841 passed, web
+       1,007, shared 209). CI's seven jobs on PR 159, with WebKit (119 passed, its 2 recorded
+       skips), which cannot run on the Mac (Playwright has no build for macOS 13).
+     - **Production**: API and web on `962f96c` with `db: ok` at 10:49 GMT.
+
