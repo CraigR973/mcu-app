@@ -16,7 +16,8 @@ export async function unfold(page: Page, name: 'Not matched to a film yet' | 'Ev
 export const filmLink = (card: Locator, title: string): Locator => card.getByRole('link', { name: title, exact: true })
 
 /** Posters from the fake world are not images; draw each as a tinted card, so a screenshot
- *  reads as the phone would. */
+ *  reads as the phone would, and no poster falls back to the placeholder as a case scrolls or
+ *  taps: in WebKit the fallback draws it square for a moment and moves what is around it (#379). */
 export async function posters(page: Page): Promise<void> {
   await page.route('https://image.tmdb.org/t/p/**', async route => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''

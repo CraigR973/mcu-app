@@ -99,6 +99,11 @@ unfaked host, or to a path on a faked host nobody wrote, fails the case that cau
   the server's answer.
 - Cases that are not about the service worker run without one (`signedIn(person)`); ask for it
   with `signedIn(person, { worker: true })` and wait for it to take control.
+- **A case that checks where Back lands reads the place at the tap** (`support/scroll-place.ts`,
+  `DECISIONS.md` #379), not before the click: Playwright scrolls a target that moved while it
+  waited into view again before tapping, so a place read first can be one the page has already
+  left. Such a case draws its posters (`posters()` in `support/cinema-view.ts`): the fake world
+  has none, and in WebKit a poster falling back to the placeholder moves what is around it.
 
 ## What this suite cannot prove
 

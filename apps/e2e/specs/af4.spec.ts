@@ -2,13 +2,16 @@ import { randomUUID } from 'node:crypto'
 
 import type { Locator } from '@playwright/test'
 
+import { posters } from '../support/cinema-view.ts'
+import { tapKeepingPlace } from '../support/scroll-place.ts'
 import { expect, test } from '../support/test.ts'
 
 // AF4 (#372, snag 4): Back returns you to where you had scrolled. The app scrolls inside its own
 // panel, and the Archive's grid in a box of its own, so the browser's own restore never applied.
 // Each case scrolls well down, opens something, comes back by a different way back (the phone's
 // arrow, the browser's Back, the page's own button), and finds the same place; a page newly
-// opened starts at the top.
+// opened starts at the top. Each draws its posters, as the phone does: the fake world has none,
+// and in WebKit a poster falling back to the placeholder moves what is around it (#379).
 
 const MAIN = '#main-content'
 
@@ -36,6 +39,7 @@ async function linkInView(box: Locator): Promise<{ href: string; x: number; y: n
 
 test('AF4 Back from a film puts the Archive grid where it was, and the film opens at the top', async ({ signedIn }, testInfo) => {
   const { page } = await signedIn('Craig')
+  await posters(page)
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/movies')
   const grid = page.locator('[data-scroll-memory="archive-grid"]')
@@ -72,23 +76,23 @@ test('AF4 a completion set opened from Home goes back to where Home was', async 
       '${JSON.stringify({ members: [{ tmdbId: 990901, title: 'AF4 Missing Film', year: 1999, posterPath: null }] })}'::jsonb, timezone('utc', now()))`)
   try {
     const { page } = await signedIn('Craig')
+    await posters(page)
     await page.setViewportSize({ width: 375, height: 812 })
     await page.goto('/dashboard')
     const row = page.getByRole('region', { name: 'Closest to complete' })
     const set = row.getByRole('button').first()
     await set.scrollIntoViewIfNeeded()
     const main = page.locator(MAIN)
-    // Where the reader is as they tap: the click itself scrolls nothing now.
-    const before = await main.evaluate(element => element.scrollTop)
-    expect(before).toBeGreaterThan(200)
-    await set.click()
+    // Where the reader is as they tap, read at the tap itself.
+    const tapped = await tapKeepingPlace(main, set)
+    expect(tapped).toBeGreaterThan(200)
     await expect(page.getByRole('button', { name: 'Home', exact: true })).toBeVisible()
     // The set opens at its top, not partway down.
     expect(await main.evaluate(element => element.scrollTop)).toBe(0)
     await page.getByRole('button', { name: 'Home', exact: true }).click()
     await expect(row).toBeVisible()
-    await expect.poll(() => main.evaluate(element => element.scrollTop)).toBeGreaterThanOrEqual(before - 2)
-    expect(await main.evaluate(element => element.scrollTop)).toBeLessThanOrEqual(before + 2)
+    await expect.poll(() => main.evaluate(element => element.scrollTop)).toBeGreaterThanOrEqual(tapped - 2)
+    expect(await main.evaluate(element => element.scrollTop)).toBeLessThanOrEqual(tapped + 2)
     await page.screenshot({ path: testInfo.outputPath('af4-home-set-back-375.png') })
   } finally {
     db.sql(`DELETE FROM completion_sets WHERE id = '${id}'`)

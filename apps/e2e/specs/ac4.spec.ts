@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Page } from '@playwright/test'
 import { posters, unfold } from '../support/cinema-view.ts'
+import { tapKeepingPlace } from '../support/scroll-place.ts'
 import { test as base, expect } from '../support/test.ts'
 
 const sql = (value: unknown) => `'${String(value).replaceAll("'", "''")}'`
@@ -267,24 +268,27 @@ async function scrolledTo(box: import('@playwright/test').Locator, top: number):
 test('AF4 Back from a film at the cinema puts At the cinema where it was', async ({ signedIn, cinema }, testInfo) => {
   void cinema // its rows make the view tall enough to scroll
   const { page } = await signedIn('Mark')
+  // Posters drawn, as the phone draws them: the fake world has none, and in WebKit a poster
+  // falling back to the placeholder moves the cards around it as the case taps (#379).
+  await posters(page)
   // A short screen, so Coming up is well below the first view.
   await page.setViewportSize({ width: 375, height: 600 })
   await page.goto('/movie-night/cinema')
   const main = page.locator('#main-content')
   const later = page.getByRole('region', { name: 'Coming up' }).getByRole('article').first().getByRole('link').first()
   await later.scrollIntoViewIfNeeded()
-  // Where the reader is as they tap: the click itself scrolls nothing now.
-  const before = await main.evaluate(element => element.scrollTop)
-  expect(before).toBeGreaterThan(100)
-  await later.click()
+  // Where the reader is as they tap, read at the tap itself.
+  const tapped = await tapKeepingPlace(main, later)
+  expect(tapped).toBeGreaterThan(100)
+  await expect(page).toHaveURL(/\/movie-night\/cinema\/tmdb-9100\d{3}$/)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   expect(await main.evaluate(element => element.scrollTop)).toBe(0)
 
   // The browser's own Back.
   await page.goBack()
   await expect(page).toHaveURL(/\/movie-night\/cinema$/)
-  await expect.poll(() => main.evaluate(element => element.scrollTop)).toBeGreaterThanOrEqual(before - 2)
-  expect(await main.evaluate(element => element.scrollTop)).toBeLessThanOrEqual(before + 2)
+  await expect.poll(() => main.evaluate(element => element.scrollTop)).toBeGreaterThanOrEqual(tapped - 2)
+  expect(await main.evaluate(element => element.scrollTop)).toBeLessThanOrEqual(tapped + 2)
   await page.screenshot({ path: testInfo.outputPath('af4-cinema-back-375.png') })
 })
 
