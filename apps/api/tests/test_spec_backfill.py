@@ -35,11 +35,14 @@ from src.auth import get_current_user
 from src.config import settings
 from src.database import get_db
 from src.main import app
+from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem
 from src.models.identify import IdentifyDoubt
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
+from src.models.reviews import FilmReview
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
+from src.services.identification import identify_film
 from src.services.specs import backfill
 from src.services.specs.backfill import (
     MONTHLY_SEARCH_CEILING,
@@ -53,6 +56,8 @@ from src.services.specs.backfill import (
 )
 from src.services.specs.runner import get_state
 from src.services.specs.search import SearchHit
+from src.tmdb.models import Credits
+from src.tmdb.models import Movie as TmdbMovie
 
 NOW = datetime(2026, 9, 24, 2, 0)
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -1519,3 +1524,267 @@ async def test_the_one_off_clears_only_what_settled_lookups_still_hold(db: Async
     assert await _candidate_urls(db, skipped) == set()
     assert len(await _candidate_urls(db, waiting)) == 2
     assert len(await _candidate_urls(db, accepted)) == 2
+
+
+# ---------------------------------------------------------------------------
+# A corrected film's discs — #380
+# ---------------------------------------------------------------------------
+
+#: Another film's page under the same title, as the 2021 remake's would be.
+REMAKE_UK = "https://www.blu-ray.com/movies/Fight-Club-Blu-ray/990380/"
+SENT_BACK_FOR_2021 = (
+    "The page is for a 1999 film and this one is from 2021, so its specs were not used. "
+    "Pick the right page."
+)
+
+
+def _tmdb_fight_club() -> TmdbMovie:
+    """TMDB's record of the 1999 film, as a correction on the film's page fetches it."""
+    return TmdbMovie(
+        id=990_380_550,
+        title="Fight Club",
+        original_title="Fight Club",
+        overview="Fight Club, as TMDB describes it.",
+        release_date="1999-10-15",
+        runtime=139,
+        vote_count=100,
+        vote_average=8.0,
+        credits=Credits(cast=[], crew=[]),
+    )
+
+
+def _corrected(db: AsyncSession, film: Movie, *, at: datetime, **changes: object) -> None:
+    """A correction of the film's match, audited as `services/identification.py` audits one."""
+    db.add(
+        AdminAction(
+            id=uuid.uuid4(),
+            user_id=None,
+            action_type="update",
+            target_table="movies",
+            target_id=str(film.id),
+            changes={"kind": "identify", **changes},
+            created_at=at,
+        )
+    )
+
+
+async def _paged(
+    db: AsyncSession,
+    film: Movie,
+    status: str,
+    *,
+    page: str = REMAKE_UK,
+    decided: datetime = NOW - timedelta(days=10),
+    decided_by: uuid.UUID | None = None,
+    note: str | None = None,
+) -> tuple[CollectionItem, SpecLookup]:
+    """A disc the matcher gave ``page`` at ``decided``: read (``done``, with the page's
+    specs), or sent back to Craig (``needs_you``, the page only among its results)."""
+    read = status == "done"
+    specs: dict[str, Any] = {
+        "video_specs": {"codec": "MPEG-4 AVC"},
+        "audio_specs": [{"language": "English"}],
+        "special_features": ["Commentary"],
+        "region_code": "B",
+        "release_label": "Remake Pictures",
+        "specs_source_url": page,
+        "specs_fetched_at_utc": decided,
+    }
+    disc = await _disc(db, film, "blu_ray", **(specs if read else {}))
+    lookup = SpecLookup(
+        id=uuid.uuid4(),
+        collection_item_id=disc.id,
+        status=status,
+        accepted_url=page if read else None,
+        how=("confirmed" if decided_by else "auto") if read else None,
+        decided_by=decided_by,
+        decided_utc=decided,
+        search_query=FIGHT_CLUB_QUERY,
+        searched_utc=decided,
+        fetched_utc=decided if read else None,
+        note=note,
+        attempts=0,
+    )
+    db.add(lookup)
+    await db.flush()
+    db.add(
+        SpecCandidate(
+            id=uuid.uuid4(),
+            lookup_id=lookup.id,
+            url=page,
+            title="Fight Club Blu-ray (United Kingdom)",
+            rank=0,
+            matches=True,
+            origin="search",
+        )
+    )
+    await db.commit()
+    return disc, lookup
+
+
+def _seeded(film: Movie, page: str, status: str = "mismatch") -> FilmReview:
+    """A Blu-ray.com review the reviews batch seeded from a disc's page (#241)."""
+    return FilmReview(
+        id=uuid.uuid4(),
+        movie_id=film.id,
+        site="bluray_com",
+        format_code="blu_ray",
+        status=status,
+        url=page,
+        found_via="spec_page",
+        found_url=page,
+        found_utc=NOW - timedelta(days=1),
+    )
+
+
+async def _lookups(db: AsyncSession, *ids: uuid.UUID) -> int:
+    return int(await db.scalar(select(func.count(SpecLookup.id)).where(SpecLookup.id.in_(ids))))
+
+
+async def test_a_disc_read_from_another_films_page_is_searched_and_read_again(
+    db: AsyncSession,
+) -> None:
+    """Salem's Lot, 15 Nov: its specs were the 2024 film's 4K disc's, read on 27 Sep, before
+    the film was corrected to the 1979 one on 15 Oct. Here the film was the 2021 remake."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc, old = await _paged(db, film, "done")
+    db.add(_seeded(film, REMAKE_UK))
+    _corrected(db, film, at=NOW - timedelta(days=5))
+    await db.commit()
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK})
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    run = await _run(db, brave, site)
+
+    assert brave.queries == [FIGHT_CLUB_QUERY]
+    assert site.requested == [FIGHT_CLUB_UK]
+    assert (run.searched, run.accepted, run.applied, run.sent_back) == (1, 1, 1, 0)
+    assert await _lookups(db, old.id) == 0
+    await db.refresh(disc)
+    assert (disc.specs_source_url, disc.specs_fetched_at_utc) == (FIGHT_CLUB_UK, NOW)
+    assert disc.release_label != "Remake Pictures"
+    assert disc.special_features != ["Commentary"]
+    lookup = await _lookup(db, disc)
+    assert (lookup.status, lookup.how, lookup.accepted_url) == ("done", "auto", FIGHT_CLUB_UK)
+    # The review the remake's page seeded answered the remake too; tonight's reviews batch
+    # seeds the new page's.
+    reviews = await db.scalars(select(FilmReview).where(FilmReview.movie_id == film.id))
+    assert reviews.all() == []
+
+
+async def test_a_page_sent_back_for_the_films_old_year_is_tried_again_once_corrected(
+    db: AsyncSession,
+) -> None:
+    """Alice in Wonderland and seven more, 15 Nov: each disc's page was its film's own, but was
+    checked against the year of the film it was wrongly identified as, and sent back."""
+    film = await _film(db, "Fight Club", year=2021, tmdb_id=990_000_551)
+    disc, old = await _paged(db, film, "needs_you", page=FIGHT_CLUB_UK, note=SENT_BACK_FOR_2021)
+    # The correction made on the film's page, audited as it audits one.
+    done = await identify_film(db, film, _tmdb_fight_club(), by=None, how="film_page")
+    done.audit.created_at = NOW - timedelta(days=5)
+    await db.commit()
+    assert done.film.year == 1999
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK})
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    run = await _run(db, brave, site)
+
+    assert brave.queries == [FIGHT_CLUB_QUERY]
+    assert (run.searched, run.accepted, run.applied, run.sent_back) == (1, 1, 1, 0)
+    assert await _lookups(db, old.id) == 0
+    await db.refresh(disc)
+    assert disc.specs_source_url == FIGHT_CLUB_UK
+    lookup = await _lookup(db, disc)
+    assert (lookup.status, lookup.accepted_url) == ("done", FIGHT_CLUB_UK)
+
+    # Its page now chosen after the correction, the next batch leaves it be.
+    await _filler(db)
+    again = FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK})
+    await _run(db, again, FakeBlurayCom({}), now=NOW + timedelta(days=1))
+    assert again.queries == [FILLER_QUERY]
+    assert await _lookups(db, lookup.id) == 1
+
+
+async def test_what_a_correction_did_not_reach_is_left_as_it_was(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    corrected = NOW - timedelta(days=5)
+    # Craig chose the page himself, before the correction: his call about the disc in his hand.
+    chosen = await _film(db, "Craigs Choice", year=2003, tmdb_id=990_380_001)
+    chosen_disc, chosen_lookup = await _paged(db, chosen, "done", decided_by=craig.id)
+    _corrected(db, chosen, at=corrected)
+    # The page was chosen after the correction, under the film as it is now.
+    after = await _film(db, "Chosen After", year=2004, tmdb_id=990_380_002)
+    after_disc, after_lookup = await _paged(db, after, "done", decided=NOW - timedelta(days=2))
+    _corrected(db, after, at=corrected)
+    # A merge: the film merged into is still the film it was.
+    kept = await _film(db, "Merged Into", year=2005, tmdb_id=990_380_003)
+    kept_disc, kept_lookup = await _paged(db, kept, "done")
+    _corrected(db, kept, at=corrected, merge={"sourceId": str(uuid.uuid4())})
+    # Never corrected at all.
+    plain = await _film(db, "Never Corrected", year=2007, tmdb_id=990_380_005)
+    plain_disc, plain_lookup = await _paged(db, plain, "done")
+    # Never given a page: Batch T10 and the second look bring this one up to date.
+    unpaged = await _film(db, "Never Paged", year=2006, tmdb_id=990_380_004)
+    _unpaged_disc, unpaged_lookup = await _searched_earlier(
+        db,
+        unpaged,
+        query="site:blu-ray.com Never Paged Blu-ray United Kingdom",
+        searched=NOW - timedelta(days=10),
+    )
+    _corrected(db, unpaged, at=corrected)
+    await db.commit()
+    await _filler(db)
+    brave = FakeBrave()
+
+    await _run(db, brave, FakeBlurayCom({}))
+
+    assert brave.queries == [FILLER_QUERY]
+    for disc, lookup in (
+        (chosen_disc, chosen_lookup),
+        (after_disc, after_lookup),
+        (kept_disc, kept_lookup),
+        (plain_disc, plain_lookup),
+    ):
+        await db.refresh(disc)
+        await db.refresh(lookup)
+        assert (lookup.status, disc.specs_source_url, disc.release_label) == (
+            "done",
+            REMAKE_UK,
+            "Remake Pictures",
+        )
+    await db.refresh(unpaged_lookup)
+    assert (unpaged_lookup.status, unpaged_lookup.note) == ("needs_you", NO_UK_PAGE)
+
+
+async def test_a_review_another_copy_still_seeds_is_kept(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    forgotten, _ = await _paged(db, film, "done")
+    still, _ = await _paged(db, film, "done", decided_by=craig.id)
+    review = _seeded(film, REMAKE_UK, status="found")
+    db.add(review)
+    _corrected(db, film, at=NOW - timedelta(days=5))
+    await db.commit()
+
+    assert await backfill.forget_discs_of_corrected_films(db) == 1
+
+    await db.refresh(forgotten)
+    await db.refresh(still)
+    assert (forgotten.specs_source_url, still.specs_source_url) == (None, REMAKE_UK)
+    assert await db.get(FilmReview, review.id) is not None
+
+
+async def test_without_a_key_nothing_is_forgotten(db: AsyncSession) -> None:
+    """A disc forgotten is searched again in the same batch, so only a batch that can search
+    forgets one."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc, lookup = await _paged(db, film, "done")
+    _corrected(db, film, at=NOW - timedelta(days=5))
+    await db.commit()
+
+    outcome = await start_run(db, trigger="job", search_configured=False, now=NOW)
+
+    assert (outcome.reason, outcome.run) == ("nothing_due", None)
+    await db.refresh(disc)
+    assert disc.specs_source_url == REMAKE_UK
+    assert await _lookups(db, lookup.id) == 1

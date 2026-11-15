@@ -37,7 +37,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import and_, delete, exists, select, update
+from sqlalchemy import Subquery, and_, delete, exists, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -626,6 +626,38 @@ async def set_aside(
     )
     await db.flush()
     return lookup
+
+
+# ---------------------------------------------------------------------------
+# Corrections, as what was found for a film reads them
+# ---------------------------------------------------------------------------
+
+#: The audited changes that make a film another film: a correction of its match, wherever it
+#: was made, and an undo of one. A merge writes an ``identify`` too, with a ``merge`` key, and
+#: is not one: the film merged into is still the film it was.
+CORRECTIONS = ("identify", "undo_identify")
+
+
+def latest_corrections() -> Subquery:
+    """Each corrected film's id, as text as the audit holds it (``movie_id``), and when its
+    match was last corrected (``corrected_utc``).
+
+    What was found for a film before then answered another film: its reviews (#378) and its
+    discs' pages (#380) are looked up again.
+    """
+    return (
+        select(
+            AdminAction.target_id.label("movie_id"),
+            func.max(AdminAction.created_at).label("corrected_utc"),
+        )
+        .where(
+            AdminAction.target_table == MOVIES_TABLE,
+            AdminAction.changes["kind"].astext.in_(CORRECTIONS),
+            AdminAction.changes["merge"].astext.is_(None),
+        )
+        .group_by(AdminAction.target_id)
+        .subquery()
+    )
 
 
 # ---------------------------------------------------------------------------

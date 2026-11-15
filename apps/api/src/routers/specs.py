@@ -44,13 +44,13 @@ from src.services.specs.backfill import (
     accept_page,
     continue_run_in_background,
     coverage,
+    forget_page_fields,
     latest_run,
     queue,
     searches_this_month,
     skip_disc,
     start_run,
 )
-from src.services.specs.editions import page_edition
 from src.services.specs.runner import get_state, halt, run_specs_fetch
 
 logger = structlog.get_logger(__name__)
@@ -169,20 +169,12 @@ async def forget_all_specs(_user: AdminUser, db: Database) -> SpecsStateResponse
         .all()
     )
     for item in rows:
-        if item.edition is not None:
-            lookup = await db.scalar(
-                select(SpecLookup).where(SpecLookup.collection_item_id == item.id)
-            )
-            if lookup is not None and item.edition == await page_edition(db, lookup):
-                item.edition = None
-                item.edition_source = None
-        item.video_specs = None
-        item.audio_specs = None
-        item.special_features = None
-        item.region_code = None
-        item.release_label = None
-        item.specs_source_url = None
-        item.specs_fetched_at_utc = None
+        lookup = (
+            await db.scalar(select(SpecLookup).where(SpecLookup.collection_item_id == item.id))
+            if item.edition is not None
+            else None
+        )
+        await forget_page_fields(db, item, lookup)
     await db.commit()
     logger.warning("specs_deleted", rows=len(rows))
     return await _state_response(db)

@@ -38,11 +38,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
-from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.reviews import FilmReview, ReviewRun
 from src.models.wanted import WantedItem
+from src.services.identification import latest_corrections
 from src.services.identify.doubts import doubt_from_page, review_page_name
 from src.services.reviews.bluray_com import OUT_OF, format_of, review_scores, reviewed_editions
 from src.services.reviews.finding import (
@@ -118,10 +118,6 @@ class Want:
 # Forgetting what answered another film
 # ---------------------------------------------------------------------------
 
-#: The audited changes that make a film another film: a correction of its match, wherever
-#: it was made, and an undo of one (`services/identification.py`).
-CORRECTIONS = ("identify", "undo_identify")
-
 
 async def forget_reviews_of_corrected_films(db: AsyncSession) -> int:
     """Forget each review row found before its film's match was last corrected (#378).
@@ -137,19 +133,7 @@ async def forget_reviews_of_corrected_films(db: AsyncSession) -> int:
     A merge is left alone: the film merged into is still the film it was, and its reviews
     still answer it. Returns how many rows were forgotten. Does not commit.
     """
-    corrected = (
-        select(
-            AdminAction.target_id.label("movie_id"),
-            func.max(AdminAction.created_at).label("corrected_utc"),
-        )
-        .where(
-            AdminAction.target_table == Movie.__tablename__,
-            AdminAction.changes["kind"].astext.in_(CORRECTIONS),
-            AdminAction.changes["merge"].astext.is_(None),
-        )
-        .group_by(AdminAction.target_id)
-        .subquery()
-    )
+    corrected = latest_corrections()
     stale = (
         select(FilmReview.id)
         .join(corrected, corrected.c.movie_id == cast(FilmReview.movie_id, Text))
