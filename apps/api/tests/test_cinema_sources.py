@@ -42,8 +42,9 @@ def body(name: str) -> str:
 
 def test_real_specimen_provenance():
     provenance = json.loads(body("provenance.json"))
-    # AE4 (#355): the Omniplex's page, 8 Nov, the thirteenth specimen.
-    assert len(provenance) == 13
+    # AE4 (#355): the Omniplex's page, 8 Nov, the thirteenth specimen; #381: Kilmarnock's page
+    # of 16 Nov, the fourteenth, in the shape CinemaTimes has served since 12 Nov.
+    assert len(provenance) == 14
     for name, record in provenance.items():
         assert hashlib.sha256((FIXTURES / name).read_bytes()).hexdigest() == record["fixtureSha256"]
         assert len(record["sourceSha256"]) == 64
@@ -336,3 +337,109 @@ def test_ten_venues_with_the_omniplex_last_and_its_stable_id():
         "https://cinematimes.com/uk/glasgow/cinemas/omniplex-glasgow-renfrew-street-city/"
     )
     assert str(OMNIPLEX.id) == str(uuid.uuid5(uuid.NAMESPACE_URL, "mcu:cinema:" + OMNIPLEX.slug))
+
+
+# --- #381, the ODEON fast lane: CinemaTimes's page shape since 12 Nov ------------------------
+
+KILMARNOCK_NOW = "cinematimes-kilmarnock-2026-11-16.html"
+KILMARNOCK_PAGE = "https://cinematimes.com/uk/glasgow/cinemas/odeon-kilmarnock/"
+
+
+def test_an_odeon_page_that_states_its_theatre_twice_is_read():
+    """From 12 Nov each ODEON page splits its one theatre across two blocks with one ``@id``.
+
+    The guard refused all four every morning until #381; the page is still this branch's.
+    """
+    page = body(KILMARNOCK_NOW)
+    assert page.count('"@type": "MovieTheater"') == 2
+    assert page.count(f'"@id": "{KILMARNOCK_PAGE}#theater"') == 2
+    snapshot = parse_cinematimes(page, BY_SLUG["odeon-kilmarnock"])
+    assert len(snapshot.rows) == 163 and snapshot.errors == []
+    assert len(snapshot.observed_dates) == 10
+    assert snapshot.source_update_label == "Times from ODEON, updated Monday 01:17"
+    assert all(row.key.startswith("019-") for row in snapshot.rows)
+    first = snapshot.rows[0]
+    assert (first.key, first.title, first.film_key) == (
+        "019-72627",
+        "Clayface",
+        "/uk/glasgow/movies/clayface/",
+    )
+
+
+@pytest.mark.parametrize("other", [v.slug for v in VENUES if v.source == "cinematimes"])
+def test_the_new_page_shape_is_still_refused_as_any_other_branch(other):
+    if other == "odeon-kilmarnock":
+        return
+    with pytest.raises(SourceError, match="venue identity"):
+        parse_cinematimes(body(KILMARNOCK_NOW), BY_SLUG[other])
+
+
+_SECOND = (
+    '<script type="application/ld+json">{"@context": "https://schema.org", '
+    '"@type": "MovieTheater", "@id": "'
+    + KILMARNOCK_PAGE
+    + '#theater", "name": "ODEON Kilmarnock", "url": "'
+    + KILMARNOCK_PAGE
+    + '"}</script></head>'
+)
+
+
+@pytest.mark.parametrize(
+    ("change", "why"),
+    [
+        # A second theatre: another branch's node, under its own page.
+        (
+            lambda n: (
+                n.replace("odeon-kilmarnock/#theater", "odeon-braehead-renfrew/#theater")
+                .replace('"ODEON Kilmarnock"', '"ODEON Braehead"')
+                .replace(f'"url": "{KILMARNOCK_PAGE}"', '"url": "x"')
+            ),
+            "another branch",
+        ),
+        # The same @id but another name: not one theatre.
+        (lambda n: n.replace('"ODEON Kilmarnock"', '"ODEON Braehead"'), "another name"),
+        # The right name under another page's @id.
+        (
+            lambda n: n.replace("odeon-kilmarnock/#theater", "odeon-braehead-renfrew/#theater"),
+            "another page's id",
+        ),
+        # The right name and @id, but a url for another page.
+        (
+            lambda n: n.replace(
+                f'"url": "{KILMARNOCK_PAGE}"',
+                '"url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-braehead-renfrew/"',
+            ),
+            "another page's url",
+        ),
+        # No @id: two nodes nothing says are one.
+        (lambda n: n.replace(f'"@id": "{KILMARNOCK_PAGE}#theater", ', ""), "no id"),
+    ],
+)
+def test_a_second_theatre_node_that_is_not_this_branch_is_refused(change, why):
+    page = body(KILMARNOCK_NOW)
+    # Add a third node, changed; the page's own two still name the branch.
+    tampered = page.replace("</head>", change(_SECOND), 1)
+    assert tampered.count('"@type": "MovieTheater"') == 3, why
+    with pytest.raises(SourceError, match="venue identity"):
+        parse_cinematimes(tampered, BY_SLUG["odeon-kilmarnock"])
+
+
+def test_one_theatre_node_is_read_as_before_and_none_is_refused():
+    # The AB6 specimens' single node, no @id, still reads (the old rule, unchanged).
+    assert (
+        len(
+            parse_cinematimes(body("cinematimes-kilmarnock.html"), BY_SLUG["odeon-kilmarnock"]).rows
+        )
+        == 137
+    )
+    page = body(KILMARNOCK_NOW).replace('"@type": "MovieTheater"', '"@type": "Place"')
+    with pytest.raises(SourceError, match="venue identity"):
+        parse_cinematimes(page, BY_SLUG["odeon-kilmarnock"])
+
+
+def test_a_showing_booked_at_another_branch_is_still_refused_on_the_new_page():
+    page = body(KILMARNOCK_NOW)
+    wrong = page.replace("showtimeId=019-72627", "showtimeId=615-72627")
+    snapshot = parse_cinematimes(wrong, BY_SLUG["odeon-kilmarnock"])
+    assert all(row.key != "615-72627" for row in snapshot.rows)
+    assert len(snapshot.rows) == 162 and len(snapshot.errors) == 1

@@ -193,8 +193,69 @@ async def test_cinema_child_runs_after_reminder_commit_and_failure_is_separate(m
 
     monkeypatch.setattr(run_reminders.heartbeat, "beat", beat)
     monkeypatch.setattr(run_reminders, "refresh_due", child)
+    # #381: the cinema rows are checked again once the refresh has written today's run.
+    cinema_check = AsyncMock(return_value=CheckSummary())
+    monkeypatch.setattr(run_reminders, "run_cinema_check", cinema_check)
     assert await run_reminders._run(as_of=None, deliver=False) == 0
+    cinema_check.assert_awaited_once()
     engine.dispose.assert_awaited_once()
+
+
+async def test_the_cinema_rows_are_checked_after_the_refresh_and_their_push_delivered(
+    monkeypatch,
+):
+    """#381: a cinema that fails this morning reaches Craig this morning."""
+    events = []
+
+    class Session:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def commit(self):
+            events.append("commit")
+
+    class Sender:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+    engine = SimpleNamespace(dispose=AsyncMock())
+    monkeypatch.setattr(run_reminders, "create_async_engine", lambda *args: engine)
+    monkeypatch.setattr(run_reminders, "AsyncSession", lambda *args, **kwargs: Session())
+    monkeypatch.setattr(run_reminders, "run_reminders", AsyncMock(return_value=ReminderSummary()))
+    monkeypatch.setattr(run_reminders, "run_daily_check", AsyncMock(return_value=CheckSummary()))
+    monkeypatch.setattr(run_reminders, "sync_due", AsyncMock(return_value=[]))
+    monkeypatch.setattr(run_reminders.heartbeat, "beat", AsyncMock())
+    monkeypatch.setattr(run_reminders, "push_sender", lambda: Sender())
+
+    async def refresh(*args):
+        events.append("refresh")
+        return {"status": "partial"}
+
+    async def cinema_check(*args, **kwargs):
+        events.append("cinema check")
+        return CheckSummary(checked=5, problems=1, new=["ODEON Braehead's listings failed"])
+
+    async def digest(*args):
+        events.append("digest")
+        return SimpleNamespace(sent=0, failed=0)
+
+    async def deliver(*args, **kwargs):
+        events.append("deliver")
+        return SimpleNamespace(sent=1, failed=0)
+
+    monkeypatch.setattr(run_reminders, "refresh_due", refresh)
+    monkeypatch.setattr(run_reminders, "run_cinema_check", cinema_check)
+    monkeypatch.setattr(run_reminders, "deliver_cinema_digest", digest)
+    monkeypatch.setattr(run_reminders, "deliver_pending", deliver)
+    assert await run_reminders._run(as_of=None, deliver=True) == 0
+    after = events[events.index("refresh") :]
+    assert after == ["refresh", "cinema check", "commit", "digest", "deliver", "commit"]
 
 
 @pytest.mark.parametrize(

@@ -71,12 +71,34 @@ def cinematimes_key(url: str, venue: Venue) -> str:
     raise SourceError("No booking rule for this CinemaTimes venue")
 
 
+def _cinematimes_theater(structured: list[dict[str, Any]], venue: Venue) -> None:
+    """The page describes exactly one theatre, and it is this venue.
+
+    One ``MovieTheater`` node with the approved name, as the AB6 specimens had. Since 12 Nov
+    CinemaTimes splits the same theatre across two blocks (its details, then its amenities);
+    JSON-LD makes nodes sharing an ``@id`` one entity. So more than one node is accepted only
+    when every node names the venue, carries the same ``@id``, and that ``@id`` (and any
+    ``url``) is this venue's own programme page. A second theatre, or a node for any other
+    page, is refused. Every showing's booking link must still name the branch
+    (``cinematimes_key``).
+    """
+    theaters = [x for x in structured if x.get("@type") == "MovieTheater"]
+    if not theaters or any(t.get("name") != venue.name for t in theaters):
+        raise SourceError("CinemaTimes venue identity differs from the approved branch")
+    if len(theaters) == 1:
+        return
+    own_page = venue.programme_url
+    if any(
+        t.get("@id") != own_page + "#theater" or t.get("url", own_page) != own_page
+        for t in theaters
+    ):
+        raise SourceError("CinemaTimes venue identity differs from the approved branch")
+
+
 def parse_cinematimes(body: str, venue: Venue) -> Snapshot:
     soup = BeautifulSoup(body, "html.parser")
     structured = _jsonld(soup)
-    theaters = [x for x in structured if x.get("@type") == "MovieTheater"]
-    if len(theaters) != 1 or theaters[0].get("name") != venue.name:
-        raise SourceError("CinemaTimes venue identity differs from the approved branch")
+    _cinematimes_theater(structured, venue)
     times: dict[str, str] = {}
     for node in structured:
         if node.get("@type") == "ScreeningEvent":
