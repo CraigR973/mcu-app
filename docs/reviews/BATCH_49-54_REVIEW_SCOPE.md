@@ -112,6 +112,14 @@ wave 1's 44 findings and the guards it named; the users' own words.
    history on 16 Nov (1,002 commits, every PR's head, no value printed) found one credential, the
    April GitHub token, which the owner record says is revoked; only `.env.example` files were ever
    committed. The synthesis records the decision in `DECISIONS.md`.
+7. **Pacing** (Craig, 16 Nov, while R6 waited for the 5-hour reset): continue the review until the usage
+   runs out. Each step from then on pauses at 90% of Claude's 5-hour allowance (85% before a long
+   section), not 75% (65%); the last tenth is kept so a step can save its place and schedule its own
+   restart.
+8. **Which *Bad Lieutenant* the want is for** (MK53-03; Craig, 16 Nov): undecided; it goes on the
+   viewer's to-do list in the app (Needs you). The app's want question is built for one film (*Dead
+   Man's Shoes*; a database check fixes its answers to 1940 and 2004), so it cannot ask this one yet:
+   the synthesis names the build, and the ask is recorded meanwhile.
 
 ## Live constraints
 
