@@ -25,7 +25,9 @@ under `apps/` and `packages/` (+109,441 −5,245 lines). The procedure is
   (CinemaTimes and venue sites). Selling is only a pre-filled eBay link. No money moves.
 - **Data and how sensitive.** PIN hashes, two watch histories (2,288 watches), assistant chats
   (8), eBay OAuth tokens (encrypted), loans with borrowers' names, push subscriptions and feed
-  tokens (withheld from the read-only role). Personal, not special-category. The repo is private.
+  tokens (withheld from the read-only role). Personal, not special-category. The repo is public
+  (since 10 Nov; Craig chose on 16 Nov to keep it so, DS50-03), so every committed report is written
+  for publication.
 - **AI.** One assistant: Claude through the Anthropic SDK, with read tools and confirmed write
   tools. Two model calls in the last 30 days, the last on 18 Oct.
 - **Where it runs.** Neon (192 MB at check-in), Railway (the API and the scheduled jobs: specs and
@@ -101,6 +103,15 @@ wave 1's 44 findings and the guards it named; the users' own words.
 5. **Unattended run:** one orchestrator session starts each step as a linked session, one at a
    time, with permissions bypassed; only the hard rules keep the steps read-only. The Mac is held
    awake for 30 hours from 09:10 on 16 Nov.
+
+## Decisions during the review
+
+6. **Repository visibility** (Craig, 16 Nov, after DS50-03): keep the repo public for now. Every
+   committed report is written for publication; R6's scorecard and anything personal stay in
+   scratch. Switching on secret scanning and push protection is Craig's to do. A scan of the whole
+   history on 16 Nov (1,002 commits, every PR's head, no value printed) found one credential, the
+   April GitHub token, which the owner record says is revoked; only `.env.example` files were ever
+   committed. The synthesis records the decision in `DECISIONS.md`.
 
 ## Live constraints
 
