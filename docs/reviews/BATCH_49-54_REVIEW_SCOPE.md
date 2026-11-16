@@ -159,7 +159,7 @@ is the main live evidence) and R6.
 | When (UTC) | Pass | Purpose | Model | Tokens in / out | Cost |
 |---|---|---|---|---|---|
 
-No paid call so far (R1–R5).
+No paid call in any pass (R1–R6).
 
 ## Outside-call budget (decision 2)
 
@@ -174,4 +174,5 @@ Other outside calls so far, all reads: the API's health endpoints (the pack), Gi
 through `gh` (R2 and the orchestrator), one unauthenticated GET of the repository (R2), Railway
 CLI attempts, rejected each time, and R5's six requests to one shop's public search plus one public
 guidance page (16 Nov, 14:55–14:56 UTC). R5 made no eBay call: the app's eBay keys live only in
-Railway, which the review cannot reach.
+Railway, which the review cannot reach. R6's read-only rig loaded film posters from TMDB's public
+image host (no key, not counted against the TMDB cap) and made no other outside call.
