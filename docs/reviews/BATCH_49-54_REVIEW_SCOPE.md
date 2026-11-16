@@ -150,3 +150,18 @@ is the main live evidence) and R6.
 
 | When (UTC) | Pass | Purpose | Model | Tokens in / out | Cost |
 |---|---|---|---|---|---|
+
+No paid call so far (R1–R4).
+
+## Outside-call budget (decision 2)
+
+| Service | Cap for the review | Used | By |
+|---|---|---|---|
+| TMDB | 100 calls | 4 | R4, 16 Nov 14:33–14:35 UTC: three film reads, one release-dates read |
+| Cinema listing pages | 20 reads | 1 | R4, 16 Nov 14:38 UTC: one CinemaTimes page (the fast lane's own reads were its batch's) |
+| eBay Browse | 50 calls | 0 | |
+| Brave | none allowed | 0 | |
+
+Other outside calls so far, all reads: the API's health endpoints (the pack), GitHub metadata
+through `gh` (R2 and the orchestrator), one unauthenticated GET of the repository (R2), and Railway
+CLI attempts, rejected each time.
