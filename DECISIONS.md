@@ -8285,3 +8285,58 @@ contemporaneous.
        Postgres 16 (API 2,846 passed, web 1,007, shared 209); CI's seven jobs on PR 160.
      - **Production**: API and web on `6910e14` with `db: ok` at 22:43 GMT.
 
+
+381. **The four ODEONs are read again, and a cinema that stops reaches Craig (16 Nov, PR 161,
+     `a2caf8c`).** A fast-lane fix Craig approved on 16 Nov, found by the wave 2 review's
+     check-in and kept apart from the review.
+     - **The defect.** From 12 Nov every morning's programme run returned nothing for ODEON
+       Braehead, East Kilbride, Glasgow Quay and Kilmarnock: `parse_cinematimes` raised "venue
+       identity differs from the approved branch". Rows fell from 2,247 (11 Nov) to 888 (16 Nov).
+       Nothing said so: every run since the first (3 Nov) has ended `partial`, and the daily
+       check did not watch the cinema programme at all.
+     - **What changed on the page (read 16 Nov, 5 GETs).** Each ODEON page on CinemaTimes now
+       states its theatre in two JSON-LD blocks: its details, then its amenities, both with the
+       same `@id` (`<the venue's own page>#theater`), the same name and the same `url`. The guard
+       required exactly one `MovieTheater` node, so it refused the branch's own page. The Omniplex's
+       page still has one node, so it was unaffected.
+     - **Proof each page is still its branch.** Each page's `@id` and `url` are that branch's own
+       CinemaTimes page; its address is the branch's (KA1 3XF, G5 8NP, PA4 8XU, G74 1PG); and every
+       showing's booking link carries that branch's ODEON code (019: 163 of 163, 530: 280, 615:
+       259, 923: 205).
+     - **The rule, no looser for another branch.** One `MovieTheater` node with the approved name
+       reads as before. More than one is accepted only when every node has the approved name and
+       the same `@id`, which is the venue's own page with `#theater`, and any `url` is that page.
+       A second theatre, another name, another page's `@id` or `url`, or two nodes without an `@id`
+       are refused, as before; every showing's booking link must still name the branch.
+     - **The check.** The daily check now names, in Craig's Needs you as App rows, each
+       switched-on cinema whose latest read failed or found no showings ("ODEON Braehead's
+       listings failed on 16 Nov (…); it last had showings on 11 Nov"), and the cinema programme
+       when it has not run for 26 hours or its whole run failed. Keys `cinema:<slug>` and
+       `cinema:job`. Since the check runs before the refresh in the 08:00 job, the cinema rows
+       are checked again straight after it (scoped to `cinema:` keys, every other row left as the
+       morning recorded it), and a new one is pushed that morning. Nothing is said while no cinema
+       is switched on.
+     - **Rejected:** watching the run's status. `partial` cannot carry a signal as it stands:
+       a run is `healthy` only when every venue proves every day of the 14-day window complete,
+       and no CinemaTimes, Cineworld, Everyman, GFT or Science Centre read ever proves one
+       (`completeDates` is empty for them by design), so every run is `partial`. What `partial`
+       should mean is for the wave 2 review's roadmap; this change does not need it.
+     - **Rejected:** dropping the one-node rule for "any node with the right name". It would
+       accept a page listing two theatres that happened to share a name.
+     - **Not covered:** the four ODEONs have no showings for 12–16 Nov beyond what was stored
+       on 11 Nov; the next morning's run (17 Nov, about 08:00 UTC) reads their next 10 days.
+       Reminders are covered already: the check runs inside that job, and Home names the check
+       itself when it is a day late.
+     - **Proved:** 12 new tests (the new page read, 163 showings; the page refused as each other
+       CinemaTimes branch; five tampered second nodes refused; the old specimens unchanged; a
+       showing booked at another branch refused; failed and empty cinemas named with their last
+       good day; a quiet, never-run or failed job named, and nothing while no cinema is on; the
+       after-refresh pass names today's failure, pushes once and leaves other rows alone; its
+       place in the 08:00 job). The full gate on the Mac against a throwaway Postgres (API 2,865
+       passed, web 1,007, shared 209); CI's seven jobs on PR 161, browsers included. A read-only
+       dry run of the merged parser through the app's own collector on 16 Nov at 10:45 UTC: all
+       four read, 907 showings over 10 days, no errors (9 GETs in all that day).
+     - **Read back on 17 Nov** after the 08:00 run: each ODEON's rows in the run's report, and the
+       307 future ODEON showings still `confirmed` and last seen 11 Nov (all starting 16–17 Nov):
+       those from 17 Nov seen again or withdrawn/cancelled. Whether a showing a source stops
+       returning should stay `confirmed` is for the review's roadmap.

@@ -10,8 +10,13 @@ export function attentionDestination(key: string, currentPersonId?: string): Att
   if (key === 'job:cron-specs') return { to: '/specs', label: 'Open Disc specs' }
   if (key === 'job:cron-values') return { to: '/valuation', label: 'Open Collection value' }
   if (key === 'job:cron-scrape') return { to: '/retailers', label: 'Open Retailers' }
-  if (key.startsWith('job:') || key === 'check:stale') {
+  // #381, the ODEON fast lane: the cinema programme's own rows. The job is Railway's; a cinema's failed
+  // listings need its source looked at, which the app cannot do.
+  if (key.startsWith('job:') || key === 'check:stale' || key === 'cinema:job') {
     return { advice: 'Ask Craig to check this scheduled job in Railway.' }
+  }
+  if (key.startsWith('cinema:')) {
+    return { advice: "Ask Craig to look at this cinema's listings source; the app cannot repair it." }
   }
   if (key === 'ebay:listings') return { to: '/settings?tab=ebay', label: 'Open eBay settings' }
   if (key.endsWith(':notifications')) {

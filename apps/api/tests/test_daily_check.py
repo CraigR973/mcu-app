@@ -26,12 +26,13 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
+from src.models.cinema import CinemaRefreshRun, CinemaVenue
 from src.models.collection_item import CollectionItem
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayWatchRun
@@ -859,3 +860,158 @@ async def test_attention_reconciles_a_saved_false_warning_without_writing_or_pus
     ]
     assert await _attention(db, craig) == []
     assert rows[1].message == "48 historical disagreements" and not rows[1].ok
+
+
+# ---------------------------------------------------------------------------
+# #381, the ODEON fast lane: the cinema programme and each cinema it reads
+# ---------------------------------------------------------------------------
+
+ODEONS = ("odeon-braehead", "odeon-kilmarnock")
+
+
+async def _cinemas(db: AsyncSession, *enabled: str) -> None:
+    """Only these cinemas switched on, and no programme run but the test's own."""
+    await db.execute(delete(CinemaRefreshRun))
+    await db.execute(update(CinemaVenue).values(collection_enabled=False))
+    await db.execute(
+        update(CinemaVenue).where(CinemaVenue.slug.in_(enabled)).values(collection_enabled=True)
+    )
+    await db.flush()
+
+
+async def _run(
+    db: AsyncSession, started: datetime, venues: dict[str, dict[str, Any]], status: str = "partial"
+) -> None:
+    db.add(
+        CinemaRefreshRun(
+            id=uuid.uuid4(),
+            trigger="cron",
+            adapter_version="ab6-3",
+            status=status,
+            started_utc=started,
+            heartbeat_utc=started,
+            lease_expires_utc=started + timedelta(minutes=10),
+            finished_utc=started + timedelta(minutes=2),
+            report={"venues": venues},
+        )
+    )
+    await db.flush()
+
+
+def _read(rows: int) -> dict[str, Any]:
+    return {"rows": rows, "failed": False, "errors": []}
+
+
+FAILED = {
+    "rows": 0,
+    "failed": True,
+    "errors": ["SourceError: CinemaTimes venue identity differs from the approved branch"],
+}
+
+
+async def test_a_cinema_whose_listings_failed_or_came_back_empty_is_named(
+    db: AsyncSession,
+) -> None:
+    """16 Nov's shape: four ODEONs failing every morning since 12 Nov, the run ``partial``."""
+    await _cinemas(db, *ODEONS, "gft")
+    await _run(db, NOW - timedelta(days=5), {s: _read(200) for s in (*ODEONS, "gft")})
+    await _run(
+        db,
+        NOW - timedelta(days=4),
+        {"odeon-braehead": FAILED, **{s: _read(1) for s in ("odeon-kilmarnock", "gft")}},
+    )
+    await _run(
+        db,
+        NOW - timedelta(hours=1),
+        {"odeon-braehead": FAILED, "odeon-kilmarnock": _read(0), "gft": _read(20)},
+    )
+
+    found = _by_key(await health_checks.check_cinemas(db, NOW))
+
+    assert found["cinema:odeon-braehead"] == (
+        "ODEON Braehead's listings failed on 13 Oct (CinemaTimes venue identity differs from "
+        "the approved branch); it last had showings on 8 Oct."
+    )
+    assert found["cinema:odeon-kilmarnock"] == (
+        "ODEON Kilmarnock's listings found no showings on 13 Oct; it last had showings on 9 Oct."
+    )
+    assert found["cinema:gft"] is None
+    # The job ran this morning, so it is not named: its ``partial`` status says nothing.
+    assert found["cinema:job"] is None
+    # A cinema switched off is not checked at all.
+    assert "cinema:vue-st-enoch" not in found
+
+
+async def test_a_cinema_that_never_found_showings_says_so(db: AsyncSession) -> None:
+    await _cinemas(db, "odeon-braehead")
+    await _run(db, NOW - timedelta(hours=1), {"odeon-braehead": {"rows": 0, "failed": True}})
+    found = _by_key(await health_checks.check_cinemas(db, NOW))
+    assert found["cinema:odeon-braehead"] == (
+        "ODEON Braehead's listings failed on 13 Oct; it has had none in two months."
+    )
+
+
+async def test_a_quiet_or_failed_cinema_job_is_named_only_while_a_cinema_is_on(
+    db: AsyncSession,
+) -> None:
+    await _cinemas(db)
+    assert _by_key(await health_checks.check_cinemas(db, NOW)) == {"cinema:job": None}
+
+    await _cinemas(db, "gft")
+    assert _by_key(await health_checks.check_cinemas(db, NOW))["cinema:job"] == (
+        "The cinema programme has never run."
+    )
+    await _run(db, NOW - timedelta(hours=27), {"gft": _read(20)})
+    found = _by_key(await health_checks.check_cinemas(db, NOW))
+    assert found["cinema:job"] == "The cinema programme hasn't run since 12 Oct."
+    # A heartbeat counts as the job running, as for every other job.
+    await beat(db, health_checks.CINEMA_HEARTBEAT, "partial", now=NOW - timedelta(hours=2))
+    assert _by_key(await health_checks.check_cinemas(db, NOW))["cinema:job"] is None
+    # A run that failed before reading any cinema is named.
+    await _run(db, NOW - timedelta(hours=1), {}, status="failed")
+    assert _by_key(await health_checks.check_cinemas(db, NOW))["cinema:job"] == (
+        "The cinema programme's run on 13 Oct failed before it read any cinema."
+    )
+
+
+def test_the_check_reads_the_programmes_own_heartbeat() -> None:
+    from src.services.cinemas.refresh import HEARTBEAT
+
+    assert health_checks.CINEMA_HEARTBEAT == HEARTBEAT
+
+
+async def test_the_after_refresh_pass_names_todays_failure_and_leaves_other_rows(
+    db: AsyncSession,
+) -> None:
+    craig = await _person(db, UserRole.admin)
+    await _cinemas(db, "odeon-braehead")
+    await _run(db, NOW - timedelta(days=1), {"odeon-braehead": _read(200)})
+    db.add_all(_scan(NOW - timedelta(hours=2 * hours), 0) for hours in range(1, 7))
+    await db.flush()
+
+    # The morning's check, before the refresh: yesterday's run was fine; eBay is not.
+    morning = await run_daily_check(db, now=NOW)
+    assert "No eBay listings read in the last 6 scans (since 12 Oct)." in (morning.new or [])
+    braehead = await db.get(HealthCheck, "cinema:odeon-braehead")
+    assert braehead is not None and braehead.ok
+
+    # Today's refresh fails Braehead; the pass after it names it this morning, pushed once.
+    await _run(db, NOW + timedelta(minutes=2), {"odeon-braehead": FAILED})
+    later = NOW + timedelta(minutes=5)
+    summary = await health_checks.run_cinema_check(db, now=later)
+    assert summary.new == [
+        "ODEON Braehead's listings failed on 13 Oct (CinemaTimes venue identity differs from "
+        "the approved branch); it last had showings on 12 Oct."
+    ]
+    pushed = [n for n in await _attention(db, craig) if n.body.startswith("ODEON Braehead")]
+    assert len(pushed) == 1
+    # The eBay row the morning recorded is left as it was, still failing since the morning.
+    ebay = await db.get(HealthCheck, "ebay:listings")
+    assert ebay is not None and (ebay.ok, ebay.failing_since_utc) == (False, NOW)
+
+    # The next morning's check sees the same failure: recorded, not pushed again.
+    await run_daily_check(db, now=NOW + timedelta(days=1))
+    again = [n for n in await _attention(db, craig) if n.body.startswith("ODEON Braehead")]
+    assert len(again) == 1
+    row = await db.get(HealthCheck, "cinema:odeon-braehead")
+    assert row is not None and (row.ok, row.failing_since_utc) == (False, later)

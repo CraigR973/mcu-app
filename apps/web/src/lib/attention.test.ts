@@ -29,6 +29,11 @@ describe('attentionDestination — AA2', () => {
     expect(attentionDestination('job:cron-values')).toMatchObject({ to: '/valuation' })
     expect(attentionDestination('job:cron-scrape')).toMatchObject({ to: '/retailers' })
     expect(attentionDestination('identify:year-doubt')).toMatchObject({ to: '/identify#identify-doubts-heading' })
+    // #381, the ODEON fast lane: the cinema programme's job, and a cinema whose listings failed.
+    expect(attentionDestination('cinema:job')).toMatchObject({ advice: 'Ask Craig to check this scheduled job in Railway.' })
+    expect(attentionDestination('cinema:odeon-braehead')).toMatchObject({
+      advice: "Ask Craig to look at this cinema's listings source; the app cannot repair it.",
+    })
   })
 })
 

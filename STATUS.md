@@ -2,6 +2,17 @@
 
 ## Now
 
+**16 Nov, 10:46 GMT: the four ODEONs are read again, and a cinema that stops reaches Craig
+(PR 161, `a2caf8c`, #381).** From 12 Nov every morning returned nothing for ODEON Braehead,
+East Kilbride, Glasgow Quay and Kilmarnock: CinemaTimes now states each theatre in two blocks
+with one `@id`, and the identity guard wanted exactly one. Two or more are now accepted only
+when all name the branch under its own page's `@id`; another branch is still refused. The daily
+check now names each switched-on cinema whose read failed or found nothing, and a quiet or
+failed cinema job, and checks the cinemas again right after the 08:00 refresh. A read-only dry
+run of the merged parser read all four (907 showings). **Read back on 17 Nov after the 08:00
+run:** each ODEON's rows, and the 307 future ODEON showings last seen 11 Nov (those from 17 Nov
+seen again or withdrawn). Production API and web on `a2caf8c`, `db: ok`.
+
 **15 Nov, 22:43 GMT: a corrected film's discs are looked up again (PR 160, `6910e14`,
 #380).** A spec batch now forgets each disc page the matcher chose before the film's match
 was last corrected, and searches the disc again. Tonight's batch (about 02:00 UTC) redoes 9
@@ -630,6 +641,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **16 Nov, 10:46 GMT — the four ODEONs read again; the daily check watches the cinemas (PR 161,
+  `a2caf8c754f58b7636ae752687b17a06c7a5222a`, #381).** Local: the full gate against a throwaway
+  Postgres (API 2,865 passed, web 1,007, shared 209). CI's seven jobs on the PR; production on
+  the merge; a read-only dry run of the merged parser on the live pages (4 of 4, 907 showings).
 - **15 Nov, 22:43 GMT — a corrected film's discs are looked up again (PR 160, `6910e14f88f05decf8fd8138fdbb0ca16ba3735b`,
   #380).** Local: the full gate against a throwaway Postgres (API 2,846 passed, web 1,007,
   shared 209). CI's seven jobs on the PR; production on the merge.

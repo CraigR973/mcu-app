@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any
 
 import structlog
 from sqlalchemy import and_, func, or_, select, text
@@ -26,6 +27,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 
 from src.clock import utcnow
 from src.models.ai import AiUsageLogEntry
+from src.models.cinema import CinemaRefreshRun, CinemaVenue
 from src.models.deal import Deal, live_deal
 from src.models.ebay_watch import EbayWatchRun
 from src.models.health import HealthCheck, JobHeartbeat
@@ -63,6 +65,15 @@ EBAY_DEAL_FRESHNESS = timedelta(days=3)
 SHOP_DEAL_FRESHNESS = timedelta(days=2)
 #: The check itself is late when its last result is older than this (read by the Home row).
 CHECK_STALE_AFTER = timedelta(hours=26)
+#: The cinema programme runs inside the 08:00 reminders job: a day plus a margin, as the others.
+CINEMA_CADENCE = timedelta(hours=26)
+#: Its heartbeat's name (`services/cinemas/refresh.py`'s ``HEARTBEAT``), kept here so this module
+#: does not import the programme's collectors.
+CINEMA_HEARTBEAT = "cinema-programme"
+#: How many of the programme's latest runs are read for a cinema's last good one: two months.
+CINEMA_RUNS_LOOKED_AT = 60
+#: Every cinema check's key starts with this, so the after-refresh pass records only its own.
+CINEMA_SCOPE = "cinema:"
 
 
 @dataclass(frozen=True)
@@ -345,6 +356,81 @@ async def check_assistant(db: AsyncSession, now: datetime) -> list[Result]:
     ]
 
 
+async def check_cinemas(db: AsyncSession, now: datetime) -> list[Result]:
+    """The ODEON fast lane (#381): the cinema programme ran, and every cinema switched on was read.
+
+    From 12 Nov the four ODEONs came back with nothing every morning and nothing said so: each
+    run ended ``partial``, as every run has since the first (no source proves a whole fortnight),
+    so the status carries no signal. This reads each cinema's own result in the programme's
+    latest run instead: one row per switched-on cinema whose read failed or found no showings,
+    by name, with when it last found some. And one row when the job itself has gone quiet, or
+    its whole run failed. Nothing is said while no cinema is switched on: the job then reads
+    nothing, by design.
+
+    It runs in the morning's check, and again straight after that morning's refresh
+    (``run_cinema_check``), so a cinema that fails today is named today.
+    """
+    venues = (
+        await db.execute(
+            select(CinemaVenue.slug, CinemaVenue.name)
+            .where(CinemaVenue.collection_enabled.is_(True), CinemaVenue.deleted_at.is_(None))
+            .order_by(CinemaVenue.name)
+        )
+    ).all()
+    job_key = CINEMA_SCOPE + "job"
+    if not venues:
+        return [(job_key, None)]
+    runs = (
+        await db.execute(
+            select(CinemaRefreshRun.started_utc, CinemaRefreshRun.status, CinemaRefreshRun.report)
+            .where(CinemaRefreshRun.status.in_(("healthy", "partial", "failed")))
+            .order_by(CinemaRefreshRun.started_utc.desc())
+            .limit(CINEMA_RUNS_LOOKED_AT)
+        )
+    ).all()
+    beat = await db.get(JobHeartbeat, CINEMA_HEARTBEAT)
+    times = [t for t in (beat.beat_utc if beat else None, runs[0][0] if runs else None) if t]
+    last = max(times) if times else None
+    label = "The cinema programme"
+    if last is None:
+        job: str | None = f"{label} has never run."
+    elif last < now - CINEMA_CADENCE:
+        job = f"{label} hasn't run since {day(last)}."
+    elif runs and runs[0][1] == "failed" and not (runs[0][2] or {}).get("venues"):
+        job = f"{label}'s run on {day(runs[0][0])} failed before it read any cinema."
+    else:
+        job = None
+    results: list[Result] = [(job_key, job)]
+
+    def read(report: dict[str, Any] | None, slug: str) -> dict[str, Any] | None:
+        value = ((report or {}).get("venues") or {}).get(slug)
+        return value if isinstance(value, dict) else None
+
+    for slug, name in venues:
+        key = CINEMA_SCOPE + slug
+        mine = [(started, found) for started, _, report in runs if (found := read(report, slug))]
+        if not mine:
+            results.append((key, None))
+            continue
+        started, latest = mine[0]
+        failed = bool(latest.get("failed"))
+        if not failed and int(latest.get("rows") or 0) > 0:
+            results.append((key, None))
+            continue
+        good = next(
+            (when for when, found in mine if not found.get("failed") and found.get("rows")), None
+        )
+        since = f"it last had showings on {day(good)}" if good else "it has had none in two months"
+        if failed:
+            errors = latest.get("errors") or []
+            why = str(errors[0]).split(":", 1)[-1].strip()[:120] if errors else ""
+            what = f"failed on {day(started)}" + (f" ({why})" if why else "")
+        else:
+            what = f"found no showings on {day(started)}"
+        results.append((key, f"{name}'s listings {what}; {since}."))
+    return results
+
+
 Check = Callable[[AsyncSession, datetime], Awaitable[list[Result]]]
 
 #: Every check, in the order the Home row lists their problems.
@@ -359,6 +445,7 @@ CHECKS: Sequence[Check] = (
     check_identification,
     check_deal_freshness,
     check_assistant,
+    check_cinemas,
 )
 
 
@@ -382,9 +469,19 @@ async def evaluate(db: AsyncSession, now: datetime) -> list[Result]:
     return results
 
 
-async def record(db: AsyncSession, results: list[Result], now: datetime) -> list[HealthCheck]:
-    """Store each result; return the checks whose problem appeared with this run."""
-    stored = {row.check_key: row for row in (await db.scalars(select(HealthCheck))).all()}
+async def record(
+    db: AsyncSession, results: list[Result], now: datetime, *, scope: str = ""
+) -> list[HealthCheck]:
+    """Store each result; return the checks whose problem appeared with this run.
+
+    ``scope`` limits the run to the keys that start with it: a pass of some checks only (the
+    cinemas, after their refresh) leaves every other check's row as the morning left it.
+    """
+    stored = {
+        row.check_key: row
+        for row in (await db.scalars(select(HealthCheck))).all()
+        if row.check_key.startswith(scope)
+    }
     appeared: list[HealthCheck] = []
     seen: set[str] = set()
     for key, message in results:
@@ -458,6 +555,26 @@ async def run_daily_check(db: AsyncSession, *, now: datetime | None = None) -> C
     await tell_craig(db, appeared, now)
     problems = [message for _, message in results if message is not None]
     logger.info("daily_check", checked=len(results), problems=len(problems), new=len(appeared))
+    return CheckSummary(
+        checked=len(results),
+        problems=len(problems),
+        new=[row.message or "" for row in appeared],
+    )
+
+
+async def run_cinema_check(db: AsyncSession, *, now: datetime | None = None) -> CheckSummary:
+    """The cinema checks again, after the morning's refresh has written today's run (#381).
+
+    The daily check runs before the refresh, inside the same job, so on its own it would name
+    a cinema that failed today only tomorrow. This records the cinema rows alone, and pushes
+    each new one once, as the daily check does. The caller commits and delivers.
+    """
+    now = now or utcnow()
+    results = await check_cinemas(db, now)
+    appeared = await record(db, results, now, scope=CINEMA_SCOPE)
+    await tell_craig(db, appeared, now)
+    problems = [message for _, message in results if message is not None]
+    logger.info("cinema_check", checked=len(results), problems=len(problems), new=len(appeared))
     return CheckSummary(
         checked=len(results),
         problems=len(problems),

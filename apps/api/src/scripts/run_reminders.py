@@ -46,7 +46,7 @@ from src.config import settings
 from src.services import heartbeat
 from src.services.cinema_digest.delivery import deliver as deliver_cinema_digest
 from src.services.cinemas.refresh import refresh_due
-from src.services.health_checks import CheckSummary, run_daily_check
+from src.services.health_checks import CheckSummary, run_cinema_check, run_daily_check
 from src.services.letterboxd.sync import SyncResult, sync_due
 from src.services.notifications import deliver_pending
 from src.services.push_transport import push_sender
@@ -114,11 +114,25 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
         # zero source requests. Cinema status is separate from the reminder exit code.
         cinema = await refresh_due(engine)
         print(f"cinema programme:  {cinema['status']}")
+        # The ODEON fast lane (#381): the cinema rows again, now that today's run is written, so a
+        # cinema that failed this morning reaches Craig this morning, not tomorrow.
+        async with AsyncSession(engine, expire_on_commit=False) as db:
+            cinema_check = await run_cinema_check(db)
+            await db.commit()
+        print(f"cinema check:      {cinema_check.problems} problems")
+        for message in cinema_check.new or []:
+            print(f"  new:             {message}")
         if deliver:
             async with push_sender() as sender:
                 cinema_delivery = await deliver_cinema_digest(engine, sender)
                 delivered += cinema_delivery.sent
                 failed += cinema_delivery.failed
+                if cinema_check.new:
+                    async with AsyncSession(engine, expire_on_commit=False) as db:
+                        attention = await deliver_pending(db, sender=sender)
+                        await db.commit()
+                    delivered += attention.sent
+                    failed += attention.failed
     finally:
         await engine.dispose()
     return report(
