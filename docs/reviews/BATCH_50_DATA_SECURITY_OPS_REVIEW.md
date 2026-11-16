@@ -20,7 +20,8 @@ DS50-03), 1 Medium, 2 Low.
 
 ## 2. Findings (at most ten, Highs first)
 
-### DS50-01 — High — The daily check watches four of the eight scheduled jobs, so a dark cinema, a dead 08:00 job or a failed backup reaches no one (P1, noticing half)
+### DS50-01 — Med-High — The daily check watches four of the eight scheduled jobs, so a dark cinema, a dead 08:00 job or a failed backup reaches no one (P1, noticing half)
+*Severity settled at Med-High by the synthesis (16 Nov), matching this report's summary; the heading said High.*
 - **Evidence:** `implemented` — `JOBS` in `services/health_checks.py` lists the shop check, the spec
   job, the eBay scan and the valuation job. Not on it: the cinema programme, the 08:00 job itself
   (reminders, digest, Letterboxd), the weekly backup and the calendar refresh. The cinema phase

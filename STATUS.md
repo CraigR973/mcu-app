@@ -641,6 +641,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **16 Nov, 19:45 GMT — wave 2 review synthesised (Batches 49–54); its PR is open and waits for the
+  owner's go.** 32 findings: 0 High, 3 Med-High (the 08:00 job's Letterboxd error path; the daily
+  check watching 4 of 8 jobs, cinema half fixed by PR 161; the repo public, kept so, #382), 17 Medium,
+  12 Low. Roadmap `docs/reviews/BATCH_49-54_ROADMAP.md`: packages AG0–AG10 (draft names) and ten
+  decisions for the owner. No paid call; the assistant canary not run (Railway token rejected).
+  Ledger rows wait for the go.
 - **16 Nov, 10:46 GMT — the four ODEONs read again; the daily check watches the cinemas (PR 161,
   `a2caf8c754f58b7636ae752687b17a06c7a5222a`, #381).** Local: the full gate against a throwaway
   Postgres (API 2,865 passed, web 1,007, shared 209). CI's seven jobs on the PR; production on

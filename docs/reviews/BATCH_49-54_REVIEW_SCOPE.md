@@ -116,6 +116,8 @@ wave 1's 44 findings and the guards it named; the users' own words.
    runs out. Each step from then on pauses at 90% of Claude's 5-hour allowance (85% before a long
    section), not 75% (65%); the last tenth is kept so a step can save its place and schedule its own
    restart.
+   Later the same day (18:15 UTC) the owner asked to run right up to the limit, with each step's
+   scheduled one-shot resume as the safety net.
 8. **Which *Bad Lieutenant* the want is for** (MK53-03; Craig, 16 Nov): undecided; it goes on the
    viewer's to-do list in the app (Needs you). The app's want question is built for one film (*Dead
    Man's Shoes*; a database check fixes its answers to 1940 and 2004), so it cannot ask this one yet:
@@ -159,7 +161,8 @@ is the main live evidence) and R6.
 | When (UTC) | Pass | Purpose | Model | Tokens in / out | Cost |
 |---|---|---|---|---|---|
 
-No paid call in any pass (R1–R6).
+No paid call in any pass (R1–R6) or in the synthesis. The assistant canary was not run: the saved
+Railway token is unchanged since 1 Oct and still rejected.
 
 ## Outside-call budget (decision 2)
 
@@ -175,4 +178,5 @@ through `gh` (R2 and the orchestrator), one unauthenticated GET of the repositor
 CLI attempts, rejected each time, and R5's six requests to one shop's public search plus one public
 guidance page (16 Nov, 14:55–14:56 UTC). R5 made no eBay call: the app's eBay keys live only in
 Railway, which the review cannot reach. R6's read-only rig loaded film posters from TMDB's public
-image host (no key, not counted against the TMDB cap) and made no other outside call.
+image host (no key, not counted against the TMDB cap) and made no other outside call. The synthesis
+made 2 `gh` reads (visibility and security settings, 16 Nov 19:05 UTC) and no other outside call.

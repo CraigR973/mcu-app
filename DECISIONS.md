@@ -8340,3 +8340,21 @@ contemporaneous.
        307 future ODEON showings still `confirmed` and last seen 11 Nov (all starting 16–17 Nov):
        those from 17 Nov seen again or withdrawn/cancelled. Whether a showing a source stops
        returning should stay `confirmed` is for the review's roadmap.
+
+382. **The repository stays public for now (16 Nov, wave 2 review, scope decision 6).** The review
+     found the repo public (DS50-03): GitHub's event log records it made public on 10 Nov at 23:49 UTC,
+     while the owner record, the review brief and the digest said private, and no decision recorded the
+     change. The owner chose on 16 Nov to keep it public for now.
+     - **Why:** a scan of the whole history on 16 Nov (1,002 commits and every PR's head, no value
+       printed) found one credential, the April GitHub token, which the owner record says is revoked;
+       only `.env.example` files were ever committed. Going private again would put CI's seven jobs and
+       the end-to-end job against the free Actions minutes, which nobody has measured.
+     - **What it means for every agent:** each committed word is written for publication. No names,
+       handles, personal quotes or values tied to a person in new docs; personal material (a scorecard,
+       screenshots of real data, data extracts) stays in the gitignored scratch folder.
+     - **Left to the owner:** switching on secret scanning and push protection (a security setting,
+       off on 16 Nov; roadmap decision 7); whether wave 1's tracked scorecard leaves the tree (roadmap
+       decision 6). A history rewrite stays the owner's alone.
+     - **Supersedes:** the "the repo is private" premise of `OWNER-ACTIONS.md` item 9 and of the review
+       brief. The April token is dead, so no history rewrite follows from it.
+     - **Not chosen now:** going private before measuring the Actions minutes it would cost.

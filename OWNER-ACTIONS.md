@@ -62,6 +62,19 @@ Nothing is blocked on it, and no agent changes these copies.
       both 4K and Blu-ray. Is each one box holding both discs? If either is two separate boxes,
       split it into two copies in the app.
 
+## Ask the viewer which *Bad Lieutenant* — 16 Nov (wave 2 roadmap, decision 1)
+
+From the wave 2 review (`docs/reviews/BATCH_49-54_ROADMAP.md`, MK53-03). Nothing is blocked on it,
+and no agent changes this want or copy.
+
+- [ ] **Which film is the 4K want for, and which film is the Blu-ray on the shelf?** The want sits
+      on *Bad Lieutenant: Port of Call New Orleans* (2009). It was first added as the 1992 film, an
+      upgrade on the owned Blu-ray, and the film was corrected to 2009 on 16 Oct. Since 12 Oct the
+      nightly shop check has recorded 27 prices of the 1992 film's 4K against it, and one became a
+      push on 22 Oct. The app cannot ask this on the viewer's Needs you yet: its want question is
+      built for one film. Once the roadmap's AG5 generalises it, the admin assigns the question there;
+      until then, ask in person, and correct the want on its page if the answer is the 1992 film.
+
 ## Mark username saved — 9 Nov, 18:33 GMT (#354)
 
 Craig explicitly asked “1) can you save it for him”, superseding the previous own-Settings
