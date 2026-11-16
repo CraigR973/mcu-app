@@ -47,3 +47,56 @@ _(written last)_
 - **Fix and cost:** count a wrong `currentPin` against the same durable lockout as login, and give the
   route the login limit. An hour with a test.
 - **Where it goes:** new row, any sitting.
+
+### DS50-03 — Med-High — The repository is public, while the project's records and this review's rules say private
+- **Evidence:** `observed` — GitHub reports the repo `public` (`private: false`), and it answers an
+  unauthenticated request (HTTP 200). Its event log records it made public on 10 Nov, 23:49 UTC;
+  agents' notes already called it public on 3–4 Nov (`ab7-implementation-2026-11-03.md`, #334), and
+  no decision records Craig choosing it. Records that still say private: the review brief, the
+  digest, `OWNER-ACTIONS.md` 9 (the reason given for not rewriting history). Secret scanning, push
+  protection and Dependabot alerts are all disabled (free on a public repo); `main` has no branch
+  protection. `implemented` (counts only, no values printed): Mark's Letterboxd username appears in
+  10 tracked files; Craig's surname in 5; 937 commits carry Craig's personal email address; 201
+  screenshots under `docs/reviews/assets` (the one opened shows seeded test data); the feedback
+  reconciliations quote both people. No live credential found: the April PAT in `0bfb672` is dead
+  (owner record).
+- **What the user or operator experiences:** anyone can read two people's names, a handle that leads
+  to Mark's public diary, the household's collection, its value and its cinemas. Every review that
+  pushes adds more: wave 2's own reports would publish on the synthesis's push.
+- **Fix and cost:** Craig's choice, ten minutes either way. Make it private again (Actions minutes
+  then count against the free 2,000 a month; CI's seven jobs and the e2e job would need measuring
+  first), or keep it public deliberately: record the decision, switch on secret scanning and push
+  protection, and scrub names and handles from new docs. A history rewrite is not needed for this.
+- **Where it goes:** Craig's decision before the wave 2 synthesis pushes (orchestrator); then a
+  decision row and, if public stays, a short hygiene row.
+
+### DS50-04 — Medium — The backup's only recorded key is one file on one Mac, and the drill never decrypts
+- **Evidence:** `observed` — 8 Backup runs, all `success`, 14 Oct–15 Nov; scheduled ones started
+  5–8 hours after 03:30. `implemented` — the drill restores the plaintext copy *before* encryption
+  ("the runner never holds the private key"), so no run has ever proved an artifact opens. `proved`
+  (public half only, the private key never printed): the key file on the Mac derives exactly the
+  public recipient in `.github/backup-age-recipient.txt`. `OWNER-ACTIONS.md` still asks Craig to copy
+  that key into his password manager (open since 14 Oct: "it exists only on the Mac"); the runbook
+  assumes the copy exists.
+- **What the user or operator experiences:** if the Mac dies or is wiped, every one of the eight
+  copies is unreadable, the same day Neon's six-hour restore window may matter.
+- **Fix and cost:** Craig copies the key (2 minutes); a quarterly hand drill decrypts the newest
+  artifact on the Mac with the runbook (15 minutes), or the monthly drill also encrypts and
+  decrypts with a throwaway key pair to prove the format round-trips. Record the custody in
+  `OWNER-ACTIONS.md` when done.
+- **Where it goes:** `OWNER-ACTIONS.md` item (already listed: raise it); the drill change is a small
+  row.
+
+### DS50-05 — Low — The TMDB six-month refresh runs only when someone opens Releases, and 24 films are never refreshed
+- **Evidence:** `implemented` — `refresh_stale_fields` (100 films, stalest first) is called only from
+  `refresh_calendar`, which a calendar read triggers at most daily, or an admin's forced refresh;
+  films with no `last_tmdb_sync_utc` are skipped by design. `observed` — 1,064 live films last synced
+  over 60 days ago, oldest 8 Sep; none yet past 150 days; 24 identified films have no sync date.
+  The 1,064 cross 150 days from about 5 Feb 2027 and six months on 8 Mar: the batch then needs a
+  calendar read on at least 11 of those ~30 days. Nothing watches it (DS50-01).
+- **What the user or operator experiences:** nothing until March; then TMDB data held past the
+  terms (DS44-06), unnoticed.
+- **Fix and cost:** call the refresh from the 08:00 job, which now holds the TMDB token for the
+  cinema programme; refresh films with no sync date once; a daily-check row when any film passes
+  165 days. Two hours.
+- **Where it goes:** fold into DS50-01's row (guard 20 of wave 1).
