@@ -30,6 +30,14 @@ username is synced once a week (``letterboxd.sync_due``, ``trigger = cron``), so
 feed never runs out between syncs. A failed sync is recorded on its run and never fails the
 job. The job has no TMDB token, so a film it gives a row keeps the feed's title and year
 until a Sync now in the app fills it in.
+
+**Since AG1 (CR49-01) every step after the reminders' own work is guarded.** The watch-history
+sync runs on a session of its own, and it, the cinema refresh, the cinema check and the cinema
+digest each run inside :func:`_phase`: an exception in one is printed with its traceback and the
+next step still runs. Wave 2's review proved that one person's failed sync used to stop the
+other person's sync, delivery, the heartbeat, the cinema refresh and the digest. The reminders,
+the daily check and the delivery stay unguarded: they are this job's own work, and their
+failure is the job's failure.
 """
 
 from __future__ import annotations
@@ -37,9 +45,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
+import traceback
+from collections.abc import Awaitable, Callable
 from datetime import date
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from src.clock import utc_today, utcnow
 from src.config import settings
@@ -91,6 +101,33 @@ def report(
     return 0
 
 
+async def _phase[T](name: str, step: Callable[[], Awaitable[T]], fallback: T) -> T:
+    """Run one guarded step of the morning: a failure is printed, and the job carries on.
+
+    AG1 (CR49-01): one step's exception must never skip the steps after it. The step builds
+    its own session, so nothing it leaves half-done reaches the next one.
+    """
+    try:
+        return await step()
+    except Exception as exc:  # noqa: BLE001 - a guarded phase never stops the morning
+        print(f"{name}: failed, {type(exc).__name__}: {exc}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        return fallback
+
+
+async def _sync_watch_history(engine: AsyncEngine) -> list[SyncResult]:
+    """The weekly Letterboxd sync on a session of its own (X5, guarded since AG1)."""
+    async with AsyncSession(engine, expire_on_commit=False) as db:
+        return await sync_due(db, now=utcnow())
+
+
+async def _cinema_check(engine: AsyncEngine) -> CheckSummary:
+    async with AsyncSession(engine, expire_on_commit=False) as db:
+        cinema_check = await run_cinema_check(db)
+        await db.commit()
+    return cinema_check
+
+
 async def _run(*, as_of: date | None, deliver: bool) -> int:
     engine = create_async_engine(settings.database_url)
     try:
@@ -99,8 +136,11 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
             # Batch X2: the daily check, queued before delivery so its pushes go out now.
             check = await run_daily_check(db)
             await db.commit()
-            # Batch X5: the weekly watch-history sync, each run recorded on its own row.
-            synced = await sync_due(db, now=utcnow())
+            # Batch X5: the weekly watch-history sync, each run recorded on its own row. AG1:
+            # on a session of its own, and guarded, so a failure cannot skip what follows.
+            synced = await _phase(
+                "watch history", lambda: _sync_watch_history(engine), list[SyncResult]()
+            )
             delivered = 0
             failed = 0
             if deliver:
@@ -112,21 +152,22 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
             await heartbeat.beat(db, heartbeat.REMINDERS, "ran")
         # AB6: independent sessions after delivery/commit. Disabled venue seeds cause
         # zero source requests. Cinema status is separate from the reminder exit code.
-        cinema = await refresh_due(engine)
+        cinema = await _phase("cinema programme", lambda: refresh_due(engine), {"status": "failed"})
         print(f"cinema programme:  {cinema['status']}")
         # The ODEON fast lane (#381): the cinema rows again, now that today's run is written, so a
         # cinema that failed this morning reaches Craig this morning, not tomorrow.
-        async with AsyncSession(engine, expire_on_commit=False) as db:
-            cinema_check = await run_cinema_check(db)
-            await db.commit()
+        cinema_check = await _phase("cinema check", lambda: _cinema_check(engine), CheckSummary())
         print(f"cinema check:      {cinema_check.problems} problems")
         for message in cinema_check.new or []:
             print(f"  new:             {message}")
         if deliver:
             async with push_sender() as sender:
-                cinema_delivery = await deliver_cinema_digest(engine, sender)
-                delivered += cinema_delivery.sent
-                failed += cinema_delivery.failed
+                cinema_delivery = await _phase(
+                    "cinema digest", lambda: deliver_cinema_digest(engine, sender), None
+                )
+                if cinema_delivery is not None:
+                    delivered += cinema_delivery.sent
+                    failed += cinema_delivery.failed
                 if cinema_check.new:
                     async with AsyncSession(engine, expire_on_commit=False) as db:
                         attention = await deliver_pending(db, sender=sender)

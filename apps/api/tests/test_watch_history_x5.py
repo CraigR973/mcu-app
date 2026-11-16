@@ -19,12 +19,14 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 import httpx
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user
+from src.clock import utcnow
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
@@ -33,6 +35,7 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
 from src.services.identify.matcher import Candidate, Counters, Proposal
+from src.services.letterboxd import sync as sync_module
 from src.services.letterboxd.backfill import BackfillPlan, apply_backfill, plan_backfill
 from src.services.letterboxd.diary import DiaryEntry
 from src.services.letterboxd.importer import fill_bare_films
@@ -325,6 +328,75 @@ async def test_the_weekly_sync_runs_for_whoever_is_a_week_stale(
     synced = {result.run.user_id for result in results}
     assert person.id in synced and fresh.id not in synced
     assert all(result.run.trigger == "cron" for result in results)
+
+
+@pytest.mark.parametrize("failing", ["first", "second"])
+async def test_one_persons_failed_sync_leaves_the_other_synced_and_is_recorded(
+    db_conn: AsyncConnection, monkeypatch: pytest.MonkeyPatch, failing: str
+) -> None:
+    """AG1 (CR49-01): one of two people fails; the other still syncs.
+
+    Both profiles are committed before the job's session starts, as the owner's and the
+    viewer's are, so the job's rollback expires them rather than erasing them: the shape in
+    which reading ``person.id`` after the rollback raised ``MissingGreenlet``, lost the first
+    error and skipped the second person. The failure is now on a committed row of its own,
+    so the failed person is not left due for the same crash tomorrow, and every result is
+    still readable once the job's session has closed, as the job prints them then.
+    """
+    first_id, second_id = uuid.uuid4(), uuid.uuid4()
+    failed_id, other_id = (first_id, second_id) if failing == "first" else (second_id, first_id)
+    setup = AsyncSession(bind=db_conn, join_transaction_mode="create_savepoint")
+    setup.add_all(
+        [
+            Profile(id=first_id, display_name="AAA first", letterboxd_username="firstone"),
+            Profile(id=second_id, display_name="AAB second", letterboxd_username="secondone"),
+        ]
+    )
+    await setup.commit()
+    await setup.close()
+
+    real_import = sync_module.run_import
+
+    async def failing_import(db: AsyncSession, profile: Profile, *args: Any, **kwargs: Any) -> Any:
+        if profile.id == failed_id:
+            raise RuntimeError("a new matcher rule broke")
+        return await real_import(db, profile, *args, **kwargs)
+
+    monkeypatch.setattr(sync_module, "run_import", failing_import)
+
+    # As the 08:00 job opens it.
+    job = AsyncSession(
+        bind=db_conn, expire_on_commit=False, join_transaction_mode="create_savepoint"
+    )
+    try:
+        results = await sync_due(job, now=utcnow(), client=_empty_feed())
+    finally:
+        await job.close()
+
+    by_person = {result.run.user_id: result.run for result in results}
+    assert set(by_person) >= {first_id, second_id}
+    assert by_person[failed_id].error == "RuntimeError: a new matcher rule broke"
+    assert by_person[other_id].error is None and by_person[other_id].finished_at_utc
+    assert by_person[other_id].entries == 0
+
+    check = AsyncSession(
+        bind=db_conn, expire_on_commit=False, join_transaction_mode="create_savepoint"
+    )
+    try:
+        stored = list(
+            await check.scalars(
+                select(LetterboxdSync).where(LetterboxdSync.user_id.in_([first_id, second_id]))
+            )
+        )
+        assert sorted((row.user_id == failed_id, row.error) for row in stored) == [
+            (False, None),
+            (True, "RuntimeError: a new matcher rule broke"),
+        ]
+        # Recorded, so tomorrow's 08:00 job does not run the same crash again.
+        again = await sync_due(check, now=utcnow() + timedelta(days=1), client=_empty_feed())
+        assert {result.run.user_id for result in again} & {first_id, second_id} == set()
+    finally:
+        await check.close()
 
 
 async def test_sync_now_fills_in_a_film_the_weekly_sync_added_bare(db: AsyncSession) -> None:

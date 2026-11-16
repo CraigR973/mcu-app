@@ -153,22 +153,73 @@ async def sync_due(
 
     A failure is recorded on that person's run row, and never stops the other person's
     sync or the job around it (`run_reminders.py`).
+
+    **Nothing ORM-backed is read after a rollback** (AG1, CR49-01). A rollback expires every
+    row the session holds, and under async SQLAlchemy reading an expired attribute raises
+    ``MissingGreenlet``: the handler used to read ``person.id`` after its rollback, which
+    masked the first error, skipped the next person and stopped the 08:00 job. So each
+    person's id and name are taken as plain values before any of them is synced, the
+    profile is read afresh for its own sync, and a failure is written on a run row of its
+    own and committed, so the person is not left due for the same crash every morning.
     """
-    people = list(
-        await db.scalars(
-            select(Profile)
-            .where(Profile.letterboxd_username.is_not(None), Profile.letterboxd_username != "")
-            .order_by(Profile.display_name)
-        )
-    )
+    people = [
+        (row.id, row.display_name)
+        for row in (
+            await db.execute(
+                select(Profile.id, Profile.display_name)
+                .where(Profile.letterboxd_username.is_not(None), Profile.letterboxd_username != "")
+                .order_by(Profile.display_name)
+            )
+        ).all()
+    ]
     results: list[SyncResult] = []
-    for person in people:
-        last = await last_sync(db, person.id)
+    for person_id, name in people:
+        last = await last_sync(db, person_id)
         if last is not None and last.started_at_utc > now - SYNC_EVERY:
             continue
+        started = utcnow()
         try:
-            results.append(await sync_watch_history(db, person, trigger="cron", client=client))
-        except Exception:  # noqa: BLE001 - one person's failure must not stop the job
+            person = await db.get(Profile, person_id, populate_existing=True)
+            if person is None:
+                continue
+            result = await sync_watch_history(db, person, trigger="cron", client=client)
+            # Committed; detached so a later person's rollback cannot expire it before the
+            # job prints it.
+            db.expunge(result.run)
+            results.append(result)
+        except Exception as exc:  # noqa: BLE001 - one person's failure must not stop the job
+            error = f"{type(exc).__name__}: {exc}"[:500]
             await db.rollback()
-            log.warning("letterboxd_weekly_sync_failed", user=str(person.id), exc_info=True)
+            log.warning("letterboxd_weekly_sync_failed", user=str(person_id), exc_info=True)
+            failed = await _record_failure(db, person_id, started=started, error=error)
+            if failed is not None:
+                results.append(SyncResult(run=failed, ambiguities=[], feed_was_full=False))
+            else:
+                log.warning("letterboxd_weekly_sync_unrecorded", user=str(person_id), name=name)
     return results
+
+
+async def _record_failure(
+    db: AsyncSession, person_id: uuid.UUID, *, started: datetime, error: str
+) -> LetterboxdSync | None:
+    """Write a failed run on a committed row of its own, or ``None`` if even that fails.
+
+    The rollback erased the row the sync had only flushed, so without this a failed person
+    leaves no trace and stays due, and the same crash repeats every morning.
+    """
+    run = LetterboxdSync(
+        id=uuid.uuid4(),
+        user_id=person_id,
+        started_at_utc=started,
+        finished_at_utc=utcnow(),
+        trigger="cron",
+        error=error,
+    )
+    try:
+        db.add(run)
+        await db.commit()
+        db.expunge(run)
+    except Exception:  # noqa: BLE001 - the job carries on; the log line is the trace
+        await db.rollback()
+        return None
+    return run

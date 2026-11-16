@@ -258,6 +258,87 @@ async def test_the_cinema_rows_are_checked_after_the_refresh_and_their_push_deli
     assert after == ["refresh", "cinema check", "commit", "digest", "deliver", "commit"]
 
 
+#: The 08:00 job's guarded steps, in the order they run, and the name each prints on failure.
+MORNING_STEPS = [
+    ("sync_due", "watch history"),
+    ("refresh_due", "cinema programme"),
+    ("run_cinema_check", "cinema check"),
+    ("deliver_cinema_digest", "cinema digest"),
+]
+
+
+@pytest.mark.parametrize(("broken", "printed"), MORNING_STEPS)
+async def test_the_morning_job_survives_a_failure_in_any_guarded_step(
+    monkeypatch, capsys, broken, printed
+):
+    """AG1 (CR49-01): one step's exception never skips the steps after it.
+
+    Wave 2 proved that a failed Letterboxd sync skipped delivery, the reminders heartbeat, the
+    cinema refresh and the digest. Each guarded step is broken in turn; every other step,
+    delivery and the heartbeat still run, and the job still exits 0.
+    """
+    events = []
+
+    class Session:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def commit(self):
+            return None
+
+    class Sender:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+    def step(name, result):
+        async def run(*args, **kwargs):
+            events.append(name)
+            if name == broken:
+                raise RuntimeError(f"{name} broke")
+            return result
+
+        return run
+
+    engine = SimpleNamespace(dispose=AsyncMock())
+    monkeypatch.setattr(run_reminders, "create_async_engine", lambda *args: engine)
+    monkeypatch.setattr(run_reminders, "AsyncSession", lambda *args, **kwargs: Session())
+    monkeypatch.setattr(run_reminders, "run_reminders", AsyncMock(return_value=ReminderSummary()))
+    monkeypatch.setattr(run_reminders, "run_daily_check", AsyncMock(return_value=CheckSummary()))
+    monkeypatch.setattr(run_reminders, "push_sender", lambda: Sender())
+    monkeypatch.setattr(run_reminders.heartbeat, "beat", step("heartbeat", None))
+    monkeypatch.setattr(
+        run_reminders, "deliver_pending", step("deliver", SimpleNamespace(sent=0, failed=0))
+    )
+    monkeypatch.setattr(run_reminders, "sync_due", step("sync_due", []))
+    monkeypatch.setattr(run_reminders, "refresh_due", step("refresh_due", {"status": "ok"}))
+    monkeypatch.setattr(
+        run_reminders,
+        "run_cinema_check",
+        step("run_cinema_check", CheckSummary(checked=1, problems=1, new=["a cinema failed"])),
+    )
+    monkeypatch.setattr(
+        run_reminders,
+        "deliver_cinema_digest",
+        step("deliver_cinema_digest", SimpleNamespace(sent=1, failed=0)),
+    )
+
+    assert await run_reminders._run(as_of=None, deliver=True) == 0
+
+    expected = ["sync_due", "deliver", "heartbeat", "refresh_due", "run_cinema_check"]
+    expected += ["deliver_cinema_digest"]
+    if broken != "run_cinema_check":
+        expected += ["deliver"]  # the cinema check's new problem, pushed this morning
+    assert events == expected
+    assert f"{printed}: failed, RuntimeError: {broken} broke" in capsys.readouterr().err
+    engine.dispose.assert_awaited_once()
+
+
 @pytest.mark.parametrize(
     "args",
     [
