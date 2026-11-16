@@ -151,7 +151,7 @@ is the main live evidence) and R6.
 | When (UTC) | Pass | Purpose | Model | Tokens in / out | Cost |
 |---|---|---|---|---|---|
 
-No paid call so far (R1–R4).
+No paid call so far (R1–R5).
 
 ## Outside-call budget (decision 2)
 
@@ -163,5 +163,7 @@ No paid call so far (R1–R4).
 | Brave | none allowed | 0 | |
 
 Other outside calls so far, all reads: the API's health endpoints (the pack), GitHub metadata
-through `gh` (R2 and the orchestrator), one unauthenticated GET of the repository (R2), and Railway
-CLI attempts, rejected each time.
+through `gh` (R2 and the orchestrator), one unauthenticated GET of the repository (R2), Railway
+CLI attempts, rejected each time, and R5's six requests to one shop's public search plus one public
+guidance page (16 Nov, 14:55–14:56 UTC). R5 made no eBay call: the app's eBay keys live only in
+Railway, which the review cannot reach.
