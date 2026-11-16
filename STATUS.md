@@ -2,6 +2,14 @@
 
 ## Now
 
+**16 Nov, 22:01 GMT: wave 2's review is accepted, and its fixes are planned as Group AG (#383).**
+The review (Batches 49–54, PR 162) found 32 issues: 0 High, 3 Med-High, 17 Medium, 12 Low
+(`docs/reviews/BATCH_49-54_ROADMAP.md`). At the owner's go its fixes are Group AG in the ledger:
+AG1–AG10 in five sittings, each started at the owner's go. Sitting 1 is AG1 (the 08:00 job survives
+one person's failure), then AG2 (every scheduled thing watched). The assistant is kept, so AG8 is
+in; pushes change in AG6, from 25 Nov, once the viewer has been asked. The owner's six jobs from the
+review are at the top of `OWNER-ACTIONS.md`.
+
 **16 Nov, 10:46 GMT: the four ODEONs are read again, and a cinema that stops reaches Craig
 (PR 161, `a2caf8c`, #381).** From 12 Nov every morning returned nothing for ODEON Braehead,
 East Kilbride, Glasgow Quay and Kilmarnock: CinemaTimes now states each theatre in two blocks
@@ -225,13 +233,16 @@ remain unchanged.
 
 ## Next
 
+**Group AG is next (#383): wave 2's fixes, five sittings, each at the owner's go.** Sitting 1 is
+AG1 then AG2 (`/group-start AG · 1`). AG2 by 5 Feb 2027 at the latest; AG6 from 25 Nov.
+
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
 
 **Group AC implementation is deployed through AC6 and the separate calendar repair.**
 AC3's post-8-Nov rerun classification read-back is complete. AC6's scheduled delivery is
 proved (9–12 Nov); its phone receipt/tap and AC5's first real trip remain open; these do not authorise
-another implementation batch. Onboarding more people still needs its own plan.
+another implementation batch. Onboarding more people still needs its own plan, after AG4 (#383).
 
 **Remaining active work:** X5's doubtful diary entries (a later pass), current catalogue/spec
 judgements, and real-device observations in
@@ -239,8 +250,8 @@ judgements, and real-device observations in
 the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
 with the scope caveat in Now. AA10c stays at its separate 25 Nov evidence gate.
 
-**Build backlog:** Batch 21's numerical history gate now passes; its third film,
-Dead Man's Shoes, waits on Craig correcting its match (`OWNER-ACTIONS.md`, #378). Sale pagination (22c) and email (33–34) stay
+**Build backlog:** Batch 21 waits for AG5: two of its three films are wrong-film wants carrying
+another film's shop prices (#383). Sale pagination (22c) and email (33–34) stay
 parked/deprioritised. A new build or multi-batch review needs its own scope and go.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -641,6 +652,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **16 Nov, 22:01 GMT — wave 2's rows written at the owner's go (#383).** Group AG: AG1–AG10 in
+  five sittings. The assistant is kept (AG8 in); pushes follow roadmap decision 4 once the viewer
+  has been asked; wave 1's scorecard leaves the tree in AG9; AG4–AG6 raised to `xhigh` and AG9 to
+  the top tier. Batch 21 waits for AG5; AA10c's read-back gains the deal check. The owner's six
+  jobs are at the top of `OWNER-ACTIONS.md`.
 - **16 Nov, 19:14 GMT — wave 2 review synthesised (Batches 49–54); its PR is open and waits for the
   owner's go.** 32 findings: 0 High, 3 Med-High (the 08:00 job's Letterboxd error path; the daily
   check watching 4 of 8 jobs, cinema half fixed by PR 161; the repo public, kept so, #382), 17 Medium,

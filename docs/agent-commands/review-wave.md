@@ -48,11 +48,13 @@ every later step itself as a linked session, **one at a time**, and is woken whe
   branch or commits in the main checkout. Nothing is pushed until the synthesis.
 - **Between steps** the orchestrator reads the step's result, checks any claim about the users
   against production, updates `STATE.md`, sends Craig a one-screen note and starts the next step.
-- **Pacing lives in each step, never in the orchestrator.** A step checks Claude usage at its
-  start and at each section boundary. Above 75% of the 5-hour window (65% before a long section)
-  it records where it is, schedules its own one-shot resume for five minutes after the reset and
-  ends its turn; above 85% of the week it finishes the section and stops. Its resumed turn wakes
-  the orchestrator when it ends.
+- **Pacing lives in each step, never in the orchestrator.** Before it starts work, a step
+  schedules its own one-shot resume for five minutes after the 5-hour window resets, then runs
+  right up to the limit: the owner chose this on 16 Nov over pausing at 75%, then 90%, since
+  headroom left before a reset only delays the result. It writes to disk after each section, so
+  a cut-off loses little, and on any resume it checks its state row and the `git` and `gh` state
+  before acting. A step that finishes first deletes its resume. Above 85% of the week it finishes
+  the section and stops. Its resumed turn wakes the orchestrator when it ends.
 - **No timer in the orchestrator,** and no message from a step to the orchestrator mid-run: either
   breaks the chain of wake-ups that can start a session. If a start is refused, Craig's one-word
   "go" restarts the chain. The Mac is held awake for the run (it sleeps after one idle minute).

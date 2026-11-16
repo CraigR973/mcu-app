@@ -1098,6 +1098,9 @@ ledger exists to stop; the model each batch actually needs is in the table above
 criterion, that is recorded *underneath* the quote, never folded into it.
 
 ### Batch 21 — Price history charts 🟢
+**16 Nov, wave 2 (#383): waits for AG5.** Two of its three films are wrong-film wants carrying
+another film's shop prices (MK53-03, CT52-04); AG5 hides them and checks the year. Build only
+after AG5.
 **8 Nov reconciliation:** 46 finished real cron days, 0 top-level run errors. Three active
 wanted IDs now have two shops on two scheduled days or more: Castle Freak (101 Films 28,
 Zavvi 19), Dog Soldiers (Second Sight 20, Zavvi 12), Dead Man's Shoes (Second Sight 24,
@@ -4762,6 +4765,8 @@ postage in, until AA10c settles it from recorded sales.
 
 ### AA10c — The stand-in settled from recorded sales 🟢
 **From 25 Nov**, once AA10a has about four weeks of sales (#290). Replaces the hand check.
+- **Its read-back also checks the deals (MK53-04, wave 2, #383):** how many live deals sit at or
+  above their disc's recorded sales, against 16 Nov's fifth to a third of the checkable ones.
 - For every disc with recorded sales, compare the lower-quartile stand-in and today's used
   median against the median of its sales; report both errors (median and spread) to Craig.
 - Keep the closer one as the stand-in; if it is the median, switch and re-price at the next run,
@@ -5504,6 +5509,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6's scheduled digest sent for real on 9–12 Nov (read back 12 Nov), so only Craig's phone receipt/tap stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
+| **AG** | 1: AG1 → AG2 · 2: AG3 → AG7 · 3: AG4 → AG5 · 4: AG6 (from 25 Nov) · 5: AG8 → AG9 → AG10 | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6126,4 +6132,253 @@ mounts, so a restored place is held briefly and put back; a page opened afresh f
 - CI's WebKit is not iOS Safari: a check on Craig's phone goes into `OWNER-ACTIONS.md` at
   close-out.
 - Web only.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+## Group AG — the wave 2 review, planned 16 Nov
+
+**Planned 16 Nov from the wave 2 full review** (Batches 49–54: six passes at `1668071`,
+`docs/reviews/BATCH_49-54_ROADMAP.md` and its packages AG1–AG10; each finding id points into its
+pass report in `docs/reviews/`). **Criteria authored 16 Nov** from the roadmap, so `DECISIONS.md`
+#54 does not apply. **Written into the plan at the owner's go (16 Nov, #383). Each sitting starts
+at the owner's go: the rows are a plan, not a go.** The assistant is kept, so AG8 is in. AG0, the
+owner's jobs, is at the top of `OWNER-ACTIONS.md`. Numbers are as re-checked on 16 Nov: re-verify
+them, per `batch-start.md` step 3. The review's working files (`scratchpad/wave-2/`, gitignored)
+exist only on the Mac.
+
+Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
+
+| Sitting | Batches, in order | Gate | Claude Code | Codex |
+|---|---|---|---|---|
+| 1 | AG1 the 08:00 job survives → AG2 every scheduled thing watched | The owner's go; first. AG2 by 5 Feb 2027 at the latest | Opus 5.5 `high` | GPT-5.6 Sol High |
+| 2 | AG3 say it where people look → AG7 one title fold | The owner's go | Sonnet 5.5 `high` | GPT-5.6 Terra High |
+| 3 | AG4 found for the film it is → AG5 wants know their film | The owner's go; their live data steps at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| 4 | AG6 deals: the right disc, a fair figure, sensible pushes | From 25 Nov, after AA10c's read-back, and once the viewer has been asked about pushes; its live data step at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| 5 | AG8 the assistant, kept → AG9 security and records → AG10 polish | The owner's go | Opus 5.5 `high` (from AG8 and AG9) | GPT-5.6 Sol High |
+
+**Each batch on its own:**
+
+| Batch | Covers | Size | Claude Code | Codex |
+|---|---|---|---|---|
+| AG1 | CR49-01 | 🟢 ~½ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AG2 | DS50-01, CR49-04, DS50-05, MK53-02's noticing half | 🟡 ~1 day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AG3 | CT52-01, UX54-01, UX54-02, UX54-03 | 🟡 ~1 day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
+| AG4 | CR49-02, CR49-05, CT52-02, CT52-03 | 🔴 ~2½ days | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| AG5 | CT52-04, MK53-03 | 🟡 ~1 day | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| AG6 | MK53-01, MK53-02's search half, MK53-04, MK53-05, MK53-06 | 🟡 ~1½ days | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| AG7 | CR49-03, CT52-05 | 🟢 ~½ day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
+| AG8 | AI51-01, AI51-03, AI51-04; UX54-06's label | 🟡 ~¾ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AG9 | DS50-02, DS50-03, DS50-04 | 🟢 ~½ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AG10 | UX54-04, UX54-05 | 🟢 ~¾ day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
+
+**About 10 days of agent work** by the roadmap's sizes, plus 30–60 minutes of gate per batch.
+
+*Why those settings.* Deep wherever a failure is silent or touches identity, auth or the jobs both
+people rely on: AG1 and AG2 change the 08:00 job and the daily check, AG8 changes what the
+assistant stores, AG9 changes the login lockout. `xhigh` where a batch writes live data or changes
+a table's shape, as X5 and X9 did: AG4 (one identity mechanism across every table with a film id,
+and any backfill it needs), AG5 (a migration widening the want question's checks, and a pass that
+hides stored prices), AG6 (push delivery to both people, and a pass over stored push rows). AG3,
+AG7 and AG10 are interface work, or one rule with crafted pairs as its tests. The roadmap set AG4–AG6
+at `high` and AG9 on the mid tier; they are raised here, open to the owner's overrule (#383).
+
+**How each lands:** as Group AF did: its own `feat/` or `fix/` branch from a green `main`, a pull
+request, CI's seven jobs green, a fast-forward merge (`phase-closeout.md`), then production health
+on the merged SHA with `db: ok`. **Each batch ships its own guards** (the roadmap's section e lists
+fifteen). **Live data steps** (AG4's backfill, if its mechanism needs one; AG5's pass over stored
+prices; AG6's pass over stored push rows) stop for the owner's word with the row count, as
+`group-start.md` requires.
+
+*Choices made while drafting, open to the owner's overrule.*
+
+- **The assistant is kept (#383).** AG8 also labels its header icon (UX54-06), since an unlabelled
+  icon is part of why it goes unused. No retire trigger. Its paid canary is not a batch criterion:
+  it runs once a Railway token works, at the owner's word.
+- **Pushes follow roadmap decision 4,** including its per-person Wanted-only choice; the viewer is
+  asked before AG6 starts.
+- **Wave 1's scorecard leaves the tree in AG9,** and the two files that name it are reworded.
+- **Sitting 5 holds AG8, AG9 and AG10,** which the roadmap left to any sitting.
+- **Settings raised from the roadmap's** (above).
+
+### AG1 — The 08:00 job survives one person's failure 🟢
+
+CR49-01 (Med-High). `proved` in a throwaway clone: the Letterboxd sync's error handler rolls back,
+then reads `person.id`; async SQLAlchemy raises, the first error is lost, the second person is
+skipped, and the job's later steps (delivery, the reminders heartbeat, the cinema refresh, the
+digest) never run. The run row is rolled back too, so the person stays due and the crash repeats
+every morning. No live occurrence on 16 Nov.
+
+- **The sync takes the person's id before the `try`,** and records a failure on a committed run
+  row, so a failed person is not left due for the same crash each morning.
+- **`_run` guards the Letterboxd phase as it guards the cinema phase:** one person's failure leaves
+  the other person's sync and every later step running. AG2 then watches the job.
+- Test: a failure for the first of two people; the second syncs and the job carries on to the
+  digest.
+- Guards in CI: no ORM attribute read after `rollback()` inside an `except`; every run loop survives
+  an injected failure, Letterboxd's included.
+- Full gate and E2E (its jobs project runs the 08:00 job); after deploy, health and readiness on the
+  merged SHA. The next 08:00 run read back: each person's sync row, and the digest sent.
+
+### AG2 — Every scheduled thing watched 🟡
+
+DS50-01 (Med-High), CR49-04 and DS50-05 (Low), MK53-02's noticing half. `observed`: four cinemas
+failed with 0 rows on every run 12–16 Nov while all 16 daily-check rows read OK; 14 of 14 cinema
+runs since 3 Nov were `partial`, nine with no failed venue; one shop has given no price since
+12 Oct and reads "no results" nightly; 1,064 films were last synced 60+ days ago (oldest 8 Sep),
+and 24 identified films never. At `1668071` the check watched 4 of 8 scheduled things; PR 161
+added the cinemas.
+
+- **One rule, not a list:** every scheduled thing writes a heartbeat with its cadence and a failure
+  figure, and the daily check reads every heartbeat.
+- **A CI test lists the cron modules and the scheduled workflows,** and fails on one the check does
+  not read.
+- **Newly watched:** the 08:00 job (stale after 26 h); the weekly backup (its last run within
+  8 days); the TMDB refresh, moved into the 08:00 job (an App row when a film passes 165 days since
+  its last sync, and the 24 never-synced films picked up by the job); a cinema switched off after a
+  refusal.
+- **`partial` means a venue read less than its source can read** (#381's first question). A run in
+  which every venue read what its source offers is `ok`.
+- **A shop that answers off its search path, or with nothing for every want N nights running,
+  counts as refused,** so the weekly ask names it.
+- By 5 Feb 2027 at the latest, when the 1,064 films start crossing 150 days.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA. The next daily check read
+  back: a row for each of the eight scheduled things.
+
+### AG3 — Say it where people look 🟡
+
+CT52-01, UX54-01, UX54-03 (Medium), UX54-02 (Low). `observed` through the read-only rig: At the
+cinema names four stale cinemas only after the last film (about line 490 of 506), and their times
+look like any other; Home's strip and the digest say nothing; a phone that stops getting pushes is
+shown on its own notification settings and to the admin, not on its owner's Home; the admin's Home
+opens on two rows labelled with the viewer's name whose next move is the admin's.
+
+- **One "N cinemas not read since <date>" line,** from the stale test the film page already uses, at
+  the top of At the cinema (beside the cinema filter) and under Home's strip heading.
+- **A stale time says "stale"** in words, not only by a missing tint.
+- **The digest says "N cinemas not read today"** when any are.
+- Guard in CI (web): every cinema card reader uses the one stale test.
+- **A person's own Home says when their phone gets no notifications** ("This phone is not getting
+  notifications · Turn on"), from the check that already tells the admin.
+- **Needs you rows are labelled by whose move it is,** the admin's own first, as AF1 orders
+  put-backs; the control that assigns reviews moves to the admin's tools.
+- 375 px in both themes, for both people.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG4 — Found for the film it is 🔴
+
+CR49-02, CT52-02, CT52-03 (Medium), CR49-05 (Low). `observed`: a copy moved to the 1971 film still
+carries the 1975 sequel's disc page and specs (a move is in neither #378's nor #380's re-lookup); a
+phantom import copy sits on the 2005 *King Kong* beside the real one; two *Hitchcock* (2012)
+Blu-rays share film, format and disc page. `implemented`: the eBay sold store is in no mechanism; an
+undo defeats the time rule; a merge hard-deletes a film and drops its cinema link (`SET NULL`).
+
+- **One mechanism for every fact found for a film:** each derived row stamped with the TMDB id it
+  was found for, or one `identity_changed` hook that identify, undo, merge and move all call. The
+  batch-start chooses and records it, amending #378 and #380: a move is a correction for its copy,
+  and a merge carries every link.
+- **A move forgets its copy's disc page and specs; an undo and a merge are corrections too.**
+- **The eBay sold store joins the mechanism.**
+- **A merge moves every link to the surviving film,** the cinema link included.
+- Guards in CI: every table with a film id is registered with the mechanism; every foreign key to
+  `movies` is moved by a merge or listed as dropped.
+- **A Needs you row when two live physical copies share film, format and disc page** (a daily-check
+  guard; two groups on 16 Nov, both in the owner's jobs).
+- Before onboarding a third person.
+- Any backfill on live rows stops for the owner's word with the row count.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG5 — Wants know their film 🟡
+
+CT52-04 (recast) and MK53-03 (Medium). `observed`: shop prices are matched to a want by title,
+because the shop extractor drops a year as noise. The 2009 *Bad Lieutenant* want holds 27 prices of
+the 1992 film's 4K since 12 Oct, and one became a push on 22 Oct; the *Dead Man's Shoes* want holds
+53 prices of another film's disc (26 since 12 Oct). The app's own question confirmed that want's
+film on 15 Nov: the want stays, and its prices are the defect. The want question is built for one
+film (its database checks allow two answers; its wording is fixed in `services/assigned_reviews.py`).
+
+- **A shop title's year must meet the want's film** (±1, as the eBay rule has it); a mismatch is
+  recorded as another film, not a price. Guard in the shop job and in CI.
+- **One pass over stored prices hides the mismatched ones** (a live write: at the owner's word, with
+  the count).
+- **Any want can ask "which film?":** the want question is generalised, and a migration widens its
+  database checks (a data-shape change, amending #351), granting any new column to `mcu_readonly`
+  and `mcu_backup` as the agent instructions require. The question is raised when a want's shop
+  years disagree.
+- ***Bad Lieutenant* goes on the viewer's Needs you,** assigned by the admin (#383); its entry in
+  `OWNER-ACTIONS.md` then closes.
+- Batch 21's charts wait for this batch.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG6 — Deals: the right disc, a fair figure, sensible pushes 🟡
+
+MK53-01, MK53-02, MK53-04, MK53-05 (Medium), MK53-06 (Low). `observed`: 7 of 124 deal pushes named
+another film or product (five same-title films told apart only by cast names, "Mastered in 4K", one
+disc of a set). 94 of 318 deals rest on exactly three asks, and 105 on a scaled New price; a fifth to
+a third of the checkable deals sat at or above recorded sales. Up to five pushes a day go to both
+people, 121 of 124 of them upgrades, about a quarter at night. 502 stored push rows keep listing
+words.
+
+- From 25 Nov, after AA10c's read-back, once the viewer has been asked about the push plan.
+- **The wrong disc is refused:** "Mastered in 4K" and "ONLY" rules; a listing that names cast absent
+  from the filed film but present in a same-title film's is refused; the seven titles join the
+  wrong-product tests (a CI guard).
+- **A percentage only on 5+ asks or 3+ sales,** amending #129.
+- **Pushes per #383:** Wanted finds and finds of 40% or more at once; upgrades as one daily summary
+  at 18:00 UK time; quiet hours 22:00–07:00 by default; each person may choose Wanted-only; ranked
+  across the day rather than first found.
+- **The dark shop's search address is repaired** (MK53-02).
+- **Expired push rows are pruned or rewritten** so none keeps listing words (a live write: at the
+  owner's word, with the count).
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG7 — One title fold 🟢
+
+CR49-03 (Medium), CT52-05 (Low). `proved`: the cinema rule and `title_key` disagree on 12 of 15
+crafted pairs ("Part Two" and "Part 2", "Rocky II" and "2"); three live listings slip the cinema
+prefixes (a typographic apostrophe, "Curates:", a certificate bracket).
+
+- The cinema title rule is built on `title_key.fold`.
+- The 15 pairs and the three live titles join the table, and agree.
+- Guard in CI: no `unicodedata.normalize` outside `title_key.py`.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG8 — The assistant, kept 🟡
+
+AI51-01 (Medium), AI51-03 and AI51-04 (Low), and UX54-06's label. Kept at the owner's word (#383).
+`proved` over a scripted wire: a refusal leaves a blank or cut-off answer stored as finished, the
+stored empty turn should make every later message in that chat fail, and nothing counts it; model
+argument types are unchecked, so a card can show less than the write stores.
+
+- **A refusal says so:** the existing "declined" sentence, no empty turn stored, and a usage row the
+  daily check counts; the five-round give-up is logged.
+- **`strict` tools:** model arguments are checked against their types, and the card prints what will
+  be stored.
+- **The prompt's load-bearing lines are asserted** (a structural guard, not an eval).
+- **Its header icon gets a label** both people can read (UX54-06).
+- Guard in CI: a refusal in three shapes.
+- The model stays `claude-sonnet-5` (AI51-05 stays deferred until a deprecation notice); any switch
+  comes after this batch.
+- Its paid canary is not a criterion: it runs once Railway access works, at the owner's word (about
+  $0.08).
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG9 — Security and records 🟢
+
+DS50-03 (Med-High), DS50-04 (Medium), DS50-02 (Low).
+
+- **A wrong current PIN on PIN change counts toward the login lockout,** with its rate limit; tested.
+- **The monthly drill also encrypts and decrypts with a throwaway key pair,** so the tooling is
+  proved without the real key. The real key's second copy is the owner's (`OWNER-ACTIONS.md`).
+- **The records that still say the repo is private are corrected** (#382).
+- **Wave 1's scorecard leaves the tree** (`docs/reviews/BATCH_48_SCORECARD.md`), by an ordinary
+  commit with no history rewrite (#383); the scope note and the R6 report that name it are reworded.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG10 — Polish 🟢
+
+UX54-04 and UX54-05 (Low).
+
+- Settings' switches, Needs you's tabs and its "Inspect the film and copies" links are 44 px tall.
+- The two large script chunks are split by route (charts, the assistant, the scanner), and the build
+  holds the entry chunk under a budget.
+- First open is measured on a throttled phone profile in the end-to-end suite.
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.

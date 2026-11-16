@@ -8358,3 +8358,33 @@ contemporaneous.
      - **Supersedes:** the "the repo is private" premise of `OWNER-ACTIONS.md` item 9 and of the review
        brief. The April token is dead, so no history rewrite follows from it.
      - **Not chosen now:** going private before measuring the Actions minutes it would cost.
+
+383. **Wave 2's roadmap answered, and Group AG written (16 Nov).** The wave 2 review (Batches 49–54,
+     `docs/reviews/BATCH_49-54_ROADMAP.md`, PR 162) put ten decisions to the owner. In chat they came
+     to four choices, five jobs only the owner can do, and one already settled. The owner answered on
+     16 Nov: yes to all four choices except the assistant, which stays.
+     - **The rows (roadmap decision 10): yes.** Group AG is in `docs/phase-batches.md`: AG1–AG10 in
+       five sittings, each started at the owner's go. As with #355 and #372, the rows are a plan,
+       not a go.
+     - **Pushes (decision 4): yes,** once the viewer has been asked, before AG6 (from 25 Nov):
+       Wanted finds and finds of 40% or more at once; upgrades as one daily summary at 18:00 UK
+       time; quiet hours 22:00–07:00 by default; each person may choose Wanted-only.
+     - **The assistant (decision 5): kept.** This overrules the roadmap's recommendation (AI51-02,
+       UX54-06) to freeze it and retire it at fewer than five questions by 31 Jan 2027, against 15
+       model calls ever and none since 18 Oct. #261, #300 and #331 stand. AG8 is written: refusals,
+       strict tools, the prompt's key lines, and a label on its header icon. Its paid canary runs
+       once Railway access works, at the owner's word (about $0.08). The model stays
+       `claude-sonnet-5` until AG8 ships (AI51-05).
+     - **Wave 1's scorecard (decision 6): leaves the tree in AG9,** by an ordinary commit, with no
+       history rewrite (#382).
+     - **The owner's own (decisions 1–3 and 7–9):** the *Bad Lieutenant* question goes on the
+       viewer's Needs you once AG5 generalises the want question, as the owner asked earlier on
+       16 Nov. The 14 Nov item to correct *Dead Man's Shoes* is superseded by the app's own question,
+       answered on 15 Nov: the 1940 film, which the want already holds. The phantom *King Kong*
+       copy, the *Hitchcock* shelf check, secret scanning and push protection, a new Railway token
+       and the backup key's second copy are at the top of `OWNER-ACTIONS.md`.
+     - **Raised from the roadmap's settings, open to the owner's overrule:** AG4, AG5 and AG6 at
+       `xhigh`, since each writes live data or changes a table's shape, as X5 and X9 did; AG9 on the
+       top tier, since it changes the login lockout.
+     - **First names in the review's docs stay** (the scope note, R1 and R2): both are already
+       public across the repo.

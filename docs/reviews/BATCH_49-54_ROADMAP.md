@@ -305,6 +305,10 @@ rarer films (testable after AA10c).
 
 ## f. Decisions for the owner
 
+**Answered 16 Nov (#383):** 10 yes; 4 yes, once the viewer has been asked; 5 no, the assistant is
+kept, so AG8 is written; 6 yes, in AG9. Decision 1 was settled earlier the same day (the viewer's
+Needs you, via AG5); 2, 3, 7, 8 and 9 are the owner's jobs at the top of `OWNER-ACTIONS.md`.
+
 1. **Which *Bad Lieutenant*: put it on the viewer's to-do list.** Recommend yes: AG5 generalises the
    want card (a migration widens a database check, so a data-shape change), then the admin assigns it
    on the viewer's Needs you. Until then, an "Ask the viewer" entry in `OWNER-ACTIONS.md` (in this

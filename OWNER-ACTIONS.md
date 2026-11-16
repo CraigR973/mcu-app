@@ -13,9 +13,43 @@ Older dated sections retain historical instructions; the current summary below t
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
-## Correct Dead Man's Shoes' match — 14 Nov (#378)
+## Wave 2's jobs for you — 16 Nov (#383)
 
-- [ ] **Open Dead Man's Shoes from Wanted, tap Correct match, and pick Dead Man's Shoes
+From the wave 2 review (`docs/reviews/BATCH_49-54_ROADMAP.md`, section f). About 20 minutes, in any
+order. No agent does these.
+
+- [ ] **Copy the backup key into your password manager** (open since 14 Oct, under Checkpoint
+      detail). `~/.mcu-secrets/backup-age-key.txt` is the only key that opens the weekly copies,
+      and it exists only on the Mac (DS50-04). 2 minutes.
+- [ ] **Switch on secret scanning and push protection** (both off on 16 Nov, #382). 1 minute, from
+      the repo folder:
+      ```
+      gh api -X PATCH repos/{owner}/{repo} -f 'security_and_analysis[secret_scanning][status]=enabled' -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+      ```
+- [ ] **Apply the *Dead Man's Shoes* answer in Needs you.** The app's own question, answered on
+      15 Nov, confirmed the 1940 film, which the want already holds. It supersedes the 14 Nov item
+      below; AG5 then hides the other film's prices. 2 minutes.
+- [ ] **Delete the phantom *King Kong* copy** (import row 878): a second 4K copy on the 2005 film
+      that is really the 1976 disc counted twice, since that disc was added by hand on 16 Oct. A
+      soft delete, restorable from Trash. **Then check the shelf for two *Hitchcock* (2012)
+      Blu-rays,** and delete one copy if there is only one (CT52-03). 7 minutes.
+- [ ] **A new Railway token** (the saved one, dated 1 Oct, is rejected). The kept assistant's canary
+      needs it, and so do the jobs' logs and the restart-policy plan. Create it in Railway, copy it,
+      then save it without showing it:
+      ```
+      pbpaste > ~/.mcu-secrets/railway_token
+      ```
+      5 minutes.
+- [ ] **Ask the viewer about pushes before AG6 (from 25 Nov):** Wanted finds and finds of 40% or more
+      at once, upgrades as one 18:00 summary, quiet hours 22:00–07:00, and Wanted-only for anyone who
+      prefers it (#383).
+
+## ~~Correct Dead Man's Shoes' match — 14 Nov (#378)~~ — superseded 16 Nov (#383)
+
+**Do not change the match.** The app's own question, answered on 15 Nov, confirmed the 1940 film;
+apply that answer instead (the first section above).
+
+- Was: **Open Dead Man's Shoes from Wanted, tap Correct match, and pick Dead Man's Shoes
       (2004).** It is wanted as the 1940 film, while Second Sight and Zavvi sell the 2004 one.
       Its 51 shop prices stay with the want, and the correction can be undone on Identify
       films. That night's reviews batch looks its review up again (#378); Batch 21's price
@@ -2002,6 +2036,10 @@ lives only in a Railway variable has no test.
 ## Housekeeping — not blocking anything
 
 ### 9. Revoke the April PAT at GitHub
+
+**16 Nov (wave 2, #382):** the repo has been public since 10 Nov, so the committed token is public
+too. It is still dead (401), so revoking it is still the whole job, and a history rewrite is still
+not recommended.
 
 - [ ] Revoke it
 
