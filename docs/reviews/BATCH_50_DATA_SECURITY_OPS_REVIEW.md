@@ -3,7 +3,20 @@
 **Pass R2** · reviewed SHA `1668071` · lens: security and site-reliability engineer · read-only · paid calls: none.
 
 ## 1. Summary
-_(written last)_
+Grade **C**. The data layer and auth are sound; the failure path still misses half the jobs, and the
+repository is public while every record says private. 5 findings: 0 High, 2 Med-High (DS50-01,
+DS50-03), 1 Medium, 2 Low.
+1. **Correct and safe:** grants on all 30 new tables are right for both roles and no credential is
+   readable (catalogue-proved); login lockout, refresh rotation and PIN-change revocation hold. One
+   gap: PIN change takes unlimited guesses (DS50-02).
+2. **Honest:** the daily check said "all OK" for five mornings while four cinemas were dark (DS50-01).
+3. **Doing its job:** backups run weekly and the restore drill passes, but nobody has opened an
+   encrypted copy and its only recorded key is on one Mac (DS50-04).
+4. **Noticed:** the check watches 4 of 8 scheduled things; the cinema half is fixed by the P1 drift
+   commit, which would have named P1 on 12 Nov; reminders, backup and the TMDB refresh stay unwatched
+   (DS50-01, DS50-05).
+5. **Cheap to run:** yes: Neon 192 MB of 1 GB, backups 0.4 GB egress a month by design; Railway's
+   side is unread (token rejected).
 
 ## 2. Findings (at most ten, Highs first)
 
@@ -100,3 +113,66 @@ _(written last)_
   cinema programme; refresh films with no sync date once; a daily-check row when any film passes
   165 days. Two hours.
 - **Where it goes:** fold into DS50-01's row (guard 20 of wave 1).
+
+### The failure table (headline question 1), at `1668071`
+| Failure | Reaches Craig today | What each person sees |
+|---|---|---|
+| Shops, specs (Brave, Blu-ray.com 403/429), eBay scan, values: job quiet | yes: `job:*`, `specs:halted`, `ebay:listings`, push + Home row | a stale price or spec, no word |
+| TMDB, eBay, Brave, Anthropic keys missing at boot | yes: `api:readiness` | the feature fails in words |
+| Anthropic 400s (credit, spend cap), timeouts, malformed output | only if a failure row lands in a day: `assistant:failures` reads the usage log | the assistant's error text |
+| A cinema source's identity or shape changes (P1), a venue switched off on refusal, the whole cinema phase failing | **no** (fixed for switched-on venues by the drift commit) | fewer cinemas; stale showings hidden or marked (R4) |
+| The 08:00 job crashing (CR49-01) or not running | only as a Home row after 26 h (`check:stale`): no push | no digest, no reminders |
+| Letterboxd sync failing | no (and on CR49-01's path, not even recorded) | the diary stops filling |
+| eBay sold-store run dying (2 abandoned 11 Nov) | no | thinner values later (R5) |
+| Database near full | yes at 512 MB (192 MB now) | — |
+| Backup failing or unrestorable | GitHub's own email to the owner only; nothing in the app; decryption never proved (DS50-04) | — |
+| A phone's push refused | yes, per person, `notifications` | nothing arrives; re-registers on open |
+| Web and API out of step | close-out step only (DS44-04, manual) | a stale page until reload |
+| TMDB data past six months | no (DS50-05) | — |
+
+## 3. Follow-through corrections (rows of the pack's table in this lens)
+| Row | Pack says | Corrected to | Evidence |
+|---|---|---|---|
+| DIGEST §1, brief | private repo | **public** since at least 10 Nov (DS50-03) | observed |
+| DS44-01 / guard 9 | fixed, 4 of 8 jobs | holds; and the check is pull-only when the 08:00 job itself fails (no push) | implemented |
+| DS44-03 / guard 17 | fixed, drill passes | the drill proves the dump, never the encrypted artifact; key custody unconfirmed (DS50-04) | implemented, proved |
+| DS44-05 | fixed | holds for login; the PIN-change path has no limit (DS50-02) | implemented |
+| DS44-06 / guard 20 | claimed | the refresh exists and works by reads; 24 films never refreshed (DS50-05) | implemented, observed |
+| DS44-07 CSP | claimed | not re-read in this pass | — |
+| L3 | 4 of 8 jobs unwatched | confirmed; the drift commit covers the cinema half (DS50-01) | implemented |
+| L7 | runs only on a read | confirmed (DS50-05) | implemented |
+| L8 | Railway token rejected | still rejected at 10:46 UTC, 16 Nov; the file is dated 1 Oct | observed |
+| Grants on 30 new tables | to check | **all good**: every table is readable by both roles except the 6 credential tables; the only withheld columns are `profiles.pin_hash` and `movie_night_sessions.invite_token`; no credential is readable by either | observed (catalogue) |
+| Spec job gap 26 Oct → 5 Nov | miss or nothing due? | nothing due: a run row is written only when work exists; the heartbeat beats daily | implemented |
+
+## 4. Queued and parked items in this lens, re-verified
+| Item | Verdict |
+|---|---|
+| Railway restart-policy drift (unapplied since 26 Sep) | unverifiable here (token rejected); the code still says `ON_FAILURE`, 3 retries for `api` |
+| `OWNER-ACTIONS.md` 9, revoke the April PAT | decayed premise: it reasons "the repo is private"; the token is dead, so no rewrite still holds |
+| `OWNER-ACTIONS.md` backup key into a password manager | still open; raised by DS50-04 |
+| `OWNER-ACTIONS.md` 22, Neon password rotation | still open; not re-checked (a credential change, Craig's) |
+| #371 dependency audit | accurate: CI's audit job runs `pip-audit` and `pnpm audit` on every push; Dependabot alerts are off, so an advisory on a quiet week waits for the next push |
+
+## 5. For reconsideration · Hypotheses · Limitations · Probe log
+**For reconsideration:** #257 (backups as Actions artifacts) holds, on one condition: the key's second
+copy (DS50-04). Its premise "the repo's owner holds the only key" is the single point of failure.
+
+**Hypotheses:** the two abandoned sold-store runs on 11 Nov (00:21 and 02:21, "No heartbeat for 30
+minutes") look like the process dying mid-pass, perhaps a Railway limit; only the deployment's logs
+can say. `refresh_tokens` is never pruned (100 rows, hashes only): harmless at this size. CR49-01
+(R1) is the likeliest way the 08:00 job goes dark; DS50-01's reminders row is what would name it.
+
+**Limitations:** no Railway read (token rejected), so no cron execution history, exit codes, logs,
+variables, plan, or whether a Sentry DSN is set. The ODEON fix (`a2caf8c`, PR 161) was read in its
+commit only, as drift. CSP and the web token storage were not re-tested. No cinema page, robots or
+terms read (0 of 20): the fetch is a bounded client with a named user agent, 49–99 requests a run.
+
+**Probe log** (no paid calls; no TMDB, eBay, Brave or cinema calls):
+- 11 projected `SELECT`s via `mcu_readonly`: table and column privileges for both roles (4), role
+  attributes, RLS count, credential-like column names, TMDB sync ages, Letterboxd usernames (2 rows,
+  held in scratch, grepped as counts only), table live-row counts, profile column names.
+- 1 Railway CLI call (`deployment list`), rejected. GitHub: repo metadata, events, security settings,
+  Dependabot and secret-scanning endpoints, branch protection, backup runs (8 `gh` calls) and one
+  unauthenticated GET to the repo's API URL (HTTP 200).
+- 1 local derivation of the backup key's public half, compared to the recipient file; nothing printed.
