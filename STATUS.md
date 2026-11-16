@@ -8,7 +8,8 @@ The review (Batches 49–54, PR 162) found 32 issues: 0 High, 3 Med-High, 17 Med
 AG1–AG10 in five sittings, each started at the owner's go. Sitting 1 is AG1 (the 08:00 job survives
 one person's failure), then AG2 (every scheduled thing watched). The assistant is kept, so AG8 is
 in; pushes change in AG6, from 25 Nov, once the viewer has been asked. The owner's six jobs from the
-review are at the top of `OWNER-ACTIONS.md`.
+review are at the top of `OWNER-ACTIONS.md`. Merged as `a680f7a` (PR 162, all seven CI jobs green
+on it); production API and web on it at 22:34 GMT, `db: ok`, every readiness field `configured`.
 
 **16 Nov, 10:46 GMT: the four ODEONs are read again, and a cinema that stops reaches Craig
 (PR 161, `a2caf8c`, #381).** From 12 Nov every morning returned nothing for ODEON Braehead,
@@ -652,6 +653,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **16 Nov, 22:34 GMT — PR 162 merged: the wave 2 review and its rows (`a680f7a9dc535e4dca25ac55ee937458a5c1ac42`).** A fast-forward
+  of `main`. CI's seven jobs green on the PR's last commit, the end-to-end job included; production
+  API and web report the merged commit, `db: ok`, and push, ai, ebay, tmdb and brave `configured`.
 - **16 Nov, 22:01 GMT — wave 2's rows written at the owner's go (#383).** Group AG: AG1–AG10 in
   five sittings. The assistant is kept (AG8 in); pushes follow roadmap decision 4 once the viewer
   has been asked; wave 1's scorecard leaves the tree in AG9; AG4–AG6 raised to `xhigh` and AG9 to
