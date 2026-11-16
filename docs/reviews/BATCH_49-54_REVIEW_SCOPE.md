@@ -9,8 +9,8 @@ under `apps/` and `packages/` (+109,441 −5,245 lines). The procedure is
 
 ## The app, in one screen
 
-- **Who, and the job.** Two people: Craig (admin; builds and runs it) and Mark (viewer), on
-  iPhones, as an installed web app. The job: know what they own and where each disc is (1,932
+- **Who, and the job.** Two people: Craig (admin; builds and runs it) on an iPhone and Mark
+  (viewer) on Android (Craig confirmed Mark's on 16 Nov), as an installed web app. The job: know what they own and where each disc is (1,932
   copies at check-in, 62 added since 11 Oct), who has one on loan (4 loans ever), what to watch
   together (Movie night, 11 nights), what is on at the cinema (10 venues), and what to buy next at
   a fair price (10 active wants).
