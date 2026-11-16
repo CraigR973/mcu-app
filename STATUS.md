@@ -641,7 +641,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
-- **16 Nov, 19:45 GMT — wave 2 review synthesised (Batches 49–54); its PR is open and waits for the
+- **16 Nov, 19:14 GMT — wave 2 review synthesised (Batches 49–54); its PR is open and waits for the
   owner's go.** 32 findings: 0 High, 3 Med-High (the 08:00 job's Letterboxd error path; the daily
   check watching 4 of 8 jobs, cinema half fixed by PR 161; the repo public, kept so, #382), 17 Medium,
   12 Low. Roadmap `docs/reviews/BATCH_49-54_ROADMAP.md`: packages AG0–AG10 (draft names) and ten
