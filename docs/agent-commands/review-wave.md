@@ -2,7 +2,7 @@
 
 The canonical procedure for reviewing this app, for every agent. Claude Code runs it as Craig's
 `/review-wave` skill, which this file copies; Codex and any other agent follow this file. It is
-refreshed at each review's check-in (last: wave 1, 11 Oct 2026, Batches 43–48).
+refreshed at each review's check-in (last: wave 2, 16 Nov 2026, Batches 49–54).
 
 ## Cadence
 
@@ -33,7 +33,32 @@ synthesis names which findings become guards.
   check-in. Finding IDs take the batch: `CR43-01`.
 - **Lenses:** core: code and architecture (CR), data, security and ops (DS), AI and LLM
   engineering (AI), product and UX with the user scorecard (UX). Domain, for this app: catalogue
-  integrity (CT) and prices, value and deals (MK). Each pass's brief is in the review's pack.
+  integrity (CT), which also judges which film each cinema screening is, and prices, value and
+  deals (MK). Each pass's brief is in the review's pack.
+
+## Running it from one orchestrator session (wave 2, 16 Nov 2026)
+
+Taken from `garmin-coach`'s wave #6. One session runs the panel and the check-in, then starts
+every later step itself as a linked session, **one at a time**, and is woken when each ends.
+
+- **Where steps run:** in the main checkout's folder (no worktree of their own), reading the code
+  at the reviewed SHA from the review worktree `scratchpad/<wave-id>/branch/`, never from the
+  main checkout, which Craig may be using for other batches. A step commits only its own outputs,
+  only on the review branch, only with `git -C scratchpad/<wave-id>/branch`; it never switches a
+  branch or commits in the main checkout. Nothing is pushed until the synthesis.
+- **Between steps** the orchestrator reads the step's result, checks any claim about the users
+  against production, updates `STATE.md`, sends Craig a one-screen note and starts the next step.
+- **Pacing lives in each step, never in the orchestrator.** A step checks Claude usage at its
+  start and at each section boundary. Above 75% of the 5-hour window (65% before a long section)
+  it records where it is, schedules its own one-shot resume for five minutes after the reset and
+  ends its turn; above 85% of the week it finishes the section and stops. Its resumed turn wakes
+  the orchestrator when it ends.
+- **No timer in the orchestrator,** and no message from a step to the orchestrator mid-run: either
+  breaks the chain of wake-ups that can start a session. If a start is refused, Craig's one-word
+  "go" restarts the chain. The Mac is held awake for the run (it sleeps after one idle minute).
+- **End times from the clock:** each step stamps its end time from `date`.
+- **Unattended permissions:** steps run with permissions bypassed, so only the hard rules below
+  keep them read-only.
 
 ## The question every lens answers
 
