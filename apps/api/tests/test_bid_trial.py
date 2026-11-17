@@ -61,6 +61,7 @@ from src.services.bid_trial import (
     summarise_trial,
     work_trial,
 )
+from src.services.found_for import stamp
 from src.services.valuation import (
     DAILY_SHARE,
     FALLBACK_FACTOR,
@@ -456,6 +457,7 @@ async def _price(db: AsyncSession, film: Movie, format_code: str, price: str | N
         DiscValuation(
             id=uuid.uuid4(),
             movie_id=film.id,
+            found_for=stamp(film),
             format_code=format_code,
             status="priced" if price is not None else "not_priced",
             price=Decimal(price) if price is not None else None,

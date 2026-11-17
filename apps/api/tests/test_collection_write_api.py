@@ -31,6 +31,7 @@ from src.models.collection_item import CollectionItem
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile, UserRole
 from src.routers.movies import get_tmdb_client
+from src.services.found_for import stamp
 from src.tmdb.models import (
     CastMember,
     Credits,
@@ -1859,6 +1860,7 @@ class TestEdition:
                 SpecLookup(
                     id=uuid.uuid4(),
                     collection_item_id=item.id,
+                    found_for=stamp(movie),
                     status="done" if how else "needs_you",
                     accepted_url=page.format(index) if how else None,
                     how=how,

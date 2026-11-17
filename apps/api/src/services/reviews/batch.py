@@ -1,7 +1,8 @@
 """The reviews batch — Batch V9, `DECISIONS.md` #228 and #241 within #110 and #202.
 
-**First it forgets what was looked up for a film whose match has since been corrected**
-(#378): each such row answered another film, and is looked up again below as if new.
+**A row is stamped with the film it was found for** (AG4, `services/found_for.py`). One found
+for a film whose match has since been corrected answered another film: the nightly job forgets
+it before this batch runs, and it is looked up again below as if new (#378, retired into AG4).
 
 **Then three phases, in this order, each bounded:**
 
@@ -33,7 +34,7 @@ from typing import Literal
 
 import httpx
 import structlog
-from sqlalchemy import Text, cast, delete, func, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,7 +43,7 @@ from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.reviews import FilmReview, ReviewRun
 from src.models.wanted import WantedItem
-from src.services.identification import latest_corrections
+from src.services.found_for import identity_sql, stamp_of
 from src.services.identify.doubts import doubt_from_page, review_page_name
 from src.services.reviews.bluray_com import OUT_OF, format_of, review_scores, reviewed_editions
 from src.services.reviews.finding import (
@@ -112,44 +113,6 @@ class Want:
     title: str
     year: int | None
     format_code: str | None
-
-
-# ---------------------------------------------------------------------------
-# Forgetting what answered another film
-# ---------------------------------------------------------------------------
-
-
-async def forget_reviews_of_corrected_films(db: AsyncSession) -> int:
-    """Forget each review row found before its film's match was last corrected (#378).
-
-    A row answers the film as it stood when it was found: its title and year are what was
-    searched for, and what a page's year was checked against. A correction makes it another
-    film, so the row answers the wrong one, and nothing else would ever look again: only an
-    old ``none`` is searched again. Dead Man's Shoes, wanted as the 1940 film while the shops
-    sold the 2004 one, kept a ``mismatch`` for good; Bad Lieutenant, corrected to the 2009
-    film, kept the 1992 film's score. Forgotten, a row is searched, seeded or read again
-    tonight, as for a film with none.
-
-    A merge is left alone: the film merged into is still the film it was, and its reviews
-    still answer it. Returns how many rows were forgotten. Does not commit.
-    """
-    corrected = latest_corrections()
-    stale = (
-        select(FilmReview.id)
-        .join(corrected, corrected.c.movie_id == cast(FilmReview.movie_id, Text))
-        .where(FilmReview.found_utc < corrected.c.corrected_utc)
-    )
-    forgotten = (
-        (
-            await db.execute(
-                delete(FilmReview).where(FilmReview.id.in_(stale)).returning(FilmReview.id)
-            )
-        )
-        .scalars()
-        .all()
-    )
-    await db.flush()
-    return len(forgotten)
 
 
 # ---------------------------------------------------------------------------
@@ -282,10 +245,12 @@ async def record_search(
         await db.delete(row)
     await db.flush()
 
+    found_for = await stamp_of(db, want.movie_id)
     if chosen is None:
         row = FilmReview(
             id=uuid.uuid4(),
             movie_id=want.movie_id,
+            found_for=found_for,
             site=site,
             format_code=want.format_code,
             status="none",
@@ -305,6 +270,7 @@ async def record_search(
     row = FilmReview(
         id=uuid.uuid4(),
         movie_id=want.movie_id,
+        found_for=found_for,
         site=site,
         format_code=chosen.format_code,
         status="found",
@@ -402,7 +368,7 @@ async def seed_owned(db: AsyncSession, *, now: datetime) -> int:
     """
     pages = (
         await db.execute(
-            select(CollectionItem.movie_id, CollectionItem.specs_source_url)
+            select(CollectionItem.movie_id, CollectionItem.specs_source_url, identity_sql())
             .join(Movie, Movie.id == CollectionItem.movie_id)
             .where(
                 owned_copy(),
@@ -419,7 +385,7 @@ async def seed_owned(db: AsyncSession, *, now: datetime) -> int:
         ).scalars()
     }
     seeded = 0
-    for movie_id, page in pages:
+    for movie_id, page, found_for in pages:
         if not page or not is_release_url(page):
             continue
         format_code = format_of(page)
@@ -436,6 +402,7 @@ async def seed_owned(db: AsyncSession, *, now: datetime) -> int:
         row = FilmReview(
             id=uuid.uuid4(),
             movie_id=movie_id,
+            found_for=found_for,
             site="bluray_com",
             format_code=format_code,
             status="found",
@@ -724,12 +691,13 @@ async def work_run(
     searches_per_run: int = SEARCHES_PER_RUN,
     fetches_per_run: int = FETCHES_PER_RUN,
 ) -> ReviewRun:
-    """The nightly batch: forget, search, seed, read; then record how it ended."""
+    """The nightly batch: search, seed, read; then record how it ended.
+
+    What was found for another film is forgotten before it, by the nightly job's sweep (AG4).
+    """
     run_id = run.id
-    forgotten = 0
     try:
         now = clock()
-        forgotten = await forget_reviews_of_corrected_films(db)
         due = await wants_to_search(db, now=now)
         budget = await search_budget(db, now=now, per_run=searches_per_run)
         searching = await search_phase(db, run, searcher, due, budget=budget, clock=clock)
@@ -762,7 +730,6 @@ async def work_run(
     logger.info(
         "review_run_finished",
         status=run.status,
-        forgotten=forgotten,
         searches=run.searches,
         found=run.found,
         fetched=run.fetched,

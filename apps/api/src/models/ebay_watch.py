@@ -211,3 +211,7 @@ class EbayPriceRef(Base, UUIDPrimaryKeyMixin):
     #: used copies: ``{"3000": {"median": "8.50", "n": 6}}``.
     by_condition: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
     checked_utc: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
+    #: AG4: the film this was found for, as ``services/found_for.identity`` writes it
+    #: (``film:<TMDB id>``, ``tv:<id>`` or ``none``). A row that no longer matches its film is
+    #: forgotten and looked up again.
+    found_for: Mapped[str] = mapped_column(Text, nullable=False)

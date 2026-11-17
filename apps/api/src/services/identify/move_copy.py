@@ -13,6 +13,11 @@ series discs on the same-named films. Watches stay where they are: they are of a
 disc. A doubt about this copy is settled by the move. The move is audited on the copy and
 undone from Identify films' recent list: the copy goes back, the doubt opens again, and a
 film the move made is removed if nothing else has come to point at it.
+
+**A move is a correction for its copy (AG4, CT52-02).** The copy's disc page was chosen for the
+film it was on, and is stamped with it (`services/found_for.py`): a move, and its undo, forget
+the page and the fields it gave the copy, and the disc is searched again as the film it is now.
+A page a person chose stays, as does one a doubt about this copy chose again for its new film.
 """
 
 from __future__ import annotations
@@ -33,6 +38,7 @@ from src.models.wanted import WantedItem
 from src.models.watch_log import WatchLog
 from src.services.audit import record_action
 from src.services.film_rows import held_row_for, make_row
+from src.services.found_for import forget_found_for_another_film
 from src.services.identify.doubts import reaccept_disagreeing_page
 from src.tmdb.models import Movie as TmdbMovie
 from src.tmdb.models import TvShow
@@ -129,6 +135,7 @@ async def move_copy(
         settled.decided_action_id = audit.id
         await reaccept_disagreeing_page(db, settled, by=by)
     await db.flush()
+    await forget_found_for_another_film(db, items=[item.id])
     return Moved(film=target, created=created, audit=audit)
 
 
@@ -192,4 +199,5 @@ async def undo_move(db: AsyncSession, action_id: uuid.UUID, *, by: uuid.UUID | N
         },
     )
     await db.flush()
+    await forget_found_for_another_film(db, items=[item.id])
     return source

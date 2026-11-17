@@ -54,6 +54,7 @@ from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.wanted import Retailer
 from src.scripts import backup as backup_script
 from src.services import health_checks, heartbeat
+from src.services.found_for import stamp
 from src.services.health_checks import run_daily_check
 from src.services.heartbeat import beat
 from src.services.notifications import queue_notification
@@ -316,6 +317,7 @@ async def test_old_proposals_and_films_a_page_says_are_another_year(db: AsyncSes
         SpecLookup(
             id=uuid.uuid4(),
             collection_item_id=item.id,
+            found_for=stamp(by_page),
             status="needs_you",
             note="The page is for a 1957 film and this one is from 2007, so its specs were not "
             "used. Pick the right page.",
@@ -326,6 +328,7 @@ async def test_old_proposals_and_films_a_page_says_are_another_year(db: AsyncSes
         FilmReview(
             id=uuid.uuid4(),
             movie_id=by_review.id,
+            found_for=stamp(by_review),
             site="bluray_com",
             status="mismatch",
             found_via="brave",

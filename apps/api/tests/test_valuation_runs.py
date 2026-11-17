@@ -42,6 +42,7 @@ from src.models.ebay_sold import EbayUsedRun
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.valuation import DiscValuation, ValuationRun
+from src.services.found_for import stamp
 from src.services.valuation import (
     DAILY_SHARE,
     FALLBACK_FACTOR,
@@ -166,6 +167,7 @@ async def _price(
     stored = DiscValuation(
         id=uuid.uuid4(),
         movie_id=film.id,
+        found_for=stamp(film),
         format_code=format_code,
         status="priced" if price is not None else "not_priced",
         price=amount,
@@ -421,6 +423,7 @@ async def test_a_value_reached_from_new_carries_its_factor_by_the_tables_own_rul
                 DiscValuation(
                     id=uuid.uuid4(),
                     movie_id=film.id,
+                    found_for=stamp(film),
                     format_code="blu_ray",
                     status="priced",
                     price=Decimal("6.00"),
@@ -444,6 +447,7 @@ async def test_a_priced_row_without_a_price_cannot_be_stored(db: AsyncSession) -
                 DiscValuation(
                     id=uuid.uuid4(),
                     movie_id=film.id,
+                    found_for=stamp(film),
                     format_code="blu_ray",
                     status="priced",
                     price=None,

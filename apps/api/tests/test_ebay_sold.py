@@ -112,7 +112,7 @@ async def film_with_disc(db: AsyncSession) -> Movie:
 
 
 def test_only_comparable_used_listings_are_observed() -> None:
-    disc = TrackedDisc(uuid.uuid4(), "blu_ray", "Jaws", True, 1975, False)
+    disc = TrackedDisc(uuid.uuid4(), "blu_ray", "Jaws", True, 1975, False, "film:578")
     good = summary("1", "10.00")
     assert observed(good, disc) is not None
     for changed in (

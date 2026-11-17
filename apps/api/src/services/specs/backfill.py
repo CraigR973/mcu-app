@@ -16,9 +16,10 @@
 
 **Nothing is fetched until a page is accepted**, and nothing here searches Blu-ray.com.
 
-**A disc whose page was chosen before its film was corrected is searched again** (#380):
-the page answered the film as it stood. A batch forgets it as it starts, page, fields and
-the review that page seeded, unless Craig chose the page himself.
+**A disc's lookup is stamped with the film the copy was on when the matcher decided** (AG4,
+`services/found_for.py`). A correction of the film, or a move of the copy, makes the page answer
+another film: the nightly job forgets it, page and fields, before this batch runs, and the disc
+is searched again, unless a person chose the page (#380, retired into AG4).
 
 **Spend is capped twice:** per batch, and per calendar month at
 :data:`MONTHLY_SEARCH_CEILING`, which covers the whole backfill with room for retries: about
@@ -42,7 +43,7 @@ from urllib.parse import urlsplit
 
 import httpx
 import structlog
-from sqlalchemy import Text, and_, case, cast, delete, exists, func, or_, select, update
+from sqlalchemy import and_, case, delete, exists, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
@@ -52,9 +53,9 @@ from src.matching.engine import searchable_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.identify import IdentifyRun
 from src.models.movie import Movie
-from src.models.reviews import FilmReview, ReviewRun
+from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
-from src.services.identification import latest_corrections
+from src.services.found_for import stamp, stamp_of, stamp_of_copy
 from src.services.identify.doubts import (
     SPECS_IN_DOUBT,
     SPECS_KEPT,
@@ -330,93 +331,6 @@ async def forget_page_fields(
     item.specs_fetched_at_utc = None
 
 
-def _names(pages: list[tuple[uuid.UUID, str | None]], movie_id: uuid.UUID, url: str) -> bool:
-    return any(film == movie_id and page and same_page(page, url) for film, page in pages)
-
-
-async def forget_discs_of_corrected_films(db: AsyncSession) -> int:
-    """Forget each disc page the matcher chose before the disc's film was last corrected (#380).
-
-    A page answers the film as it stood when it was chosen: the search used the film's title,
-    the matcher judged the results by it, and the fetch checked the page's year against the
-    film's. A correction makes the film another one, so the page may answer the wrong film,
-    and nothing looked again. Live on 15 Nov: Salem's Lot, corrected from the 2024 film to the
-    1979 one on 15 Oct, kept the specs of the 2024 film's 4K disc, read on 27 Sep; and eight
-    discs sent back to Craig because their page's year was not the film's old year stayed
-    with him after the correction made it the film's year.
-
-    Such a disc is forgotten whole: its lookup and the results it kept, every field its page
-    gave it (:func:`forget_page_fields`), and a review seeded from that page, which answered
-    the same wrong film (``services/reviews/batch.py``). It is then searched again as a disc
-    never searched, under the film as it is now.
-
-    Left alone: a page Craig chose, or a disc he skipped (``decided_by``), his call about the
-    disc in his hand; a page chosen after the correction; and a disc never given a page (the
-    search left it for Craig), which Batch T10 and the second look bring up to date already.
-    A merge is not a correction (`services/identification.py`). Returns how many discs were
-    forgotten. Flushes; does not commit.
-    """
-    _, conditions = _in_scope()
-    corrected = latest_corrections()
-    rows = (
-        await db.execute(
-            select(SpecLookup, CollectionItem)
-            .join(CollectionItem, CollectionItem.id == SpecLookup.collection_item_id)
-            .join(Movie, Movie.id == CollectionItem.movie_id)
-            .join(corrected, corrected.c.movie_id == cast(Movie.id, Text))
-            .where(
-                *conditions,
-                SpecLookup.status.in_(("accepted", "done", "needs_you")),
-                SpecLookup.decided_by.is_(None),
-                SpecLookup.decided_utc < corrected.c.corrected_utc,
-                # A page's fields are taken only from a disc whose page it was.
-                or_(SpecLookup.status == "done", CollectionItem.specs_source_url.is_(None)),
-            )
-        )
-    ).all()
-    if not rows:
-        return 0
-    pages: list[tuple[uuid.UUID, str | None]] = []
-    for lookup, item in rows:
-        if item.specs_source_url:
-            pages.append((item.movie_id, item.specs_source_url))
-            await forget_page_fields(db, item, lookup)
-    await db.execute(delete(SpecLookup).where(SpecLookup.id.in_([lookup.id for lookup, _ in rows])))
-    await db.flush()
-    if pages:
-        films = {film for film, _ in pages}
-        # Another copy of the film that still has the page still seeds its review.
-        still: list[tuple[uuid.UUID, str | None]] = [
-            (film, page)
-            for film, page in (
-                await db.execute(
-                    select(CollectionItem.movie_id, CollectionItem.specs_source_url).where(
-                        owned_copy(),
-                        CollectionItem.movie_id.in_(films),
-                        CollectionItem.specs_source_url.is_not(None),
-                    )
-                )
-            ).all()
-        ]
-        seeded = (
-            await db.scalars(
-                select(FilmReview).where(
-                    FilmReview.movie_id.in_(films),
-                    FilmReview.site == "bluray_com",
-                    FilmReview.found_via == "spec_page",
-                    FilmReview.url.is_not(None),
-                )
-            )
-        ).all()
-        for review in seeded:
-            url = review.url or ""
-            if _names(pages, review.movie_id, url) and not _names(still, review.movie_id, url):
-                await db.delete(review)
-        await db.flush()
-    logger.info("spec_discs_forgotten", discs=len(rows), pages=len(pages))
-    return len(rows)
-
-
 # ---------------------------------------------------------------------------
 # Runs
 # ---------------------------------------------------------------------------
@@ -497,9 +411,8 @@ async def start_run(
     one exist, as for valuation runs. Without a Brave key there is still work when Craig
     has chosen pages that are waiting to be fetched.
 
-    **First, a corrected film's discs are forgotten** (#380), so the batch searches them
-    again as discs never searched. Only when a search can follow, and in the batch's own
-    commit: a claim that fails forgets nothing.
+    A disc whose page answered another film was forgotten before this, by the nightly job's
+    sweep or by the correction or move itself (AG4), so it is searched as never searched.
     """
     now = now or utcnow()
     await abandon_stale_runs(db, now=now)
@@ -507,8 +420,6 @@ async def start_run(
         return StartOutcome("halted", None)
     if await running_run(db) is not None:
         return StartOutcome("running", None)
-    if search_configured:
-        await forget_discs_of_corrected_films(db)
     to_search = search_configured and (
         bool(await discs_to_search(db, limit=1)) or bool(await discs_to_search_again(db, limit=1))
     )
@@ -634,6 +545,7 @@ async def record_search(
     lookup = SpecLookup(
         id=uuid.uuid4(),
         collection_item_id=row.item_id,
+        found_for=await stamp_of(db, row.movie_id),
         status=verdict.decision,
         search_query=query,
         searched_utc=now,
@@ -712,6 +624,7 @@ async def record_search_again(
     """
     candidates = judge(hits, row.disc)
     verdict = decide(candidates, row.disc)
+    found_for = await stamp_of(db, row.movie_id)
     await db.execute(
         delete(SpecCandidate).where(
             SpecCandidate.lookup_id == lookup.id, SpecCandidate.origin == "search"
@@ -725,6 +638,7 @@ async def record_search_again(
             db.add(_candidate_row(lookup.id, candidate))
 
     lookup.status = verdict.decision
+    lookup.found_for = found_for
     lookup.search_query = query
     lookup.searched_utc = now
     lookup.run_id = run.id
@@ -848,6 +762,7 @@ async def redecide_queue(db: AsyncSession, run: SpecRun, *, clock: Callable[[], 
         verdict = decide(judged, row.disc)
         if verdict.decision == "accepted":
             lookup.status = "accepted"
+            lookup.found_for = stamp(movie)
             lookup.accepted_url = verdict.url
             lookup.how = "auto"
             lookup.decided_utc = clock()
@@ -1298,7 +1213,9 @@ async def accept_page(
         .select_from(SpecCandidate)
         .where(SpecCandidate.lookup_id == lookup.id, SpecCandidate.url == page)
     )
+    found_for = await stamp_of_copy(db, lookup.collection_item_id)
     lookup.status = "accepted"
+    lookup.found_for = found_for
     lookup.accepted_url = page
     lookup.how = "confirmed" if offered else "pasted"
     lookup.decided_by = by
@@ -1315,7 +1232,9 @@ async def skip_disc(
 ) -> SpecLookup:
     """Craig's other choice: no specs for this disc."""
     lookup = await _waiting_lookup(db, lookup_id)
+    found_for = await stamp_of_copy(db, lookup.collection_item_id)
     lookup.status = "skipped"
+    lookup.found_for = found_for
     lookup.decided_by = by
     lookup.decided_utc = now or utcnow()
     lookup.note = "Skipped by hand."

@@ -99,6 +99,10 @@ class FilmReview(Base, UUIDPrimaryKeyMixin):
     scores_read_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True
     )
+    #: AG4: the film this was found for, as ``services/found_for.identity`` writes it
+    #: (``film:<TMDB id>``, ``tv:<id>`` or ``none``). A row that no longer matches its film is
+    #: forgotten and looked up again.
+    found_for: Mapped[str] = mapped_column(Text, nullable=False)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<FilmReview {self.site} {self.format_code} {self.status}>"

@@ -44,6 +44,7 @@ from src.models.wanted import WantedItem
 from src.routers.ebay_watch import get_ebay_client_factory
 from src.services.ebay_watch.runs import DAILY_SHARE, clear_ended_finds, start_run, work_run
 from src.services.ebay_watch.scan import is_deal
+from src.services.found_for import stamp
 from src.services.identification import _move_back, move_references
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -382,6 +383,7 @@ async def _last_jedi_owned_on_blu_ray(db: AsyncSession) -> Movie:
         EbayPriceRef(
             id=uuid.uuid4(),
             movie_id=film.id,
+            found_for=stamp(film),
             format_code="4k_uhd",
             status="priced",
             median=Decimal("16.00"),
@@ -470,6 +472,7 @@ async def test_three_sales_replace_the_asking_figure_for_a_new_deal(
         DiscValuation(
             id=uuid.uuid4(),
             movie_id=film.id,
+            found_for=stamp(film),
             format_code="4k_uhd",
             status="not_priced",
             price=None,

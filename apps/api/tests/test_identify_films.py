@@ -50,6 +50,7 @@ from src.models.wanted import WantedItem
 from src.models.watch_log import WatchLog
 from src.routers.movies import get_tmdb_client
 from src.scripts.import_collection import LiveFilmIndex
+from src.services.found_for import stamp
 from src.services.identification import (
     IdentifyError,
     MergeNeeded,
@@ -776,6 +777,7 @@ async def test_a_value_taken_before_an_identification_falls_due(db: AsyncSession
         DiscValuation(
             id=uuid.uuid4(),
             movie_id=film.id,
+            found_for=stamp(film),
             format_code="4k_uhd",
             status="not_priced",
             basis=ASKING_PRICES,
@@ -825,6 +827,7 @@ async def test_t7s_second_look_reconsiders_a_disc_whose_film_has_gained_a_year(
     lookup = SpecLookup(
         id=uuid.uuid4(),
         collection_item_id=disc.id,
+        found_for=stamp(film),
         status="needs_you",
         note="This film has no year, so the page cannot be checked. Confirm it's the right one.",
         attempts=0,

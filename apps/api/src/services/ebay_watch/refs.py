@@ -27,6 +27,8 @@ from src.ebay.pricing import (
 )
 from src.matching.engine import searchable_title
 from src.models.ebay_watch import EbayPriceRef
+from src.models.movie import Movie
+from src.services.found_for import identity_sql, stamp_of
 
 #: How long a usual price stands before it is searched again.
 FRESH_FOR = timedelta(days=14)
@@ -136,10 +138,18 @@ async def stored_ref(
     now: datetime,
     require_used_figure: bool = False,
 ) -> EbayPriceRef | None:
-    """A fresh reference, with the figure required by the caller."""
+    """A fresh reference, with the figure required by the caller.
+
+    One found for the film as it was before a correction is not one (AG4): the nightly sweep
+    forgets it, and until then it is not used.
+    """
     ref = await db.scalar(
-        select(EbayPriceRef).where(
-            EbayPriceRef.movie_id == movie_id, EbayPriceRef.format_code == format_code
+        select(EbayPriceRef)
+        .join(Movie, Movie.id == EbayPriceRef.movie_id)
+        .where(
+            EbayPriceRef.movie_id == movie_id,
+            EbayPriceRef.format_code == format_code,
+            EbayPriceRef.found_for == identity_sql(),
         )
     )
     if (
@@ -176,6 +186,8 @@ async def fetch_ref(
     values = {
         **_values(estimate, format_code, factor=factors[format_code].factor),
         "checked_utc": now,
+        # AG4: what the film usually asks, as the film it is now (`services/found_for.py`).
+        "found_for": await stamp_of(db, movie_id),
     }
     await db.execute(
         insert(EbayPriceRef)

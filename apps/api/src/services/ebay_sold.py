@@ -33,6 +33,7 @@ from src.models.movie import Movie
 from src.models.valuation import DiscValuation
 from src.services.ebay_watch.client import WatchClient
 from src.services.ebay_watch.listings import OUT_OF_STOCK, parse_utc, scan_listing
+from src.services.found_for import identity_sql, stamp
 from src.services.valuation import REVALUE_AFTER, _film_formats
 
 logger = structlog.get_logger(__name__)
@@ -57,6 +58,8 @@ class TrackedDisc:
     identified: bool
     year: int | None
     is_tv: bool
+    #: AG4: the film this is searched for, as what it finds is stamped (`services/found_for.py`).
+    found_for: str
 
 
 @dataclass(frozen=True)
@@ -133,6 +136,7 @@ async def tracked_discs(db: AsyncSession, *, now: datetime, limit: int) -> list[
             Movie.tmdb_id,
             Movie.year,
             Movie.is_tv,
+            identity_sql(),
         )
         .join(Movie, Movie.id == pairs.c.movie_id)
         .outerjoin(
@@ -150,8 +154,8 @@ async def tracked_discs(db: AsyncSession, *, now: datetime, limit: int) -> list[
         .limit(limit)
     )
     return [
-        TrackedDisc(movie_id, code, title, tmdb_id is not None, year, bool(is_tv))
-        for movie_id, code, title, tmdb_id, year, is_tv in rows
+        TrackedDisc(movie_id, code, title, tmdb_id is not None, year, bool(is_tv), found_for)
+        for movie_id, code, title, tmdb_id, year, is_tv, found_for in rows
     ]
 
 
@@ -176,6 +180,7 @@ async def _record_search(
                 id=uuid.uuid4(),
                 legacy_item_id=item.legacy_item_id,
                 movie_id=disc.movie_id,
+                found_for=disc.found_for,
                 format_code=disc.format_code,
                 price=item.price,
                 postage=item.postage,
@@ -191,6 +196,8 @@ async def _record_search(
             existing_by_id[item.legacy_item_id] = existing
         elif existing.movie_id == disc.movie_id and existing.format_code == disc.format_code:
             relisted_sold |= existing.status == "sold"
+            # Seen again in a search for the film as it is now (AG4).
+            existing.found_for = disc.found_for
             existing.price = item.price
             existing.postage = item.postage
             existing.condition_code = item.condition_code
@@ -205,10 +212,15 @@ async def _record_search(
     await db.execute(
         insert(EbayUsedScan)
         .values(
-            id=uuid.uuid4(), movie_id=disc.movie_id, format_code=disc.format_code, checked_utc=now
+            id=uuid.uuid4(),
+            movie_id=disc.movie_id,
+            format_code=disc.format_code,
+            checked_utc=now,
+            found_for=disc.found_for,
         )
         .on_conflict_do_update(
-            constraint="uq_ebay_used_scans_movie_format", set_={"checked_utc": now}
+            constraint="uq_ebay_used_scans_movie_format",
+            set_={"checked_utc": now, "found_for": disc.found_for},
         )
     )
     await db.commit()
@@ -275,6 +287,7 @@ async def refresh_sales_value(
             DiscValuation(
                 id=uuid.uuid4(),
                 movie_id=movie_id,
+                found_for=stamp(movie),
                 format_code=format_code,
                 status="not_priced",
                 price=None,

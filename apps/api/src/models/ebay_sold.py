@@ -55,6 +55,10 @@ class EbayUsedListing(Base, UUIDPrimaryKeyMixin):
     missing_checked_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True
     )
+    #: AG4: the film this was found for, as ``services/found_for.identity`` writes it
+    #: (``film:<TMDB id>``, ``tv:<id>`` or ``none``). A row that no longer matches its film is
+    #: forgotten and looked up again.
+    found_for: Mapped[str] = mapped_column(Text, nullable=False)
 
 
 class EbayUsedScan(Base, UUIDPrimaryKeyMixin):
@@ -71,6 +75,10 @@ class EbayUsedScan(Base, UUIDPrimaryKeyMixin):
     )
     format_code: Mapped[str] = mapped_column(String(20), nullable=False)
     checked_utc: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
+    #: AG4: the film this was found for, as ``services/found_for.identity`` writes it
+    #: (``film:<TMDB id>``, ``tv:<id>`` or ``none``). A row that no longer matches its film is
+    #: forgotten and looked up again.
+    found_for: Mapped[str] = mapped_column(Text, nullable=False)
 
 
 class EbayUsedRun(Base, UUIDPrimaryKeyMixin):

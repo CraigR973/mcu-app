@@ -151,6 +151,10 @@ class SpecLookup(Base, UUIDPrimaryKeyMixin):
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     fetched_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: AG4: the film the copy was on when the matcher decided, as
+    #: ``services/found_for.identity`` writes it. A move or a correction makes it another film,
+    #: and the disc is searched again.
+    found_for: Mapped[str] = mapped_column(Text, nullable=False)
     created_utc: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )

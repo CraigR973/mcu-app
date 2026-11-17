@@ -65,6 +65,7 @@ from src.matching.engine import searchable_title as search_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.valuation import VALUED_FORMATS, DiscValuation, ValuationRun
+from src.services.found_for import identity_sql
 
 logger = structlog.get_logger()
 
@@ -129,6 +130,8 @@ class DueFilm:
     format_code: str
     title: str
     identified: bool
+    #: AG4: the film this is searched for, as its value is stamped (`services/found_for.py`).
+    found_for: str
     #: A TV title: "Complete Series" and "Season" listings are the thing itself (Batch X6).
     is_tv: bool = False
     year: int | None = None
@@ -144,21 +147,20 @@ def _owned_discs() -> tuple[ColumnElement[str | None], list[ColumnElement[bool]]
 
 
 def _due_condition(now: datetime, *, include_reprice: bool = False) -> ColumnElement[bool]:
-    """Never priced, priced over 30 days ago, priced before the film was last identified,
-    or priced before Batch X6. Once the owner starts AA10b's re-price, include values
-    on the old used median until each pair has been searched again.
+    """Never priced, priced over 30 days ago, or priced before Batch X6. Once the owner starts
+    AA10b's re-price, include values on the old used median until each pair has been searched
+    again.
 
-    The third is Batch T9's. A film priced under its spreadsheet title ("Captain Ameica") was
-    searched for under that title; once identified, the search the film page would run is
-    different, so the stored value no longer agrees with it (#209's reason for the shared
-    estimator). ``last_tmdb_sync_utc`` is written only when a film is identified. The last is
-    X6's: a value from before it is a new copy's price, and ``used_count`` is what every value
-    since carries.
+    The last is X6's: a value from before it is a new copy's price, and ``used_count`` is what
+    every value since carries. A value priced for the film as it was before a correction, or
+    under its spreadsheet title before it was identified (Batch T9's reason), is not here: it
+    is stamped with the film it was priced for, and forgotten once that is not the film, so it
+    is never priced (AG4, `services/found_for.py`). The time rule this replaces, priced before
+    the film's last TMDB sync, was defeated by an undo, which puts the old sync time back.
     """
     normal = or_(
         DiscValuation.id.is_(None),
         DiscValuation.checked_utc < now - REVALUE_AFTER,
-        DiscValuation.checked_utc < Movie.last_tmdb_sync_utc,
         DiscValuation.used_count.is_(None),
     )
     if not include_reprice:
@@ -224,6 +226,7 @@ async def due_films(
             Movie.tmdb_id,
             Movie.is_tv,
             Movie.year,
+            identity_sql(),
         )
         .join(Movie, Movie.id == pairs.c.movie_id)
         .outerjoin(
@@ -243,10 +246,11 @@ async def due_films(
             format_code=code,
             title=title,
             identified=tmdb_id is not None,
+            found_for=found_for,
             is_tv=bool(is_tv),
             year=year,
         )
-        for movie_id, code, title, tmdb_id, is_tv, year in rows
+        for movie_id, code, title, tmdb_id, is_tv, year, found_for in rows
     ]
 
 
@@ -470,6 +474,7 @@ async def _store(
         "search_query": search_query(film.search_title, film.format_code),
         "checked_utc": checked,
         "run_id": run_id,
+        "found_for": film.found_for,
     }
     await db.execute(
         insert(DiscValuation)

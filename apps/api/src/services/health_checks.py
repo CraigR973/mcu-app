@@ -15,6 +15,7 @@ problem as the Home row says it. Keys are stable, so a problem that persists kee
 
 from __future__ import annotations
 
+import json
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import Text, and_, cast, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
@@ -30,6 +31,7 @@ from src.clock import utcnow
 from src.models.admin_action import AdminAction
 from src.models.ai import AiUsageLogEntry
 from src.models.cinema import CinemaRefreshRun, CinemaVenue
+from src.models.collection_item import CollectionItem, owned_copy
 from src.models.deal import Deal, live_deal
 from src.models.ebay_watch import EbayWatchRun
 from src.models.health import HealthCheck, JobHeartbeat
@@ -47,6 +49,7 @@ from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.valuation import ValuationRun
 from src.models.wanted import Retailer
 from src.services import heartbeat
+from src.services.format_names import formats_phrase
 from src.services.identify.doubts import count_old as count_old_doubts
 from src.services.identify.doubts import count_page_disagreements
 from src.services.identify.queue import count_old_waiting
@@ -369,6 +372,45 @@ async def check_identification(db: AsyncSession, now: datetime) -> list[Result]:
     ]
 
 
+async def check_copies_sharing_a_page(db: AsyncSession, now: datetime) -> list[Result]:
+    """Two or more owned copies of one film on the same formats with the same disc page (AG4).
+
+    Usually one disc counted twice: wave 2 found an import row that was another film's disc
+    sitting beside the real copy (CT52-03), and two *Hitchcock* Blu-rays to check on the shelf.
+    One row for each film and formats, so each is named once and clears when a copy goes.
+    """
+    formats = cast(CollectionItem.formats, Text)
+    groups = (
+        await db.execute(
+            select(Movie.id, Movie.title, Movie.year, formats, func.count())
+            .join(Movie, Movie.id == CollectionItem.movie_id)
+            .where(
+                owned_copy(),
+                Movie.deleted_at.is_(None),
+                CollectionItem.specs_source_url.is_not(None),
+            )
+            .group_by(Movie.id, Movie.title, Movie.year, formats, CollectionItem.specs_source_url)
+            .having(func.count() > 1)
+            .order_by(Movie.title, Movie.id, formats)
+        )
+    ).all()
+    results: list[Result] = []
+    for movie_id, title, year, codes, count in groups:
+        try:
+            phrase = formats_phrase(json.loads(codes))
+        except (TypeError, ValueError):  # pragma: no cover - formats is a JSON list
+            phrase = codes
+        named = f"{title} ({year})" if year else title
+        results.append(
+            (
+                f"copies:same-page:{movie_id}:{codes}",
+                f"{count} {phrase} copies of {named} have the same disc page: is one disc counted "
+                "twice? Check the shelf, and delete the extra copy in the app.",
+            )
+        )
+    return results
+
+
 async def check_deal_freshness(db: AsyncSession, now: datetime) -> list[Result]:
     """No deal on the page older than its source's freshness: eBay 3 days, shops 2."""
     is_ebay = and_(Deal.retailer_id.is_(None), Deal.retailer_name_snapshot == "eBay")
@@ -603,6 +645,7 @@ CHECKS: Sequence[Check] = (
     check_database_size,
     check_lockouts,
     check_identification,
+    check_copies_sharing_a_page,
     check_deal_freshness,
     check_assistant,
     check_cinemas,

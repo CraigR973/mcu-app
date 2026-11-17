@@ -25,6 +25,7 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
+from src.services.found_for import stamp
 
 
 @pytest_asyncio.fixture
@@ -150,6 +151,7 @@ async def _value(
         DiscValuation(
             id=uuid.uuid4(),
             movie_id=movie.id,
+            found_for=stamp(movie),
             format_code=fmt,
             status="priced" if price is not None else "not_priced",
             price=amount,

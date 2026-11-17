@@ -30,6 +30,7 @@ from src.models.price_check import PriceCheck
 from src.models.price_history import PriceHistoryDaily, ScrapeRun
 from src.models.profile import Profile, UserRole
 from src.models.wanted import Retailer, WantedItem
+from src.services.found_for import stamp
 from src.services.notifications import DeliveryOutcome, DeliveryResult
 from src.services.scraping.aggregate import aggregate_old_checks
 from src.services.scraping.alerts import AlertCandidate, queue_price_drop_alerts
@@ -883,6 +884,7 @@ async def _usual(
     ref = EbayPriceRef(
         id=uuid.uuid4(),
         movie_id=movie.id,
+        found_for=stamp(movie),
         format_code=format_code,
         status="priced",
         median=Decimal(median),

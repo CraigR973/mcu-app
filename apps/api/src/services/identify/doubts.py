@@ -51,6 +51,7 @@ from src.models.reviews import FilmReview
 from src.models.specs_backfill import SpecCandidate, SpecLookup
 from src.models.watch_log import WatchLog
 from src.services.audit import record_action
+from src.services.found_for import stamp_of_copy
 from src.services.identification import (
     MOVIES_TABLE,
     Identified,
@@ -576,11 +577,30 @@ async def reaccept_disagreeing_page(
     db: AsyncSession, doubt: IdentifyDoubt, *, by: uuid.UUID | None
 ) -> None:
     """Choose again the disc page that raised a doubt, once the copy is another film, so the
-    next spec run reads it against that film's year. Does not commit."""
-    lookup = await _spec_lookup_waiting(db, doubt)
-    if lookup is None or not doubt.page_url:
+    next spec run reads it against that film's year. Does not commit.
+
+    AG4: identifying the film forgets the copy's lookup, which answered the film as it was, so
+    the page is chosen again on a lookup of its own, stamped with the film the copy is on now.
+    """
+    if doubt.source != "specs" or doubt.collection_item_id is None or not doubt.page_url:
         return
+    lookup = await db.scalar(
+        select(SpecLookup).where(SpecLookup.collection_item_id == doubt.collection_item_id)
+    )
+    if lookup is not None and lookup.status != "needs_you":
+        return
+    found_for = await stamp_of_copy(db, doubt.collection_item_id)
+    if lookup is None:
+        lookup = SpecLookup(
+            id=uuid.uuid4(),
+            collection_item_id=doubt.collection_item_id,
+            found_for=found_for,
+            status="accepted",
+            attempts=0,
+        )
+        db.add(lookup)
     lookup.status = "accepted"
+    lookup.found_for = found_for
     lookup.accepted_url = doubt.page_url
     lookup.how = "auto"
     lookup.note = None

@@ -40,6 +40,7 @@ from src.models.profile import Profile
 from src.models.specs_backfill import SpecCandidate, SpecLookup
 from src.models.watch_log import WatchLog
 from src.routers.movies import get_tmdb_client
+from src.services.found_for import stamp_of_copy
 from src.services.health_checks import check_identification
 from src.services.identify.doubts import (
     SPECS_IN_DOUBT,
@@ -99,7 +100,12 @@ async def page(db: AsyncSession) -> AsyncIterator[tuple[AsyncClient, Profile, Fa
 async def _waiting_spec_page(db: AsyncSession, disc_id: uuid.UUID, note: str) -> SpecLookup:
     """A disc sent back by the spec job, with the search result its page was chosen from."""
     lookup = SpecLookup(
-        id=uuid.uuid4(), collection_item_id=disc_id, status="needs_you", note=note, attempts=0
+        id=uuid.uuid4(),
+        collection_item_id=disc_id,
+        found_for=await stamp_of_copy(db, disc_id),
+        status="needs_you",
+        note=note,
+        attempts=0,
     )
     db.add(lookup)
     await db.flush()
@@ -288,11 +294,19 @@ async def test_identifying_it_again_settles_the_doubt_and_its_undo_opens_it_agai
     assert corrected.status_code == 200 and corrected.json()["outcome"] == "identified"
     await db.refresh(film)
     await db.refresh(doubt)
-    await db.refresh(lookup)
     assert (film.tmdb_id, film.year) == (right, 1957)
     assert doubt.status == "corrected" and doubt.decided_action_id is not None
-    # The disc page that disagreed is chosen again, to be read against 1957.
-    assert (lookup.status, lookup.accepted_url, lookup.how) == ("accepted", KWAI_PAGE, "auto")
+    # The disc page that disagreed is chosen again, to be read against 1957: on a lookup of
+    # its own, since the correction forgot the one that answered the 2007 film (AG4).
+    assert await db.get(SpecLookup, lookup.id, populate_existing=True) is None
+    again = await db.scalar(
+        select(SpecLookup)
+        .where(SpecLookup.collection_item_id == disc.id)
+        .execution_options(populate_existing=True)
+    )
+    assert again is not None
+    assert (again.status, again.accepted_url, again.how) == ("accepted", KWAI_PAGE, "auto")
+    assert again.found_for == f"film:{right}"
     detail = (await client.get(f"/api/v1/movies/{film_id}")).json()
     assert detail["identificationDoubt"] is None
 

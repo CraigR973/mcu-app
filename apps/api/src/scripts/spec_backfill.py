@@ -14,6 +14,10 @@ films' reviews on Blu-ray.com and AVForums, then up to 150 Blu-ray.com pages rea
 review scores, owned films' from their spec pages. It runs in this process, after the spec
 batch, so no two requests to Blu-ray.com are ever less than five seconds apart.
 
+**First, what was found for another film is forgotten** (AG4, `services/found_for.py`): every
+review, eBay value, used listing and disc page whose film has changed since, so both batches look
+them up again. Past 50 rows it forgets nothing and the job counts a failure, for the daily check.
+
 It **exits non-zero** when a batch stopped on errors or the integration is halted, so a job
 that quietly did nothing does not look like a quiet night.
 """
@@ -24,11 +28,13 @@ import asyncio
 import sys
 
 import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import AsyncSessionLocal
 from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecRun
 from src.services import heartbeat
+from src.services.found_for import nightly_sweep
 from src.services.imdb_ratings import refresh_ratings
 from src.services.reviews import batch as reviews
 from src.services.specs.backfill import Coverage, StartOutcome, coverage, start_run, work_run
@@ -88,8 +94,32 @@ def report_reviews(run: ReviewRun | None) -> int:
     return 1 if run.status in ("stopped", "halted") else 0
 
 
+async def sweep(db: AsyncSession) -> tuple[int, str | None]:
+    """AG4's catch-all, guarded: its exit code and what went wrong, if anything."""
+    try:
+        forgotten = await nightly_sweep(db)
+    except Exception as exc:  # noqa: BLE001 - preserve the batches; fail this nightly pass
+        await db.rollback()
+        error = f"{type(exc).__name__}: {exc}"[:300]
+        print(f"Found for another film: the sweep failed: {error}", file=sys.stderr)
+        return 1, error
+    counts = ", ".join(f"{table} {count}" for table, count in forgotten.counts.items() if count)
+    if forgotten.refused:
+        error = (
+            f"{forgotten.total} rows answer another film, over the {forgotten.limit} the nightly "
+            f"sweep forgets on its own; nothing forgotten ({counts})"
+        )
+        print(f"Found for another film: {error}", file=sys.stderr)
+        return 1, error
+    print(
+        f"Found for another film: {forgotten.total} forgotten" + (f" ({counts})" if counts else "")
+    )
+    return 0, None
+
+
 async def main() -> int:
     async with BraveSearch() as brave, httpx.AsyncClient() as client, AsyncSessionLocal() as db:
+        sweep_code, sweep_error = await sweep(db)
         imdb_code = 0
         imdb_error = None
         try:
@@ -115,8 +145,8 @@ async def main() -> int:
             heartbeat.SPECS,
             "IMDb ratings failed" if imdb_code else done.replace("_", " "),
             # AG2: the failure figure counts what the exit code is about.
-            failures=imdb_code + (1 if code else 0),
-            detail={"imdbError": imdb_error},
+            failures=sweep_code + imdb_code + (1 if code else 0),
+            detail={"imdbError": imdb_error, "foundForError": sweep_error},
         )
         # Its own Brave client, so its run counts only its own searches.
         async with BraveSearch() as review_brave:
@@ -125,7 +155,7 @@ async def main() -> int:
                 review_run = await reviews.work_run(
                     db, review_run, searcher=review_brave, client=client
                 )
-    return max(imdb_code, code, report_reviews(review_run))
+    return max(sweep_code, imdb_code, code, report_reviews(review_run))
 
 
 if __name__ == "__main__":

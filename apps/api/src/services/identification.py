@@ -24,6 +24,11 @@ identical.
   collection refresh still finds the film by the spreadsheet's spelling (#198).
 - **:func:`undo_identification` reverses one**, merges included.
 
+**AG4 (#388): what was found for the film goes with what it was.** Every review, eBay value, used
+listing and disc page is stamped with the film it was found for (`services/found_for.py`), and an
+identification, its undo and a merge each forget, in their own transaction, what answered the
+film as it was. A merge also moves the film's cinema listings (CR49-05), which it used to drop.
+
 **Batch Y3 identifies TV series too.** A series' TMDB id goes in ``movies.tmdb_tv_id``, never
 ``tmdb_id``, which every other module reads as a film's; identifying a row as one kind clears
 the other's id, so a film matched by mistake can be corrected to the series it is, and back.
@@ -37,13 +42,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import Subquery, and_, delete, exists, func, select, update
+from sqlalchemy import and_, delete, exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from src.clock import utcnow
 from src.models.admin_action import AdminAction
 from src.models.barcode import BarcodeLookup
+from src.models.cinema import CinemaFilm
 from src.models.collection_item import CollectionItem
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayTarget
@@ -54,6 +60,7 @@ from src.models.release_calendar import ReleaseCalendarEntry
 from src.models.wanted import WantedItem
 from src.models.watch_log import WatchLog
 from src.services.audit import record_action
+from src.services.found_for import forget_found_for_another_film
 from src.services.movie_metadata import (
     credit_rows,
     movie_metadata_values,
@@ -203,6 +210,24 @@ class Merge:
             "moved": self.moved,
             "dropped": self.dropped,
         }
+
+
+#: Every table a merge moves to the film merged into, and an undo moves back (AG4: CI checks
+#: this against `services/found_for.FILM_LINKS` and every foreign key to ``movies``).
+MOVED_ON_MERGE: dict[str, Any] = {
+    "collection_items": CollectionItem,
+    "watch_log": WatchLog,
+    "wanted_list": WantedItem,
+    "movie_night_votes": MovieNightVote,
+    "movie_night_suggestions": MovieNightSuggestion,
+    "release_calendar": ReleaseCalendarEntry,
+    "barcode_lookups": BarcodeLookup,
+    "deals": Deal,
+    "movie_title_aliases": MovieTitleAlias,
+    "ebay_targets": EbayTarget,
+    "identify_doubts": IdentifyDoubt,
+    "cinema_films": CinemaFilm,
+}
 
 
 def _ids(rows: Any) -> list[str]:
@@ -355,6 +380,9 @@ async def move_references(db: AsyncSession, source_id: uuid.UUID, target_id: uui
     merge.moved["movie_title_aliases"] = await move(MovieTitleAlias)
     # Batch X9: a film's doubts go with it, so the merge that settles one can be undone.
     merge.moved["identify_doubts"] = await move(IdentifyDoubt)
+    # AG4 (CR49-05): a cinema listing agreed to be the merged-away film is the film merged
+    # into. ``SET NULL`` used to unlink it until the next read of a cinema still showing it.
+    merge.moved["cinema_films"] = await move(CinemaFilm)
     return merge
 
 
@@ -569,6 +597,8 @@ async def identify_film(
         changes=changes,
     )
     await db.flush()
+    # AG4: what was found for the film as it was answered another film.
+    await forget_found_for_another_film(db, films=[target.id])
     if doubts:
         await db.execute(
             update(IdentifyDoubt)
@@ -626,38 +656,6 @@ async def set_aside(
     )
     await db.flush()
     return lookup
-
-
-# ---------------------------------------------------------------------------
-# Corrections, as what was found for a film reads them
-# ---------------------------------------------------------------------------
-
-#: The audited changes that make a film another film: a correction of its match, wherever it
-#: was made, and an undo of one. A merge writes an ``identify`` too, with a ``merge`` key, and
-#: is not one: the film merged into is still the film it was.
-CORRECTIONS = ("identify", "undo_identify")
-
-
-def latest_corrections() -> Subquery:
-    """Each corrected film's id, as text as the audit holds it (``movie_id``), and when its
-    match was last corrected (``corrected_utc``).
-
-    What was found for a film before then answered another film: its reviews (#378) and its
-    discs' pages (#380) are looked up again.
-    """
-    return (
-        select(
-            AdminAction.target_id.label("movie_id"),
-            func.max(AdminAction.created_at).label("corrected_utc"),
-        )
-        .where(
-            AdminAction.target_table == MOVIES_TABLE,
-            AdminAction.changes["kind"].astext.in_(CORRECTIONS),
-            AdminAction.changes["merge"].astext.is_(None),
-        )
-        .group_by(AdminAction.target_id)
-        .subquery()
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -782,6 +780,8 @@ async def undo_identification(
         },
     )
     await db.flush()
+    # AG4: an undo is a correction too: what was found for the film it undoes goes.
+    await forget_found_for_another_film(db, films=[restored.id])
     return restored
 
 
@@ -824,20 +824,7 @@ async def _move_back(
     source_id: uuid.UUID,
     target_id: uuid.UUID,
 ) -> None:
-    models: dict[str, Any] = {
-        "collection_items": CollectionItem,
-        "watch_log": WatchLog,
-        "wanted_list": WantedItem,
-        "movie_night_votes": MovieNightVote,
-        "movie_night_suggestions": MovieNightSuggestion,
-        "release_calendar": ReleaseCalendarEntry,
-        "barcode_lookups": BarcodeLookup,
-        "deals": Deal,
-        "movie_title_aliases": MovieTitleAlias,
-        "ebay_targets": EbayTarget,
-        "identify_doubts": IdentifyDoubt,
-    }
-    for table, model in models.items():
+    for table, model in MOVED_ON_MERGE.items():
         ids = [uuid.UUID(value) for value in moved.get(table, [])]
         if ids:
             await db.execute(

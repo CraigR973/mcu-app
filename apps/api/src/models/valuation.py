@@ -182,6 +182,10 @@ class DiscValuation(Base, UUIDPrimaryKeyMixin):
     run_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("valuation_runs.id", ondelete="SET NULL"), nullable=True
     )
+    #: AG4: the film this was found for, as ``services/found_for.identity`` writes it
+    #: (``film:<TMDB id>``, ``tv:<id>`` or ``none``). A row that no longer matches its film is
+    #: forgotten and looked up again.
+    found_for: Mapped[str] = mapped_column(Text, nullable=False)
 
     @property
     def sales_backed(self) -> bool:
