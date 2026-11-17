@@ -61,8 +61,10 @@ async def main() -> int:
             run = await work_run(db, client, outcome.run.id) if outcome.run else None
             # Batch X2: a beat whatever happened, so "nothing due" reads differently from stopped.
             done = run.status if run is not None else outcome.reason
-            await heartbeat.beat(db, heartbeat.VALUES, done.replace("_", " "))
-    return report(outcome, run)
+            code = report(outcome, run)
+            # AG2: a run the exit code calls failed counts as a failure in the heartbeat too.
+            await heartbeat.beat(db, heartbeat.VALUES, done.replace("_", " "), failures=code)
+    return code
 
 
 if __name__ == "__main__":

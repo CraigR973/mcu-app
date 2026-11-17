@@ -160,3 +160,28 @@ async def test_the_daily_check_has_a_row_for_every_scheduled_thing(db: AsyncSess
 @pytest.mark.parametrize("thing", heartbeat.SCHEDULED, ids=lambda thing: thing.job)
 def test_each_cadence_is_its_schedule_plus_a_margin(thing: heartbeat.Scheduled) -> None:
     assert timedelta(hours=1) < thing.cadence <= timedelta(days=17)
+
+
+def test_every_beat_of_a_scheduled_thing_counts_its_failures() -> None:
+    """The rule's other half: a beat with no failure figure says nothing went wrong, always."""
+    import ast
+
+    names = {f"heartbeat.{constant_for(thing.job)}" for thing in heartbeat.SCHEDULED}
+    names.add("HEARTBEAT")  # the cinema programme's, `heartbeat.CINEMAS` by another name
+    silent = []
+    found = 0
+    for path in sorted((API / "src").rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "beat"
+                and len(node.args) >= 2
+                and ast.unparse(node.args[1]) in names
+            ):
+                continue
+            found += 1
+            if not any(keyword.arg == "failures" for keyword in node.keywords):
+                silent.append(f"{path.relative_to(API)}:{node.lineno}")
+    assert found >= 9, f"the scan found only {found} beats; it has stopped reading them"
+    assert silent == [], f"these beats carry no failure figure: {silent}"

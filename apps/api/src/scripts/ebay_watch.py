@@ -66,13 +66,17 @@ async def main() -> int:
             outcome = await start_run(db, trigger="job")
             if outcome.run is None:
                 # Batch X2: a beat when no pass starts, so idle reads differently from stopped.
-                await heartbeat.beat(db, heartbeat.EBAY, outcome.reason.replace("_", " "))
                 watch_code = report(outcome, None)
+                await heartbeat.beat(
+                    db, heartbeat.EBAY, outcome.reason.replace("_", " "), failures=watch_code
+                )
             else:
                 result = await work_run(db, client, outcome.run.id)
                 await deliver_now(db, result.told)
                 # Batch X3: "pushed" is what reached a phone, not what was queued.
                 await record_delivered(db, result.run)
+                watch_code = report(outcome, result.run)
+                # AG2: a run the exit code calls failed counts as a failure in the heartbeat.
                 await heartbeat.beat(
                     db,
                     heartbeat.EBAY,
@@ -80,8 +84,8 @@ async def main() -> int:
                         f"{result.run.status.replace('_', ' ')}, "
                         f"{result.run.listings_seen} listings read"
                     ),
+                    failures=watch_code,
                 )
-                watch_code = report(outcome, result.run)
             if watch_code:
                 return watch_code
             used_reason, used_run = await start_used_run(db, trigger="job")

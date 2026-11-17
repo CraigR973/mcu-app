@@ -114,6 +114,8 @@ async def main() -> int:
             db,
             heartbeat.SPECS,
             "IMDb ratings failed" if imdb_code else done.replace("_", " "),
+            # AG2: the failure figure counts what the exit code is about.
+            failures=imdb_code + (1 if code else 0),
             detail={"imdbError": imdb_error},
         )
         # Its own Brave client, so its run counts only its own searches.

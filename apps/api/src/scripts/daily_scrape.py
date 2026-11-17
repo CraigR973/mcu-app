@@ -118,7 +118,10 @@ async def _run(*, dry_run: bool, retention_days: int) -> int:
                 )
             await db.commit()
             if not dry_run:
-                await heartbeat.beat(db, heartbeat.SCRAPE, outcome_word(summary))
+                # AG2: the failure figure is what the exit code is about, the real failures.
+                await heartbeat.beat(
+                    db, heartbeat.SCRAPE, outcome_word(summary), failures=real_failures(summary)
+                )
     finally:
         await engine.dispose()
     return report(summary, dry_run=dry_run)
