@@ -179,3 +179,121 @@ def test_a_review_whose_film_ends_in_a_numeral_or_a_kind_word_is_found() -> None
     assert [hit.format_code for hit in avforums_hits([rocky], "Rocky IV")] == ["4k_uhd"]
     assert avforums_hits([rocky], "Rocky") == []
     assert [hit.format_code for hit in avforums_hits([bee], "Bee Movie")] == ["blu_ray"]
+
+
+# ---------------------------------------------------------------------------
+# AG7 (CR49-03, CT52-05): the cinema site joins the table
+# ---------------------------------------------------------------------------
+
+#: The cinema matcher's pairs: (a, b, one title for a cinema listing). Fifteen crafted pairs, on
+#: which the old cinema rule and the shared fold disagreed on twelve, and the table above's
+#: spellings, which the cinema rule must answer as every other site does.
+CINEMA_PAIRS: list[tuple[str, str, bool]] = [
+    ("Cowboys v Aliens", "Cowboys & Aliens", True),
+    ("Dune: Part Two", "Dune: Part 2", True),
+    ("Dune: Part Two", "Dune 2", True),
+    ("Rocky II", "Rocky 2", True),
+    ("Kill Bill: Vol. 1", "Kill Bill: Volume 1", True),
+    ("Ocean's Eleven", "Ocean's 11", True),
+    ("Ocean’s Eleven", "Oceans 11", True),
+    ("Spider-Man: No Way Home", "Spiderman: No Way Home", True),
+    ("Star Wars Ep IV A New Hope", "Star Wars: Episode IV - A New Hope", True),
+    ("Batman v Superman", "Batman vs Superman", True),
+    ("Léon: The Professional", "Leon: The Professional", True),
+    ("The Thing", "Thing", True),
+    ("Speed", "Speed 2: Cruise Control", False),
+    ("Rocky", "Rocky IV", False),
+    ("The Collector", "The Collection", False),
+]
+
+
+@pytest.mark.parametrize(
+    ("a", "b", "same"), CINEMA_PAIRS, ids=[f"{a} ~ {b}" for a, b, _ in CINEMA_PAIRS]
+)
+def test_the_cinema_rule_gives_the_table_s_answer_in_both_orders(
+    a: str, b: str, same: bool
+) -> None:
+    from src.services.cinemas import identity
+
+    assert len(CINEMA_PAIRS) == 15
+    assert identity.same_title(a, b) is same
+    assert identity.same_title(b, a) is same
+    assert (identity.normal(a) == identity.normal(b)) is (same and "Thing" not in a)
+
+
+@pytest.mark.parametrize(("a", "b", "words", "title", "identify"), PAIRS, ids=IDS)
+def test_the_cinema_rule_agrees_with_the_catalogue_level_where_a_listing_can_say_it(
+    a: str, b: str, words: bool, title: bool, identify: bool
+) -> None:
+    """The cinema rule is the catalogue level less what a listing never carries: library order
+    ("Mummy, The") and a catalogue's brackets, year and edition words, which `read_title` and
+    the film's own facts deal with first. On every other pair it answers exactly as the
+    catalogue level does."""
+    from src.services.cinemas import identity
+
+    del words, identify
+    carries_what_a_listing_never_does = (
+        ", The" in a or ", The" in b or "(" in a or "(" in b or "Final Cut" in a or "Final Cut" in b
+    )
+    if carries_what_a_listing_never_does:
+        return
+    assert identity.same_title(a, b) is title or identity.normal(a) == identity.normal(b)
+
+
+#: The three live listings that slipped the old prefixes and suffixes (16 Nov): a typographic
+#: apostrophe, a society's "Curates:", and an unconfirmed certificate. (title, query it reads as,
+#: whether it reads as a preview)
+LIVE_TITLES = [
+    ("Members’ Preview: Focker-In–Law", "Focker-In-Law", True),
+    ("RCS Curates: No Country for Old Men + discussion", "No Country for Old Men", False),
+    (
+        "The Further Mis-adventures of Cliff Booth - IMAX 2D (18 TBC)",
+        "The Further Mis-adventures of Cliff Booth",
+        False,
+    ),
+]
+
+
+@pytest.mark.parametrize(("title", "query", "preview"), LIVE_TITLES)
+def test_the_three_live_titles_read_as_the_films_they_are(
+    title: str, query: str, preview: bool
+) -> None:
+    from src.services.cinemas import identity
+
+    read = identity.read_title(title, date(2026, 11, 17))
+    assert read.query == query
+    assert read.preview is preview
+    assert read.event is None
+    # And the cleaned title meets the film's own spelling, as a TMDB candidate would give it.
+    assert identity.same_title(read.query, query.replace("-", " "))
+
+
+def test_a_typographic_apostrophe_or_dash_no_longer_hides_a_decoration() -> None:
+    from src.services.cinemas import identity
+
+    shown = date(2026, 11, 17)
+    for apostrophe in ("'", "’", "‘"):
+        assert identity.read_title(f"Members{apostrophe} Preview: Fjord", shown).query == "Fjord"
+    assert identity.read_title("Fjord – IMAX 2D (12A)", shown).query == "Fjord"
+    assert identity.read_title("Fjord — 4K", shown).query == "Fjord"
+    # A film's own apostrophe is kept, written plain, for the search.
+    assert (
+        identity.read_title("Don’t Cry, Pretty Girls!", shown).query == "Don't Cry, Pretty Girls!"
+    )
+
+
+def test_only_title_key_normalises_unicode() -> None:
+    """AG7 (CR49-03): a second rule for "is this the same title?" is how the cinema code came to
+    differ from the rest. No module but `title_key.py` may call `unicodedata.normalize`; a site
+    that needs it asks `fold`. Nothing is allowed through today."""
+    from pathlib import Path
+
+    allowed: set[str] = {"services/title_key.py"}
+    src = Path(__file__).resolve().parents[1] / "src"
+    offenders = [
+        str(path.relative_to(src))
+        for path in sorted(src.rglob("*.py"))
+        if "unicodedata.normalize" in path.read_text(encoding="utf-8")
+        and str(path.relative_to(src)) not in allowed
+    ]
+    assert offenders == []

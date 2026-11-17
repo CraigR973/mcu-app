@@ -148,6 +148,39 @@ ARTICLES = frozenset({"the", "a", "an"})
 _CONJUNCTIONS = {"&": " and ", "+": " and "}
 
 
+#: Typographic marks a listing or a page may use for a plain one, so a pattern written with the
+#: plain mark still meets them (AG7, CT52-05: "Members’ Preview:" slipped a rule that expected
+#: "Members' Preview:").
+_PLAIN_MARKS = str.maketrans(
+    {
+        "’": "'",
+        "‘": "'",
+        "ʼ": "'",
+        "´": "'",
+        "“": '"',
+        "”": '"',
+        "‐": "-",
+        "‑": "-",
+        "–": "-",
+        "—": "-",
+        "\u00a0": " ",
+    }
+)
+
+
+def plain_marks(text: str) -> str:
+    """``text`` with typographic apostrophes, quotes and dashes written as plain ones. For a
+    caller that reads a title with patterns; :func:`fold` already reads every mark alike."""
+    return text.translate(_PLAIN_MARKS)
+
+
+def compact(folded: str) -> str:
+    """A folded title with its spaces gone, so "spider man" meets "spiderman" (AG7, CR49-03).
+    The cinema rule compares at this level on top of :func:`fold`; its keys and its matching
+    are both built on the one fold, never on a rule of their own."""
+    return folded.replace(" ", "")
+
+
 def fold(title: str) -> str:
     """Reduce a title to the form two spellings of one title share.
 

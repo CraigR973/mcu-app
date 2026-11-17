@@ -20,10 +20,11 @@ otherwise Unclassified. Each label keeps its reason in words.
 from __future__ import annotations
 
 import re
-import unicodedata
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Literal
+
+from src.services.title_key import ARTICLES, compact, fold, plain_marks
 
 FIRST_RUN = timedelta(weeks=16)
 RERUN = timedelta(days=365)
@@ -34,17 +35,22 @@ Category = Literal["newRelease", "olderFilm", "unclassified"]
 
 
 def normal(value: str) -> str:
-    value = unicodedata.normalize("NFKD", value).casefold().replace("&", "and")
-    return "".join(c for c in value if c.isalnum())
+    """A title's comparison key: ``title_key.fold``, spaces gone (AG7, CR49-03). "Part Two" and
+    "Part 2", "Rocky II" and "Rocky 2", "&" and "and", "Vol." and "Volume" share a key, as they do
+    everywhere else a title is compared (`title_key.py`); "Spider-Man" meets "Spiderman" on top."""
+    return compact(fold(value))
 
 
 def same_title(a: str, b: str) -> bool:
-    """Equal titles, ignoring case, punctuation and a leading article a listing may drop."""
+    """One title, by the shared fold, ignoring a leading article a listing may drop. An empty key
+    is no title."""
 
     def bare(value: str) -> str:
-        return normal(re.sub(r"^\s*(?:the|a|an)\s+", "", value, flags=re.I))
+        words = fold(value).split()
+        return compact(" ".join(words[1:] if len(words) > 1 and words[0] in ARTICLES else words))
 
-    return normal(a) == normal(b) or bare(a) == bare(b)
+    key = normal(a)
+    return bool(key) and (key == normal(b) or bare(a) == bare(b))
 
 
 #: Live and staged events, television and programmes of shorts: never one film (#335).
@@ -64,7 +70,10 @@ _PREFIXES = re.compile(
     r"^\s*(?:\(imax\)\s*|throwback:\s*|toddler club:\s*|members'? preview:\s*|kids'? club:\s*"
     r"|parent (?:and|&) baby:\s*|autism friendly:\s*|silver screen:\s*"
     # AE4: the Omniplex's subtitled, accessible screenings name the film after the club.
-    r"|access film club:\s*)+",
+    r"|access film club:\s*"
+    # AG7 (CT52-05): "RCS Curates: No Country for Old Men + discussion" names the film after the
+    # society that chose it.
+    r"|(?:[\w.&' -]{1,40}?\s)?curates:\s*)+",
     re.I,
 )
 #: Decorations a listing adds to a film's own title: a run label, a format, a language, a
@@ -73,7 +82,8 @@ _SUFFIXES = re.compile(
     r"(?:\s*[-–:]?\s*(?:"
     r"\(?(?:\d+(?:st|nd|rd|th) anniversary(?: \d+k restoration)?|\d+k restoration|4k"
     r"|restored|re-?release|reissue)\)?"
-    r"|imax(?: 2d| 3d)?(?: \(\w+\))?"
+    # A certificate may be a word or an unconfirmed one: "(12A)", "(18 TBC)".
+    r"|imax(?: 2d| 3d)?(?: \([\w ]{1,10}\))?"
     r"|\((?:hindi|tamil|telugu|japanese|korean|mandarin|english dubbed|subtitled|dubbed)\)"
     r"|unlimited screening"
     r"|\+ (?:discussion|q\s*&\s*a|intro|introduction|panel)"
@@ -100,7 +110,8 @@ class Title:
 
 
 def read_title(title: str, shown: date) -> Title:
-    raw = " ".join(title.split())
+    # Typographic apostrophes and dashes read as plain ones before any pattern (AG7, CT52-05).
+    raw = " ".join(plain_marks(title).split())
     if _EVENT.search(raw):
         return Title(query=raw, event="a live or staged event, not a film")
     if _DOUBLE.search(raw):
