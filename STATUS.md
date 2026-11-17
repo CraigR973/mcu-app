@@ -2,6 +2,17 @@
 
 ## Now
 
+**17 Nov, 00:03 GMT: AG1 shipped, the 08:00 job survives one person's failure (PR 163, `1e14283`,
+#384); Group AG sitting 1 continues with AG2.** One person's failed watch-history sync used to
+read the profile after its rollback, crash, skip the other person and stop the job before
+delivery, the heartbeat, the cinema refresh and the digest (CR49-01, proved in a clone, never seen
+live). The sync now records the failure on a committed run row and the next person syncs; the sync,
+the cinema refresh, the cinema check and the digest each run guarded, so one step's failure is
+printed and the rest still run. CI now refuses an attribute read after a rollback inside an
+`except`. Production API and web on `1e14283`, `db: ok`, every readiness field `configured`.
+**Read back after the 17 Nov 08:00 run:** each person's sync row, if one was due, and the digest
+sent. The 08:00 run carries AG1, as the owner accepted.
+
 **16 Nov, 22:01 GMT: wave 2's review is accepted, and its fixes are planned as Group AG (#383).**
 The review (Batches 49–54, PR 162) found 32 issues: 0 High, 3 Med-High, 17 Medium, 12 Low
 (`docs/reviews/BATCH_49-54_ROADMAP.md`). At the owner's go its fixes are Group AG in the ledger:
@@ -653,6 +664,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **17 Nov, 00:03 GMT — PR 163 merged: AG1, the 08:00 job survives one person's failure (`1e14283c901d3fd0028cdc91caa9ab45ecba7742`, #384).**
+  A fast-forward of `main`. CI's seven jobs green on the PR, the end-to-end job included (skips as on
+  `main`); production API and web on the merged commit, `db: ok`, every readiness field `configured`.
 - **16 Nov, 22:34 GMT — PR 162 merged: the wave 2 review and its rows (`a680f7a9dc535e4dca25ac55ee937458a5c1ac42`).** A fast-forward
   of `main`. CI's seven jobs green on the PR's last commit, the end-to-end job included; production
   API and web report the merged commit, `db: ok`, and push, ai, ebay, tmdb and brave `configured`.

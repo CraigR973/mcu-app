@@ -8388,3 +8388,24 @@ contemporaneous.
        top tier, since it changes the login lockout.
      - **First names in the review's docs stay** (the scope note, R1 and R2): both are already
        public across the repo.
+
+384. **AG1: the 08:00 job survives one person's failure (17 Nov, CR49-01).** Group AG's first batch,
+     started with sitting 1 at the owner's go on 16 Nov (#383). PR 163, `1e14283`.
+     - **What changed:** the weekly Letterboxd sync takes each person's id and name as plain values
+       before syncing anyone, reads the profile afresh for its own sync, and writes a failure on a
+       run row of its own, committed. The 08:00 job runs the sync on a session of its own; the sync,
+       the cinema refresh, the cinema check and the cinema digest each run guarded. The reminders,
+       the daily check and delivery stay unguarded: they are the job's own work.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - A failed person is not due again for a week, since the failed run counts as that week's
+         sync. The alternative, retrying each morning, would repeat a deterministic crash daily.
+       - A guarded step's failure prints its traceback and leaves the job's exit code alone, as
+         the cinema refresh already did; nothing reads Railway's exit codes (L3). AG2 makes the
+         failure reach the daily check through the job's heartbeat.
+       - The rollback guard is a static scan of `src`: after `rollback()` inside an `except`, an
+         attribute may be read only from the session, the exception, an import, a row fetched
+         again, or a name listed as not a row (nine, each with what it is, each checked to be
+         still needed). The scan found no second live instance of CR49-01's bug.
+     - **Unverified until the 17 Nov 08:00 run:** each person's sync row (only if a sync is due)
+       and the digest sent. A real failure was not injected live.
+
