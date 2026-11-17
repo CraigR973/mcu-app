@@ -8409,3 +8409,37 @@ contemporaneous.
      - **Unverified until the 17 Nov 08:00 run:** each person's sync row (only if a sync is due)
        and the digest sent. A real failure was not injected live.
 
+385. **AG2: every scheduled thing watched, by one rule (17 Nov, DS50-01, CR49-04, DS50-05, MK53-02).**
+     Group AG's second batch, closing sitting 1 (#383). PR 164, `efa5f9b`.
+     - **The rule:** `heartbeat.SCHEDULED` lists the eight scheduled things once (the five Railway
+       crons, the cinema programme and the TMDB refresh inside the 08:00 job, and the backup
+       workflow), with a cadence and where each schedule lives. Every beat carries a failure figure
+       (what the run's own exit code is about) and its cadence; the daily check reads every beat,
+       listed or not. CI reads `.railway/railway.ts` and the scheduled workflows and fails on one
+       not listed, not beating, or beating with no failure figure.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **The backup beats through a definer function, not a table grant or a GitHub read.**
+         `record_backup_heartbeat` (migration 079) writes the `backup` row and nothing else; only
+         `mcu_backup` may call it. A table grant would let the role forge any job's beat; reading
+         the workflow's runs from GitHub would need a token on Railway (a credential change) or
+         rely on the repository staying public (#382 says "for now").
+       - **The TMDB refresh moved, not copied:** the calendar read no longer refreshes film details.
+         It runs last in the 08:00 job, after the digest, so a slow TMDB never holds the digest.
+         Never-synced films go first, once; the first run after deploy takes 24 (all watch-only
+         films the weekly sync added bare, read back on 17 Nov through the read-only role).
+       - **`healthy` stays the run table's word for ok** (the table's check constraint and the digest
+         read it); the criterion's "ok" is that state. Metadata waiting for review no longer makes
+         a run `partial`: it is not a cinema reading less.
+       - **"Off its search page" counts only when the page there lists nothing,** so a search
+         that redirects to a priced product page is read as before. A night of nothing for every
+         want counts toward the weekly ask, as the criterion asks, so a shop that stocks none of
+         the wants also goes weekly after seven nights and is named.
+       - **A thing that began beating with AG2 is not "never run" before it could have run:** the
+         TMDB refresh from 18 Nov, 10:00 UTC, the backup from 25 Nov, 08:00 UTC.
+       - **Four test expectations changed, each by a criterion:** the TMDB refresh test now expects
+         a never-synced film refreshed; the calendar test proves the calendar no longer refreshes
+         details; the cinema digest end-to-end case expects a working run to read `healthy`; one
+         job test's fake heartbeat accepts keyword arguments.
+     - **Unverified:** the next daily check's eight rows, the first live TMDB refresh, the backup's
+       first heartbeat (22 Nov), and the shop rule on Zavvi's real redirect (fixture-proved only).
+

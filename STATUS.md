@@ -2,6 +2,23 @@
 
 ## Now
 
+**17 Nov, 00:59 GMT: AG2 shipped, every scheduled thing watched (PR 164, `efa5f9b`, #385); Group AG
+sitting 1 is done.** The daily check read four of the eight scheduled things. Now each is listed
+once with its cadence (`heartbeat.SCHEDULED`), beats with a failure figure, and gets a row: the
+08:00 job (26 h, and the steps, syncs and pushes that failed), the weekly backup (8 days; the
+workflow records each run through `record_backup_heartbeat`, migration 079), the TMDB refresh
+(moved into the 08:00 job, never-synced films first; a row past 165 days), the cinema programme,
+and the four nightly jobs, each now counting its own failures. A cinema switched off after a
+refusal is named. A cinema run is `partial` only when a cinema read less than its source can, so a
+good morning now reads `healthy`. A shop whose search lands off its search page with nothing on it
+counts as refusing, as does a night of nothing for every want, so the weekly ask names it after
+seven nights; a shop asked weekly is a daily-check row. CI fails on a Railway cron or scheduled
+workflow the check does not read. Production API and web on `efa5f9b`, `db: ok`, every readiness
+field `configured`. **Read back:** the next daily check (a row for each of the eight: `job:` for
+seven and `cinema:job`); the first 08:00 run's TMDB refresh (24 never-synced films, all watch-only,
+then the stalest); the backup's first heartbeat after Sunday 22 Nov's run; Zavvi reaching the
+weekly ask after seven nights (about 24 Nov).
+
 **17 Nov, 00:03 GMT: AG1 shipped, the 08:00 job survives one person's failure (PR 163, `1e14283`,
 #384); Group AG sitting 1 continues with AG2.** One person's failed watch-history sync used to
 read the profile after its rollback, crash, skip the other person and stop the job before
@@ -245,8 +262,10 @@ remain unchanged.
 
 ## Next
 
-**Group AG is next (#383): wave 2's fixes, five sittings, each at the owner's go.** Sitting 1 is
-AG1 then AG2 (`/group-start AG · 1`). AG2 by 5 Feb 2027 at the latest; AG6 from 25 Nov.
+**Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2,
+AG3 then AG7 (`/group-start AG · 2`), waits for the owner's go.** AG6 from 25 Nov. Sitting 1's
+read-backs: each person's sync row and the digest on the next 08:00 run; the next daily check's
+row for each of the eight scheduled things; the first TMDB refresh; Sunday 22 Nov's backup beat.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
@@ -664,6 +683,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **17 Nov, 00:59 GMT — PR 164 merged: AG2, every scheduled thing watched (`efa5f9b63ec7320970698ab8bda0ec3a265fefcc`, #385).**
+  A fast-forward of `main`. CI's seven jobs green on the PR's last commit, the end-to-end job
+  included (skips as on `main`); production API and web on the merged commit, `db: ok`, every
+  readiness field `configured`. Group AG sitting 1 done.
 - **17 Nov, 00:03 GMT — PR 163 merged: AG1, the 08:00 job survives one person's failure (`1e14283c901d3fd0028cdc91caa9ab45ecba7742`, #384).**
   A fast-forward of `main`. CI's seven jobs green on the PR, the end-to-end job included (skips as on
   `main`); production API and web on the merged commit, `db: ok`, every readiness field `configured`.
