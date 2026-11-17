@@ -31,7 +31,7 @@ test('AG3 a cinema not read, and a phone with no notifications, are said where e
         now() AT TIME ZONE 'utc',
         CASE WHEN v.slug IN ('odeon-braehead','odeon-kilmarnock') THEN ${sql(sixDaysAgo.toISOString().slice(0, 19))}::timestamp ELSE now() AT TIME ZONE 'utc' END
       FROM cinema_venues v, generate_series(${sql(today)}::date, ${sql(today)}::date + 13, interval '1 day') d;
-      UPDATE push_subscriptions SET revoked_at_utc=now() AT TIME ZONE 'utc', revoked_reason='ag3-e2e' WHERE revoked_at_utc IS NULL`)
+      UPDATE push_subscriptions SET revoked_at_utc=now() AT TIME ZONE 'utc', revoked_reason='removed' WHERE revoked_at_utc IS NULL`)
     for (const person of ['Craig', 'Mark'] as const) {
       for (const theme of ['light', 'dark'] as const) {
         const { context, page } = await signedIn(person)
