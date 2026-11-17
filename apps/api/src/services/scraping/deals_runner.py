@@ -22,7 +22,6 @@ offer is **not better than** what is already owned, using the same `FORMAT_RANK`
 from __future__ import annotations
 
 import asyncio
-import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -44,7 +43,12 @@ from src.services.scraping.deals import (
     extract_deals,
     judge_cards,
 )
-from src.services.scraping.extract import TITLE_NOISE, YEAR_PATTERN, _normalise
+from src.services.scraping.extract import (
+    TITLE_NOISE,
+    YEAR_PATTERN,
+    _normalise,
+    title_year,
+)
 from src.services.scraping.fetcher import (
     FetchedPage,
     FetchError,
@@ -148,18 +152,6 @@ async def already_owned(db: AsyncSession, movie_id: uuid.UUID, format_code: str 
     if format_code is None or format_code not in FORMAT_RANK:
         return True
     return FORMAT_RANK.index(format_code) >= best_owned
-
-
-#: A year a listing names in brackets, the way a shop tells a remake from its original:
-#: "The Mummy (2017)". Brackets only, because a bare number is often the title itself:
-#: "2001: A Space Odyssey", "Blade Runner 2049", "1917".
-BRACKETED_YEAR = re.compile(r"[(\[]((?:19|20)\d{2})[)\]]")
-
-
-def title_year(title: str) -> int | None:
-    """The one year a listing names in brackets, or ``None`` for none or several."""
-    years = {int(year) for year in BRACKETED_YEAR.findall(title)}
-    return years.pop() if len(years) == 1 else None
 
 
 def narrowing_words(title: str) -> list[str]:

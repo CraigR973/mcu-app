@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  assignedReviewSchema,
+  wantProposalSchema,
   identificationDoubtSchema,
   identifyDoubtsSchema,
   activitySchema,
@@ -2761,3 +2763,50 @@ describe('AE3 — Closest to complete names what is missing', () => {
   })
 })
 
+describe('AG5 — any want can ask which film', () => {
+  const review = {
+    id: '3c8bb48b-ac07-4157-bf70-b31c0afc9681',
+    kind: 'wanted_identity',
+    targetId: '30738655-a32f-4004-815d-f4e753c3235b',
+    assignedTo: '30738655-a32f-4004-815d-f4e753c3235c',
+    assigneeName: 'Viewer',
+    movieId: null,
+    title: 'Check Bad Lieutenant: Port of Call New Orleans on Wanted',
+    question: 'Is the wanted film Bad Lieutenant: Port of Call New Orleans (2009) or Bad Lieutenant (1992)?',
+    evidence: '101 Films lists Bad Lieutenant (1992).',
+    choices: [
+      { value: '2009', label: 'Bad Lieutenant: Port of Call New Orleans (2009)' },
+      { value: '1992', label: 'Bad Lieutenant (1992)' },
+      { value: 'unsure', label: 'Not sure yet' },
+    ],
+    revision: 2,
+    answer: '1992',
+    answeredAt: '2026-11-18T09:00:00Z',
+    status: 'answered',
+    canAnswer: true,
+  }
+
+  it('reads a want question whose choices are the years its shops name', () => {
+    expect(assignedReviewSchema.parse(review).answer).toBe('1992')
+    expect(assignedReviewSchema.parse({ ...review, kind: 'titanic_disc', answer: '1953' }).answer).toBe('1953')
+  })
+
+  it('refuses an answer that is neither a year nor one of the fixed words', () => {
+    expect(() => assignedReviewSchema.parse({ ...review, answer: 'the 1992 one' })).toThrow()
+    expect(() => assignedReviewSchema.parse({ ...review, answer: '992' })).toThrow()
+  })
+
+  it('reads a want proposal with the question it would ask', () => {
+    const proposal = wantProposalSchema.parse({
+      kind: 'wanted_identity',
+      targetId: review.targetId,
+      assignedTo: review.assignedTo,
+      expectedFingerprint: 'a'.repeat(64),
+      title: review.title,
+      question: review.question,
+      choices: review.choices.slice(0, 2),
+      assigneeName: 'Viewer',
+    })
+    expect(proposal.choices.map(choice => choice.value)).toEqual(['2009', '1992'])
+  })
+})

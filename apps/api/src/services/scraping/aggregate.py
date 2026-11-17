@@ -27,7 +27,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
-from src.models.price_check import PriceCheck
+from src.models.price_check import PRICED, PriceCheck
 from src.models.price_history import RETENTION_DAYS, PriceHistoryDaily
 
 logger = structlog.get_logger(__name__)
@@ -81,7 +81,9 @@ async def aggregate_old_checks(
                 func.min(PriceCheck.retailer_name_snapshot).label("retailer_name"),
                 func.min(PriceCheck.currency).label("currency"),
             )
-            .where(PriceCheck.checked_at < cutoff)
+            # AG5: another film's listings are never rolled into a want's history; they go
+            # with the rest of the old rows below.
+            .where(PriceCheck.checked_at < cutoff, PRICED)
             .group_by(PriceCheck.wanted_id, PriceCheck.retailer_id, day)
         )
     ).all()

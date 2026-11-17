@@ -28,7 +28,7 @@ from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
-from src.models.price_check import PriceCheck
+from src.models.price_check import PRICED, PriceCheck
 from src.models.reviews import FilmReview
 from src.models.wanted import (
     DEFAULT_RETAILERS,
@@ -97,7 +97,8 @@ async def _shop_prices(
     rows = (
         await db.execute(
             select(PriceCheck)
-            .where(PriceCheck.wanted_id.in_(wanted_ids))
+            # AG5: another film's listing of the title is never this want's price.
+            .where(PriceCheck.wanted_id.in_(wanted_ids), PRICED)
             .order_by(PriceCheck.checked_at.desc())
         )
     ).scalars()

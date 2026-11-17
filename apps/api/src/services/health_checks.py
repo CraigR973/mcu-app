@@ -30,6 +30,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 from src.clock import utcnow
 from src.models.admin_action import AdminAction
 from src.models.ai import AiUsageLogEntry
+from src.models.assigned_review import AssignedReview
 from src.models.cinema import CinemaRefreshRun, CinemaVenue
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.deal import Deal, live_deal
@@ -42,18 +43,20 @@ from src.models.notification import (
     NotificationStatus,
     PushSubscription,
 )
+from src.models.price_check import ANOTHER_YEAR, PriceCheck
 from src.models.price_history import ScrapeRun
 from src.models.profile import Profile, UserRole
 from src.models.specs_backfill import SpecRun
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.valuation import ValuationRun
-from src.models.wanted import Retailer
+from src.models.wanted import Retailer, WantedItem
 from src.services import heartbeat
 from src.services.format_names import formats_phrase
 from src.services.identify.doubts import count_old as count_old_doubts
 from src.services.identify.doubts import count_page_disagreements
 from src.services.identify.queue import count_old_waiting
 from src.services.notifications import queue_notification
+from src.services.scraping.another_film import WANT_QUESTION, other_films
 from src.services.scraping.runner import WEEKLY_AFTER_NIGHTS
 
 logger = structlog.get_logger(__name__)
@@ -411,6 +414,49 @@ async def check_copies_sharing_a_page(db: AsyncSession, now: datetime) -> list[R
     return results
 
 
+async def check_wants_naming_another_film(db: AsyncSession, now: datetime) -> list[Result]:
+    """A want whose shop listings name another film's year, and that has not asked (AG5).
+
+    The shop job records such a listing as the other film's, never as the want's price; this
+    says so to the admin, who can ask which film the want is from Administration (MK53-03).
+    One row per want, cleared when the question is assigned or the listings go.
+    """
+    asked = select(AssignedReview.target_id).where(
+        AssignedReview.kind == WANT_QUESTION, AssignedReview.deleted_at.is_(None)
+    )
+    wants = (
+        await db.execute(
+            select(WantedItem.id, Movie.title, Movie.year)
+            .join(Movie, Movie.id == WantedItem.movie_id)
+            .join(PriceCheck, PriceCheck.wanted_id == WantedItem.id)
+            .where(
+                WantedItem.is_active.is_(True),
+                WantedItem.deleted_at.is_(None),
+                Movie.deleted_at.is_(None),
+                PriceCheck.another_film == ANOTHER_YEAR,
+                WantedItem.id.not_in(asked),
+            )
+            .distinct()
+            .order_by(Movie.title, WantedItem.id)
+        )
+    ).all()
+    results: list[Result] = []
+    for want_id, title, year in wants:
+        others = await other_films(db, want_id)
+        if not others:  # pragma: no cover - the query found one
+            continue
+        listed = "; ".join(f"{', '.join(other.shops)}: {other.label}" for other in others)
+        named = f"{title} ({year})" if year else title
+        results.append(
+            (
+                f"wanted:another-film:{want_id}",
+                f"The shops list another film for the wanted {named} ({listed}), so those "
+                "listings are not its prices. Ask which film it is from Administration.",
+            )
+        )
+    return results
+
+
 async def check_deal_freshness(db: AsyncSession, now: datetime) -> list[Result]:
     """No deal on the page older than its source's freshness: eBay 3 days, shops 2."""
     is_ebay = and_(Deal.retailer_id.is_(None), Deal.retailer_name_snapshot == "eBay")
@@ -646,6 +692,7 @@ CHECKS: Sequence[Check] = (
     check_lockouts,
     check_identification,
     check_copies_sharing_a_page,
+    check_wants_naming_another_film,
     check_deal_freshness,
     check_assistant,
     check_cinemas,

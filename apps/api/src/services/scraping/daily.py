@@ -32,6 +32,7 @@ from src.models.price_history import RETENTION_DAYS, ScrapeRun
 from src.services.notifications import PushSender, deliver_pending
 from src.services.scraping.aggregate import AggregationResult, aggregate_old_checks
 from src.services.scraping.alerts import queue_price_drop_alerts
+from src.services.scraping.another_film import Rejudged, rejudge_stored
 from src.services.scraping.fetcher import RETRY_AFTER_LIMIT_SECONDS
 from src.services.scraping.runner import ScrapeRunResult, run_scrape
 
@@ -49,6 +50,8 @@ class DailyRunSummary:
     run_id: str
     scrape: ScrapeRunResult
     alerts_queued: int = 0
+    #: AG5: what judging the stored listings by each want's film changed, before the scrape.
+    rejudged: Rejudged | None = None
     pushes_sent: int = 0
     aggregation: AggregationResult | None = None
 
@@ -119,7 +122,12 @@ async def run_daily_scrape(
     await db.flush()
 
     kwargs = {} if polite_pause is None else {"polite_pause": polite_pause}
+    rejudged: Rejudged | None = None
     try:
+        if not dry_run:
+            # AG5: the stored listings first, by the same rule tonight's are read with, so a
+            # want corrected or asked since its listings were read is judged as it is now.
+            rejudged = await rejudge_stored(db)
         result = await run_scrape(
             db,
             client=client,
@@ -139,7 +147,7 @@ async def run_daily_scrape(
         logger.exception("daily_scrape_failed")
         raise
 
-    summary = DailyRunSummary(run_id=str(run.id), scrape=result)
+    summary = DailyRunSummary(run_id=str(run.id), scrape=result, rejudged=rejudged)
 
     if not dry_run:
         summary.alerts_queued = await queue_price_drop_alerts(db, result.written_checks, now=now)
@@ -172,6 +180,7 @@ async def run_daily_scrape(
         run_id=summary.run_id,
         attempted=run.attempted,
         not_stocked=run.not_stocked,
+        another_film=result.another_film,
         written=run.written,
         failed=run.failed,
         refused=result.refused,

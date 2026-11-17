@@ -282,15 +282,7 @@
    "AnswerReview": {
     "properties": {
      "answer": {
-      "enum": [
-       "1953",
-       "1997",
-       "1940",
-       "2004",
-       "use_series",
-       "keep_separate",
-       "unsure"
-      ],
+      "pattern": "^(use_series|keep_separate|unsure|(19|20)[0-9]{2})$",
       "title": "Answer",
       "type": "string"
      },
@@ -446,15 +438,7 @@
      "answer": {
       "anyOf": [
        {
-        "enum": [
-         "1953",
-         "1997",
-         "1940",
-         "2004",
-         "use_series",
-         "keep_separate",
-         "unsure"
-        ],
+        "pattern": "^(use_series|keep_separate|unsure|(19|20)[0-9]{2})$",
         "type": "string"
        },
        {
@@ -13053,15 +13037,7 @@
       "type": "string"
      },
      "value": {
-      "enum": [
-       "1953",
-       "1997",
-       "1940",
-       "2004",
-       "use_series",
-       "keep_separate",
-       "unsure"
-      ],
+      "pattern": "^(use_series|keep_separate|unsure|(19|20)[0-9]{2})$",
       "title": "Value",
       "type": "string"
      }
@@ -17566,6 +17542,66 @@
      "recorded"
     ],
     "title": "VoteResponse",
+    "type": "object"
+   },
+   "WantProposal": {
+    "description": "AG5: a want whose shop listings name another film's year, and what it would ask.",
+    "properties": {
+     "assignedTo": {
+      "format": "uuid",
+      "title": "Assignedto",
+      "type": "string"
+     },
+     "assigneeName": {
+      "title": "Assigneename",
+      "type": "string"
+     },
+     "choices": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewChoice"
+      },
+      "title": "Choices",
+      "type": "array"
+     },
+     "expectedFingerprint": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Expectedfingerprint",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "titanic_disc",
+       "wanted_identity",
+       "shetland_series"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "question": {
+      "title": "Question",
+      "type": "string"
+     },
+     "targetId": {
+      "format": "uuid",
+      "title": "Targetid",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "targetId",
+     "assignedTo",
+     "expectedFingerprint",
+     "title",
+     "question",
+     "choices",
+     "assigneeName"
+    ],
+    "title": "WantProposal",
     "type": "object"
    },
    "WantedCreateRequest": {
@@ -25782,6 +25818,37 @@
      }
     ],
     "summary": "Proposals",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/want-proposals": {
+   "get": {
+    "description": "AG5: wants whose shop listings name another film's year, to ask which film.",
+    "operationId": "want_proposals_api_v1_needs_you_reviews_want_proposals_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/WantProposal"
+         },
+         "title": "Response Want Proposals Api V1 Needs You Reviews Want Proposals Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Want Proposals",
     "tags": [
      "needs-you"
     ]

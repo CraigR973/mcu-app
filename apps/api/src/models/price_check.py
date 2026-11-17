@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -19,9 +19,23 @@ from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 CONDITIONS = ("new", "used", "refurbished", "unknown")
 LISTING_TYPES = ("buy_it_now", "auction", "fixed_price", "unknown")
 
+#: AG5 (MK53-03, CT52-04): why a listing that names a want's title is another film's, not its
+#: price (``services/scraping/extract.another_film``). ``year``: it names a year more than one
+#: from the want's film. ``shared_title``: the want has asked "which film?", so its title is
+#: two films', and the listing names no year to say which.
+ANOTHER_YEAR = "year"
+SHARED_TITLE = "shared_title"
+ANOTHER_FILM = (ANOTHER_YEAR, SHARED_TITLE)
+
 
 class PriceCheck(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "price_checks"
+    __table_args__ = (
+        CheckConstraint(
+            "another_film IS NULL OR another_film IN ('year', 'shared_title')",
+            name="ck_price_checks_another_film",
+        ),
+    )
 
     #: Both ``SET NULL``: a price check is a historical fact — "£12.99 at HMV on the
     #: 9th" — and stays true after the wanted entry is removed or the retailer edited.
@@ -48,9 +62,20 @@ class PriceCheck(Base, UUIDPrimaryKeyMixin):
 
     notification_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
+    #: AG5: set when the listing is another film's (:data:`ANOTHER_FILM`), so it is kept, to
+    #: say what the shop has, and never read as the want's price: every reader filters on
+    #: :data:`PRICED`. The shop job writes it, and re-judges stored rows each night with the
+    #: same rule (``services/scraping/another_film.py``).
+    another_film: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     checked_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=UTC_NOW, index=True
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<PriceCheck {self.retailer_name_snapshot} {self.price} {self.currency}>"
+
+
+#: AG5: a row that is the want's own price. Every read of ``price_checks`` for a price filters
+#: on it; a test fails on a reader that does not (``test_wants_know_their_film.py``).
+PRICED = PriceCheck.another_film.is_(None)

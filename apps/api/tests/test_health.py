@@ -193,6 +193,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # AD1 (#351): explicit assigned reviews, separate from derived loan/trip jobs.
         "/api/v1/needs-you/reviews",
         "/api/v1/needs-you/reviews/proposals",
+        # AG5 (MK53-03): wants whose shop listings name another film, to ask which film.
+        "/api/v1/needs-you/reviews/want-proposals",
         "/api/v1/needs-you/reviews/{review_id}",
         "/api/v1/needs-you/reviews/{review_id}/answer",
         "/api/v1/needs-you/reviews/{review_id}/assignee",

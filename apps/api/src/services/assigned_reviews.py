@@ -1,4 +1,10 @@
-"""Private, durable observations, not a second catalogue correction path (AD1)."""
+"""Private, durable observations, not a second catalogue correction path (AD1).
+
+AG5 (amends #351): **any want can ask "which film?"** when its shop listings name another film's
+year (``services/scraping/another_film.py``). Its words are written from those listings when the
+admin assigns it and kept on the row; its choices are the want's film and each other year. The
+Dead Man's Shoes question keeps the words it was asked with.
+"""
 
 from __future__ import annotations
 
@@ -18,17 +24,19 @@ from src.models.assigned_review import AssignedReview
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.identify import IdentifyDoubt
 from src.models.movie import Movie
+from src.models.price_check import ANOTHER_YEAR, PriceCheck
 from src.models.profile import Profile, UserRole
 from src.models.wanted import WantedItem
 from src.schemas.assigned_reviews import (
     AssignedReviewResponse,
     AssignReview,
-    ReviewAnswer,
     ReviewKind,
     ReviewProposal,
+    WantProposal,
 )
 from src.services.collection_additions import MARK_PROFILE_ID
 from src.services.identify.waiting import still_to_identify
+from src.services.scraping.another_film import WANT_QUESTION, other_films
 
 # Approved assignment manifest only; never inserted by a migration or Home read.
 MARK_REVIEW_MOVIES = {
@@ -62,6 +70,62 @@ WORDS = {
         ],
     ),
 }
+
+
+#: A question's words: title, question, evidence and its choices as (value, label).
+Words = tuple[str, str, str, list[tuple[str, str]]]
+
+
+def as_wording(words: Words) -> dict[str, Any]:
+    """Words as a want question's row keeps them (``assigned_reviews.wording``)."""
+    title, question, evidence, choices = words
+    return {
+        "title": title,
+        "question": question,
+        "evidence": evidence,
+        "choices": [{"value": value, "label": label} for value, label in choices],
+    }
+
+
+def wording_of(row: AssignedReview) -> Words:
+    """The row's own words when it has them (a want question), else its kind's fixed words."""
+    if row.wording is None:
+        return WORDS[row.kind]
+    wording = row.wording
+    return (
+        wording["title"],
+        wording["question"],
+        wording["evidence"],
+        [(choice["value"], choice["label"]) for choice in wording["choices"]],
+    )
+
+
+async def want_words(
+    db: AsyncSession, want_id: uuid.UUID, snapshot: dict[str, Any]
+) -> Words | None:
+    """What a want asks, from the other years its shop listings name; ``None`` if none do."""
+    year = snapshot.get("year")
+    if year is None:
+        return None
+    others = await other_films(db, want_id)
+    if not others:
+        return None
+    title = snapshot["title"]
+    film = f"{title} ({year})"
+    choices = [(str(year), film), *((str(other.year), other.label) for other in others)]
+    if len(choices) == 2:
+        question = f"Is the wanted film {choices[0][1]} or {choices[1][1]}?"
+    else:
+        question = f"Which film is the wanted {title}?"
+    listed = "; ".join(
+        f"{', '.join(other.shops)} {'lists' if len(other.shops) == 1 else 'list'} {other.label}"
+        for other in others
+    )
+    evidence = (
+        f"Wanted names the {year} film; {listed}. "
+        "Your answer does not move the want or change its prices."
+    )
+    return (f"Check {title} on Wanted", question, evidence, choices)
 
 
 def fingerprint(snapshot: dict[str, Any]) -> str:
@@ -157,7 +221,7 @@ async def context(
 async def describe(
     db: AsyncSession, row: AssignedReview, reader: Profile
 ) -> AssignedReviewResponse:
-    title, question, evidence, options = WORDS[row.kind]
+    title, question, evidence, options = wording_of(row)
     status: Any = "answered" if row.answer not in (None, "unsure") else "open"
     movie_id: uuid.UUID | None = uuid.UUID(row.snapshot["movieId"])
     try:
@@ -188,7 +252,7 @@ async def describe(
         choices=[{"value": value, "label": label} for value, label in options]
         + [{"value": "unsure", "label": "Not sure yet"}],
         revision=row.revision,
-        answer=cast(ReviewAnswer | None, row.answer),
+        answer=row.answer,
         answeredAt=row.answered_at_utc,
         status=status,
         canAnswer=reader.id == row.assigned_to and status in ("open", "answered"),
@@ -294,10 +358,21 @@ async def assign(db: AsyncSession, payload: AssignReview, actor: Profile) -> Ass
     current, resolved = await context(db, payload.kind, payload.targetId, lock=True)
     if resolved or fingerprint(current) != payload.expectedFingerprint:
         raise _conflict()
-    # This batch supports exactly the three reviewed subjects, not arbitrary misleading cards.
-    if uuid.UUID(current["movieId"]) != MARK_REVIEW_MOVIES[payload.kind]:
-        raise HTTPException(422, "This target is not one of the approved review subjects")
-    validate_subject(payload.kind, current)
+    approved = uuid.UUID(current["movieId"]) == MARK_REVIEW_MOVIES[payload.kind]
+    wording: dict[str, Any] | None = None
+    if payload.kind == WANT_QUESTION and not approved:
+        # AG5: any want whose shop listings name another film's year, in its own words.
+        words = await want_words(db, payload.targetId, current)
+        if words is None:
+            raise HTTPException(422, "This want's shop listings name no other film")
+        wording = as_wording(words)
+    else:
+        # The three reviewed subjects AD1 approved, not arbitrary misleading cards.
+        if not approved:
+            raise HTTPException(422, "This target is not one of the approved review subjects")
+        validate_subject(payload.kind, current)
+        if payload.kind == WANT_QUESTION:
+            wording = as_wording(WORDS[payload.kind])
     review_id = uuid.uuid4()
     inserted = await db.scalar(
         insert(AssignedReview)
@@ -307,6 +382,7 @@ async def assign(db: AsyncSession, payload: AssignReview, actor: Profile) -> Ass
             target_id=payload.targetId,
             assigned_to=payload.assignedTo,
             snapshot=current,
+            wording=wording,
         )
         .on_conflict_do_nothing()
         .returning(AssignedReview.id)
@@ -325,6 +401,7 @@ async def assign(db: AsyncSession, payload: AssignReview, actor: Profile) -> Ass
             "kind": row.kind,
             "targetId": str(row.target_id),
             "snapshot": current,
+            **({"wording": wording} if wording is not None else {}),
         },
         create=True,
     )
@@ -378,3 +455,50 @@ async def proposals(db: AsyncSession) -> list[ReviewProposal]:
             )
         )
     return found
+
+
+async def want_proposals(db: AsyncSession) -> list[WantProposal]:
+    """AG5: each active want whose shop listings name another film's year and that has not
+    asked which film it is, with the words it would ask. Nothing is written or fetched."""
+    await active_person(db, MARK_PROFILE_ID)
+    assignee = await db.get(Profile, MARK_PROFILE_ID)
+    assert assignee is not None  # active_person refused a missing profile
+    asked = select(AssignedReview.target_id).where(
+        AssignedReview.kind == WANT_QUESTION, AssignedReview.deleted_at.is_(None)
+    )
+    wants = (
+        await db.scalars(
+            select(WantedItem.id)
+            .join(PriceCheck, PriceCheck.wanted_id == WantedItem.id)
+            .where(
+                WantedItem.is_active.is_(True),
+                WantedItem.deleted_at.is_(None),
+                PriceCheck.another_film == ANOTHER_YEAR,
+                WantedItem.id.not_in(asked),
+            )
+            .distinct()
+        )
+    ).all()
+    found: list[WantProposal] = []
+    for want_id in wants:
+        try:
+            current, _resolved = await context(db, WANT_QUESTION, want_id)
+        except HTTPException:  # pragma: no cover - its film was deleted since the query
+            continue
+        words = await want_words(db, want_id, current)
+        if words is None:
+            continue
+        title, question, _evidence, choices = words
+        found.append(
+            WantProposal(
+                kind=WANT_QUESTION,
+                targetId=want_id,
+                assignedTo=MARK_PROFILE_ID,
+                expectedFingerprint=fingerprint(current),
+                title=title,
+                question=question,
+                choices=[{"value": value, "label": label} for value, label in choices],
+                assigneeName=assignee.display_name,
+            )
+        )
+    return sorted(found, key=lambda proposal: proposal.title)

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ebay.matching import classify_edition
 from src.ebay.pricing import NEW_CONDITION_ID
-from src.models.price_check import PriceCheck
+from src.models.price_check import PRICED, PriceCheck
 from src.models.wanted import WantedItem
 from src.services.ebay_watch.refs import Yardstick, stored_ref, yardstick
 from src.services.scraping.extract import primary_format
@@ -76,6 +76,8 @@ async def shop_prices(
                 WantedItem.movie_id == movie_id,
                 PriceCheck.checked_at >= now - SHOP_WINDOW,
                 PriceCheck.currency == "GBP",
+                # AG5: a shop's listing of another film of the title is not this film's price.
+                PRICED,
             )
             .order_by(PriceCheck.checked_at.desc())
         )

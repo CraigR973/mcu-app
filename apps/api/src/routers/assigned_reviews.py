@@ -14,6 +14,7 @@ from src.schemas.assigned_reviews import (
     AssignReview,
     ReassignReview,
     ReviewProposal,
+    WantProposal,
 )
 from src.services import assigned_reviews as reviews
 
@@ -39,6 +40,12 @@ async def proposals(_user: AdminUser, db: Database) -> list[ReviewProposal]:
     return await reviews.proposals(db)
 
 
+@router.get("/want-proposals", response_model=list[WantProposal])
+async def want_proposals(_user: AdminUser, db: Database) -> list[WantProposal]:
+    """AG5: wants whose shop listings name another film's year, to ask which film."""
+    return await reviews.want_proposals(db)
+
+
 @router.post("", response_model=AssignedReviewResponse)
 async def assign(payload: AssignReview, user: AdminUser, db: Database) -> AssignedReviewResponse:
     row = await reviews.assign(db, payload, user)
@@ -60,7 +67,7 @@ async def answer(
     # Administrator inspection is not permission to answer on another person's behalf.
     if row.assigned_to != user.id:
         raise HTTPException(403, "Only the assigned person can answer this review")
-    choices = {value for value, _label in reviews.WORDS[row.kind][3]} | {"unsure"}
+    choices = {value for value, _label in reviews.wording_of(row)[3]} | {"unsure"}
     if payload.answer not in choices:
         raise HTTPException(422, "Choose an answer offered by this review")
     if row.answer == payload.answer and payload.revision in (row.revision, row.revision - 1):

@@ -1,6 +1,6 @@
 import {
-  assignedReviewSchema, assignedReviewListSchema, reviewProposalListSchema,
-  type AssignedReview, type ReviewAnswer, type ReviewProposal,
+  assignedReviewSchema, assignedReviewListSchema, reviewProposalListSchema, wantProposalListSchema,
+  type AssignedReview, type ReviewAnswer, type ReviewProposal, type WantProposal,
   activitySchema,
   cinemaFilmDetailSchema,
   cinemaFilmsResponseSchema,
@@ -2991,6 +2991,10 @@ export async function fetchAssignedReviews(allAssignees = false): Promise<Assign
 }
 export async function fetchReviewProposals(): Promise<ReviewProposal[]> {
   return parseResponse(await authFetch('/needs-you/reviews/proposals'), reviewProposalListSchema)
+}
+/** AG5: wants whose shop listings name another film's year, to ask which film. */
+export async function fetchWantProposals(): Promise<WantProposal[]> {
+  return parseResponse(await authFetch('/needs-you/reviews/want-proposals'), wantProposalListSchema)
 }
 export async function assignReview(proposal: ReviewProposal): Promise<AssignedReview> {
   return parseResponse(await authFetch('/needs-you/reviews', { method: 'POST', body: JSON.stringify(proposal) }), assignedReviewSchema)

@@ -2890,7 +2890,9 @@ export const nextTripSchema = z.object({
 })
 // AD1: explicit review observations; answers do not correct catalogue records.
 export const reviewKindSchema = z.enum(['titanic_disc', 'wanted_identity', 'shetland_series'])
-export const reviewAnswerSchema = z.enum(['1953', '1997', '1940', '2004', 'use_series', 'keep_separate', 'unsure'])
+// AG5: a want question's choices are the years its shop listings name, so any year is an answer
+// in shape; the API keeps it to the row's own choices.
+export const reviewAnswerSchema = z.string().regex(/^(use_series|keep_separate|unsure|(19|20)\d{2})$/)
 export const reviewAssignmentSchema = z.object({
   kind: reviewKindSchema,
   targetId: z.string().uuid(),
@@ -2898,6 +2900,12 @@ export const reviewAssignmentSchema = z.object({
   expectedFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
 })
 export const reviewProposalSchema = reviewAssignmentSchema.extend({ title: z.string() })
+/** AG5: a want whose shop listings name another film's year, and what it would ask. */
+export const wantProposalSchema = reviewProposalSchema.extend({
+  question: z.string(),
+  choices: z.array(z.object({ value: reviewAnswerSchema, label: z.string() })),
+  assigneeName: z.string(),
+})
 export const assignedReviewSchema = z.object({
   id: z.string().uuid(),
   kind: reviewKindSchema,
@@ -2917,8 +2925,10 @@ export const assignedReviewSchema = z.object({
 })
 export const assignedReviewListSchema = z.array(assignedReviewSchema)
 export const reviewProposalListSchema = z.array(reviewProposalSchema)
+export const wantProposalListSchema = z.array(wantProposalSchema)
 export type AssignedReview = z.infer<typeof assignedReviewSchema>
 export type ReviewProposal = z.infer<typeof reviewProposalSchema>
+export type WantProposal = z.infer<typeof wantProposalSchema>
 export type ReviewAnswer = z.infer<typeof reviewAnswerSchema>
 
 export const needsYouSchema = z.object({

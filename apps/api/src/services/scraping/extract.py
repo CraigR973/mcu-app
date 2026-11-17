@@ -32,6 +32,8 @@ from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
 
+from src.models.price_check import ANOTHER_YEAR, SHARED_TITLE
+
 #: Symbols and codes a UK retailer might use. Used to *recognise* a price, not to convert
 #: one — a scraper that silently converted currencies would be inventing data.
 CURRENCY_SYMBOLS = {"£": "GBP", "$": "USD", "€": "EUR"}
@@ -179,6 +181,44 @@ TITLE_NOISE = frozenset(
 #: A standalone four-digit year, as shops append it: "Bad Lieutenant (1992)".
 YEAR_PATTERN = re.compile(r"^(?:19|20)\d{2}$")
 
+#: A year a listing names in brackets, the way a shop tells a remake from its original:
+#: "The Mummy (2017)". Brackets only, because a bare number is often the title itself:
+#: "2001: A Space Odyssey", "Blade Runner 2049", "1917".
+BRACKETED_YEAR = re.compile(r"[(\[]((?:19|20)\d{2})[)\]]")
+
+#: How far a listing's year may be from the want's film and still be it: a disc's year is often
+#: the UK release rather than the premiere, as the eBay rule has it (``ebay/matching.py``).
+YEAR_SLACK = 1
+
+
+def title_year(title: str) -> int | None:
+    """The one year a listing names in brackets, or ``None`` for none or several."""
+    years = {int(year) for year in BRACKETED_YEAR.findall(title)}
+    return years.pop() if len(years) == 1 else None
+
+
+def another_film(
+    title: str | None, film_year: int | None, *, needs_year: bool = False
+) -> str | None:
+    """Why a listing that names the want's title is another film's, or ``None`` (AG5).
+
+    The title rules match words, and a year is one of the words a shop adds, so "Bad
+    Lieutenant (1992)" passed for the 2009 film's want and was priced 27 times (MK53-03).
+    So a listing that names a year in brackets must name one within :data:`YEAR_SLACK` of
+    the want's film: otherwise it is another film's (``"year"``). A want that has asked
+    "which film?" has a title two films share, so a listing naming no year cannot say which
+    (``"shared_title"``): the shops' *Dead Man's Shoes* is the 2004 film's disc, and the want
+    is the 1940 film's (CT52-04). Any other listing naming no year is read as before.
+    """
+    if not title:
+        return None
+    years = {int(year) for year in BRACKETED_YEAR.findall(title)}
+    if not years:
+        return SHARED_TITLE if needs_year else None
+    if film_year is None or any(abs(year - film_year) <= YEAR_SLACK for year in years):
+        return None
+    return ANOTHER_YEAR
+
 
 def edition_words(preferred_edition: str | None) -> set[str]:
     """The significant words of a wanted edition, as `_normalise` would see them."""
@@ -261,6 +301,8 @@ class ShapeVerdict:
 
     ok: bool
     reasons: list[str] = field(default_factory=list)
+    #: AG5: set when the listing is another film's (:func:`another_film`).
+    another_film: str | None = None
 
     def fail(self, reason: str) -> None:
         self.ok = False
@@ -391,10 +433,10 @@ def _candidate_from(scope: BeautifulSoup | Tag, config: dict[str, object]) -> Sc
     )
 
 
-def _matches_title(
+def _names_title(
     title: str | None, expected_title: str | None, preferred_edition: str | None = None
 ) -> bool:
-    """The same title test `check_shape` applies, so a card it would reject never wins."""
+    """Whether a listing's words are the film's title, whatever year it names."""
     if not expected_title:
         return True
     if not title:
@@ -407,6 +449,20 @@ def _matches_title(
     return not _meaningful_extras(title, expected_title, edition_words(preferred_edition))
 
 
+def _matches_title(
+    title: str | None,
+    expected_title: str | None,
+    preferred_edition: str | None = None,
+    *,
+    film_year: int | None = None,
+    needs_year: bool = False,
+) -> bool:
+    """The same title test `check_shape` applies, so a card it would reject never wins."""
+    if not _names_title(title, expected_title, preferred_edition):
+        return False
+    return not expected_title or another_film(title, film_year, needs_year=needs_year) is None
+
+
 def extract(
     html: str,
     config: dict[str, object],
@@ -414,6 +470,8 @@ def extract(
     expected_title: str | None = None,
     preferred_format: str | None = None,
     preferred_edition: str | None = None,
+    film_year: int | None = None,
+    needs_year: bool = False,
 ) -> ScrapeCandidate:
     """Run a retailer's configured selectors over a page and pick the best listing on it.
 
@@ -442,6 +500,11 @@ def extract(
     When no card qualifies, the **first** card is returned rather than nothing, so
     `check_shape` reports why the page was rejected — "names no disc format" — instead of
     the misleading "no price found" an empty candidate would produce.
+
+    **``film_year`` and ``needs_year`` are the want's film** (AG5): a card naming another
+    year, or none when the want has asked which film, is never the want's. When no card is,
+    another film's disc is returned before the first card, so `check_shape` says so and the
+    shop job records it as another film's rather than as nothing.
     """
     soup = BeautifulSoup(html, "html.parser")
     item_selector = _string(config.get("item"))
@@ -473,11 +536,17 @@ def extract(
     # film among them. A shop that answered properly and simply has not got it must not
     # accrue a strike towards auto-disable.
     titled = sum(1 for candidate in candidates if candidate.title)
-    matching = sum(
-        1
-        for candidate in candidates
-        if candidate.title and _matches_title(candidate.title, expected_title, preferred_edition)
-    )
+
+    def matches(candidate: ScrapeCandidate) -> bool:
+        return _matches_title(
+            candidate.title,
+            expected_title,
+            preferred_edition,
+            film_year=film_year,
+            needs_year=needs_year,
+        )
+
+    matching = sum(1 for candidate in candidates if candidate.title and matches(candidate))
 
     def counted(candidate: ScrapeCandidate) -> ScrapeCandidate:
         return replace(candidate, titled_cards=titled, matching_cards=matching)
@@ -486,11 +555,18 @@ def extract(
         candidate
         for candidate in candidates
         if candidate.price is not None
-        and _matches_title(candidate.title, expected_title, preferred_edition)
+        and matches(candidate)
         and looks_like_physical_media(candidate.title, candidate.url)
     ]
     if not qualifying:
-        return counted(candidates[0])
+        others = [
+            candidate
+            for candidate in candidates
+            if candidate.price is not None
+            and _names_title(candidate.title, expected_title, preferred_edition)
+            and looks_like_physical_media(candidate.title, candidate.url)
+        ]
+        return counted(others[0] if others else candidates[0])
 
     # Both constraints, then format, then edition, then the shop's own order. Format wins
     # over edition when only one can be had: a Steelbook is still a disc you cannot play
@@ -538,6 +614,8 @@ def check_shape(
     expected_currency: str = "GBP",
     retailer_host: str | None = None,
     preferred_edition: str | None = None,
+    film_year: int | None = None,
+    needs_year: bool = False,
 ) -> ShapeVerdict:
     """The "last known good shape" assertion the ledger's risk note asks for.
 
@@ -560,6 +638,9 @@ def check_shape(
     - **A listing URL on a different domain** — an advert, or a "customers also bought".
     - **A listing that names no disc format** — the merchandise case. "Jaws" at Zavvi is a
       beach towel long before it is a Blu-ray, and every other rule passes on a towel.
+    - **A listing of another film of the same title** (AG5) — "Bad Lieutenant (1992)" for the
+      2009 film's want. :func:`another_film` says why, and ``verdict.another_film`` carries
+      it, so the shop job records the listing as another film's rather than as a price.
     """
     verdict = ShapeVerdict(ok=True)
 
@@ -604,6 +685,19 @@ def check_shape(
                         f"page title {candidate.title!r} names a different film from "
                         f"{expected_title!r} ({', '.join(sorted(extras))})"
                     )
+                else:
+                    other = another_film(candidate.title, film_year, needs_year=needs_year)
+                    if other == ANOTHER_YEAR:
+                        verdict.fail(
+                            f"page title {candidate.title!r} is another film than "
+                            f"{expected_title!r} ({film_year})"
+                        )
+                    elif other == SHARED_TITLE:
+                        verdict.fail(
+                            f"page title {candidate.title!r} names no year, and two films are "
+                            f"called {expected_title!r}"
+                        )
+                    verdict.another_film = other
 
     if candidate.url and retailer_host:
         host = urlparse(candidate.url).hostname

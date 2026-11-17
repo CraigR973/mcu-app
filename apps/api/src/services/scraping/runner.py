@@ -41,6 +41,7 @@ from src.models.movie import Movie
 from src.models.price_check import PriceCheck
 from src.models.wanted import Retailer, WantedItem
 from src.services.scraping.alerts import AlertCandidate
+from src.services.scraping.another_film import wants_asked
 from src.services.scraping.extract import (
     DEFAULT_FORMAT_SEARCH_TERM,
     DISC_FORMATS,
@@ -145,6 +146,12 @@ class ScrapeOutcome:
     #: auto-disable arithmetic — and a retailer answering this way for *every* want in a
     #: run is flagged, because that is what a broken selector looks like.
     no_results: bool = False
+    #: AG5: set when the shop's listing of the title is **another film's**
+    #: (``extract.another_film``): a year more than one from the want's film, or none when the
+    #: want has asked which film. Always with ``not_stocked``, since the shop has not got this
+    #: film, so it counts as that everywhere; the listing is still written, marked, so the
+    #: want says what the shop has and the daily check can ask which film.
+    another_film: str | None = None
     #: True when the shop **refused** the request, answering ``429`` (Batch 20b). Not a
     #: failure for auto-disable either: a refusal says nothing about whether the scraper
     #: works, and on 30 Sep and 1 Oct it was about to switch off shops that were not
@@ -196,6 +203,11 @@ class ScrapeRunResult:
     @property
     def no_results(self) -> int:
         return sum(1 for outcome in self.outcomes if outcome.no_results)
+
+    @property
+    def another_film(self) -> int:
+        """AG5: wants a shop answered with another film's listing of their title."""
+        return sum(1 for outcome in self.outcomes if outcome.another_film)
 
     @property
     def skipped(self) -> int:
@@ -279,6 +291,8 @@ async def scrape_one(
     *,
     preferred_format: str | None = None,
     preferred_edition: str | None = None,
+    film_year: int | None = None,
+    needs_year: bool = False,
     client: httpx.AsyncClient | None = None,
     retry_after_limit: float = RETRY_AFTER_LIMIT_SECONDS,
 ) -> tuple[ScrapeCandidate | None, ScrapeOutcome]:
@@ -292,6 +306,10 @@ async def scrape_one(
     second half), up to ``retry_after_limit``; past it, or with none sent, the usual pause.
     Every refusal on 2 Oct asked for 60 seconds and got a retry two seconds later, of which
     4 in 29 got through. ``retry_after_limit=0`` keeps the usual pause: "Run now" in the app.
+
+    **``film_year`` and ``needs_year`` are the want's film** (AG5). A listing of another film
+    of the title comes back *with* its candidate and ``outcome.another_film`` set, so the
+    caller records it as that film's and never as this want's price.
     """
     outcome = ScrapeOutcome(retailer=retailer.name, wanted_title=title, ok=False)
 
@@ -362,6 +380,8 @@ async def scrape_one(
         expected_title=title,
         preferred_format=preferred_format,
         preferred_edition=preferred_edition,
+        film_year=film_year,
+        needs_year=needs_year,
     )
     if (
         candidate.price is None
@@ -396,12 +416,21 @@ async def scrape_one(
         expected_currency=retailer.currency,
         retailer_host=urlparse(retailer.base_url).hostname,
         preferred_edition=preferred_edition,
+        film_year=film_year,
+        needs_year=needs_year,
     )
     outcome.price = candidate.price
     outcome.currency = candidate.currency or retailer.currency
     outcome.url = candidate.url or page.final_url
     outcome.reasons = verdict.reasons
     outcome.ok = verdict.ok
+    if verdict.another_film is not None and len(verdict.reasons) == 1:
+        # AG5: a good listing in every other way, of another film of this title. The shop has
+        # not got the want's film; what it has is recorded as the other film's.
+        outcome.not_stocked = True
+        outcome.another_film = verdict.another_film
+        outcome.error = f"{retailer.name} lists {candidate.title!r}, another film than {title}"
+        return candidate, outcome
     # The page parsed into real listings and none of them names this film. That is the
     # shop answering, not the scraper breaking, so `run_scrape` must not count it. Read
     # from the card counts rather than from the rejection message, because the first card
@@ -584,6 +613,8 @@ async def run_scrape(
             .where(WantedItem.deleted_at.is_(None), WantedItem.is_active.is_(True))
         )
     ).all()
+    # AG5: wants that have asked which film; their title is two films', so needs a year.
+    asked = await wants_asked(db)
 
     now = utcnow()
     for retailer in retailers:
@@ -599,12 +630,19 @@ async def run_scrape(
                 movie.title,
                 preferred_format=wanted.preferred_format,
                 preferred_edition=wanted.preferred_edition,
+                film_year=movie.year,
+                needs_year=wanted.id in asked,
                 client=client,
                 retry_after_limit=retry_after_limit,
             )
             result.outcomes.append(outcome)
 
-            if candidate is not None and candidate.price is not None:
+            if candidate is not None and candidate.price is not None and outcome.another_film:
+                # AG5: another film's listing, recorded as that and never as a price: no
+                # success for the shop's health, no write count and no alert.
+                if not dry_run:
+                    await _write_check(db, retailer, wanted, candidate, outcome)
+            elif candidate is not None and candidate.price is not None:
                 any_success = True
                 if not dry_run:
                     row = await _write_check(db, retailer, wanted, candidate, outcome)
@@ -698,6 +736,7 @@ async def _write_check(
     if existing is not None:
         existing.price = candidate.price
         existing.title_snapshot = candidate.title
+        existing.another_film = outcome.another_film
         return existing
 
     try:
@@ -715,6 +754,7 @@ async def _write_check(
                 title_snapshot=candidate.title,
                 url=url,
                 checked_at=utcnow(),
+                another_film=outcome.another_film,
             )
             db.add(row)
             await db.flush()

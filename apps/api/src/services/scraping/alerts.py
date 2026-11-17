@@ -36,7 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.clock import utcnow
 from src.models.movie import Movie
 from src.models.notification import NotificationCategory
-from src.models.price_check import PriceCheck
+from src.models.price_check import PRICED, PriceCheck
 from src.models.profile import Profile
 from src.models.wanted import WantedItem
 from src.services.ebay_watch.refs import Yardstick
@@ -82,6 +82,8 @@ async def _previously_alerted_below_threshold(
                 PriceCheck.retailer_id == candidate.check.retailer_id,
                 PriceCheck.id != candidate.check.id,
                 PriceCheck.checked_at <= candidate.check.checked_at,
+                # AG5: a drop is judged against the want's own last price, never another film's.
+                PRICED,
             )
             .order_by(PriceCheck.checked_at.desc())
             .limit(1)
