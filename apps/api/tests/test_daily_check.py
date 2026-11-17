@@ -16,6 +16,7 @@ keys of their own people and on tables the rolled-back transaction starts with e
 
 from __future__ import annotations
 
+import json
 import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
@@ -26,12 +27,13 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
+from src.models.admin_action import AdminAction
 from src.models.cinema import CinemaRefreshRun, CinemaVenue
 from src.models.collection_item import CollectionItem
 from src.models.deal import Deal
@@ -49,7 +51,9 @@ from src.models.profile import Profile, UserRole
 from src.models.reviews import FilmReview
 from src.models.specs_backfill import SpecLookup
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
-from src.services import health_checks
+from src.models.wanted import Retailer
+from src.scripts import backup as backup_script
+from src.services import health_checks, heartbeat
 from src.services.health_checks import run_daily_check
 from src.services.heartbeat import beat
 from src.services.notifications import queue_notification
@@ -1015,3 +1019,161 @@ async def test_the_after_refresh_pass_names_todays_failure_and_leaves_other_rows
     assert len(again) == 1
     row = await db.get(HealthCheck, "cinema:odeon-braehead")
     assert row is not None and (row.ok, row.failing_since_utc) == (False, later)
+
+
+# ---------------------------------------------------------------------------
+# AG2 (DS50-01, DS50-05, MK53-02): every scheduled thing, by one rule
+# ---------------------------------------------------------------------------
+
+
+async def test_a_run_that_counted_a_failure_is_named_until_one_does_not(db: AsyncSession) -> None:
+    await beat(db, "cron-reminders", "ran, 1 failed", failures=1, now=NOW - timedelta(hours=1))
+    found = _by_key(await health_checks.check_jobs(db, NOW))
+    assert found["job:cron-reminders"] == (
+        "The 08:00 job (reminders, watch history, the cinema digest)'s last run, 13 Oct, 07:00 "
+        "UTC, had a failure (ran, 1 failed)."
+    )
+    await beat(db, "cron-reminders", "ran", now=NOW - timedelta(minutes=5))
+    assert _by_key(await health_checks.check_jobs(db, NOW))["job:cron-reminders"] is None
+
+
+async def test_the_eight_scheduled_things_each_have_a_row(db: AsyncSession) -> None:
+    keys = {key for key, _ in await health_checks.check_jobs(db, NOW)}
+    keys |= {key for key, _ in await health_checks.check_cinemas(db, NOW)}
+    assert {thing.key for thing in heartbeat.SCHEDULED} <= keys
+    assert len(heartbeat.SCHEDULED) == 8
+
+
+async def test_a_thing_that_began_beating_with_ag2_is_not_late_before_it_could_run(
+    db: AsyncSession,
+) -> None:
+    backup = heartbeat.BY_JOB[heartbeat.BACKUP]
+    assert backup.watched_from is not None
+    before = _by_key(await health_checks.check_jobs(db, backup.watched_from - timedelta(hours=1)))
+    assert before["job:backup"] is None
+    after = _by_key(await health_checks.check_jobs(db, backup.watched_from + timedelta(hours=1)))
+    assert after["job:backup"] == "The weekly backup has never run."
+
+    await beat(db, "backup", "ok", now=backup.watched_from - timedelta(days=9))
+    late = _by_key(await health_checks.check_jobs(db, backup.watched_from + timedelta(hours=1)))
+    assert late["job:backup"] == "The weekly backup hasn't run since 16 Nov."
+
+
+async def test_a_failed_backup_recorded_through_its_function_is_named(db: AsyncSession) -> None:
+    """The workflow's last step, as the backup role runs it: the function writes only the
+    ``backup`` row (migration 079), and PUBLIC may not call it."""
+    detail = backup_script.beat_detail("failed", drill=False, run_id="42")
+    await db.execute(
+        text("SELECT record_backup_heartbeat(:outcome, CAST(:detail AS jsonb))"),
+        {"outcome": "failed", "detail": json.dumps(detail)},
+    )
+    row = await db.get(JobHeartbeat, "backup")
+    assert row is not None and row.outcome == "failed"
+    assert row.detail == {"failures": 1, "cadenceHours": 192.0, "drill": False, "run": "42"}
+    found = _by_key(await health_checks.check_jobs(db, row.beat_utc + timedelta(hours=1)))
+    assert found["job:backup"] is not None and "had a failure (failed)" in found["job:backup"]
+    public = await db.scalar(
+        text(
+            "SELECT has_function_privilege('public', "
+            "'record_backup_heartbeat(text, jsonb)', 'EXECUTE')"
+        )
+    )
+    assert public is False
+
+
+async def test_a_beat_nobody_listed_is_still_judged_by_its_own_cadence(db: AsyncSession) -> None:
+    db.add(
+        JobHeartbeat(
+            job="cron-newcomer",
+            beat_utc=NOW - timedelta(hours=30),
+            outcome="ran",
+            detail={"failures": 0, "cadenceHours": 26},
+        )
+    )
+    await db.flush()
+    found = _by_key(await health_checks.check_jobs(db, NOW))
+    assert found["job:cron-newcomer"] == "The cron-newcomer job hasn't run since 12 Oct."
+
+
+async def test_a_film_past_165_days_since_its_tmdb_details_is_named(db: AsyncSession) -> None:
+    await db.execute(update(Movie).values(last_tmdb_sync_utc=NOW - timedelta(days=10)))
+    await db.flush()
+    assert _by_key(await health_checks.check_tmdb_age(db, NOW))["tmdb:age"] is None
+    film = Movie(
+        id=uuid.uuid4(),
+        tmdb_id=9_900_001,
+        title="Long Unsynced",
+        original_title="Long Unsynced",
+        media_type="film",
+        last_tmdb_sync_utc=NOW - timedelta(days=170),
+    )
+    db.add(film)
+    await db.flush()
+    found = _by_key(await health_checks.check_tmdb_age(db, NOW))
+    assert found["tmdb:age"] == (
+        "1 film's TMDB details are over 165 days old, the oldest from 26 Apr."
+    )
+
+
+async def test_a_shop_asked_only_weekly_is_named(db: AsyncSession) -> None:
+    shop = Retailer(
+        id=uuid.uuid4(),
+        name=f"Dark Shop {uuid.uuid4().hex[:4]}",
+        base_url="https://93.184.216.34",
+        search_url_template="https://93.184.216.34/search?q={query}",
+        enabled=True,
+        refused_nights=6,
+        last_scrape_error="10 request(s) refused. The last: Dark Shop answered off its search page",
+    )
+    db.add(shop)
+    await db.flush()
+    assert _by_key(await health_checks.check_shops(db, NOW))[f"shop:{shop.id}"] is None
+    shop.refused_nights = 7
+    await db.flush()
+    assert _by_key(await health_checks.check_shops(db, NOW))[f"shop:{shop.id}"] == (
+        f"{shop.name} has given no prices for 7 nights in a row, so it is now asked weekly: "
+        "10 request(s) refused."
+    )
+
+
+async def test_a_cinema_switched_off_after_a_refusal_is_named(db: AsyncSession) -> None:
+    await _cinemas(db, "gft")
+    await _run(db, NOW - timedelta(hours=1), {"gft": _read(20)})
+    venue = (
+        await db.scalars(select(CinemaVenue).where(CinemaVenue.slug == "odeon-braehead"))
+    ).one()
+    db.add(
+        AdminAction(
+            id=uuid.uuid4(),
+            user_id=None,
+            action_type="update",
+            target_table="cinema_venues",
+            target_id=str(venue.id),
+            changes={
+                "collectionEnabled": {"from": True, "to": False},
+                "reason": "Source host refusal; owner must review before re-enabling",
+            },
+            created_at=NOW - timedelta(days=2),
+        )
+    )
+    await db.flush()
+    found = _by_key(await health_checks.check_cinemas(db, NOW))
+    assert found["cinema:odeon-braehead"] == (
+        "ODEON Braehead was switched off on 11 Oct after its listings site refused the app; it "
+        "stays off until it is switched back on."
+    )
+    # The owner switching it off afterwards is a choice, not a refusal: no longer named.
+    owner = await _person(db, UserRole.admin)
+    db.add(
+        AdminAction(
+            id=uuid.uuid4(),
+            user_id=owner.id,
+            action_type="update",
+            target_table="cinema_venues",
+            target_id=str(venue.id),
+            changes={"collectionEnabled": {"from": False, "to": False}},
+            created_at=NOW - timedelta(days=1),
+        )
+    )
+    await db.flush()
+    assert "cinema:odeon-braehead" not in _by_key(await health_checks.check_cinemas(db, NOW))

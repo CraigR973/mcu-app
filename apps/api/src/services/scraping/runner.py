@@ -363,6 +363,27 @@ async def scrape_one(
         preferred_format=preferred_format,
         preferred_edition=preferred_edition,
     )
+    if (
+        candidate.price is None
+        and candidate.titled_cards == 0
+        and off_search_page(url, page.final_url)
+    ):
+        # AG2 (MK53-02): the search was sent somewhere else and the page there lists nothing.
+        # Zavvi's search answered 301 then 302 to a campaign page from 12 Oct, and it read as
+        # "no results" for five weeks. Counted as a refusal, so its nights add up to the weekly
+        # ask; a search sent to a product page that has a price is still read as before.
+        outcome.refused = True
+        outcome.url = page.final_url
+        outcome.error = (
+            f"{retailer.name} answered off its search page, at {urlparse(page.final_url).path}"
+        )
+        logger.warning(
+            "scrape_off_search_page",
+            retailer=retailer.name,
+            wanted=title,
+            final=page.final_url,
+        )
+        return None, outcome
     # Retailer pages overwhelmingly use relative product links. Persisting one as-is made
     # `_write_check` silently return without a row, even though `written` was incremented.
     # Resolve it against the final page after redirects so the stored link is usable and
@@ -462,15 +483,31 @@ def _record_success(retailer: Retailer) -> None:
     retailer.last_scraped_at = utcnow()
 
 
-def is_refusing_night(outcomes: list[ScrapeOutcome]) -> bool | None:
-    """Did the shop refuse at least half of what it was asked tonight? ``None``: not asked.
+def off_search_page(asked: str, answered: str) -> bool:
+    """Did a search land on another site, or another path, than the one asked (AG2)?
 
-    A want these shops cannot serve (``skipped``) was never put to the shop, so it is
-    neither asked nor refused.
+    A trailing slash and the query string are ignored: only where the shop sent the request.
+    """
+    want, got = urlparse(asked), urlparse(answered)
+    if (want.hostname or "").removeprefix("www.") != (got.hostname or "").removeprefix("www."):
+        return True
+    return want.path.rstrip("/") != got.path.rstrip("/")
+
+
+def is_refusing_night(outcomes: list[ScrapeOutcome]) -> bool | None:
+    """Did the shop refuse tonight? ``None``: not asked.
+
+    It refused when it refused at least half of what it was asked (X11), and since AG2
+    (MK53-02) when it answered nothing for every want it was asked: an empty page for each, or
+    a refusal. A shop answering nothing night after night is as dark as one answering 429,
+    and the weekly ask should name it. A want these shops cannot serve (``skipped``) was never
+    put to the shop, so it is neither asked nor refused.
     """
     asked = [outcome for outcome in outcomes if not outcome.skipped]
     if not asked:
         return None
+    if all(outcome.no_results or outcome.refused for outcome in asked):
+        return True
     return sum(1 for outcome in asked if outcome.refused) >= len(asked) * REFUSING_SHARE
 
 

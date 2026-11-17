@@ -18,13 +18,15 @@ from src.models.base import Base
 class JobHeartbeat(Base):
     __tablename__ = "job_heartbeats"
 
-    #: ``cron-scrape``, ``cron-specs``, ``cron-ebay``, ``cron-values``, ``cron-reminders``, or
-    #: ``api`` — the Railway service's own name.
+    #: A scheduled thing's name (`services/heartbeat.SCHEDULED`, AG2): a Railway service's own
+    #: (``cron-scrape``, ``cron-reminders``…), ``cinema-programme``, ``tmdb-refresh``, ``backup``;
+    #: or ``api``.
     job: Mapped[str] = mapped_column(Text, primary_key=True)
     beat_utc: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
     #: What the run did, in a word or two: ``ran``, ``nothing due``, ``budget spent``…
     outcome: Mapped[str] = mapped_column(Text, nullable=False)
-    #: The API's readiness at boot; nothing for the jobs so far.
+    #: The API's readiness at boot; for a scheduled thing, since AG2, its failure figure
+    #: (``failures``) and cadence (``cadenceHours``) beside anything of its own.
     detail: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
 

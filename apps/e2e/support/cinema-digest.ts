@@ -45,7 +45,9 @@ export async function exerciseCinemaDigest(craig: Api, mark: Api, db: DB) {
     db.sql(`UPDATE cinema_venues SET collection_enabled=true WHERE id='${venue}'`)
     const first = runJob('src.scripts.run_reminders')
     expect(first.status, first.output).toBe(0)
-    expect(first.output).toMatch(/cinema programme:\s+partial/)
+    // AG2 (CR49-04): a CinemaTimes read that worked reads all its source offers, so the run is
+    // healthy; before AG2 every run was partial.
+    expect(first.output).toMatch(/cinema programme:\s+healthy/)
     const second = runJob('src.scripts.run_reminders')
     expect(second.status, second.output).toBe(0)
     for (const phone of phones) {

@@ -11,7 +11,9 @@
 ``dump`` reads through ``BACKUP_DATABASE_URL`` (the ``mcu_backup`` role), in one read-only
 snapshot, and exits 1 when the role can read a credential or cannot read a table it should.
 ``restore`` migrates the database at ``RESTORE_DATABASE_URL`` to the copy's revision with
-Alembic, loads it, and exits 1 when any table's rows differ from the manifest. Both
+Alembic, loads it, and exits 1 when any table's rows differ from the manifest. ``beat`` (AG2,
+DS50-01) records the run's outcome as the ``backup`` heartbeat, through the one function the
+role may call (migration 079), so the daily check sees a backup that failed or stopped. Both
 addresses come from the environment, never the command line, so a password reaches neither
 ``ps`` nor the shell history; neither is ever printed.
 
@@ -22,6 +24,7 @@ over the live database.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -29,6 +32,7 @@ from pathlib import Path
 
 import psycopg2
 
+from src.services import heartbeat
 from src.services.backup import BackupPolicyError, Manifest, dump, restore, summary
 
 API_DIR = Path(__file__).resolve().parents[2]
@@ -134,6 +138,35 @@ def run_restore(source: Path, *, expect_head: bool = False) -> int:
     return 0
 
 
+def beat_detail(outcome: str, *, drill: bool, run_id: str | None) -> dict[str, object]:
+    """What the backup's heartbeat carries: the failure figure and cadence every beat has."""
+    return {
+        "failures": 0 if outcome == "ok" else 1,
+        "cadenceHours": heartbeat.BY_JOB[heartbeat.BACKUP].cadence.total_seconds() / 3600,
+        "drill": drill,
+        "run": run_id,
+    }
+
+
+def run_beat(outcome: str, *, drill: bool) -> int:
+    url = os.environ.get("BACKUP_DATABASE_URL", "")
+    if not url:
+        print("BACKUP_DATABASE_URL is not set.", file=sys.stderr)
+        return 1
+    detail = beat_detail(outcome, drill=drill, run_id=os.environ.get("GITHUB_RUN_ID"))
+    connection = _connect(url, readonly=False)
+    try:
+        with connection.cursor() as cur:
+            cur.execute(
+                "SELECT record_backup_heartbeat(%s, %s::jsonb)", (outcome, json.dumps(detail))
+            )
+        connection.commit()
+    finally:
+        connection.close()
+    print(f"Recorded the backup's heartbeat: {outcome}.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     commands = parser.add_subparsers(dest="command", required=True)
@@ -146,9 +179,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="fail unless the copy is at this checkout's newest migration (the drill)",
     )
+    mark = commands.add_parser("beat", help="record this run as the backup's heartbeat")
+    mark.add_argument("--outcome", choices=("ok", "failed"), required=True)
+    mark.add_argument("--drill", action="store_true", help="this run restored the copy too")
     args = parser.parse_args(argv)
     if args.command == "dump":
         return run_dump(args.out)
+    if args.command == "beat":
+        return run_beat(args.outcome, drill=args.drill)
     return run_restore(args.source, expect_head=args.expect_head)
 
 

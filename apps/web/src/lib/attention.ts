@@ -10,6 +10,11 @@ export function attentionDestination(key: string, currentPersonId?: string): Att
   if (key === 'job:cron-specs') return { to: '/specs', label: 'Open Disc specs' }
   if (key === 'job:cron-values') return { to: '/valuation', label: 'Open Collection value' }
   if (key === 'job:cron-scrape') return { to: '/retailers', label: 'Open Retailers' }
+  // AG2 (DS50-01): the weekly backup runs in GitHub Actions, not Railway; a shop asked only weekly
+  // is on Retailers; TMDB details past 165 days mean the 08:00 job's TMDB refresh fell behind.
+  if (key === 'job:backup') return { advice: 'Check the backup workflow’s latest run in GitHub Actions.' }
+  if (key.startsWith('shop:')) return { to: '/retailers', label: 'Open Retailers' }
+  if (key === 'tmdb:age') return { advice: 'Check the 08:00 job’s TMDB refresh in Railway.' }
   // #381, the ODEON fast lane: the cinema programme's own rows. The job is Railway's; a cinema's failed
   // listings need its source looked at, which the app cannot do.
   if (key.startsWith('job:') || key === 'check:stale' || key === 'cinema:job') {

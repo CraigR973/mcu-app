@@ -15,6 +15,7 @@ problem as the Home row says it. Keys are stable, so a problem that persists kee
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -26,11 +27,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from src.clock import utcnow
+from src.models.admin_action import AdminAction
 from src.models.ai import AiUsageLogEntry
 from src.models.cinema import CinemaRefreshRun, CinemaVenue
 from src.models.deal import Deal, live_deal
 from src.models.ebay_watch import EbayWatchRun
 from src.models.health import HealthCheck, JobHeartbeat
+from src.models.movie import Movie
 from src.models.notification import (
     Notification,
     NotificationCategory,
@@ -42,11 +45,13 @@ from src.models.profile import Profile, UserRole
 from src.models.specs_backfill import SpecRun
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.valuation import ValuationRun
+from src.models.wanted import Retailer
 from src.services import heartbeat
 from src.services.identify.doubts import count_old as count_old_doubts
 from src.services.identify.doubts import count_page_disagreements
 from src.services.identify.queue import count_old_waiting
 from src.services.notifications import queue_notification
+from src.services.scraping.runner import WEEKLY_AFTER_NIGHTS
 
 logger = structlog.get_logger(__name__)
 
@@ -66,45 +71,26 @@ SHOP_DEAL_FRESHNESS = timedelta(days=2)
 #: The check itself is late when its last result is older than this (read by the Home row).
 CHECK_STALE_AFTER = timedelta(hours=26)
 #: The cinema programme runs inside the 08:00 reminders job: a day plus a margin, as the others.
-CINEMA_CADENCE = timedelta(hours=26)
-#: Its heartbeat's name (`services/cinemas/refresh.py`'s ``HEARTBEAT``), kept here so this module
-#: does not import the programme's collectors.
-CINEMA_HEARTBEAT = "cinema-programme"
+CINEMA_CADENCE = heartbeat.BY_JOB[heartbeat.CINEMAS].cadence
+#: Its heartbeat's name, the one `services/cinemas/refresh.py` writes.
+CINEMA_HEARTBEAT = heartbeat.CINEMAS
 #: How many of the programme's latest runs are read for a cinema's last good one: two months.
 CINEMA_RUNS_LOOKED_AT = 60
 #: Every cinema check's key starts with this, so the after-refresh pass records only its own.
 CINEMA_SCOPE = "cinema:"
 
 
-@dataclass(frozen=True)
-class Job:
-    """A scheduled job, how long it may go quiet, and its own run table's start column."""
-
-    name: str
-    label: str
-    cadence: timedelta
-    #: Its run table's start time, which also counts: a run started from the app is a run.
-    started: InstrumentedAttribute[datetime]
-
-
-#: Each job's allowance is its schedule plus a margin: daily jobs 26 hours, the two-hourly
-#: eBay scan 5 hours, the valuation (1st, 2nd, 15th, 16th) 17 days.
-JOBS: tuple[Job, ...] = (
-    Job(
-        heartbeat.SCRAPE,
-        "The nightly shop price check",
-        timedelta(hours=26),
-        ScrapeRun.started_at_utc,
-    ),
-    Job(
-        heartbeat.SPECS,
-        "The nightly disc spec and review job",
-        timedelta(hours=26),
-        SpecRun.started_utc,
-    ),
-    Job(heartbeat.EBAY, "The eBay scan", timedelta(hours=5), EbayWatchRun.started_utc),
-    Job(heartbeat.VALUES, "The valuation job", timedelta(days=17), ValuationRun.started_utc),
-)
+#: A job's run table's start time also counts as its having run: a run started from the app is
+#: a run. The scheduled things themselves, and their cadences, are `heartbeat.SCHEDULED` (AG2).
+RUN_STARTS: dict[str, InstrumentedAttribute[datetime]] = {
+    heartbeat.SCRAPE: ScrapeRun.started_at_utc,
+    heartbeat.SPECS: SpecRun.started_utc,
+    heartbeat.EBAY: EbayWatchRun.started_utc,
+    heartbeat.VALUES: ValuationRun.started_utc,
+}
+#: The TMDB refresh names a film once its TMDB details are this old: TMDB's terms allow six
+#: months, the refresh takes films at 150 days (DS50-05).
+TMDB_AGE_LIMIT = timedelta(days=165)
 
 #: The API's readiness fields, as the row names each.
 READINESS_LABELS = {
@@ -131,33 +117,104 @@ def moment(when: datetime) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _failures(row: JobHeartbeat) -> int:
+    value = (row.detail or {}).get("failures")
+    if isinstance(value, bool):
+        return int(value)
+    return value if isinstance(value, int) else 0
+
+
+def judge_beat(
+    label: str, cadence: timedelta, last: datetime | None, row: JobHeartbeat | None, now: datetime
+) -> str | None:
+    """The one rule (AG2): quiet past its cadence, or its last run counted a failure."""
+    if last is None:
+        return f"{label} has never run."
+    if last < now - cadence:
+        return f"{label} hasn't run since {day(last)}."
+    if row is not None and row.beat_utc == last and (failed := _failures(row)):
+        what = "a failure" if failed == 1 else f"{failed} failures"
+        return f"{label}'s last run, {moment(row.beat_utc)} UTC, had {what} ({row.outcome})."
+    return None
+
+
 async def check_jobs(db: AsyncSession, now: datetime) -> list[Result]:
-    """Each job ran (or beat) within its cadence."""
+    """Every heartbeat, by one rule: each scheduled thing ran within its cadence, and its last
+    run counted no failure (AG2, DS50-01). At wave 2's review this read four of eight.
+
+    A thing listed in `heartbeat.SCHEDULED` that has never beaten is named once its
+    ``watched_from`` has passed; a beat not listed there is still judged, by the cadence it
+    wrote, so nothing that beats goes unread. The cinema programme is judged by
+    :func:`check_cinemas`, beside each cinema's own row.
+    """
     beats = {row.job: row for row in (await db.scalars(select(JobHeartbeat))).all()}
     results: list[Result] = []
-    for job in JOBS:
-        times = [beats[job.name].beat_utc] if job.name in beats else []
-        started = await db.scalar(select(func.max(job.started)))
-        if started is not None:
-            times.append(started)
+    for thing in heartbeat.SCHEDULED:
+        if thing.row is not None:
+            continue
+        row = beats.get(thing.job)
+        times = [row.beat_utc] if row is not None else []
+        if thing.job in RUN_STARTS:
+            started = await db.scalar(select(func.max(RUN_STARTS[thing.job])))
+            if started is not None:
+                times.append(started)
         last = max(times) if times else None
-        if last is None:
-            message: str | None = f"{job.label} has never run."
-        elif last < now - job.cadence:
-            message = f"{job.label} hasn't run since {day(last)}."
+        if last is None and thing.watched_from is not None and now < thing.watched_from:
+            message: str | None = None
         elif (
-            job.name == heartbeat.SPECS
-            and job.name in beats
-            and (beats[job.name].detail or {}).get("imdbError")
+            thing.job == heartbeat.SPECS
+            and row is not None
+            and last is not None
+            and last >= now - thing.cadence
+            and (row.detail or {}).get("imdbError")
         ):
             message = (
                 "IMDb scores could not be refreshed in the nightly job. "
                 "Stored scores have been kept."
             )
         else:
-            message = None
-        results.append((f"job:{job.name}", message))
+            message = judge_beat(thing.label, thing.cadence, last, row, now)
+        results.append((thing.key, message))
+    for job, row in sorted(beats.items()):
+        if job in heartbeat.BY_JOB or job == heartbeat.API:
+            continue
+        hours = (row.detail or {}).get("cadenceHours")
+        cadence = timedelta(hours=float(hours)) if isinstance(hours, int | float) else None
+        if cadence is None:
+            continue
+        results.append(
+            (f"job:{job}", judge_beat(f"The {job} job", cadence, row.beat_utc, row, now))
+        )
     return results
+
+
+async def check_tmdb_age(db: AsyncSession, now: datetime) -> list[Result]:
+    """No identified film's TMDB details older than 165 days (DS50-05; TMDB allows six months).
+
+    The 08:00 job refreshes 100 a day from 150 days, so a row here means it has fallen behind
+    or stopped. A film never synced is counted from the day it was added.
+    """
+    age = func.coalesce(Movie.last_tmdb_sync_utc, Movie.created_at)
+    row = (
+        await db.execute(
+            select(func.count(Movie.id), func.min(age)).where(
+                Movie.deleted_at.is_(None),
+                or_(Movie.tmdb_id.is_not(None), Movie.tmdb_tv_id.is_not(None)),
+                age < now - TMDB_AGE_LIMIT,
+            )
+        )
+    ).one()
+    count, oldest = int(row[0] or 0), row[1]
+    if not count:
+        return [("tmdb:age", None)]
+    films = "film's" if count == 1 else "films'"
+    return [
+        (
+            "tmdb:age",
+            f"{count} {films} TMDB details are over {TMDB_AGE_LIMIT.days} days old"
+            + (f", the oldest from {day(oldest)}." if oldest else "."),
+        )
+    ]
 
 
 async def check_ebay_listings(db: AsyncSession, now: datetime) -> list[Result]:
@@ -356,6 +413,79 @@ async def check_assistant(db: AsyncSession, now: datetime) -> list[Result]:
     ]
 
 
+async def check_shops(db: AsyncSession, now: datetime) -> list[Result]:
+    """Each switched-on shop the nightly check now asks only weekly, by name (AG2, MK53-02).
+
+    A shop goes weekly after :data:`WEEKLY_AFTER_NIGHTS` scheduled nights in a row in which it
+    refused, answered off its search page, or answered nothing for every want. Before AG2 only
+    a 429 counted, so a shop whose search had moved read as "no results" for five weeks.
+    """
+    shops = (
+        await db.execute(
+            select(Retailer.id, Retailer.name, Retailer.refused_nights, Retailer.last_scrape_error)
+            .where(Retailer.deleted_at.is_(None), Retailer.enabled.is_(True))
+            .order_by(Retailer.name)
+        )
+    ).all()
+    results: list[Result] = []
+    for shop_id, name, nights, error in shops:
+        key = f"shop:{shop_id}"
+        if nights < WEEKLY_AFTER_NIGHTS:
+            results.append((key, None))
+            continue
+        why = (error or "").split(". ", 1)[0].strip()[:160]
+        results.append(
+            (
+                key,
+                f"{name} has given no prices for {nights} nights in a row, so it is now asked "
+                "weekly" + (f": {why}." if why else "."),
+            )
+        )
+    return results
+
+
+async def _switched_off_by_refusal(db: AsyncSession) -> dict[str, datetime]:
+    """Each switched-off cinema whose latest change was the refresh switching it off, refused."""
+    rows = (
+        await db.execute(
+            select(CinemaVenue.id, CinemaVenue.slug).where(
+                CinemaVenue.collection_enabled.is_(False), CinemaVenue.deleted_at.is_(None)
+            )
+        )
+    ).all()
+    off: dict[uuid.UUID, str] = {venue_id: slug for venue_id, slug in rows}
+    if not off:
+        return {}
+    changes = (
+        await db.execute(
+            select(
+                AdminAction.target_id,
+                AdminAction.user_id,
+                AdminAction.changes,
+                AdminAction.created_at,
+            )
+            .where(
+                AdminAction.target_table == "cinema_venues",
+                AdminAction.target_id.in_([str(venue_id) for venue_id in off]),
+            )
+            .order_by(AdminAction.created_at.desc())
+        )
+    ).all()
+    latest: dict[str, tuple[Any, Any, datetime]] = {}
+    for target, user, change, when in changes:
+        latest.setdefault(target, (user, change, when))
+    found: dict[str, datetime] = {}
+    for venue_id, slug in off.items():
+        last = latest.get(str(venue_id))
+        if last is None:
+            continue
+        user, change, when = last
+        reason = str((change or {}).get("reason") or "")
+        if user is None and reason.startswith("Source host refusal"):
+            found[slug] = when
+    return found
+
+
 async def check_cinemas(db: AsyncSession, now: datetime) -> list[Result]:
     """The ODEON fast lane (#381): the cinema programme ran, and every cinema switched on was read.
 
@@ -378,8 +508,23 @@ async def check_cinemas(db: AsyncSession, now: datetime) -> list[Result]:
         )
     ).all()
     job_key = CINEMA_SCOPE + "job"
+    # AG2 (DS50-01): a cinema the refresh switched off after its source refused is named until
+    # the owner switches it back on; before, only switched-on cinemas were read.
+    refused = await _switched_off_by_refusal(db)
+    names: dict[str, str] = {
+        slug: name
+        for slug, name in (await db.execute(select(CinemaVenue.slug, CinemaVenue.name))).all()
+    }
+    off_rows: list[Result] = [
+        (
+            CINEMA_SCOPE + slug,
+            f"{names.get(slug, slug)} was switched off on {day(when)} after its listings site "
+            "refused the app; it stays off until it is switched back on.",
+        )
+        for slug, when in sorted(refused.items())
+    ]
     if not venues:
-        return [(job_key, None)]
+        return [(job_key, None), *off_rows]
     runs = (
         await db.execute(
             select(CinemaRefreshRun.started_utc, CinemaRefreshRun.status, CinemaRefreshRun.report)
@@ -428,7 +573,7 @@ async def check_cinemas(db: AsyncSession, now: datetime) -> list[Result]:
         else:
             what = f"found no showings on {day(started)}"
         results.append((key, f"{name}'s listings {what}; {since}."))
-    return results
+    return results + off_rows
 
 
 Check = Callable[[AsyncSession, datetime], Awaitable[list[Result]]]
@@ -446,6 +591,8 @@ CHECKS: Sequence[Check] = (
     check_deal_freshness,
     check_assistant,
     check_cinemas,
+    check_shops,
+    check_tmdb_age,
 )
 
 

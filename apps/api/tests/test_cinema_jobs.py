@@ -1,12 +1,12 @@
 """Real advisory locks/leases, disabled job, and reminder commit boundary."""
 
 import uuid
-from datetime import UTC, timedelta
+from datetime import UTC, date, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.clock import utcnow
@@ -183,7 +183,7 @@ async def test_cinema_child_runs_after_reminder_commit_and_failure_is_separate(m
     monkeypatch.setattr(run_reminders, "run_daily_check", AsyncMock(return_value=CheckSummary()))
     monkeypatch.setattr(run_reminders, "sync_due", AsyncMock(return_value=[]))
 
-    async def beat(*args):
+    async def beat(*args, **kwargs):
         events.append("reminder heartbeat")
 
     async def child(*args):
@@ -258,12 +258,118 @@ async def test_the_cinema_rows_are_checked_after_the_refresh_and_their_push_deli
     assert after == ["refresh", "cinema check", "commit", "digest", "deliver", "commit"]
 
 
+def _prepared(**snapshots):
+    start = date(2026, 11, 17)
+    return SimpleNamespace(
+        date_from=start, date_to=start + timedelta(days=13), snapshots=dict(snapshots)
+    )
+
+
+def test_partial_means_a_cinema_read_less_than_its_source_can():
+    """AG2 (CR49-04): 14 of 14 runs from 3 Nov were ``partial``, nine with nothing wrong,
+    because only Vue's two days could ever be proven of a 14-day window. A run is now
+    ``partial`` only when a cinema read less than its source can."""
+    start = date(2026, 11, 17)
+    vue_both = Snapshot(complete_dates={start, start + timedelta(days=1)})
+    listings = Snapshot(observed_dates={start})  # a listings page proves no day complete
+    assert refresh.provable_days("vue", start, start + timedelta(days=13), start) == {
+        start,
+        start + timedelta(days=1),
+    }
+    assert refresh.provable_days("cinematimes", start, start + timedelta(days=13), start) == set()
+
+    every = _prepared(**{"vue-st-enoch": vue_both, "gft": listings, "odeon-braehead": listings})
+    assert refresh.run_status(every) == "healthy"
+    assert refresh.read_short(every) == []
+
+    vue_one = Snapshot(complete_dates={start})
+    short = _prepared(**{"vue-st-enoch": vue_one, "gft": listings})
+    assert refresh.run_status(short) == "partial"
+    assert refresh.read_short(short) == ["vue-st-enoch"]
+
+    one_failed = _prepared(gft=listings, **{"odeon-braehead": Snapshot(failed=True)})
+    assert refresh.run_status(one_failed) == "partial"
+    assert refresh.read_short(one_failed) == ["odeon-braehead"]
+
+    all_failed = _prepared(gft=Snapshot(failed=True), **{"odeon-braehead": Snapshot(failed=True)})
+    assert refresh.run_status(all_failed) == "failed"
+
+
+async def test_the_0800_job_refreshes_tmdbs_old_and_never_synced_films_and_beats(
+    db_conn, monkeypatch
+):
+    """AG2 (DS50-05): the TMDB refresh moved into the 08:00 job, never-synced films first, and
+    its heartbeat counts what TMDB would not give."""
+    from sqlalchemy.ext.asyncio import AsyncSession as RealSession
+
+    from src.models.movie import Movie
+    from src.tmdb.models import Movie as TmdbMovie
+
+    db = RealSession(bind=db_conn, expire_on_commit=False, join_transaction_mode="create_savepoint")
+
+    class Shared:
+        async def __aenter__(self):
+            return db
+
+        async def __aexit__(self, *args):
+            return None
+
+    class FakeTmdb:
+        asked: list[int] = []
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def get_movie_full(self, movie_id, language="en-US"):
+            FakeTmdb.asked.append(movie_id)
+            if movie_id == 9_800_003:
+                raise RuntimeError("TMDB has removed it")
+            return TmdbMovie(id=movie_id, title="Fresh", original_title="Fresh", overview="New.")
+
+    now = utcnow()
+    await db.execute(update(Movie).values(last_tmdb_sync_utc=now))
+    films = {
+        9_800_001: None,
+        9_800_002: now - timedelta(days=200),
+        9_800_003: now - timedelta(days=300),
+        9_800_004: now - timedelta(days=10),
+    }
+    for tmdb_id, synced in films.items():
+        db.add(
+            Movie(
+                id=uuid.uuid4(),
+                tmdb_id=tmdb_id,
+                title="Stale",
+                original_title="Stale",
+                media_type="film",
+                last_tmdb_sync_utc=synced,
+            )
+        )
+    await db.flush()
+    monkeypatch.setattr(run_reminders, "AsyncSession", lambda *args, **kwargs: Shared())
+    monkeypatch.setattr(run_reminders, "TMDBClient", FakeTmdb)
+    monkeypatch.setattr(run_reminders.settings, "tmdb_read_token", "a-token")
+    try:
+        result = await run_reminders._refresh_tmdb(SimpleNamespace())
+        assert FakeTmdb.asked == [9_800_001, 9_800_003, 9_800_002]
+        assert result is not None and (result.refreshed, result.failed) == (2, 1)
+        row = await db.get(JobHeartbeat, "tmdb-refresh")
+        assert row is not None and row.outcome == "2 refreshed, 1 still due"
+        assert row.detail["failures"] == 1
+    finally:
+        await db.close()
+
+
 #: The 08:00 job's guarded steps, in the order they run, and the name each prints on failure.
 MORNING_STEPS = [
     ("sync_due", "watch history"),
     ("refresh_due", "cinema programme"),
     ("run_cinema_check", "cinema check"),
     ("deliver_cinema_digest", "cinema digest"),
+    ("_refresh_tmdb", "TMDB refresh"),
 ]
 
 
@@ -278,6 +384,7 @@ async def test_the_morning_job_survives_a_failure_in_any_guarded_step(
     delivery and the heartbeat still run, and the job still exits 0.
     """
     events = []
+    beats = []
 
     class Session:
         async def __aenter__(self):
@@ -296,6 +403,10 @@ async def test_the_morning_job_survives_a_failure_in_any_guarded_step(
         async def __aexit__(self, *args):
             return None
 
+    async def heartbeat(db, job, outcome, **kwargs):
+        events.append("heartbeat")
+        beats.append((job, outcome, kwargs.get("failures"), kwargs.get("detail")))
+
     def step(name, result):
         async def run(*args, **kwargs):
             events.append(name)
@@ -311,7 +422,8 @@ async def test_the_morning_job_survives_a_failure_in_any_guarded_step(
     monkeypatch.setattr(run_reminders, "run_reminders", AsyncMock(return_value=ReminderSummary()))
     monkeypatch.setattr(run_reminders, "run_daily_check", AsyncMock(return_value=CheckSummary()))
     monkeypatch.setattr(run_reminders, "push_sender", lambda: Sender())
-    monkeypatch.setattr(run_reminders.heartbeat, "beat", step("heartbeat", None))
+    monkeypatch.setattr(run_reminders.heartbeat, "beat", heartbeat)
+    monkeypatch.setattr(run_reminders, "_refresh_tmdb", step("_refresh_tmdb", None))
     monkeypatch.setattr(
         run_reminders, "deliver_pending", step("deliver", SimpleNamespace(sent=0, failed=0))
     )
@@ -334,9 +446,16 @@ async def test_the_morning_job_survives_a_failure_in_any_guarded_step(
     expected += ["deliver_cinema_digest"]
     if broken != "run_cinema_check":
         expected += ["deliver"]  # the cinema check's new problem, pushed this morning
+    expected += ["_refresh_tmdb"]
+    if broken != "sync_due":
+        expected += ["heartbeat"]  # AG2: written again, so a later step's failure is counted
     assert events == expected
     assert f"{printed}: failed, RuntimeError: {broken} broke" in capsys.readouterr().err
     engine.dispose.assert_awaited_once()
+    # AG2: the job's last heartbeat names the step that failed, for the next daily check.
+    job, outcome, failures, detail = beats[-1]
+    assert (job, outcome, failures) == ("cron-reminders", "ran, 1 failed", 1)
+    assert detail["failedSteps"] == [printed]
 
 
 @pytest.mark.parametrize(

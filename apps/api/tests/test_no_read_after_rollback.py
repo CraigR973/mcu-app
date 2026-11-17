@@ -32,7 +32,6 @@ NOT_ORM: dict[str, dict[str, str]] = {
         "want": "a reviews Want, a dataclass",
         "searcher": "the Brave searcher, counting its own calls",
     },
-    "services/calendar.py": {"result": "the calendar's IngestResult, a dataclass"},
     "services/bid_trial.py": {"client": "the eBay client, counting its own calls"},
     "services/ebay_watch/runs.py": {"client": "the eBay client, counting its own calls"},
     "services/specs/backfill.py": {"searcher": "the Brave searcher, counting its own calls"},

@@ -34,6 +34,13 @@ describe('attentionDestination — AA2', () => {
     expect(attentionDestination('cinema:odeon-braehead')).toMatchObject({
       advice: "Ask Craig to look at this cinema's listings source; the app cannot repair it.",
     })
+    // AG2: the four rows the daily check gained.
+    expect(attentionDestination('job:backup')).toMatchObject({
+      advice: 'Check the backup workflow’s latest run in GitHub Actions.',
+    })
+    expect(attentionDestination('job:tmdb-refresh')).toMatchObject({ advice: 'Ask Craig to check this scheduled job in Railway.' })
+    expect(attentionDestination('shop:3f2504e0-4f89-41d3-9a0c-0305e82c3409')).toMatchObject({ to: '/retailers' })
+    expect(attentionDestination('tmdb:age')).toMatchObject({ advice: 'Check the 08:00 job’s TMDB refresh in Railway.' })
   })
 })
 

@@ -343,13 +343,13 @@ async def test_a_refresh_records_what_it_found(db: AsyncSession) -> None:
     assert state.last_error is None
 
 
-async def test_a_refresh_also_fetches_again_the_films_whose_tmdb_data_is_150_days_old(
+async def test_a_calendar_refresh_leaves_tmdbs_old_data_to_the_0800_job(
     db: AsyncSession,
 ) -> None:
-    """Batch X12c (DS44-06): TMDB's terms bar caching its data over six months."""
+    """Batch X12c refreshed TMDB's 150-day-old fields here; AG2 (DS50-05) moved that to the
+    08:00 job, since the calendar refreshes only when someone reads it. The calendar no longer
+    asks TMDB for a film's details (`test_cinema_jobs.py` proves the job does)."""
     from src.models.movie import Movie
-    from src.tmdb.models import Genre
-    from src.tmdb.models import Movie as TmdbMovie
 
     now = utcnow()
     await _set_state(db, now - timedelta(days=2), now - timedelta(days=2))
@@ -365,36 +365,15 @@ async def test_a_refresh_also_fetches_again_the_films_whose_tmdb_data_is_150_day
     db.add(old)
     await db.flush()
 
-    class WithFilms(FakeDiscover):
-        failing = False
+    class NoDetails(FakeDiscover):
+        async def get_movie_full(self, movie_id: int, language: str = "en-US") -> object:
+            raise AssertionError("the calendar must not refresh a film's details")
 
-        async def get_movie_full(self, movie_id: int, language: str = "en-US") -> TmdbMovie:
-            del language
-            if self.failing:
-                raise RuntimeError("TMDB is down")
-            return TmdbMovie(
-                id=movie_id,
-                title="New Data",
-                original_title="New Data",
-                overview="Fresh.",
-                genres=[Genre(id=18, name="Drama")],
-            )
-
-    fake = WithFilms({DISCS: {1: []}}, {})
-    result = await refresh_calendar(db, fake, now=now)
+    result = await refresh_calendar(db, NoDetails({DISCS: {1: []}}, {}), now=now)
 
     assert result is not None and not result.errors
     await db.refresh(old)
-    assert (old.title, old.overview) == ("New Data", "Fresh.")
-
-    # TMDB down for the fields: the calendar still finishes, and says so.
-    await _set_state(db, now - timedelta(days=2), now - timedelta(days=2))
-    old.last_tmdb_sync_utc = now - timedelta(days=200)
-    await db.flush()
-    broken = WithFilms({DISCS: {1: []}}, {})
-    broken.failing = True
-    again = await refresh_calendar(db, broken, now=now)
-    assert again is not None and any("TMDB is down" in e for e in again.errors)
+    assert (old.title, old.overview) == ("Old Data", "Stale.")
 
 
 @pytest_asyncio.fixture

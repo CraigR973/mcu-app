@@ -38,6 +38,12 @@ next step still runs. Wave 2's review proved that one person's failed sync used 
 other person's sync, delivery, the heartbeat, the cinema refresh and the digest. The reminders,
 the daily check and the delivery stay unguarded: they are this job's own work, and their
 failure is the job's failure.
+
+**Since AG2 (DS50-01, DS50-05) the job says what failed, and runs the TMDB refresh.** Its
+heartbeat carries a failure figure: the steps that failed, each person's failed sync and each
+push that failed, written again at the end if a later step failed, so the next daily check names
+a morning that went wrong. The TMDB six-month refresh moved here from the release calendar's
+read, which nothing guaranteed would happen; it beats as ``tmdb-refresh``.
 """
 
 from __future__ import annotations
@@ -61,6 +67,8 @@ from src.services.letterboxd.sync import SyncResult, sync_due
 from src.services.notifications import deliver_pending
 from src.services.push_transport import push_sender
 from src.services.reminders import ReminderSummary, run_reminders
+from src.services.tmdb_refresh import StaleRefreshResult, refresh_stale_fields
+from src.tmdb import TMDBClient
 
 
 def report(
@@ -101,18 +109,59 @@ def report(
     return 0
 
 
-async def _phase[T](name: str, step: Callable[[], Awaitable[T]], fallback: T) -> T:
+async def _phase[T](
+    name: str, step: Callable[[], Awaitable[T]], fallback: T, failed: list[str] | None = None
+) -> T:
     """Run one guarded step of the morning: a failure is printed, and the job carries on.
 
     AG1 (CR49-01): one step's exception must never skip the steps after it. The step builds
-    its own session, so nothing it leaves half-done reaches the next one.
+    its own session, so nothing it leaves half-done reaches the next one. AG2: the step's name
+    is added to ``failed``, which the job's heartbeat counts.
     """
     try:
         return await step()
     except Exception as exc:  # noqa: BLE001 - a guarded phase never stops the morning
         print(f"{name}: failed, {type(exc).__name__}: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
+        if failed is not None:
+            failed.append(name)
         return fallback
+
+
+async def _beat_morning(engine: AsyncEngine, failed: list[str], others: int) -> None:
+    """The 08:00 job's heartbeat (AG2): what failed this morning, counted."""
+    failures = len(failed) + others
+    async with AsyncSession(engine, expire_on_commit=False) as db:
+        await heartbeat.beat(
+            db,
+            heartbeat.REMINDERS,
+            f"ran, {failures} failed" if failures else "ran",
+            failures=failures,
+            detail={"failedSteps": list(failed), "otherFailures": others},
+        )
+
+
+async def _refresh_tmdb(engine: AsyncEngine) -> StaleRefreshResult | None:
+    """TMDB's details again for the films oldest past 150 days, and those never synced (AG2).
+
+    Moved from the release calendar's read (X12c), which ran only when someone opened
+    Releases, so nothing made sure it ran at all (DS50-05). One TMDB call a film, at most
+    100 a morning. Its heartbeat counts each film TMDB would not give.
+    """
+    async with AsyncSession(engine, expire_on_commit=False) as db:
+        if not settings.tmdb_read_token:
+            await heartbeat.beat(db, heartbeat.TMDB, "no TMDB token", failures=1)
+            return None
+        async with TMDBClient() as tmdb:
+            result = await refresh_stale_fields(db, tmdb, now=utcnow())
+        await heartbeat.beat(
+            db,
+            heartbeat.TMDB,
+            f"{result.refreshed} refreshed, {result.remaining} still due",
+            failures=result.failed,
+            detail={"errors": result.errors[:5]},
+        )
+    return result
 
 
 async def _sync_watch_history(engine: AsyncEngine) -> list[SyncResult]:
@@ -138,9 +187,14 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
             await db.commit()
             # Batch X5: the weekly watch-history sync, each run recorded on its own row. AG1:
             # on a session of its own, and guarded, so a failure cannot skip what follows.
+            failed_steps: list[str] = []
             synced = await _phase(
-                "watch history", lambda: _sync_watch_history(engine), list[SyncResult]()
+                "watch history",
+                lambda: _sync_watch_history(engine),
+                list[SyncResult](),
+                failed_steps,
             )
+            failed_syncs = sum(1 for result in synced if result.run.error)
             delivered = 0
             failed = 0
             if deliver:
@@ -149,21 +203,29 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
                     delivered = delivery.sent
                     failed = delivery.failed
             await db.commit()
-            await heartbeat.beat(db, heartbeat.REMINDERS, "ran")
+        await _beat_morning(engine, failed_steps, failed_syncs + failed)
+        early_failures = len(failed_steps)
         # AB6: independent sessions after delivery/commit. Disabled venue seeds cause
         # zero source requests. Cinema status is separate from the reminder exit code.
-        cinema = await _phase("cinema programme", lambda: refresh_due(engine), {"status": "failed"})
+        cinema = await _phase(
+            "cinema programme", lambda: refresh_due(engine), {"status": "failed"}, failed_steps
+        )
         print(f"cinema programme:  {cinema['status']}")
         # The ODEON fast lane (#381): the cinema rows again, now that today's run is written, so a
         # cinema that failed this morning reaches Craig this morning, not tomorrow.
-        cinema_check = await _phase("cinema check", lambda: _cinema_check(engine), CheckSummary())
+        cinema_check = await _phase(
+            "cinema check", lambda: _cinema_check(engine), CheckSummary(), failed_steps
+        )
         print(f"cinema check:      {cinema_check.problems} problems")
         for message in cinema_check.new or []:
             print(f"  new:             {message}")
         if deliver:
             async with push_sender() as sender:
                 cinema_delivery = await _phase(
-                    "cinema digest", lambda: deliver_cinema_digest(engine, sender), None
+                    "cinema digest",
+                    lambda: deliver_cinema_digest(engine, sender),
+                    None,
+                    failed_steps,
                 )
                 if cinema_delivery is not None:
                     delivered += cinema_delivery.sent
@@ -174,6 +236,17 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
                         await db.commit()
                     delivered += attention.sent
                     failed += attention.failed
+        # AG2 (DS50-05): last, so a slow TMDB never holds the digest back.
+        tmdb = await _phase("TMDB refresh", lambda: _refresh_tmdb(engine), None, failed_steps)
+        if tmdb is not None:
+            print(f"TMDB refresh:      {tmdb.refreshed} refreshed, {tmdb.failed} failed")
+        if len(failed_steps) > early_failures:
+            # A later step failed: the heartbeat says so, for tomorrow's check to name.
+            await _phase(
+                "heartbeat",
+                lambda: _beat_morning(engine, failed_steps, failed_syncs + failed),
+                None,
+            )
     finally:
         await engine.dispose()
     return report(

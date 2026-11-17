@@ -4,14 +4,16 @@ TMDB's terms bar caching its data "for longer than 6 months". Every film's field
 one fetch when it was identified (1,051 of them on 8 Sep, the first day), and nothing fetched
 them again, so most would pass six months on 8 Mar 2027. This refreshes the films whose
 ``last_tmdb_sync_utc`` is older than :data:`STALE_AFTER` (150 days, a month inside the limit),
-stalest first, a few each time the release calendar refreshes (:func:`calendar.refresh_calendar`,
-which a read triggers at most daily): 100 a day clears the 1,051 in 11 days, long before 8 Mar.
+stalest first, 100 each morning in the 08:00 job (since AG2, DS50-05; before it, each time the
+release calendar's read refreshed it, which nothing guaranteed): 100 a day clears the 1,051 in
+11 days, long before 8 Mar.
 
 **A refresh rewrites TMDB's fields and credits and nothing a person set:** the film's title,
 year, overview, poster, genres, keywords, cast summary and trailer as TMDB gives them now, and
-its credit rows; never its copies, watches, wants or identification. A film with no sync date
-is left alone: its age is unknown rather than old, and the first run must not write rows nobody
-expected.
+its credit rows; never its copies, watches, wants or identification. **A film with no sync date
+is refreshed first, once** (AG2): at wave 2's review 24 identified films had none and so were
+never refreshed at all. The daily check names any film past 165 days
+(`health_checks.check_tmdb_age`).
 """
 
 from __future__ import annotations
@@ -38,7 +40,7 @@ logger = structlog.get_logger(__name__)
 #: A film's TMDB data is refreshed once it is this old: a month inside TMDB's six.
 STALE_AFTER = timedelta(days=150)
 
-#: Films refreshed per calendar refresh. One TMDB call each, one after another.
+#: Films refreshed each morning (AG2). One TMDB call each, one after another.
 BATCH_SIZE = 100
 
 
@@ -52,12 +54,15 @@ class StaleRefreshResult:
 
 
 def stale_condition(now: datetime) -> tuple[ColumnElement[bool], ...]:
-    """Identified, live, and last fetched from TMDB longer ago than :data:`STALE_AFTER`."""
+    """Identified, live, and never fetched from TMDB or fetched longer ago than
+    :data:`STALE_AFTER`."""
     return (
         Movie.deleted_at.is_(None),
         or_(Movie.tmdb_id.is_not(None), Movie.tmdb_tv_id.is_not(None)),
-        Movie.last_tmdb_sync_utc.is_not(None),
-        Movie.last_tmdb_sync_utc < now - STALE_AFTER,
+        or_(
+            Movie.last_tmdb_sync_utc.is_(None),
+            Movie.last_tmdb_sync_utc < now - STALE_AFTER,
+        ),
     )
 
 
@@ -102,7 +107,7 @@ async def refresh_stale_fields(
             await db.scalars(
                 select(Movie)
                 .where(*stale_condition(now))
-                .order_by(Movie.last_tmdb_sync_utc)
+                .order_by(Movie.last_tmdb_sync_utc.asc().nulls_first(), Movie.id)
                 .limit(limit)
             )
         ).all()

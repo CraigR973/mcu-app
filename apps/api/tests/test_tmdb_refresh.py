@@ -96,9 +96,12 @@ async def _film(
     return movie
 
 
-async def test_only_a_film_older_than_150_days_is_refreshed_and_its_data_is_replaced(
+async def test_only_a_film_older_than_150_days_or_never_synced_is_refreshed(
     db: AsyncSession,
 ) -> None:
+    """AG2 (DS50-05) changed one thing here: a film with no sync date is refreshed, first and
+    once. X12c left it alone as "unknown, not old", which left 24 identified films never
+    refreshed at all."""
     old = await _film(db, 7_700_001, NOW - STALE_AFTER - timedelta(days=1))
     fresh = await _film(db, 7_700_002, NOW - timedelta(days=149))
     never = await _film(db, 7_700_003, None)
@@ -106,18 +109,22 @@ async def test_only_a_film_older_than_150_days_is_refreshed_and_its_data_is_repl
     tmdb = FakeTmdb()
     result = await refresh_stale_fields(db, tmdb, now=NOW)  # type: ignore[arg-type]
 
-    assert tmdb.asked == [7_700_001], "a film with no sync date is unknown, not old"
-    assert (result.refreshed, result.failed) == (1, 0)
-    await db.refresh(old)
-    assert old.title == "The Title Now" and old.overview == "Fresh overview."
-    assert old.last_tmdb_sync_utc == NOW
+    assert tmdb.asked == [7_700_003, 7_700_001], "never synced first, then the stalest"
+    assert (result.refreshed, result.failed) == (2, 0)
+    for refreshed in (old, never):
+        await db.refresh(refreshed)
+        assert refreshed.title == "The Title Now" and refreshed.overview == "Fresh overview."
+        assert refreshed.last_tmdb_sync_utc == NOW
     credits = (
         await db.scalars(select(MovieCredit.person_name).where(MovieCredit.movie_id == old.id))
     ).all()
     assert list(credits) == ["Fresh Actor"]
-    for untouched in (fresh, never):
-        await db.refresh(untouched)
-        assert untouched.overview == "Stale overview."
+    await db.refresh(fresh)
+    assert fresh.overview == "Stale overview."
+
+    again = FakeTmdb()
+    await refresh_stale_fields(db, again, now=NOW)  # type: ignore[arg-type]
+    assert again.asked == [], "once synced, a film waits its 150 days like any other"
 
 
 async def test_a_refresh_leaves_the_copies_alone(db: AsyncSession) -> None:

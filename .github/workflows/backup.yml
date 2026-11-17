@@ -9,6 +9,10 @@ name: Backup
 # The monthly drill restores the copy this run took into a throwaway Postgres, before it is
 # encrypted (the runner never holds the private key), and fails the run when any table's
 # rows differ from the manifest. A failed run emails the repository's owner.
+#
+# AG2 (DS50-01): the last step records every run, ok or failed, as the `backup` heartbeat,
+# through the one function the role may call (migration 079), so the app's daily check names
+# a backup that failed or has not run in 8 days.
 
 on:
   schedule:
@@ -116,3 +120,10 @@ jobs:
                 echo "Deleting $name ($created)"
                 gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/$id"
               done
+
+      - name: Record the run for the daily check
+        if: always()
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          OUTCOME: ${{ job.status == 'success' && 'ok' || 'failed' }}
+        run: python -m src.scripts.backup beat --outcome "$OUTCOME" ${{ env.DRILL == 'true' && '--drill' || '' }}

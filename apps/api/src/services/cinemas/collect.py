@@ -47,6 +47,24 @@ def _metadata_url(body: str, source: str) -> str:
     return match.group(0) + "page-data/sq/d/3836549025.json"
 
 
+#: The Vue adapter reads today and tomorrow only (AB6), whatever window is asked for.
+VUE_DAYS = 2
+
+
+def provable_days(source: str, start: date, end: date, today: date) -> set[date]:
+    """The days a source's adapter can prove complete inside ``start``..``end`` (AG2, CR49-04).
+
+    Vue's showings API is read for today and tomorrow, and each read proves its day. No other
+    adapter proves a day complete: a parsed listings page is not proof that the operator's whole
+    schedule was on it, so they only ever observe. A venue that proves fewer days than this read
+    less than its source can, and only that makes a run ``partial``.
+    """
+    if source == "vue":
+        last = today + timedelta(days=VUE_DAYS - 1)
+        return {day for day in days_between(start, end) if today <= day <= last}
+    return set()
+
+
 async def collect_venue(venue: Venue, start: date, end: date, fetch: Budget) -> Snapshot:
     days = days_between(start, end)
     checked_utc = utcnow()
@@ -60,7 +78,7 @@ async def collect_venue(venue: Venue, start: date, end: date, fetch: Budget) -> 
             # This approved adapter observes only today/tomorrow, even when the
             # caller selects later dates. Later coverage remains explicitly unchecked.
             today = checked_utc.replace(tzinfo=UTC).astimezone(LONDON).date()
-            selected = [d for d in days if today <= d <= today + timedelta(days=1)]
+            selected = sorted(provable_days(venue.source, start, end, today))
             if selected:
                 # Ordinary anonymous page cookies remain in the existing HTTP client,
                 # never in programme evidence. This GET consumes the same run budget.

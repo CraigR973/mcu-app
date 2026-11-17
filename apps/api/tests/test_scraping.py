@@ -56,6 +56,7 @@ from src.services.scraping.runner import (
     _record_refused,
     _record_success,
     apply_search_template,
+    off_search_page,
     scrape_one,
     search_url_for,
 )
@@ -1329,6 +1330,45 @@ EMPTY_RESULTS_PAGE = """
   <p>Your search did not yield any results.</p>
 </body></html>
 """
+
+
+class TestASearchSentElsewhere:
+    """AG2 (MK53-02): from 12 Oct a shop's search answered 301, then 302 to a campaign page with
+    no product cards, and read as "no results" for five weeks. A search that lands off its
+    search page and lists nothing is now a refusal; one that lands on a priced product page is
+    read as before."""
+
+    @staticmethod
+    def _redirecting(final_path: str, page: str) -> httpx.MockTransport:
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path == "/search":
+                return httpx.Response(302, headers={"location": final_path})
+            return httpx.Response(200, text=page)
+
+        return httpx.MockTransport(handler)
+
+    async def test_a_campaign_page_with_nothing_on_it_is_a_refusal(self) -> None:
+        transport = self._redirecting("/c/october/", "<html><h1>October deals</h1></html>")
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            candidate, outcome = await scrape_one(_retailer(), "Dog Soldiers", client=client)
+
+        assert candidate is None
+        assert outcome.refused and not outcome.no_results
+        assert outcome.error == "Test Shop answered off its search page, at /c/october/"
+
+    async def test_a_product_page_with_a_price_is_still_read(self) -> None:
+        transport = self._redirecting("/heat/", RUNNER_PAGE)
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _candidate, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert not outcome.refused
+
+    def test_where_a_search_landed(self) -> None:
+        asked = "https://www.shop.example/search?q=heat"
+        assert not off_search_page(asked, "https://www.shop.example/search/?q=heat&page=1")
+        assert not off_search_page(asked, "https://shop.example/search?q=heat")
+        assert off_search_page(asked, "https://www.shop.example/c/october/")
+        assert off_search_page(asked, "https://elsewhere.example/search?q=heat")
 
 
 class TestAnEmptyResultsPageIsNeitherAFailureNorAClaim:

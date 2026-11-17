@@ -31,7 +31,7 @@ from src.services import heartbeat
 from src.services.cinema_digest.evaluate import evaluate_run, recover
 from src.services.cinemas import identity
 from src.services.cinemas.awaiting import awaiting_first_enable
-from src.services.cinemas.collect import ADAPTER_VERSION, collect_venue
+from src.services.cinemas.collect import ADAPTER_VERSION, collect_venue, provable_days
 from src.services.cinemas.domain import (
     LONDON,
     Snapshot,
@@ -55,7 +55,7 @@ from src.services.cinemas.venues import BY_SLUG, VENUES, Venue
 log = structlog.get_logger(__name__)
 LOCK = "SELECT pg_try_advisory_lock(864387, 6)"
 UNLOCK = "SELECT pg_advisory_unlock(864387, 6)"
-HEARTBEAT = "cinema-programme"
+HEARTBEAT = heartbeat.CINEMAS
 
 
 class PreparedRun(BaseModel):
@@ -464,21 +464,8 @@ async def _promote_all(
                         )
             run = await fence(db, run_id)
             run.report = report
-    status = (
-        "failed"
-        if all(s.failed for s in prepared.snapshots.values())
-        else (
-            "partial"
-            if any(
-                s.failed
-                or prepared.metadata_report.get("pending", 0)
-                or prepared.metadata_report.get("refused", False)
-                or set(days_between(prepared.date_from, prepared.date_to)) != s.complete_dates
-                for s in prepared.snapshots.values()
-            )
-            else "healthy"
-        )
-    )
+    short = read_short(prepared)
+    status = run_status(prepared)
     async with factory() as db, db.begin():
         run = await fence(db, run_id)
         await retain(db)
@@ -513,12 +500,43 @@ async def _promote_all(
             db,
             HEARTBEAT,
             status,
+            # AG2: the failure figure is the cinemas whose read failed; those that read less
+            # than their source can are counted beside it.
+            failures=sum(s.failed for s in prepared.snapshots.values()),
             detail={
                 "rows": prepared.row_count,
                 "failedVenues": sum(s.failed for s in prepared.snapshots.values()),
+                "shortVenues": short,
             },
         )
     return {"status": status, **summary(prepared), "changes": report["venues"]}
+
+
+def read_short(prepared: PreparedRun) -> list[str]:
+    """The cinemas that read less than their source can (AG2, CR49-04), failed ones included."""
+    # A run's window starts on its own day in London (`refresh_due`), the day Vue reads from.
+    start, end = prepared.date_from, prepared.date_to
+    return sorted(
+        slug
+        for slug, snapshot in prepared.snapshots.items()
+        if snapshot.failed
+        or not provable_days(BY_SLUG[slug].source, start, end, start) <= snapshot.complete_dates
+    )
+
+
+def run_status(prepared: PreparedRun) -> str:
+    """``failed`` when every cinema failed; ``partial`` only when one read less than its source
+    can; otherwise ``healthy``, the run table's word for ok (AG2, CR49-04).
+
+    Before AG2 a run was ``partial`` whenever a cinema's proven days differed from the 14-day
+    window, which only Vue's two days could ever meet: 14 of 14 runs from 3 Nov were
+    ``partial``, nine of them with nothing wrong, so the word carried no signal. Metadata
+    waiting for review is not a cinema reading less, and no longer counts.
+    """
+    snapshots = prepared.snapshots.values()
+    if snapshots and all(s.failed for s in snapshots):
+        return "failed"
+    return "partial" if read_short(prepared) else "healthy"
 
 
 async def due_venues(db: AsyncSession) -> set[str]:

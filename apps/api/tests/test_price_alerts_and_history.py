@@ -1021,6 +1021,17 @@ class TestRefusingShops:
         outcomes = [self._outcome(refused=True), self._outcome(), self._outcome()]
         assert is_refusing_night(outcomes) is False
 
+    def test_nothing_for_every_want_is_a_refusing_night(self) -> None:
+        """AG2 (MK53-02): a shop answering nothing for every want, night after night, is as
+        dark as one answering 429, so its nights add up to the weekly ask too."""
+        assert is_refusing_night([self._outcome(no_results=True)] * 3) is True
+        mixed = [self._outcome(no_results=True), self._outcome(refused=True)]
+        assert is_refusing_night(mixed) is True
+        answered = [self._outcome(no_results=True), self._outcome(not_stocked=True)]
+        assert is_refusing_night(answered) is False, "a 'no' is an answer"
+        priced = [self._outcome(no_results=True), self._outcome(ok=True)]
+        assert is_refusing_night(priced) is False
+
     def test_a_want_the_shop_cannot_serve_was_never_asked(self) -> None:
         outcomes = [self._outcome(refused=True), self._outcome(skipped=True)]
         assert is_refusing_night(outcomes) is True
