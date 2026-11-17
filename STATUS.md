@@ -2,6 +2,21 @@
 
 ## Now
 
+**17 Nov, 08:23 GMT: the first 08:00 run with AG1 and AG2 read back clean, and the four ODEONs are
+read again (#381, #384, #385).** Production was on `fdeb954` for the run. The 08:00 job beat at
+08:01 with zero failures and no failed step; one person's watch-history sync was due and ran (7
+written, no error), the other's was not due (last run 15 Nov); both digests were sent at 08:03. The
+TMDB refresh beat for the first time: 24 refreshed, 0 still due, no errors. The cinema run read
+`healthy`, its first since at least 15 Nov: 2,495 showings against 888 on 16 Nov, no cinema failed,
+the four ODEONs 1,373 of them (Braehead 437, East Kilbride 334, Glasgow Quay 457, Kilmarnock 145).
+Of the 307 ODEON showings last seen 11 Nov, 153 had passed, 152 from 17 Nov were seen again, and 2
+at Braehead on 17 Nov are now unconfirmed (the source never shows a whole day, so they are not
+marked withdrawn); none were withdrawn or cancelled. The daily check wrote 36 rows between 08:01 and
+08:03, none failing and none pushed, among them a row for each of the eight scheduled things (`job:`
+for seven, and `cinema:job`). All read-only. **Still to read back:** 18 Nov's check judging the TMDB
+refresh on its own beat; the backup's first heartbeat after Sunday 22 Nov's run; Zavvi reaching the
+weekly ask (about 24 Nov); the valuation job's first beat with a failure count (1 Dec, its next run).
+
 **17 Nov, 00:59 GMT: AG2 shipped, every scheduled thing watched (PR 164, `efa5f9b`, #385); Group AG
 sitting 1 is done.** The daily check read four of the eight scheduled things. Now each is listed
 once with its cadence (`heartbeat.SCHEDULED`), beats with a failure figure, and gets a row: the
@@ -264,8 +279,9 @@ remain unchanged.
 
 **Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2,
 AG3 then AG7 (`/group-start AG · 2`), waits for the owner's go.** AG6 from 25 Nov. Sitting 1's
-read-backs: each person's sync row and the digest on the next 08:00 run; the next daily check's
-row for each of the eight scheduled things; the first TMDB refresh; Sunday 22 Nov's backup beat.
+first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
+TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
+the valuation job's first beat with a failure count (1 Dec).
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
@@ -683,6 +699,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **17 Nov, 08:23 GMT — read-back: the first 08:00 run with AG1 and AG2, and the ODEON fix (#381,
+  #384, #385).** Production on `fdeb954`. The 08:00 job: zero failures, one sync due and run, both
+  digests sent. The TMDB refresh: 24 refreshed, 0 still due. The cinema run `healthy` with 2,495
+  showings (888 on 16 Nov), the four ODEONs 1,373; of 307 stale ODEON showings, 153 passed, 152 seen
+  again, 2 unconfirmed, none withdrawn. The daily check: 36 rows, none failing, eight for the
+  scheduled things. Read-only; nothing written in production.
 - **17 Nov, 00:59 GMT — PR 164 merged: AG2, every scheduled thing watched (`efa5f9b63ec7320970698ab8bda0ec3a265fefcc`, #385).**
   A fast-forward of `main`. CI's seven jobs green on the PR's last commit, the end-to-end job
   included (skips as on `main`); production API and web on the merged commit, `db: ok`, every
