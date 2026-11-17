@@ -6,7 +6,7 @@ Since AF1 (#372) they are rows in Craig's Needs you rather than a row of their o
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
@@ -42,3 +42,14 @@ class AttentionResponse(BaseModel):
     items: list[AttentionItemResponse]
     #: When the daily check last ran; null before its first run.
     checkedAt: UtcDatetime | None = None
+
+
+class OwnAttentionResponse(BaseModel):
+    """AG3 (UX54-02): what the person signed in may be told about their own phone.
+
+    ``notifications`` is null while their phone is getting notifications; ``noDevice`` when no
+    device holds a live subscription; ``undelivered`` when the last three days' notifications
+    all failed or were held back. Worked out as it is read, so turning notifications on clears
+    it at once rather than at the next 08:00 check."""
+
+    notifications: Literal["noDevice", "undelivered"] | None = None

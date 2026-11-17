@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/theme'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/layouts/AppLayout'
 import ErrorBoundary from './components/ErrorBoundary'
+import { AssignReviewsPanel } from '@/components/admin/AssignReviewsPanel'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { BrandMark } from '@/components/brand/BrandMark'
@@ -68,6 +69,8 @@ function AdminPage() {
           </Link>
         ))}
       </div>
+      {/* AG3 (UX54-03): assigning reviews is an admin's tool, not a card on Needs you. */}
+      <div className="mt-6"><AssignReviewsPanel /></div>
     </div>
   )
 }

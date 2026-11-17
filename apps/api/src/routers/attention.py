@@ -24,8 +24,19 @@ from src.clock import utcnow
 from src.models.craig_note import CraigNote
 from src.models.profile import Profile
 from src.routers.movies import Database
-from src.schemas.attention import AttentionItemResponse, AttentionResponse, NoteRequest
-from src.services.health_checks import CHECK_STALE_AFTER, current_problems, day, last_checked
+from src.schemas.attention import (
+    AttentionItemResponse,
+    AttentionResponse,
+    NoteRequest,
+    OwnAttentionResponse,
+)
+from src.services.health_checks import (
+    CHECK_STALE_AFTER,
+    current_problems,
+    day,
+    last_checked,
+    notification_trouble,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["attention"])
 
@@ -69,6 +80,19 @@ async def attention(_user: AdminUser, db: Database) -> AttentionResponse:
             AttentionItemResponse(key="check:stale", message=f"The daily check hasn't run {when}."),
         )
     return AttentionResponse(items=items, checkedAt=checked)
+
+
+@router.get("/attention/mine", response_model=OwnAttentionResponse)
+async def own_attention(user: CurrentUser, db: Database) -> OwnAttentionResponse:
+    """AG3 (UX54-02): the one thing the daily check finds about a person that is theirs to fix,
+    their own phone not getting notifications, said to them on their own Home. Open to both
+    people; it reads only the caller's own devices and notifications."""
+    trouble = await notification_trouble(db, user, utcnow())
+    if trouble is None:
+        return OwnAttentionResponse()
+    return OwnAttentionResponse(
+        notifications="noDevice" if trouble[0] == "noDevice" else "undelivered"
+    )
 
 
 #: Open lines one person may have waiting at once. Enough to say a few things, too few for a

@@ -287,7 +287,44 @@ it('shows an assigned review on Home even without loans or trips', async () => {
   api.fetchNeedsYou.mockResolvedValue({ items: [], reviews: [{ id: 'review-1', title: "Check Titanic's Blu-ray", question: 'Inspect the disc', status: 'answered' }] })
   renderRow()
   expect((await screen.findByRole('link', { name: /Check Titanic/ })).getAttribute('href')).toBe('/needs-you?review=review-1')
-  expect(screen.getByText('Answered — awaiting correction')).not.toBeNull()
+  // AG3 (UX54-03): an answered review is the admin's move, so its words say so, not "awaiting correction".
+  expect(screen.getByText('You answered · waiting for the admin')).not.toBeNull()
+  expect(screen.getByText('Admin')).not.toBeNull()
+})
+
+describe('AG3 (UX54-03): Needs you rows are labelled by whose move it is', () => {
+  const MARK = '3f2504e0-4f89-41d3-9a0c-0305e82c3999'
+  const answered = { id: 'review-a', title: "Check Titanic's Blu-ray", question: 'Which film?', status: 'answered' as const, assignedTo: MARK, assigneeName: 'Mark' }
+  const open = { id: 'review-o', title: 'Check Shetland Series 5', question: 'One series?', status: 'open' as const, assignedTo: MARK, assigneeName: 'Mark' }
+
+  it('gives the admin an answered review as their own, first, "Apply the answer", not under the viewer’s name', async () => {
+    auth.craig = true
+    api.fetchAttention.mockResolvedValue({ items: [], checkedAt: null })
+    api.fetchNeedsYou.mockResolvedValue({ items: [], trips: [], reviews: [open, answered] })
+    renderRow()
+    const card = await screen.findByRole('region', { name: /Needs you/ })
+    const rows = within(card).getAllByRole('listitem').map((li) => li.textContent ?? '')
+    // Open first in the data, but the admin's own move leads.
+    expect(rows[0]).toContain("Check Titanic's Blu-ray")
+    expect(rows[0]).toContain('Apply Mark’s answer')
+    expect(rows[0]).toMatch(/You$/)
+    expect(rows[0]).not.toContain('For Mark')
+    // What is still the viewer's to answer stays under their name.
+    expect(rows[1]).toContain('For Mark · One series?')
+    expect(rows[1]).toMatch(/Mark$/)
+  })
+
+  it('tells the viewer an answered review is waiting on the admin, after what is still theirs', async () => {
+    auth.craig = false
+    api.fetchNeedsYou.mockResolvedValue({ items: [], trips: [], reviews: [{ ...answered, assignedTo: 'p-mark' }, { ...open, assignedTo: 'p-mark' }] })
+    renderRow()
+    const card = await screen.findByRole('region', { name: /Needs you/ })
+    const rows = within(card).getAllByRole('listitem').map((li) => li.textContent ?? '')
+    expect(rows[0]).toContain('Check Shetland Series 5')
+    expect(rows[0]).toMatch(/You$/)
+    expect(rows[1]).toContain('You answered · waiting for the admin')
+    expect(rows[1]).toMatch(/Admin$/)
+  })
 })
 
 describe('AF1 (#372): Mark puts every disc back, and Craig’s Needs attention is part of Needs you', () => {

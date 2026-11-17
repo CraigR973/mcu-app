@@ -184,6 +184,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/activity",
         # Batch X2: the daily check's problems, for Home's "Needs attention" row.
         "/api/v1/attention",
+        # AG3 (UX54-02): the person's own phone, told to the person.
+        "/api/v1/attention/mine",
         "/api/v1/attention/notes",
         "/api/v1/attention/notes/{note_id}",
         # AC1 (#335): Home's "Needs you", a read scoped to whoever is signed in.

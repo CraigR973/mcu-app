@@ -53,9 +53,11 @@ function othersLoanCopy(item: NeedsYouItem, owner: string): { title: string; det
   return { ...base, title: `${owner} to hand over ${item.movieTitle}`, detail: `You asked for it${by}` }
 }
 
-const REVIEW_STATUS: Record<string, string> = {
-  answered: 'Answered — awaiting correction',
-  changed: 'The record changed — needs another look',
+/** AG3 (UX54-03): whose move a review is. Until it is answered it is the person it was
+ *  assigned to; once answered, or when the record has changed, it is the admin's to apply or
+ *  look at again, and the person who answered has nothing left to do. */
+function adminsMove(status: string): boolean {
+  return status === 'answered' || status === 'changed'
 }
 
 /** One row on Home's Needs you and on the Needs you page (AE8, #355). */
@@ -79,6 +81,7 @@ export interface NeedsYouRowData {
 }
 
 type Review = Pick<AssignedReview, 'id' | 'title' | 'question' | 'status'> & Partial<Pick<AssignedReview, 'assignedTo' | 'assigneeName'>>
+type Reader = { id: string; displayName?: string; role?: string }
 
 /**
  * Everything on Needs you as rows, the reader's own first — AE8 (#355). The people who keep the
@@ -90,7 +93,7 @@ type Review = Pick<AssignedReview, 'id' | 'title' | 'question' | 'status'> & Par
  */
 export function needsYouRows(
   data: { items?: NeedsYouItem[]; trips?: NeedsYou['trips']; reviews?: Review[] },
-  reader: { id: string; displayName?: string } | null | undefined,
+  reader: Reader | null | undefined,
   app: NeedsYouRowData[] = [],
 ): NeedsYouRowData[] {
   const mine = (id: string | null | undefined) => !id || id === reader?.id
@@ -106,11 +109,23 @@ export function needsYouRows(
       return { ...copy, key: `${item.kind}:${item.loanId}`, kind: 'loan' as const, poster: item.posterPath, film: item.movieTitle, label: own ? 'You' : item.owner?.name ?? 'You', own, ownerId: item.owner?.profileId ?? reader?.id ?? null }
     }),
     ...(data.reviews ?? []).map((review) => {
+      const who = review.assigneeName ?? 'someone else'
+      if (adminsMove(review.status)) {
+        // AG3 (UX54-03): labelled by whose move it is, not by who answered.
+        const own = reader?.role === 'admin'
+        const detail = review.status === 'changed'
+          ? 'Look again · the record changed since the question'
+          : own ? `Apply ${who}’s answer · awaiting correction` : `${mine(review.assignedTo) ? 'You' : who} answered · waiting for the admin`
+        return {
+          key: `review:${review.id}`, kind: 'review' as const, title: review.title, detail,
+          to: `/needs-you?review=${review.id}`, poster: null, film: review.title,
+          label: own ? 'You' : 'Admin', own, ownerId: own ? reader?.id ?? null : null,
+        }
+      }
       const own = mine(review.assignedTo)
-      const status = REVIEW_STATUS[review.status] ?? review.question
       return {
         key: `review:${review.id}`, kind: 'review' as const, title: review.title,
-        detail: own ? status : `For ${review.assigneeName ?? 'someone else'} · ${status}`,
+        detail: own ? review.question : `For ${who} · ${review.question}`,
         to: `/needs-you?review=${review.id}`, poster: null, film: review.title,
         label: own ? 'You' : review.assigneeName ?? 'Someone else', own,
         ownerId: review.assignedTo ?? reader?.id ?? null,

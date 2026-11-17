@@ -656,6 +656,59 @@ async def test_a_line_from_mark_lands_in_craigs_row_until_he_clears_it(db: Async
         assert (await client.delete(f"/api/v1/attention/notes/{note['noteId']}")).status_code == 403
 
 
+async def test_a_person_is_told_their_own_phone_is_not_getting_notifications(
+    db: AsyncSession,
+) -> None:
+    """AG3 (UX54-02): the check's rule, said to its person on their own Home, as it is read."""
+    craig = await _person(db, UserRole.admin)
+    mark = await _person(db)
+    just_now = datetime.now().replace(microsecond=0)
+
+    async with _as(db, mark.id) as client:
+        assert (await client.get("/api/v1/attention/mine")).json() == {"notifications": "noDevice"}
+    # Craig's own, not Mark's: each is told about their own phone and nobody else's.
+    await _device(db, craig)
+    async with _as(db, craig.id) as client:
+        assert (await client.get("/api/v1/attention/mine")).json() == {"notifications": None}
+
+    # A device that has had only undelivered notifications for three days.
+    await _device(db, mark)
+    for _ in range(2):
+        db.add(
+            Notification(
+                id=uuid.uuid4(),
+                user_id=mark.id,
+                category="deals",
+                status="suppressed",
+                title="A deal",
+                body="",
+                created_at_utc=just_now - timedelta(hours=5),
+            )
+        )
+    await db.flush()
+    async with _as(db, mark.id) as client:
+        assert (await client.get("/api/v1/attention/mine")).json() == {
+            "notifications": "undelivered"
+        }
+    # One that reached a phone clears it at once, with no wait for the next 08:00 check.
+    db.add(
+        Notification(
+            id=uuid.uuid4(),
+            user_id=mark.id,
+            category="deals",
+            status="sent",
+            title="A deal",
+            body="",
+            created_at_utc=just_now - timedelta(hours=1),
+            sent_at_utc=just_now - timedelta(hours=1),
+            delivered_count=1,
+        )
+    )
+    await db.flush()
+    async with _as(db, mark.id) as client:
+        assert (await client.get("/api/v1/attention/mine")).json() == {"notifications": None}
+
+
 async def test_a_note_must_have_words_and_stay_short(db: AsyncSession) -> None:
     mark = await _person(db)
     async with _as(db, mark.id) as client:

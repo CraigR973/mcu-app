@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
-import { answerReview, assignReview, fetchAssignedReviews, fetchAttention, fetchNeedsYou, fetchReviewProposals } from '@/lib/api'
+import { answerReview, fetchAssignedReviews, fetchAttention, fetchNeedsYou } from '@/lib/api'
 import { attentionRows } from '@/lib/attention'
 import { needsYouRows } from '@/lib/needs-you'
 import { listState, queryErrorMessage } from '@/lib/query-state'
@@ -66,35 +66,6 @@ function ReviewCard({ review, selected }: { review: AssignedReview; selected: bo
   )
 }
 
-function MarkAssignmentPanel() {
-  const client = useQueryClient()
-  // Explicit preflight only, not a request on every Home/page read.
-  const proposals = useQuery({ queryKey: ['review-proposals'], queryFn: fetchReviewProposals, enabled: false, retry: false })
-  const assignment = useMutation({
-    mutationFn: async () => {
-      if (!proposals.data || proposals.data.length !== 3) throw new Error('Check the three current targets first.')
-      // Independent assignments are deliberately sequential: report partial failure; retries
-      // re-use assignments already made rather than replacing someone's answer.
-      for (const proposal of proposals.data) await assignReview(proposal)
-    },
-    onSettled: async () => { await client.invalidateQueries({ queryKey: ['assigned-reviews'] }) },
-  })
-  return (
-    <section className="archive-panel space-y-3 p-4" aria-label="Assign Mark's reviews">
-      <h2 className="font-display text-lg font-semibold">Mark’s three catalogue reviews</h2>
-      <p className="text-sm text-muted-foreground">Check the current Titanic, Dead Man’s Shoes and Shetland records, then assign the questions to Mark. This sends no notification and makes no catalogue corrections.</p>
-      <Button variant="outline" disabled={proposals.isFetching || assignment.isPending} onClick={() => { void proposals.refetch() }}>Check current targets</Button>
-      {proposals.data && !proposals.isError ? <>
-        <ul className="list-inside list-disc text-sm">{proposals.data.map(proposal => <li key={proposal.kind}>{proposal.title}</li>)}</ul>
-        <Button disabled={assignment.isPending || proposals.isFetching} onClick={() => assignment.mutate()}>{assignment.isPending ? 'Assigning…' : 'Assign these three reviews to Mark'}</Button>
-      </> : null}
-      {proposals.isError ? <p role="alert" className="text-sm text-destructive">{queryErrorMessage(proposals.error, 'Could not check the current records.')}</p> : null}
-      {assignment.isError ? <p role="alert" className="text-sm text-destructive">{queryErrorMessage(assignment.error, 'Assignment stopped.')} Some reviews may already be assigned; the list below shows what exists. Recheck the targets before continuing.</p> : null}
-      {assignment.isSuccess ? <p role="status" className="text-sm">All three reviews are assigned. Existing answers were preserved.</p> : null}
-    </section>
-  )
-}
-
 /** AE8 (#355): every item on Needs you, Home's five and the rest, each saying whose it is, the
  *  reader's own first. One read, shared with Home's row. Since AF1 (#372) Craig's list carries
  *  the app's problems and the lines sent to him, as Home's does. */
@@ -138,11 +109,10 @@ export default function AssignedReviewsPage() {
         <Link to="/loans">Loans</Link><Link to="/movie-night">Cinema trips</Link>
       </nav>
       <EverythingWaiting />
-      {admin ? <MarkAssignmentPanel /> : null}
       {state === 'loading' ? <StatePanel tone="loading" title="Loading your reviews" /> : null}
       {state === 'offline' ? <StatePanel tone="offline" title="Reviews are unavailable offline" description="Reconnect to see the current records and save an observation." /> : null}
       {state === 'error' ? <StatePanel tone="error" title="Could not load reviews" description={queryErrorMessage(query.error, 'Please try again.')} /> : null}
-      {state === 'empty' ? <StatePanel tone="empty" title="No assigned reviews" description="Your loans and cinema trips remain on Home and their own pages." /> : null}
+      {state === 'empty' ? <StatePanel tone="empty" title="No assigned reviews" description={admin ? 'Your loans and cinema trips remain on Home and their own pages. Reviews are assigned from Administration.' : 'Your loans and cinema trips remain on Home and their own pages.'} /> : null}
       {state === 'ready' ? query.data?.map(review => <ReviewCard key={`${review.id}:${review.revision}`} review={review} selected={params.get('review') === review.id} />) : null}
     </div>
   )

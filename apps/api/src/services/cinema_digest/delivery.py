@@ -19,7 +19,7 @@ from src.models.cinema_digest import (
 )
 from src.models.notification import DEFERRED_QUIET_HOURS, Notification
 from src.models.profile import Profile
-from src.services.cinema_digest.evaluate import london_day, tmdb_id, words
+from src.services.cinema_digest.evaluate import london_day, tmdb_id, with_unread, words
 from src.services.notifications import (
     DeliverySummary,
     PushSender,
@@ -33,11 +33,14 @@ from src.services.notifications import (
 log = structlog.get_logger(__name__)
 
 
-def payload(items: list[CinemaDigestAppearance], older: bool, tag: str) -> dict[str, Any]:
+def payload(
+    items: list[CinemaDigestAppearance], older: bool, tag: str, unread: int = 0
+) -> dict[str, Any]:
     title, body = words(items, older, bounded=True)
     result = {
         "title": title,
-        "body": body,
+        # AG3 (CT52-01): "N cinemas not read today" closes the body when any were not.
+        "body": with_unread(body, unread),
         "url": "/movie-night/cinema?view=new-this-week" + ("&run=olderFilm" if older else ""),
         "category": "cinemas",
         "tag": tag,
@@ -47,7 +50,9 @@ def payload(items: list[CinemaDigestAppearance], older: bool, tag: str) -> dict[
     while len(json.dumps(result, ensure_ascii=False).encode()) > 3000 and shown > 1:
         shown -= 1
         _, lines = words(items[:shown], older, bounded=True)
-        result["body"] = lines + f"\nAnd {len(items) - shown} more. Open New this week."
+        result["body"] = with_unread(
+            lines + f"\nAnd {len(items) - shown} more. Open New this week.", unread
+        )
     return result
 
 
@@ -119,10 +124,12 @@ async def _claim(
             )
         ).all()
         ids_by_notification: dict[str, list[str]] = {}
+        unread_by_notification: dict[str, int] = {}
         for day in days:
             entry = day.report.get("recipients", {}).get(str(user_id))
             if entry:
                 ids_by_notification[entry["notificationId"]] = entry["appearanceIds"]
+                unread_by_notification[entry["notificationId"]] = int(entry.get("unreadCinemas", 0))
         ids = {value for row in rows for value in ids_by_notification.get(str(row.id), [])}
         appearances = list(
             (
@@ -201,7 +208,11 @@ async def _claim(
             appearance_ids=sorted(eligible_ids),
             device_ids=[str(device.id) for device in devices],
             payload=payload(
-                eligible, pref.cinemas_older_only, f"cinemas:{user_id}:{london_day(now)}"
+                eligible,
+                pref.cinemas_older_only,
+                f"cinemas:{user_id}:{london_day(now)}",
+                # The newest day's figure: the last usable row is the coalesced delivery's.
+                unread_by_notification.get(str(usable[-1].id), 0),
             ),
         )
         db.add(claim)

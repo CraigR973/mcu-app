@@ -3,10 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, Popcorn } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { StaleCinemasLine } from '@/components/cinemas/StaleCinemasLine'
 import { PosterCard, ShelfRow } from '@/components/dashboard/Shelf'
 import { useAuth } from '@/context/auth'
 import { fetchCinemaFilms } from '@/lib/api'
-import { CINEMA_VIEW_PATH, cinemaFilmPath, runBadge, shortVenueName } from '@/lib/cinemas'
+import { CINEMA_VIEW_PATH, cinemaFilmPath, runBadge, shortVenueName, staleCinemasLine } from '@/lib/cinemas'
 import { cinemaStrip, type HomeLineup } from '@/lib/home-films'
 
 /**
@@ -29,7 +30,7 @@ export function CinemaStrip({ lineup, settled, homeLayoutPending }: { lineup: Ho
   }
 
   if (films.length === 0) {
-    return (
+    const way = (
       <Link
         to={CINEMA_VIEW_PATH}
         aria-disabled={homeLayoutPending || undefined}
@@ -47,6 +48,9 @@ export function CinemaStrip({ lineup, settled, homeLayoutPending }: { lineup: Ho
         <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       </Link>
     )
+    // AG3: with no film to show, the way in still says which cinemas were not read.
+    const unread = staleCinemasLine(query.data?.venues ?? [], now)
+    return unread ? <div className="space-y-2">{way}<StaleCinemasLine venues={query.data?.venues ?? []} now={now} compact /></div> : way
   }
 
   return (
@@ -65,6 +69,8 @@ export function CinemaStrip({ lineup, settled, homeLayoutPending }: { lineup: Ho
           </Link>
         </h2>
         <p className="-mt-1 text-xs leading-5 text-muted-foreground">This week at your cinemas.</p>
+        {/* AG3 (CT52-01): Home's strip says which cinemas were not read, as At the cinema does. */}
+        <StaleCinemasLine venues={query.data?.venues ?? []} now={now} compact className="mt-1" />
       </div>
       <ShelfRow label="This week at the cinema">
         {films.map(({ card, run, runReason, venueIds }) => {

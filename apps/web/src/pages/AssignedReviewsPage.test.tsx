@@ -70,21 +70,12 @@ it('does not present a failed review read as an empty queue', async () => {
   expect(screen.queryByText('No assigned reviews')).toBeNull()
 })
 
-it('checks the three current targets without assigning, then assigns only on the explicit click', async () => {
+it('no longer carries the assigning control, for either person (AG3, UX54-03)', async () => {
   auth.role = 'admin'
-  const proposals = ['titanic_disc', 'wanted_identity', 'shetland_series'].map(kind => ({
-    kind, targetId: review.targetId, assignedTo: review.assignedTo,
-    expectedFingerprint: 'a'.repeat(64), title: kind,
-  }))
-  api.fetchReviewProposals.mockResolvedValue(proposals)
-  api.assignReview.mockResolvedValue(review)
   show()
-  fireEvent.click(await screen.findByRole('button', { name: 'Check current targets' }))
-  const assign = await screen.findByRole('button', { name: 'Assign these three reviews to Mark' })
-  expect(api.assignReview).not.toHaveBeenCalled()
-  fireEvent.click(assign)
-  await vi.waitFor(() => expect(api.assignReview).toHaveBeenCalledTimes(3))
-  for (const proposal of proposals) expect(api.assignReview).toHaveBeenCalledWith(proposal)
+  await screen.findByRole('region', { name: 'Everything waiting' })
+  expect(screen.queryByRole('button', { name: 'Check current targets' })).toBeNull()
+  expect(api.fetchReviewProposals).not.toHaveBeenCalled()
 })
 
 it('lists everything waiting for both, labelled, the reader’s own first (AE8)', async () => {

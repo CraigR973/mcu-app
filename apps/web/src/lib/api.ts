@@ -47,6 +47,7 @@ import {
   duplicateCheckSchema,
   barcodeLookupSchema,
   attentionSchema,
+  ownAttentionSchema,
   needsYouSchema,
   dealListSchema,
   dealSchema,
@@ -130,6 +131,7 @@ import {
   watchLogPageSchema,
   type Activity,
   type Attention,
+  type OwnAttention,
   type NeedsYou,
   type BarcodeCandidate,
   type BarcodeLookup,
@@ -2792,6 +2794,11 @@ export async function fetchDeals(filters: DealFilters = {}): Promise<DealList> {
 /** Batch X2: what the daily check found; since AF1 (#372) App rows of Craig's Needs you. Admin only. */
 export async function fetchAttention(): Promise<Attention> {
   return parseResponse(await authFetch('/attention'), attentionSchema)
+}
+
+/** AG3 (UX54-02): the person's own phone not getting notifications, for their own Home. */
+export async function fetchOwnAttention(): Promise<OwnAttention> {
+  return parseResponse(await authFetch('/attention/mine'), ownAttentionSchema)
 }
 
 /** AC1 (#335): what the person signed in can act on now, for Home's "Needs you" row. */

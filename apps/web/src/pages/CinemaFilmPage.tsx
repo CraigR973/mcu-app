@@ -37,6 +37,8 @@ import {
   showingBooking,
   showingFormats,
   showingScreen,
+  coverageAged,
+  seenAged,
   staleCoverage,
   type ProgrammeShowing,
   type ProgrammeVenue,
@@ -110,7 +112,7 @@ function TimeChip({ showing, venue, now, connected, onLapsed }: {
       </li>
     )
   }
-  const stale = showing.observationStale || now - Date.parse(showing.lastSeenUtc) >= 30 * 3600000
+  const stale = showing.observationStale || seenAged(Date.parse(showing.lastSeenUtc), now)
   const why = showing.confirmation === 'unconfirmed' ? 'Unconfirmed' : stale ? 'Saved showing is stale' : 'No ticket link'
   return (
     <li>
@@ -149,8 +151,7 @@ function coverageNote(venue: ProgrammeVenue, day: string, now: number): string |
   const coverage = venue.coverage.find((item) => item.localDate === day)
   if (!coverage) return null
   if (coverage.status === 'failed') return 'Latest check failed · ticket links paused'
-  if (coverage.status === 'stale' || (coverage.lastSuccessUtc && now - Date.parse(coverage.lastSuccessUtc) >= 30 * 3600000)
-    || (coverage.upstreamUtc && now - Date.parse(coverage.upstreamUtc) >= 36 * 3600000)) return 'Saved listing is stale · ticket links paused'
+  if (coverage.status === 'stale' || coverageAged(coverage, now)) return 'Saved listing is stale · ticket links paused'
   return null
 }
 

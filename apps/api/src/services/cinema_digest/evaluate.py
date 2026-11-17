@@ -92,6 +92,15 @@ def words(
     return title, "\n".join(lines)
 
 
+def unread_line(unread: int) -> str:
+    """AG3 (CT52-01): the digest's one line when a switched-on cinema was not read today."""
+    return f"{unread} {'cinema' if unread == 1 else 'cinemas'} not read today."
+
+
+def with_unread(body: str, unread: int) -> str:
+    return f"{body}\n{unread_line(unread)}" if unread > 0 else body
+
+
 async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) -> dict[str, Any]:
     "Caller owns commit. Day/history/outbox roll back together; uniqueness is not a read race."
     await db.execute(LOCK)
@@ -115,7 +124,7 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
     }
     # AE4 (#355): a cinema read while it awaits its first enable is evidence for that step,
     # not a programme anyone sees, so the digest names nothing from it.
-    good &= set(
+    enabled = set(
         (
             await db.scalars(
                 select(CinemaVenue.id).where(
@@ -124,6 +133,9 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
             )
         ).all()
     )
+    good &= enabled
+    # AG3 (CT52-01): a switched-on cinema this run did not read says so in the push.
+    unread = len(enabled - good)
     coverage = list(
         (
             await db.scalars(
@@ -260,15 +272,6 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
             appearances.append(appearance)
         state.baseline = baseline
     all_venues = {v.id for v in VENUES}
-    enabled = set(
-        (
-            await db.scalars(
-                select(CinemaVenue.id).where(
-                    CinemaVenue.collection_enabled.is_(True), CinemaVenue.deleted_at.is_(None)
-                )
-            )
-        ).all()
-    )
     for identity, state in states.items():
         absence(
             state,
@@ -293,6 +296,7 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
         if not eligible:
             continue
         title, body = words(eligible, pref.cinemas_older_only)
+        body = with_unread(body, unread)
         row = await queue_notification(
             db,
             user_id=person.id,
@@ -309,11 +313,13 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
                 "notificationId": str(row.id),
                 "appearanceIds": [str(a.id) for a in eligible],
                 "olderOnly": pref.cinemas_older_only,
+                "unreadCinemas": unread,
                 "status": row.status,
             }
     report = {
         "successfulVenues": sorted(str(v) for v in good),
         "failedVenues": sorted(str(v) for v in all_venues - good),
+        "unreadCinemas": unread,
         "appearanceIds": [str(a.id) for a in appearances],
         "recipients": recipients,
     }

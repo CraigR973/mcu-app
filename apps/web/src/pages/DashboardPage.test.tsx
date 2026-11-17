@@ -30,6 +30,7 @@ const api = vi.hoisted(() => ({
   fetchAttention: vi.fn().mockResolvedValue({ items: [], checkedAt: null }),
   // AC1: Home's "Needs you" row, for everyone. Nothing to do here unless a test says so.
   fetchNeedsYou: vi.fn().mockResolvedValue({ items: [] }),
+  fetchOwnAttention: vi.fn().mockResolvedValue({ notifications: null }),
   // AC4: the cinema strip's read. Refused unless a test says otherwise, so Home keeps its card.
   fetchCinemaFilms: vi.fn(),
 }))
@@ -156,6 +157,7 @@ function fill() {
   api.fetchSmartCollections.mockResolvedValue({ items: [], total: 0 })
   api.fetchActivity.mockResolvedValue({ items: [] })
   api.fetchCinemaFilms.mockRejectedValue(new Error('No cinema read in this test'))
+  api.fetchOwnAttention.mockResolvedValue({ notifications: null })
 }
 
 function renderHome(client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
@@ -525,6 +527,32 @@ describe('Needs you, at the top for everyone — AC1 (#335)', () => {
   })
 })
 
+describe('Home says when this phone is not getting notifications — AG3 (UX54-02)', () => {
+  it('shows nothing while notifications are arriving', async () => {
+    api.fetchOwnAttention.mockResolvedValue({ notifications: null })
+    renderHome()
+    await screen.findByRole('heading', { level: 2, name: 'The collection' })
+    expect(screen.queryByText(/not getting notifications/)).toBeNull()
+  })
+
+  for (const role of ['admin', 'viewer'] as const) {
+    it(`tells a ${role} their own phone gets none, with the way to turn it on`, async () => {
+      auth.role = role
+      api.fetchOwnAttention.mockResolvedValue({ notifications: 'noDevice' })
+      renderHome()
+      const notice = await screen.findByRole('link', { name: /This phone is not getting notifications/ })
+      expect(notice.getAttribute('href')).toBe('/settings?tab=notifications')
+      expect(notice.textContent).toContain('Turn on')
+    })
+  }
+
+  it('says when what was sent never reached a phone', async () => {
+    api.fetchOwnAttention.mockResolvedValue({ notifications: 'undelivered' })
+    renderHome()
+    expect(await screen.findByRole('link', { name: /not reaching a phone/ })).not.toBeNull()
+  })
+})
+
 describe('At the cinema on Home — AC4', () => {
   it('becomes a poster strip of this week’s films, last on Home, opening each film’s page', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(CINEMA_NOW)
@@ -538,6 +566,17 @@ describe('At the cinema on Home — AC4', () => {
     expect(within(cards[0]).getByRole('link').getAttribute('href')).toBe('/movie-night/cinema/tmdb-1417')
     expect(within(cards[2]).getByRole('link', { name: 'See all films at the cinema' }).getAttribute('href')).toBe('/movie-night/cinema')
     expect(headings().at(-1)).toBe('At the cinema')
+    vi.restoreAllMocks()
+  })
+
+  it('says how many cinemas were not read, under its heading (AG3, CT52-01)', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(CINEMA_NOW)
+    const down = filmsFixture()
+    down.venues[1].coverage = down.venues[1].coverage.map((day) => ({ ...day, status: 'failed' as const, observed: false, lastSuccessUtc: '2026-11-01T08:00:00Z' }))
+    api.fetchCinemaFilms.mockResolvedValue(down)
+    renderHome()
+    const strip = await screen.findByRole('region', { name: 'At the cinema' })
+    expect(within(strip).getByText('1 cinema not read since Sun 1 Nov.')).not.toBeNull()
     vi.restoreAllMocks()
   })
 

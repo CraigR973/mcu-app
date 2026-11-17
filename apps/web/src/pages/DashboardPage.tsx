@@ -13,6 +13,7 @@ import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
 import { FeaturedFilm } from '@/components/dashboard/FeaturedFilm'
 import { HighlightsRow } from '@/components/dashboard/Highlights'
 import { NeedsYouRow } from '@/components/dashboard/NeedsYouRow'
+import { PhoneNotice } from '@/components/dashboard/PhoneNotice'
 import { PosterCard, Shelf, ShelfHeading } from '@/components/dashboard/Shelf'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { CompletionSetPanel } from '@/components/insights/CompletionSetPanel'
@@ -124,6 +125,9 @@ export default function DashboardPage() {
             screening. Since AF1 (#372) Craig's app problems are rows of it, labelled App.
             Hidden when there is nothing. */}
         <NeedsYouRow />
+
+        {/* AG3 (UX54-02): their own phone not getting notifications, said to its owner. */}
+        <PhoneNotice />
 
         <CollectionLedger />
 

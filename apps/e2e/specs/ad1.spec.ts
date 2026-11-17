@@ -30,10 +30,15 @@ test('Mark answers his three reviews; Craig reads them without answering; change
     expect(proposals).toHaveLength(3)
     const { page: adminPage } = await signedIn('Craig')
     await adminPage.setViewportSize({ width: 375, height: 812 })
+    // AG3 (UX54-03): assigning is an admin's tool, on Administration, not a card on Needs you.
     await adminPage.goto('/needs-you')
     await expect(adminPage.getByRole('banner', { name: 'Top bar' })).toContainText('Needs you')
+    await expect(adminPage.getByRole('button', { name: 'Check current targets' })).toHaveCount(0)
+    await adminPage.goto('/admin')
     await adminPage.getByRole('button', { name: 'Check current targets' }).click()
     await adminPage.getByRole('button', { name: 'Assign these three reviews to Mark' }).click()
+    await expect(adminPage.getByRole('status').filter({ hasText: 'All three reviews are assigned' })).toBeVisible()
+    await adminPage.goto('/needs-you')
     await expect(adminPage.getByRole('region', { name: "Check Titanic's Blu-ray" })).toBeVisible()
     for (const proposal of proposals) await craig.post('/needs-you/reviews', proposal)
     const reviews = await mark.get<Review[]>('/needs-you/reviews')
@@ -66,7 +71,7 @@ test('Mark answers his three reviews; Craig reads them without answering; change
     const inspected = adminPage.getByRole('region', { name: "Check Titanic's Blu-ray" })
     await expect(inspected.getByText('Recorded answer: Not sure yet')).toBeVisible()
     await expect(inspected.getByRole('radio')).toHaveCount(0)
-    await expect(adminPage.getByRole('button', { name: 'Check current targets' })).toBeVisible()
+    await expect(adminPage.getByRole('button', { name: 'Check current targets' })).toHaveCount(0)
 
     db.sql(`UPDATE movies SET title='A changed wanted identity' WHERE id='${WANTED}';
       UPDATE movies SET tmdb_tv_id=46923,media_type='tv' WHERE id='${SHETLAND}'`)

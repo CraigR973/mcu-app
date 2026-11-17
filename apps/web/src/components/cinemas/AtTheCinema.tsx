@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { CHIP, CHIP_OFF, CHIP_ON } from '@/components/cinemas/chip-styles'
 import { DayStrip } from '@/components/cinemas/DayStrip'
 import { ProgrammeCoverage, ProgrammeLink } from '@/components/cinemas/ProgrammeCoverage'
+import { StaleCinemasLine } from '@/components/cinemas/StaleCinemasLine'
 import { Poster } from '@/components/movies/Poster'
 import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -35,6 +36,7 @@ import {
   staleCoverage,
   stripDays,
   timeBooking,
+  timeStale,
   type CinemaFilms,
   type CinemaFilters,
   type CinemaLine,
@@ -181,13 +183,15 @@ function DayFilmCard({ film, day, venues, now, online }: { film: DayFilm; day: s
                   {times.map((time) => {
                     const href = venue ? timeBooking(time, venue, now, online) : null
                     const formats = chipFormats(time.formats).join(' · ')
-                    const content = <>{clock(time.at)}{formats ? <span className="text-xs font-normal opacity-80">{formats}</span> : null}</>
+                    // AG3 (UX54-01): a stale time says so in words, not only by lacking the tint.
+                    const stale = venue ? timeStale(time, venue, now) : false
+                    const content = <>{clock(time.at)}{formats ? <span className="text-xs font-normal opacity-80">{formats}</span> : null}{stale ? <span className="text-xs font-normal">stale</span> : null}</>
                     return (
                       <li key={time.at}>
                         {href ? (
                           <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`Book ${clock(time.at)}${formats ? ` ${formats}` : ''} at ${name}`} className={cn(TIME_CHIP, 'border-primary/50 bg-primary/10 text-foreground hover:bg-primary/15')}>{content}</a>
                         ) : (
-                          <span className={cn(TIME_CHIP, 'border-border text-muted-foreground')}>{content}</span>
+                          <span className={cn(TIME_CHIP, stale ? 'border-dashed border-warning/60 text-muted-foreground' : 'border-border text-muted-foreground')}>{content}</span>
                         )}
                       </li>
                     )
@@ -371,6 +375,8 @@ export function AtTheCinema() {
               </div>
             </fieldset>
           </details>
+          {/* AG3 (UX54-01): a cinema not read says so here, not only after the last film. */}
+          <StaleCinemasLine venues={selected} now={now} />
         </div>
       ) : null}
 

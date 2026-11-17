@@ -10422,6 +10422,28 @@
     "title": "OnThisDayMemoryResponse",
     "type": "object"
    },
+   "OwnAttentionResponse": {
+    "description": "AG3 (UX54-02): what the person signed in may be told about their own phone.\n\n``notifications`` is null while their phone is getting notifications; ``noDevice`` when no\ndevice holds a live subscription; ``undelivered`` when the last three days' notifications\nall failed or were held back. Worked out as it is read, so turning notifications on clears\nit at once rather than at the next 08:00 check.",
+    "properties": {
+     "notifications": {
+      "anyOf": [
+       {
+        "enum": [
+         "noDevice",
+         "undelivered"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notifications"
+     }
+    },
+    "title": "OwnAttentionResponse",
+    "type": "object"
+   },
    "ParticipantResponse": {
     "properties": {
      "added": {
@@ -19289,6 +19311,33 @@
      }
     ],
     "summary": "Attention",
+    "tags": [
+     "attention"
+    ]
+   }
+  },
+  "/api/v1/attention/mine": {
+   "get": {
+    "description": "AG3 (UX54-02): the one thing the daily check finds about a person that is theirs to fix,\ntheir own phone not getting notifications, said to them on their own Home. Open to both\npeople; it reads only the caller's own devices and notifications.",
+    "operationId": "own_attention_api_v1_attention_mine_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OwnAttentionResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Own Attention",
     "tags": [
      "attention"
     ]

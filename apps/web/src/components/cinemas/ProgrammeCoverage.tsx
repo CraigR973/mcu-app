@@ -1,5 +1,5 @@
 import type { ProgrammeVenue } from '@/lib/cinemas'
-import { COVERAGE_LABELS, londonTime, programmeUrl } from '@/lib/cinemas'
+import { COVERAGE_LABELS, coverageAged, londonTime, programmeUrl } from '@/lib/cinemas'
 import { cn } from '@/lib/utils'
 
 export function ProgrammeLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
@@ -19,7 +19,7 @@ export function ProgrammeCoverage({ venues, now }: { venues: ProgrammeVenue[]; n
             <ul className="mt-2 space-y-2 text-sm">
               {venue.coverage.map((day) => (
                 <li key={day.localDate}>
-                  <p>{day.localDate} · {day.lastSuccessUtc && (now - Date.parse(day.lastSuccessUtc) >= 30 * 3600000 || day.upstreamUtc && now - Date.parse(day.upstreamUtc) >= 36 * 3600000) && day.status !== 'failed' && day.status !== 'notEnabled' ? 'Saved programme is stale' : COVERAGE_LABELS[day.status]}</p>
+                  <p>{day.localDate} · {day.lastSuccessUtc && coverageAged(day, now) && day.status !== 'failed' && day.status !== 'notEnabled' ? 'Saved programme is stale' : COVERAGE_LABELS[day.status]}</p>
                   <p className="text-muted-foreground">{day.lastSuccessUtc ? `Checked ${londonTime(day.lastSuccessUtc)}` : 'No successful check recorded'}{day.lastAttemptUtc && day.lastAttemptUtc !== day.lastSuccessUtc ? ` · Attempted ${londonTime(day.lastAttemptUtc)}` : ''}</p>
                   <p className="text-muted-foreground">{day.upstreamUtc ? `Source updated ${londonTime(day.upstreamUtc)}${day.upstreamAge === 'stale' ? ' · stale' : ''}` : 'Source update time unverified'}</p>
                   {day.sourceUpdateLabel ? <p className="text-muted-foreground">Source label: {day.sourceUpdateLabel}</p> : null}

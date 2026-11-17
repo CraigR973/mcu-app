@@ -181,6 +181,46 @@ async def test_partial_run_uses_only_current_successful_venue_and_stays_frozen(a
     ] == "already_evaluated"
 
 
+async def test_the_digest_says_how_many_cinemas_were_not_read_today(api_session, admin):
+    """AG3 (CT52-01): a push that reads as complete while cinemas failed is the defect."""
+    db = api_session
+    run = await finished(db, failed=(VENUES[0].slug, VENUES[3].slug))
+    await showing(db, VENUES[1], identity=950021)
+    result = await digest.evaluate(db, run, now=NOW)
+    assert result["unreadCinemas"] == 2
+    row = await db.scalar(
+        select(Notification).where(
+            Notification.category == "cinemas", Notification.user_id == admin.id
+        )
+    )
+    assert row.body.splitlines()[-1] == "2 cinemas not read today."
+    assert result["recipients"][str(admin.id)]["unreadCinemas"] == 2
+    # The sent push carries the same closing line, still inside its byte limit.
+    from src.models.cinema_digest import CinemaDigestAppearance
+    from src.services.cinema_digest import delivery
+
+    items = list((await db.scalars(select(CinemaDigestAppearance))).all())
+    pushed = delivery.payload(items, False, "t", unread=2)
+    assert pushed["body"].splitlines()[-1] == "2 cinemas not read today."
+    one = delivery.payload(items, False, "t", unread=1)
+    assert one["body"].endswith("1 cinema not read today.")
+    assert "not read today" not in delivery.payload(items, False, "t")["body"]
+
+
+async def test_a_digest_of_a_fully_read_day_adds_no_line(api_session, admin):
+    db = api_session
+    run = await finished(db)
+    await showing(db, VENUES[1], identity=950022)
+    result = await digest.evaluate(db, run, now=NOW)
+    assert result["unreadCinemas"] == 0
+    row = await db.scalar(
+        select(Notification).where(
+            Notification.category == "cinemas", Notification.user_id == admin.id
+        )
+    )
+    assert "not read today" not in row.body
+
+
 async def test_unmatched_baseline_late_matching_and_identity_correction_are_silent(api_session):
     db = api_session
     run = await finished(db)

@@ -65,10 +65,9 @@ export function showingBooking(showing: ProgrammeShowing, venue: ProgrammeVenue,
   const coverage = venue.coverage.find((date) => date.localDate === londonDate(Date.parse(showing.startsAtUtc)))
   const seen = Date.parse(showing.lastSeenUtc)
   if (!connected || !venue.collectionEnabled || !coverage?.observed || coverage.status === 'failed' || coverage.status === 'stale'
-    || !coverage.lastSuccessUtc || now - Date.parse(coverage.lastSuccessUtc) >= 30 * 60 * 60 * 1000
-    || (coverage.upstreamUtc !== null && now - Date.parse(coverage.upstreamUtc) >= 36 * 60 * 60 * 1000)
+    || !coverage.lastSuccessUtc || coverageAged(coverage, now)
     || showing.confirmation !== 'confirmed' || showing.observationStale || showing.upstreamAge === 'stale'
-    || !Number.isFinite(seen) || seen > now || now - seen >= 30 * 60 * 60 * 1000 || Date.parse(showing.startsAtUtc) <= now) return null
+    || !Number.isFinite(seen) || seen > now || seenAged(seen, now) || Date.parse(showing.startsAtUtc) <= now) return null
   return url && BOOKING_PATHS[url.hostname]?.some((path) => url.pathname.startsWith(path)) ? showing.bookingUrl : null
 }
 
@@ -274,11 +273,61 @@ export function shortHorizons(data: Pick<CinemaFilms, 'venues' | 'window'>): { t
   return { to: [...to.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([day, venues]) => ({ day, venues })), none }
 }
 
+// ---------------------------------------------------------------------------
+// AG3 (CT52-01, UX54-01): ONE stale test. A saved check is stale when it failed, or when its last
+// good read is 30 hours old, or its source's own update is 36 hours old. Every reader of a
+// cinema's programme asks these functions; `cinemas-stale.test.ts` fails on a second copy.
+// ---------------------------------------------------------------------------
+
+const READ_FRESH_MS = 30 * 3600000
+const SOURCE_FRESH_MS = 36 * 3600000
+type Coverage = ProgrammeVenue['coverage'][number]
+
+/** A day's last good read, or the source's own update, is older than its limit (status aside). */
+export function coverageAged(day: Pick<Coverage, 'lastSuccessUtc' | 'upstreamUtc'>, now: number): boolean {
+  return Boolean(day.lastSuccessUtc && now - Date.parse(day.lastSuccessUtc) >= READ_FRESH_MS)
+    || Boolean(day.upstreamUtc && now - Date.parse(day.upstreamUtc) >= SOURCE_FRESH_MS)
+}
+
+/** A day's saved programme is stale: its check failed, or went stale, or aged out. */
+export function coverageStale(day: Coverage, now: number): boolean {
+  return day.status === 'failed' || day.status === 'stale' || coverageAged(day, now)
+}
+
+/** A showing was last seen too long ago to treat as current. */
+export function seenAged(seenAt: number, now: number): boolean {
+  return now - seenAt >= READ_FRESH_MS
+}
+
 /** Whether a saved check behind these venues is failed or past its freshness limits. */
 export function staleCoverage(venues: ProgrammeVenue[], now: number): boolean {
-  return venues.some((venue) => venue.coverage.some((day) => day.status === 'failed' || day.status === 'stale'
-    || Boolean(day.lastSuccessUtc && now - Date.parse(day.lastSuccessUtc) >= 30 * 3600000)
-    || Boolean(day.upstreamUtc && now - Date.parse(day.upstreamUtc) >= 36 * 3600000)))
+  return venues.some((venue) => venue.coverage.some((day) => coverageStale(day, now)))
+}
+
+/** The cinemas among these whose saved check is stale (the film page's test). */
+export function staleVenues(venues: ProgrammeVenue[], now: number): ProgrammeVenue[] {
+  return venues.filter((venue) => staleCoverage([venue], now))
+}
+
+/** A time chip's cinema is stale on its day: no ticket link, and the chip says "stale" in words.
+ *  A day the cinema has no row for reads as the cinema does. */
+export function timeStale(time: Pick<DayTime, 'at'>, venue: ProgrammeVenue, now: number): boolean {
+  const coverage = venue.coverage.find((date) => date.localDate === londonDate(Date.parse(time.at)))
+  return coverage ? coverageStale(coverage, now) : staleCoverage([venue], now)
+}
+
+/** The line AG3 puts where people look: "4 cinemas not read since Wed 11 Nov", from the oldest of
+ *  the stale cinemas' last good reads; null when every cinema is current. */
+export function staleCinemasLine(venues: ProgrammeVenue[], now: number): string | null {
+  const stale = staleVenues(venues, now)
+  if (stale.length === 0) return null
+  const lastRead = (venue: ProgrammeVenue) => venue.coverage.reduce<number | null>((last, day) => {
+    const at = day.lastSuccessUtc ? Date.parse(day.lastSuccessUtc) : Number.NaN
+    return Number.isFinite(at) && (last === null || at > last) ? at : last
+  }, null)
+  const reads = stale.map(lastRead).filter((at): at is number => at !== null)
+  const words = `${String(stale.length)} ${stale.length === 1 ? 'cinema' : 'cinemas'} not read`
+  return reads.length > 0 ? `${words} since ${dayAndDate(londonDate(Math.min(...reads)))}` : `${words} yet`
 }
 
 /** What a listing is, in a word or two, where a film would show its run. */
@@ -384,8 +433,7 @@ export function timeBooking(time: DayTime, venue: ProgrammeVenue, now: number, c
   const url = safeUrl(time.bookingUrl)
   const coverage = venue.coverage.find((date) => date.localDate === londonDate(Date.parse(time.at)))
   if (!connected || !venue.collectionEnabled || !coverage?.observed || coverage.status === 'failed' || coverage.status === 'stale'
-    || !coverage.lastSuccessUtc || now - Date.parse(coverage.lastSuccessUtc) >= 30 * 60 * 60 * 1000
-    || (coverage.upstreamUtc !== null && now - Date.parse(coverage.upstreamUtc) >= 36 * 60 * 60 * 1000)
+    || !coverage.lastSuccessUtc || coverageAged(coverage, now)
     || Date.parse(time.at) <= now) return null
   return url && BOOKING_PATHS[url.hostname]?.some((path) => url.pathname.startsWith(path)) ? time.bookingUrl : null
 }

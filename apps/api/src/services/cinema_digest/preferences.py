@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.cinema_digest import CinemaDigestAppearance, CinemaDigestDay, CinemaDigestDelivery
 from src.models.notification import Notification, NotificationPreference
-from src.services.cinema_digest.evaluate import words
+from src.services.cinema_digest.evaluate import with_unread, words
 
 
 async def apply_pending(db: AsyncSession, user_id: uuid.UUID, pref: NotificationPreference) -> None:
@@ -61,6 +61,7 @@ async def apply_pending(db: AsyncSession, user_id: uuid.UUID, pref: Notification
         row = by_id[entry["notificationId"]]
         if older:
             row.title, row.body = words(older, True)
+            row.body = with_unread(row.body, int(entry.get("unreadCinemas", 0)))
             row.url = "/movie-night/cinema?view=new-this-week&run=olderFilm"
         else:
             row.status, row.suppressed_reason = "suppressed", "cinema_filter_empty"

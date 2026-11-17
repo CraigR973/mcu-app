@@ -315,3 +315,45 @@ describe('At the cinema, day by day (AE5)', () => {
   })
 })
 
+describe('a cinema not read says so where people look — AG3 (CT52-01, UX54-01)', () => {
+  /** The ODEON's checks failed after a good read on 1 Nov, as the four ODEONs' did on 11 Nov. */
+  function odeonDown(): CinemaFilms {
+    const data = filmsFixture()
+    const odeon = data.venues.find((venue) => venue.slug === 'odeon-kilmarnock')!
+    odeon.coverage = odeon.coverage.map((day) => ({ ...day, status: 'failed' as const, observed: false, lastSuccessUtc: '2026-11-01T08:00:00Z' }))
+    return data
+  }
+
+  it('puts one line at the top, before any film, and says nothing while every cinema is current', async () => {
+    setup()
+    await screen.findByRole('region', { name: 'This week' })
+    expect(screen.queryByText(/not read since/)).toBeNull()
+    cleanup()
+    state.fetch.mockReset().mockResolvedValue(odeonDown())
+    setup()
+    const line = await screen.findByText('1 cinema not read since Sun 1 Nov.')
+    const films = await screen.findByRole('region', { name: 'This week' })
+    expect(line.compareDocumentPosition(films) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // It sits with the filters, above the cinema list that follows them.
+    expect(within(screen.getByRole('group', { name: 'Filters' })).getByText('1 cinema not read since Sun 1 Nov.')).toBeTruthy()
+  })
+
+  it('counts only the cinemas the view is narrowed to', async () => {
+    state.fetch.mockReset().mockResolvedValue(odeonDown())
+    setup('/movie-night/cinema?cinema=vue-st-enoch')
+    await screen.findByRole('region', { name: 'This week' })
+    expect(screen.queryByText(/not read since/)).toBeNull()
+  })
+
+  it('says "stale" in words on a time chip, not only by lacking the tint', async () => {
+    state.fetch.mockReset().mockResolvedValue(odeonDown())
+    setup('/movie-night/cinema?day=2026-11-05')
+    const times = await screen.findByRole('list', { name: 'Times at ODEON Kilmarnock' })
+    expect(within(times).getByText('stale')).toBeTruthy()
+    cleanup()
+    state.fetch.mockReset().mockResolvedValue(filmsFixture())
+    setup('/movie-night/cinema?day=2026-11-05')
+    const live = await screen.findByRole('list', { name: 'Times at ODEON Kilmarnock' })
+    expect(within(live).queryByText('stale')).toBeNull()
+  })
+})

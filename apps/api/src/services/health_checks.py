@@ -239,6 +239,36 @@ async def check_ebay_listings(db: AsyncSession, now: datetime) -> list[Result]:
     ]
 
 
+async def notification_trouble(
+    db: AsyncSession, person: Profile, now: datetime
+) -> tuple[str, int] | None:
+    """Why this person's phone is not getting notifications, or None when it is.
+
+    ``("noDevice", 0)``: no live device. ``("undelivered", n)``: n notifications in the last
+    three days, none delivered. The daily check words it for the admin; since AG3 (UX54-02) the
+    person's own Home says it too, from this one rule."""
+    devices = await db.scalar(
+        select(func.count(PushSubscription.id)).where(
+            PushSubscription.user_id == person.id, PushSubscription.revoked_at_utc.is_(None)
+        )
+    )
+    if not devices:
+        return ("noDevice", 0)
+    statuses = (
+        await db.scalars(
+            select(Notification.status).where(
+                Notification.user_id == person.id,
+                Notification.created_at_utc >= now - NOTIFICATION_WINDOW,
+                Notification.status != NotificationStatus.queued.value,
+            )
+        )
+    ).all()
+    undelivered = {NotificationStatus.suppressed.value, NotificationStatus.failed.value}
+    if statuses and all(status in undelivered for status in statuses):
+        return ("undelivered", len(statuses))
+    return None
+
+
 async def check_people(db: AsyncSession, now: datetime) -> list[Result]:
     """Each person holds a live device, and their last three days are not all undelivered."""
     people = (
@@ -248,35 +278,20 @@ async def check_people(db: AsyncSession, now: datetime) -> list[Result]:
     ).all()
     results: list[Result] = []
     for person in people:
-        devices = await db.scalar(
-            select(func.count(PushSubscription.id)).where(
-                PushSubscription.user_id == person.id, PushSubscription.revoked_at_utc.is_(None)
-            )
-        )
         key = f"person:{person.id}:notifications"
-        if not devices:
+        trouble = await notification_trouble(db, person, now)
+        if trouble is None:
+            results.append((key, None))
+        elif trouble[0] == "noDevice":
             results.append((key, f"{person.display_name} has no phone getting notifications."))
-            continue
-        statuses = (
-            await db.scalars(
-                select(Notification.status).where(
-                    Notification.user_id == person.id,
-                    Notification.created_at_utc >= now - NOTIFICATION_WINDOW,
-                    Notification.status != NotificationStatus.queued.value,
-                )
-            )
-        ).all()
-        undelivered = {NotificationStatus.suppressed.value, NotificationStatus.failed.value}
-        if statuses and all(status in undelivered for status in statuses):
+        else:
             results.append(
                 (
                     key,
-                    f"None of {person.display_name}'s {len(statuses)} notifications since "
+                    f"None of {person.display_name}'s {trouble[1]} notifications since "
                     f"{day(now - NOTIFICATION_WINDOW)} reached a phone.",
                 )
             )
-        else:
-            results.append((key, None))
     return results
 
 

@@ -2804,6 +2804,14 @@ export const attentionSchema = z.object({
 export type AttentionItem = z.infer<typeof attentionItemSchema>
 export type Attention = z.infer<typeof attentionSchema>
 
+/** AG3 (UX54-02): what the person signed in is told about their own phone: `noDevice` when no
+ *  device holds a live subscription, `undelivered` when the last three days' notifications all
+ *  failed or were held back, null while it is getting them. For both people. */
+export const ownAttentionSchema = z.object({
+  notifications: z.enum(['noDevice', 'undelivered']).nullable(),
+})
+export type OwnAttention = z.infer<typeof ownAttentionSchema>
+
 // AC1 (#335): Home's "Needs you", what the person signed in can act on now. The API decides
 // who sees what from the loan rows; the web words each item and links to the exact place.
 const needsYouDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
