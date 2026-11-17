@@ -5509,7 +5509,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6's scheduled digest sent for real on 9–12 Nov (read back 12 Nov), so only Craig's phone receipt/tap stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
-| **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → AG7 · 3: AG4 → AG5 · 4: AG6 (from 25 Nov) · 5: AG8 → AG9 → AG10 | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386).** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
+| **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: AG4 → AG5 · 4: AG6 (from 25 Nov) · 5: AG8 → AG9 → AG10 | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6165,7 +6165,7 @@ Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
 | AG4 | CR49-02, CR49-05, CT52-02, CT52-03 | 🔴 ~2½ days | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
 | AG5 | CT52-04, MK53-03 | 🟡 ~1 day | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
 | AG6 | MK53-01, MK53-02's search half, MK53-04, MK53-05, MK53-06 | 🟡 ~1½ days | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
-| AG7 | CR49-03, CT52-05 | 🟢 ~½ day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
+| ~~AG7~~ | ~~CR49-03, CT52-05~~ | ~~🟢 ~½ day~~ | ~~Sonnet 5.5 `high`~~ | **shipped** 17 Nov: PR 166, merge `8a4b33751f6657e81f72183d7414f61f3289f48b` |
 | AG8 | AI51-01, AI51-03, AI51-04; UX54-06's label | 🟡 ~¾ day | Opus 5.5 `high` | GPT-5.6 Sol High |
 | AG9 | DS50-02, DS50-03, DS50-04 | 🟢 ~½ day | Opus 5.5 `high` | GPT-5.6 Sol High |
 | AG10 | UX54-04, UX54-05 | 🟢 ~¾ day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
@@ -6337,6 +6337,8 @@ words.
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
 
 ### AG7 — One title fold 🟢
+
+**Shipped 17 Nov, 11:27 GMT: PR 166, merge `8a4b33751f6657e81f72183d7414f61f3289f48b` (#387); production API and web on it, `db: ok`, every readiness field `configured`.** Every criterion below is met in CI, the end-to-end job included. Not yet seen live: whether the three live titles link on the 18 Nov 08:00 run (a gap in TMDB would leave one unlinked).
 
 CR49-03 (Medium), CT52-05 (Low). `proved`: the cinema rule and `title_key` disagree on 12 of 15
 crafted pairs ("Part Two" and "Part 2", "Rocky II" and "2"); three live listings slip the cinema

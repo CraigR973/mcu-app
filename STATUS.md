@@ -2,6 +2,16 @@
 
 ## Now
 
+**17 Nov, 11:27 GMT: AG7 shipped, one title fold (PR 166, `8a4b337`, #387); Group AG sitting 2 is
+done.** The cinema title rule is built on the shared `title_key.fold`: "Part Two" meets "Part 2",
+"Rocky II" meets "Rocky 2", and a typographic apostrophe, "<Name> Curates:" or a certificate such as
+"(18 TBC)" no longer hides a title. CI fails on any `unicodedata.normalize` outside `title_key.py`.
+No test expectation changed. Production API and web on `8a4b337`, `db: ok`, every readiness field
+`configured`. **Read back after the 18 Nov 08:00 run:** whether the three titles that slipped link
+(one may have no TMDB film), and the unverified count (123 on 17 Nov); AG3's stale lines and digest
+closing line only if a cinema fails. The read-back queries are in the shared notes folder.
+Sitting 3 (AG4, then AG5) waits for the owner's go.
+
 **17 Nov, 10:27 GMT: AG3 shipped, say it where people look (PR 165, `879860e`, #386); Group AG
 sitting 2 continues with AG7.** At the cinema and Home's strip say "N cinemas not read since <date>"
 from one stale test, a stale time chip says "stale", and the digest push ends "N cinemas not read
@@ -288,7 +298,7 @@ remain unchanged.
 ## Next
 
 **Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2
-is under way at the owner's go: AG3 shipped (`879860e`, #386), AG7 next (`/group-start AG · 2`).** AG6 from 25 Nov. Sitting 1's
+is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3, AG4 then AG5, waits for the owner's go.** AG6 from 25 Nov. Sitting 1's
 first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
 TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
 the valuation job's first beat with a failure count (1 Dec).
@@ -709,6 +719,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **17 Nov, 11:27 GMT — AG7 shipped (PR 166, `8a4b337`, #387); sitting 2 of Group AG done.** The cinema title rule reads the shared fold; three listing decorations no longer slip it. Production on `8a4b337`, `db: ok`.
 - **17 Nov, 10:27 GMT — AG3 shipped (PR 165, `879860e`, #386).** Cinemas not read are said on At the cinema, Home's strip and the digest; a person's own phone with no notifications is said on their Home; Needs you rows are labelled by whose move it is. Production on `879860e`, `db: ok`.
 - **17 Nov, 08:23 GMT — read-back: the first 08:00 run with AG1 and AG2, and the ODEON fix (#381,
   #384, #385).** Production on `fdeb954`. The 08:00 job: zero failures, one sync due and run, both

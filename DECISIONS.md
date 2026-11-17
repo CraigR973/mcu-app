@@ -8472,3 +8472,25 @@ contemporaneous.
        the digest's closing line on a live morning; the notice on a real device with no
        subscription.
 
+387. **AG7: one title fold (17 Nov, CR49-03, CT52-05).** Group AG's fourth batch, closing sitting 2 (#383).
+     PR 166, `8a4b337`.
+     - **What changed:** the cinema matcher's key (`identity.normal`, behind grouping, lookups and
+       "also listed") and its match (`identity.same_title`) are built on `title_key.fold`, with spaces
+       removed on top, so "Spider-Man" still meets "Spiderman" as it did. `read_title` writes
+       typographic apostrophes, quotes and dashes as plain ones before any pattern, takes
+       "<Name> Curates:" as a prefix and a certificate such as "(18 TBC)" after an IMAX suffix. The
+       fifteen crafted pairs and the three live titles are tests, which fail on the old rule; a test
+       fails on any `unicodedata.normalize` outside `title_key.py`, with an allow-list that holds
+       only that file.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **An empty key is no title** in the cinema rule, as in the shared one; the old rule matched
+         two titles that were only punctuation.
+       - **The query now carries plain punctuation,** so a film's own "Don’t" is searched as "Don't".
+         Only three of the 203 distinct live titles read differently; grouping by key was identical
+         under the old and new rule (148 keys), checked read-only.
+       - **The fifteen pairs are this batch's own,** since the review's list was not in the tree: nine
+         fail on the old rule, not the review's twelve of its own fifteen.
+       - **No test expectation changed.**
+     - **Unverified:** whether the three titles link on the next 08:00 run: one may have no TMDB
+       film, which would be a gap, not the rule.
+
