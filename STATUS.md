@@ -2,6 +2,16 @@
 
 ## Now
 
+**17 Nov, 10:27 GMT: AG3 shipped, say it where people look (PR 165, `879860e`, #386); Group AG
+sitting 2 continues with AG7.** At the cinema and Home's strip say "N cinemas not read since <date>"
+from one stale test, a stale time chip says "stale", and the digest push ends "N cinemas not read
+today" when any were not. A person's own Home says when their phone gets no notifications
+(`GET /api/v1/attention/mine`, the daily check's rule, live). Needs you rows are labelled by whose
+move it is, the admin's own first, and the assign-reviews control is on Administration. CI's first
+run failed only the new end-to-end case's own setup, fixed in the PR. Production API and web on
+`879860e`, `db: ok`, every readiness field `configured`. **Read back after the 18 Nov 08:00 run:**
+what the digest and Home say about any unread cinema. Not seen: either phone.
+
 **17 Nov, 08:23 GMT: the first 08:00 run with AG1 and AG2 read back clean, and the four ODEONs are
 read again (#381, #384, #385).** Production was on `fdeb954` for the run. The 08:00 job beat at
 08:01 with zero failures and no failed step; one person's watch-history sync was due and ran (7
@@ -277,8 +287,8 @@ remain unchanged.
 
 ## Next
 
-**Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2,
-AG3 then AG7 (`/group-start AG · 2`), waits for the owner's go.** AG6 from 25 Nov. Sitting 1's
+**Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2
+is under way at the owner's go: AG3 shipped (`879860e`, #386), AG7 next (`/group-start AG · 2`).** AG6 from 25 Nov. Sitting 1's
 first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
 TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
 the valuation job's first beat with a failure count (1 Dec).
@@ -699,6 +709,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **17 Nov, 10:27 GMT — AG3 shipped (PR 165, `879860e`, #386).** Cinemas not read are said on At the cinema, Home's strip and the digest; a person's own phone with no notifications is said on their Home; Needs you rows are labelled by whose move it is. Production on `879860e`, `db: ok`.
 - **17 Nov, 08:23 GMT — read-back: the first 08:00 run with AG1 and AG2, and the ODEON fix (#381,
   #384, #385).** Production on `fdeb954`. The 08:00 job: zero failures, one sync due and run, both
   digests sent. The TMDB refresh: 24 refreshed, 0 still due. The cinema run `healthy` with 2,495

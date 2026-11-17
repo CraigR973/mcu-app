@@ -8443,3 +8443,32 @@ contemporaneous.
      - **Unverified:** the next daily check's eight rows, the first live TMDB refresh, the backup's
        first heartbeat (22 Nov), and the shop rule on Zavvi's real redirect (fixture-proved only).
 
+386. **AG3: say it where people look (17 Nov, CT52-01, UX54-01, UX54-02, UX54-03).** Group AG's third
+     batch, opening sitting 2 at the owner's go (#383). PR 165, `879860e`.
+     - **What changed:** one "N cinemas not read since <date>" line, at the top of At the cinema (with
+       its filters, for the cinemas the view is narrowed to) and under Home's strip heading, from the
+       stale test the film page uses, now one set of functions in `lib/cinemas.ts` that a web test
+       refuses to see copied; a stale time chip says "stale"; the digest push ends with "N cinemas not
+       read today". A person's own Home says when their phone gets no notifications, from
+       `GET /api/v1/attention/mine`, which runs the daily check's own rule on the caller. Needs you
+       rows are labelled by whose move it is; the control that assigns reviews is on Administration.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **The digest line goes only on a digest that is sent.** A day with no new film still sends
+         nothing, even if cinemas were not read; the daily check and the screens say it then.
+       - **"Not read today" counts switched-on cinemas the run did not read,** not cinemas paused
+         before their first enable. The figure is stored with each recipient's day, so a push held
+         for quiet hours, or rewritten for older films only, keeps its line.
+       - **The phone notice is worked out as it is read, not copied from the 08:00 check's row,**
+         so turning notifications on clears it at once. The admin sees it as well as their own App
+         row; the two say the same thing.
+       - **An answered review, or one whose record changed, is the admin's move.** The admin reads
+         it as theirs ("Apply <name>'s answer", labelled You, first); the person who answered reads
+         "You answered · waiting for the admin", labelled Admin, after what is still theirs. The
+         label has no name because the read does not carry the admin's.
+       - **Three test expectations changed, each by a criterion:** the answered-review wording on
+         Home's Needs you; the assign-reviews test moved, unchanged, to its component's file; the
+         end-to-end case for reviews now assigns from Administration.
+     - **Unverified:** a real phone at 375 px (the check ran in Chromium, both themes, both people);
+       the digest's closing line on a live morning; the notice on a real device with no
+       subscription.
+
