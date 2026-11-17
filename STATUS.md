@@ -2,6 +2,21 @@
 
 ## Now
 
+**17 Nov, 21:57 GMT: AG4 shipped, found for the film it is (PR 167, `fec8628`, #388); Group AG
+sitting 3 continues with AG5.** Every fact the app finds for a film (reviews, disc values, eBay
+used listings and scans, eBay usual prices, disc page lookups) is stamped with the film it was
+found for; a stamp that no longer matches is forgotten and looked up again. Identify, undo, merge
+and move sweep what they touched; the nightly spec job sweeps the rest first, 50 rows at most,
+and counts a failure past that. A merge moves the cinema link, and CI fails on a foreign key to
+`movies` not listed as moved, dropped or stamped. The daily check names two owned copies of one
+film and format with one disc page. Migration 080 ran at deploy at the owner's word: 31,754 rows
+stamped, 40 `stale`, as previewed and read back. The test expectations changed are listed in
+#388. Production API and web on `fec8628`, `db: ok`, every readiness field `configured`. **Read
+back after the 18 Nov `cron-specs` run (about 02:00 UTC) and the 08:00 run:** the 40 forgotten
+and the 37 discs searched again, the *French Connection* copy off the sequel's page, and the two
+duplicate-copy rows (*King Kong* 4K, *Hitchcock* Blu-ray), which stay until the owner removes the
+extra copies (`OWNER-ACTIONS.md`). The read-back queries are in the shared notes folder.
+
 **17 Nov, 11:27 GMT: AG7 shipped, one title fold (PR 166, `8a4b337`, #387); Group AG sitting 2 is
 done.** The cinema title rule is built on the shared `title_key.fold`: "Part Two" meets "Part 2",
 "Rocky II" meets "Rocky 2", and a typographic apostrophe, "<Name> Curates:" or a certificate such as
@@ -298,7 +313,7 @@ remain unchanged.
 ## Next
 
 **Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2
-is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3, AG4 then AG5, waits for the owner's go.** AG6 from 25 Nov. Sitting 1's
+is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is under way at the owner's go: AG4 shipped (`fec8628`, #388), AG5 next.** AG6 from 25 Nov. Sitting 1's
 first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
 TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
 the valuation job's first beat with a failure count (1 Dec).
@@ -719,6 +734,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **17 Nov, 21:57 GMT — AG4 shipped (PR 167, `fec8628`, #388).** Every fact found for a film is stamped with it; a stale stamp is forgotten and looked up again, by identify, undo, merge, move and a nightly sweep. Migration 080 stamped 31,754 live rows, 40 `stale`. Production on `fec8628`, `db: ok`.
 - **17 Nov, 11:27 GMT — AG7 shipped (PR 166, `8a4b337`, #387); sitting 2 of Group AG done.** The cinema title rule reads the shared fold; three listing decorations no longer slip it. Production on `8a4b337`, `db: ok`.
 - **17 Nov, 10:27 GMT — AG3 shipped (PR 165, `879860e`, #386).** Cinemas not read are said on At the cinema, Home's strip and the digest; a person's own phone with no notifications is said on their Home; Needs you rows are labelled by whose move it is. Production on `879860e`, `db: ok`.
 - **17 Nov, 08:23 GMT — read-back: the first 08:00 run with AG1 and AG2, and the ODEON fix (#381,

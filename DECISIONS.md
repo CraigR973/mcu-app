@@ -8494,3 +8494,65 @@ contemporaneous.
      - **Unverified:** whether the three titles link on the next 08:00 run: one may have no TMDB
        film, which would be a gap, not the rule.
 
+388. **AG4: found for the film it is (17 Nov, CR49-02, CR49-05, CT52-02, CT52-03).** Group AG's fifth
+     batch, opening sitting 3 (#383). PR 167, `fec8628`. Amends #378 and #380.
+     - **The mechanism, the owner's choice on 17 Nov: a stamp, not one `identity_changed` hook.**
+       Six stores carry `found_for`, not null: `film_reviews`, `disc_valuations`,
+       `ebay_used_listings`, `ebay_used_scans`, `ebay_price_refs` and `spec_lookups` (migration
+       080). It holds what the film was when the row was found: `film:<TMDB id>`, else
+       `tv:<TMDB series id>`, else `none`. A row whose stamp is not its film now is forgotten and
+       looked up again (`services/found_for.py`). Identify, undo, merge and move sweep what they
+       touched, in their own transaction; the nightly spec and review job (`cron-specs`) sweeps
+       everything first.
+     - **Retired into it:** #378's and #380's audit rule (`latest_corrections`, read by the review
+       and disc spec batches) and the disc values' time rule (priced before the film's last TMDB
+       sync), which an undo defeated by putting the old sync time back. No live value was due by
+       that rule when it went (0 of 1,495, read-only). Batch T10's once-only search again of a
+       queued disc stays as it was.
+     - **A move is a correction for its copy (CT52-02):** a moved copy's matcher-found page and
+       specs are forgotten. **A merge moves every link (CR49-05),** the cinema link included. Each
+       foreign key to `movies` is listed as moved, dropped (credits, identify lookups) or stamped;
+       CI fails on one that is not, and on a writer of a stamped store that does not stamp.
+     - **The daily check names two owned copies of one film and format with one disc page
+       (CT52-03),** as a Needs you row the admin is pushed for once, like any new problem. Two
+       groups on 17 Nov, both the owner's to settle (`OWNER-ACTIONS.md`).
+     - **Backfill, at the owner's word on 17 Nov:** at deploy every existing row was stamped with its
+       film as it is now (31,754), except 40 the retired rules already judged to answer another
+       film, stamped `stale` for the first sweep: 3 eBay usual prices and 37 disc page lookups (36
+       queued discs, and the moved *French Connection* copy's page). Nothing was deleted at deploy.
+       Read back after deploy: the counts as previewed, every other stamp agreeing with its film,
+       and both the read-only and the backup role reading the new column.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **The nightly sweep forgets 50 rows at most.** Past that it forgets nothing, logs the
+         count and counts a failure on the job's heartbeat, so a mass forgetting waits for a person.
+       - **A disc page a person chose is kept.** The sweep forgets only what the matcher found.
+       - **IMDb ratings are left as they are:** they are keyed by the IMDb id they were read for,
+         which is already a stamp.
+       - **Re-accepting a page through an identify doubt writes a new lookup** when the sweep has
+         just forgotten the old one.
+       - **The backfill relinks no cinema film.** Past merges lost no cinema link: all 12 ran
+         14–16 Oct, before the first cinema run on 3 Nov. The 25 unlinked listings whose film is
+         now in the collection are timing gaps; each links at the next read that lists it.
+     - **Test expectations changed, each because the criterion asks for one mechanism for every
+       fact found for a film:**
+       - `test_reviews_batch`: the corrected-film tests drive identify, undo and the sweep rather
+         than audit rows the batch read; two are renamed for what they now prove
+         (`…_found_for_another_film_is_forgotten`, `…_and_its_undo_both_forget`).
+       - `test_spec_backfill`: the first corrected-film test runs the nightly sweep before the
+         batch, since the batch no longer forgets.
+       - `test_spec_backfill`: "what a correction did not reach is left as it was" drops its
+         never-paged disc, which is now forgotten and searched again; a new test says so (Batch
+         T10 covered only a film identified since its search).
+       - `test_spec_backfill`: a review another copy still seeds is forgotten and seeded again for
+         the film it is, not kept (`…_is_seeded_again`).
+       - `test_spec_backfill`: without a Brave key the nightly job still forgets, since the sweep
+         runs before the key check (`…_nightly_job_does_key_or_not`, was "without a key nothing is
+         forgotten").
+       - `test_identify_doubts`: the page re-accepted when a film is identified again is read from
+         the new lookup, with the same status, page and how.
+       - Fixtures in a dozen test files gained `found_for`, the new not-null column; two integrity
+         tests in `test_valuation_runs` gained it so they still fail on the constraint they name.
+     - **Unverified:** the first sweep forgetting the 40 and searching the 37 discs again
+       (`cron-specs`, about 02:00 UTC on 18 Nov); the daily check's two duplicate-copy rows and
+       their pushes (the 08:00 run); a real identify, undo, merge or move on live data.
+
