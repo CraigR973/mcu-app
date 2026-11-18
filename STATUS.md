@@ -23,7 +23,10 @@ unverified; 123 unverified in all, as on 17 Nov. Sitting 1's open item: the chec
 `job:tmdb-refresh` on 17 Nov's own beat, ok (today's run: 0 refreshed, 0 still due). The 08:00
 job: 0 failures. Read-only; nothing written in production. **Next:** the owner's steps in
 `OWNER-ACTIONS.md` (ask the viewer which *Bad Lieutenant*, apply the *Dead Man's Shoes* answer,
-remove the extra *King Kong* copy and check the *Hitchcock* shelf), and the owner's word on Zavvi.
+remove the extra *King Kong* copy and check the *Hitchcock* shelf). **Zavvi, the owner's word (18 Nov,
+about 11:55 GMT): fix its search after the weekly usage reset (20 Nov, 02:00 UTC).** The fix starts that
+morning with a read-only look at why the search answers 404, and stops for the owner's word before any
+live write (the search address, switching Zavvi back on).
 
 **18 Nov, 01:16 GMT: AG5 shipped, wants know their film (PR 168, `fd9286f`, #389); Group AG
 sitting 3 is done.** A shop listing naming a year more than one from the want's film is kept
