@@ -43,6 +43,12 @@ order. No agent does these.
 - [ ] **Ask the viewer about pushes before AG6 (from 25 Nov):** Wanted finds and finds of 40% or more
       at once, upgrades as one 18:00 summary, quiet hours 22:00–07:00, and Wanted-only for anyone who
       prefers it (#383).
+- [ ] **Re-check Zavvi from mid-December.** On 18 Nov its own site sent every visitor with no
+      cookies, a browser as much as the app, from its search and its home page to a dead October
+      page (404). There was nothing to fix in the app, and the shop switches itself off after its
+      third failing night (20 Nov, 03:00 UTC) unless the site recovers first. When zavvi.com's search
+      works in a private browser window, switch the shop back on: Retailers → Zavvi → Enable.
+      2 minutes.
 
 ## ~~Correct Dead Man's Shoes' match — 14 Nov (#378)~~ — superseded 16 Nov (#383)
 
