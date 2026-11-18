@@ -2,6 +2,19 @@
 
 ## Now
 
+**18 Nov, 01:16 GMT: AG5 shipped, wants know their film (PR 168, `fd9286f`, #389); Group AG
+sitting 3 is done.** A shop listing naming a year more than one from the want's film is kept
+as another film's (`price_checks.another_film`), never read as a price, pushed or rolled up;
+once a want has asked which film, a listing naming no year is too. The nightly shop job judges
+the stored listings by the same rule before it reads the shops, so its first run (03:00 UTC,
+18 Nov) hides 82 of 274 stored prices, at the owner's word: *Bad Lieutenant* (2009) 28 and
+*Dead Man's Shoes* (1940) 54. Any want whose shops name another year can be asked which film
+from Administration (migration 081 widens the question's answer check); the daily check raises
+such a want on Needs you. Production API and web on `fd9286f`, `db: ok`, every readiness field
+`configured`. **Read back after the 03:00 and 08:00 runs:** the 82 hidden, no new push for
+either want, and the one daily-check row for *Bad Lieutenant*; then the owner asks the viewer
+(`OWNER-ACTIONS.md`). The read-back queries are in the shared notes folder.
+
 **17 Nov, 21:57 GMT: AG4 shipped, found for the film it is (PR 167, `fec8628`, #388); Group AG
 sitting 3 continues with AG5.** Every fact the app finds for a film (reviews, disc values, eBay
 used listings and scans, eBay usual prices, disc page lookups) is stamped with the film it was
@@ -313,7 +326,7 @@ remain unchanged.
 ## Next
 
 **Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2
-is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is under way at the owner's go: AG4 shipped (`fec8628`, #388), AG5 next.** AG6 from 25 Nov. Sitting 1's
+is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is done: AG4 (`fec8628`, #388) and AG5 (`fd9286f`, #389).** AG6 from 25 Nov. Sitting 1's
 first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
 TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
 the valuation job's first beat with a failure count (1 Dec).
@@ -734,6 +747,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **18 Nov, 01:16 GMT — AG5 shipped (PR 168, `fd9286f`, #389); sitting 3 of Group AG done.** A want's shop prices are its film's: another film's listing is kept apart, and any want can ask which film. 82 stored prices hide at the 03:00 run, at the owner's word. Production on `fd9286f`, `db: ok`.
 - **17 Nov, 21:57 GMT — AG4 shipped (PR 167, `fec8628`, #388).** Every fact found for a film is stamped with it; a stale stamp is forgotten and looked up again, by identify, undo, merge, move and a nightly sweep. Migration 080 stamped 31,754 live rows, 40 `stale`. Production on `fec8628`, `db: ok`.
 - **17 Nov, 11:27 GMT — AG7 shipped (PR 166, `8a4b337`, #387); sitting 2 of Group AG done.** The cinema title rule reads the shared fold; three listing decorations no longer slip it. Production on `8a4b337`, `db: ok`.
 - **17 Nov, 10:27 GMT — AG3 shipped (PR 165, `879860e`, #386).** Cinemas not read are said on At the cinema, Home's strip and the digest; a person's own phone with no notifications is said on their Home; Needs you rows are labelled by whose move it is. Production on `879860e`, `db: ok`.

@@ -108,6 +108,9 @@ and no agent changes this want or copy.
       push on 22 Oct. The app cannot ask this on the viewer's Needs you yet: its want question is
       built for one film. Once the roadmap's AG5 generalises it, the admin assigns the question there;
       until then, ask in person, and correct the want on its page if the answer is the 1992 film.
+      **AG5 shipped 18 Nov (#389): after the 03:00 shop run on 18 Nov, open Administration →
+      "Which film each want is" → Check wants → Ask the viewer.** 1 minute. The shelf copy's film
+      is a separate question, still to ask in person.
 
 ## Mark username saved — 9 Nov, 18:33 GMT (#354)
 

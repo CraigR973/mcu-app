@@ -8556,3 +8556,43 @@ contemporaneous.
        (`cron-specs`, about 02:00 UTC on 18 Nov); the daily check's two duplicate-copy rows and
        their pushes (the 08:00 run); a real identify, undo, merge or move on live data.
 
+389. **AG5: wants know their film (18 Nov, CT52-04, MK53-03).** Group AG's sixth batch, closing
+     sitting 3 (#383). PR 168, `fd9286f`. Amends #351.
+     - **A shop listing's year must meet the want's film,** within one year, as the eBay rule has
+       it. One that names a bracketed year further off is another film's: the shop job records it
+       marked (`price_checks.another_film = 'year'`), never as a price, with no alert and no
+       strike against the shop (it counts as not stocked). Every reader of shop prices filters on
+       `PRICED`: the Wanted list, the price-drop check, the 90-day roll-up and the eBay deal
+       yardstick; CI fails on a function selecting from `price_checks` that decides neither way.
+     - **One rule for stored and new listings.** The nightly shop job judges every stored listing
+       by its want's film as it is now before it reads the shops, so a want corrected or asked
+       since is judged afresh, and a want corrected to the shop's film gets its prices back.
+     - **The pass, at the owner's word (17 Nov, "Yes, hide all 82"):** the first run after deploy
+       hides 82 of 274 stored prices, on two wants: *Bad Lieutenant* (2009) 28, 101 Films'
+       "(1992)" 4K, 4 of which had pushed; *Dead Man's Shoes* (1940) 54, Second Sight 35 and Zavvi
+       19. Nothing is deleted. Counted read-only by running the rule over the live rows.
+     - **Any want can ask "which film?" (amends #351).** A want whose shops name another film's
+       year is proposed to the admin in Administration with the question it would ask, its film
+       and each other year as choices; asking writes the question with its own words
+       (`assigned_reviews.wording`, migration 081) and puts it on the viewer's Needs you. The
+       *Dead Man's Shoes* question keeps the words it was asked with. An answer still records
+       judgement only. The daily check raises such a want (`wanted:another-film:`) until asked.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **A want that has asked which film needs a year** (`another_film = 'shared_title'`). The
+         spec's year rule alone reaches none of *Dead Man's Shoes*' 54 prices: its shops' listings
+         name no year. The owner saw this at the stop and said yes to all 82.
+       - **Only a bracketed year counts,** as the deals scan reads one: a bare number is often the
+         title ("Blade Runner 2049", "1917"). A listing naming two years is the film's if either
+         meets it. The helper moved from the deals scan to the shop extractor, shared by both.
+       - **The pass runs in the nightly job, not the migration,** so the hiding and tonight's reading
+         are one rule in one place; the migration hides nothing.
+       - **Another film's listing is still written,** marked, so the want's evidence and the
+         daily check can name what the shop has.
+       - **The question is asked of the viewer** (the profile the three AD1 questions go to), by the
+         admin's click; nothing assigns itself.
+     - **Test expectations changed:** the API route list gains
+       `/api/v1/needs-you/reviews/want-proposals`, and `packages/shared/openapi.json` is regenerated
+       for it and the widened answer; both because any want can now ask which film.
+     - **Unverified:** the 03:00 pass on live rows, the 08:00 check's row for *Bad Lieutenant*, and
+       the admin's question on a real phone.
+
