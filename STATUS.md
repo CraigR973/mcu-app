@@ -2,6 +2,29 @@
 
 ## Now
 
+**18 Nov, 08:42 GMT: read-back of the 02:00, 03:00 and 08:00 runs after Group AG sittings 1–3
+(#384–#389). Everything the sittings changed landed as previewed; one new failing row, Zavvi.**
+Production on `128ff06`, `db: ok`, every readiness field `configured`. AG4: the nightly sweep
+(`cron-specs`, 02:03 UTC) ran with 0 failures and no `foundForError` and left 0 `stale` rows; the
+37 discs searched again (37 Brave searches) found no page, so they wait on Disc specs, the
+*French Connection* copy among them, off the sequel's page and stamped with the 1971 film. AG5:
+the 03:00 shop run set 84 listings apart as another film's, *Bad Lieutenant* 29 by year (the 28
+stored and that night's) and *Dead Man's Shoes* 55 naming no year; no new push for either want.
+The 08:00 daily check (39 rows) raised the three rows the sittings meant it to: the *King Kong* 4K
+and *Hitchcock* Blu-ray copies sharing a disc page, and *Bad Lieutenant* on Needs you. It also
+failed `job:cron-scrape` for the first time: Zavvi's search answered 404 for all 10 of its wants
+(on 17 Nov it answered off its search page; its last price was 12 Oct), and nothing in AG5 changed
+how a shop is fetched. A third failing night in a row, 20 Nov at 03:00, switches Zavvi off by
+itself (`FAILURE_LIMIT`), and the weekly refusal ask expected about 24 Nov will not come while it
+answers 404. AG3: all ten cinemas read at 08:04, the digest's `unreadCinemas` 0 and both people's
+notification rows ok, so no stale line, digest line or Home card. AG7: the *Cliff Booth* IMAX
+title is now verified; the *Focker-In-Law* preview and the *RCS Curates* title are still
+unverified; 123 unverified in all, as on 17 Nov. Sitting 1's open item: the check judged
+`job:tmdb-refresh` on 17 Nov's own beat, ok (today's run: 0 refreshed, 0 still due). The 08:00
+job: 0 failures. Read-only; nothing written in production. **Next:** the owner's steps in
+`OWNER-ACTIONS.md` (ask the viewer which *Bad Lieutenant*, apply the *Dead Man's Shoes* answer,
+remove the extra *King Kong* copy and check the *Hitchcock* shelf), and the owner's word on Zavvi.
+
 **18 Nov, 01:16 GMT: AG5 shipped, wants know their film (PR 168, `fd9286f`, #389); Group AG
 sitting 3 is done.** A shop listing naming a year more than one from the want's film is kept
 as another film's (`price_checks.another_film`), never read as a price, pushed or rolled up;
@@ -747,6 +770,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **18 Nov, 08:42 GMT — read-back: the 02:00, 03:00 and 08:00 runs after Group AG sittings 1–3
+  (#384–#389).** Production on `128ff06`. AG4's sweep left 0 stale rows (37 discs searched again,
+  none accepted); AG5 set 84 shop listings apart with no new push; the daily check raised its three
+  new rows and failed `job:cron-scrape` on Zavvi's 404s. Cinemas all read, digest 0 unread.
+  Read-only; nothing written in production.
 - **18 Nov, 01:16 GMT — AG5 shipped (PR 168, `fd9286f`, #389); sitting 3 of Group AG done.** A want's shop prices are its film's: another film's listing is kept apart, and any want can ask which film. 82 stored prices hide at the 03:00 run, at the owner's word. Production on `fd9286f`, `db: ok`.
 - **17 Nov, 21:57 GMT — AG4 shipped (PR 167, `fec8628`, #388).** Every fact found for a film is stamped with it; a stale stamp is forgotten and looked up again, by identify, undo, merge, move and a nightly sweep. Migration 080 stamped 31,754 live rows, 40 `stale`. Production on `fec8628`, `db: ok`.
 - **17 Nov, 11:27 GMT — AG7 shipped (PR 166, `8a4b337`, #387); sitting 2 of Group AG done.** The cinema title rule reads the shared fold; three listing decorations no longer slip it. Production on `8a4b337`, `db: ok`.
