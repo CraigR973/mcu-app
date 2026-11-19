@@ -8636,3 +8636,39 @@ contemporaneous.
        live, *Dead Man's Shoes*, has answer 1940 and its want's film 1940, so it reads `resolved`; its
        row is kept (`deleted_at` null). Its 56 no-year listings stay hidden as another film's
        (`shared_title`), as before deploy. Nothing was written. *Bad Lieutenant* is not yet asked.
+
+391. **AG8: the assistant, kept (20 Nov, AI51-01, AI51-03, AI51-04, UX54-06).** Group AG's eighth
+     batch, sitting 5 (#383). PR 171, `6b0320b`.
+     - **A refusal says so (AI51-01).** A model that declines answers 200 with `stop_reason:
+       "refusal"`, before any output, mid-answer, or after only an empty thinking block. The chat
+       loop now discards what streamed, stores the existing "declined" sentence as the turn (one
+       text block), and sends the browser a new terminal frame, `declined`, which shows the
+       sentence in place of any half answer. Before, the stored turn was empty or cut off, and an
+       empty assistant turn makes every later message in that chat fail.
+     - **The daily check counts refusals** by the call's own usage row (`stop_reason` "refusal").
+       That row keeps its cost and counts against the allowance: the call was paid for. **The
+       five-round give-up leaves a failure row** (`stop_reason` "gave_up", no cost), named
+       "(gave up)".
+     - **The write tools' arguments are checked against their types (AI51-03).** `strict` was
+       already on every tool (since Batch 31); the review's crafted inputs showed the app itself
+       trusted them. `checked_arguments` refuses a wrong type as text the model reads, and keeps
+       each value in the one form the write stores and the card prints: a rating a number, a price
+       text with pence, a date YYYY-MM-DD. Arguments the schema does not name are dropped.
+     - **Eight load-bearing prompt lines are asserted (AI51-04)**, a structural guard, not an eval:
+       use the tools, never invent a film, shelf, price or watch date, say what is needed rather
+       than guess, say how many were left out, never present part of a list as the whole, the card
+       is the confirmation, do not confirm in words first, ask which film when a title is shared.
+     - **The header icon has a label (UX54-06):** "Ask" beside it on the phone's bar, "Assistant"
+       on the desktop's at every width; the accessible name stays "Ask the assistant".
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **The declined sentence is stored as the assistant's turn,** not the turn dropped: a
+         dropped turn would leave two user messages in a row.
+       - **A refusal is not an error on the web:** the message box clears and the chat goes on.
+       - **A price of "£20" is read as 20.00**; a price with more than two decimals, a number where
+         text is due, a bool rating and a format outside the four are refused.
+       - **The give-up row costs nothing and does not count against the allowance**, like any
+         failure row; each round's call already has its own row.
+     - **No test expectation changed.** The model stays `claude-sonnet-5` (AI51-05). The paid
+       canary was not run: not a criterion, and it waits for a working Railway token.
+     - **Unverified:** a real refusal from the live model (none can be asked for), and the label on
+       a real phone.

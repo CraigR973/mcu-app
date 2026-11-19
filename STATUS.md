@@ -2,6 +2,15 @@
 
 ## Now
 
+**19 Nov, 23:58 GMT: AG8 shipped, the assistant kept (PR 171, `6b0320b`, #391); Group AG sitting 5
+continues with AG9.** A refused chat turn now shows and stores the "declined" sentence instead of a
+blank or cut-off answer that broke the chat, and the daily check counts refusals; the five-round
+give-up leaves a failure row. The write tools' arguments are checked against their types and kept
+in the form the card prints. Eight load-bearing prompt lines are asserted. The header icon reads
+"Ask" on the phone and "Assistant" on the desktop. CI's seven jobs green on the PR, end-to-end
+included; `main` green on AG11's close-out. Production API and web on `6b0320b`, `db: ok`, every
+readiness field `configured`. Not run: the paid canary (not a criterion; needs a Railway token).
+
 **19 Nov, 20:49 GMT: AG11 shipped, a want's question clears once the want is the film its answer
 names (PR 169, `25c1870`, #390); Group AG sitting 5 continues with AG8.** A want's "which film?"
 question reads resolved when its recorded answer is the year of the want's film now, and leaves
@@ -799,6 +808,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **19 Nov, 23:58 GMT — AG8 shipped (PR 171, `6b0320b`, #391).** The assistant says when it declines
+  and the chat carries on; arguments type-checked; prompt lines guarded; the header icon labelled.
 - **19 Nov, 20:49 GMT — AG11 shipped (PR 169, `25c1870`, #390).** A want's question clears once the
   want is the film its answer names; *Dead Man's Shoes* read back as resolved, nothing written.
 - **19 Nov, 20:08 GMT — a pre-existing red on `main` fixed (PR 170, `3bf3fca`).** The fake outside
