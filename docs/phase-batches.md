@@ -5509,7 +5509,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6's scheduled digest sent for real on 9–12 Nov (read back 12 Nov), so only Craig's phone receipt/tap stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
-| **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (from 25 Nov) · 5: AG8 → AG9 → AG10 | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
+| **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (from 25 Nov) · 5: AG11 → AG8 → AG9 → AG10 | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6153,7 +6153,7 @@ Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
 | 2 | AG3 say it where people look → AG7 one title fold | The owner's go | Sonnet 5.5 `high` | GPT-5.6 Terra High |
 | 3 | AG4 found for the film it is → AG5 wants know their film | The owner's go; their live data steps at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
 | 4 | AG6 deals: the right disc, a fair figure, sensible pushes | From 25 Nov, after AA10c's read-back, and once the viewer has been asked about pushes; its live data step at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
-| 5 | AG8 the assistant, kept → AG9 security and records → AG10 polish | The owner's go | Opus 5.5 `high` (from AG8 and AG9) | GPT-5.6 Sol High |
+| 5 | AG11 a want's question clears → AG8 the assistant, kept → AG9 security and records → AG10 polish | The owner's go (19 Nov, "Go, with the fix") | Opus 5.5 `high` (from AG11, AG8 and AG9) | GPT-5.6 Sol High |
 
 **Each batch on its own:**
 
@@ -6169,6 +6169,7 @@ Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
 | AG8 | AI51-01, AI51-03, AI51-04; UX54-06's label | 🟡 ~¾ day | Opus 5.5 `high` | GPT-5.6 Sol High |
 | AG9 | DS50-02, DS50-03, DS50-04 | 🟢 ~½ day | Opus 5.5 `high` | GPT-5.6 Sol High |
 | AG10 | UX54-04, UX54-05 | 🟢 ~¾ day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
+| AG11 | The owner's word, 19 Nov | 🟢 ~¼ day | Opus 5.5 `high` | GPT-5.6 Sol High |
 
 **About 10 days of agent work** by the roadmap's sizes, plus 30–60 minutes of gate per batch.
 
@@ -6196,7 +6197,8 @@ prices; AG6's pass over stored push rows) stop for the owner's word with the row
 - **Pushes follow roadmap decision 4,** including its per-person Wanted-only choice; the viewer is
   asked before AG6 starts.
 - **Wave 1's scorecard leaves the tree in AG9,** and the two files that name it are reworded.
-- **Sitting 5 holds AG8, AG9 and AG10,** which the roadmap left to any sitting.
+- **Sitting 5 holds AG8, AG9 and AG10,** which the roadmap left to any sitting. **AG11 joined it
+  first** at the owner's word on 19 Nov ("Go, with the fix").
 - **Settings raised from the roadmap's** (above).
 
 ### AG1 — The 08:00 job survives one person's failure 🟢
@@ -6393,4 +6395,33 @@ UX54-04 and UX54-05 (Low).
 - The two large script chunks are split by route (charts, the assistant, the scanner), and the build
   holds the entry chunk under a budget.
 - First open is measured on a throttled phone profile in the end-to-end suite.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AG11 — A want's question clears once the want is the film its answer names 🟢
+
+The owner's word, 19 Nov ("Go, with the fix"), after seeing the plan. Not from the wave 2 review.
+`observed`: a want's "which film?" question is never resolved. `context()` in
+`services/assigned_reviews.py` sets `resolved = False` ("not proof its price history was
+repaired"), and nothing in the app applies or closes a review. *Dead Man's Shoes* was answered 1940
+on 15 Nov, its want already names the 1940 film, and still it sits on the admin's Needs you as
+"Apply …'s answer · awaiting correction". Every AG5 question would do the same.
+
+- **A want question reads `resolved` when its recorded answer is the year of the want's current
+  film** (an answer is always a year or "unsure", by the table's check). A resolved question leaves
+  Needs you (the endpoint already drops `resolved`) and is no longer the admin's move on the web.
+- **Every other case keeps its status:** an answer that does not match stays `answered`; a changed
+  record that does not match stays `changed`; an unanswered or "unsure" question never resolves.
+- **The question row is kept,** never deleted or soft-deleted, so the shared-title hiding
+  (`wants_asked()`) and the daily check's another-film row read it as before. A test proves a
+  resolved question still hides listings that name no year.
+- **A decision records it** (#390 if free), naming what it amends, why it is safe now (since AG5,
+  `rejudge_stored` judges every stored listing by the want's current film at each shop run), and
+  that an answer still records judgement only.
+- **The resolved label reads true when nothing needed changing** (*Dead Man's Shoes* needed none).
+- Tests: API, the rule both ways, "unsure", and the hiding; web, the new label and the admin's move.
+- No migration, no stored flag, no live write; any of those needed is a stop for the owner.
+- After deploy: *Dead Man's Shoes* proved to meet the rule from live data, read-only, and its
+  `OWNER-ACTIONS.md` item struck; the *Bad Lieutenant* item says what each answer does (2009 clears
+  itself; 1992 cannot be applied yet: do not re-identify the film or remove the want, tell an
+  agent). A "change a want's film" control is not part of AG11; it waits for the owner's word.
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
