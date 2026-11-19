@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -99,6 +100,14 @@ def install() -> None:
     _refuse_database_not_throwaway()
     world = World(_directory())
     routes = _routes()
+
+    # **No uvloop.** It resolves names in libuv, not through ``socket.getaddrinfo``, so the
+    # name-lookup backstop below never saw them: uvicorn picks uvloop whenever it can import
+    # it, and the end-to-end API resolved every shop's name for real. On 19 Nov the real
+    # www.zavvi.com stopped resolving, the shop job read "could not be resolved" before the
+    # mock transport was reached, and the shop price-alert case failed in all three browsers.
+    # Barred here, every process the fake is armed in runs asyncio's own loop.
+    sys.modules["uvloop"] = None  # type: ignore[assignment]
 
     def answer(request: Any) -> httpx.Response:
         host = request.url.host

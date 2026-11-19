@@ -2,6 +2,18 @@
 
 ## Now
 
+**19 Nov, 20:08 GMT: a pre-existing red on `main` fixed on its own branch before Group AG sitting 5
+went on (PR 170, `3bf3fca`).** Since 19 Nov the end-to-end job failed one case in all three browsers,
+"price alert from a shop", on `main` as on every branch: the shop run read 0 shops. The real
+`www.zavvi.com` stopped resolving on 19 Nov (`zavvi.com` still does), and the end-to-end API, run
+by uvicorn on uvloop, resolved every shop's name for real: uvloop resolves in libuv, past the fake
+outside world's name-lookup backstop. The fake now bars uvloop, so every process it is armed in
+runs asyncio's loop and every lookup is faked; a test drives uvicorn's own loop choice and expects
+the fake's address. Test harness only. CI's seven jobs green on the PR, end-to-end included;
+production API and web on `3bf3fca`, `db: ok`, every readiness field `configured`. **For the
+20 Nov 03:00 read-back:** live Zavvi lookups now fail as "could not be resolved" rather than 404,
+still a failure, so its third failing night switches it off as expected.
+
 **18 Nov, 08:42 GMT: read-back of the 02:00, 03:00 and 08:00 runs after Group AG sittings 1–3
 (#384–#389). Everything the sittings changed landed as previewed; one new failing row, Zavvi.**
 Production on `128ff06`, `db: ok`, every readiness field `configured`. AG4: the nightly sweep
@@ -776,6 +788,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **19 Nov, 20:08 GMT — a pre-existing red on `main` fixed (PR 170, `3bf3fca`).** The fake outside
+  world bars uvloop, whose resolver bypassed its name-lookup backstop; the real `www.zavvi.com`
+  stopped resolving on 19 Nov and failed the shop price-alert case in all three browsers.
 - **18 Nov, afternoon — Zavvi looked at, at the owner's word: nothing to fix in the app.** Its own
   site sends every cookieless visitor, browser or app, to a dead October page (404). The shop
   switches itself off on 20 Nov unless the site recovers; the re-check is in `OWNER-ACTIONS.md`.

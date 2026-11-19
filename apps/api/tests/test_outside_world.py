@@ -170,6 +170,36 @@ def test_nothing_gets_out_by_a_raw_socket_or_a_name_lookup(tmp_path: Path) -> No
     assert len([e for e in logged(tmp_path) if e["kind"] == "unfaked"]) >= 2
 
 
+def test_a_server_s_name_lookups_go_through_the_fake_whatever_loop_it_would_pick(
+    tmp_path: Path,
+) -> None:
+    """The end-to-end API is uvicorn, which picks uvloop when it can import it; uvloop
+    resolves names in libuv, past the fake's lookup backstop. On 19 Nov the real
+    www.zavvi.com stopped resolving and the shop job's lookup failed for real."""
+    done = run(
+        """
+        import asyncio
+        from uvicorn.config import Config
+
+        factory = Config(app="src.main:app", loop="auto").get_loop_factory()
+        loop = factory() if factory is not None else asyncio.new_event_loop()
+        print("loop:", type(loop).__module__)
+        try:
+            import uvloop  # noqa: F401
+            print("uvloop: importable")
+        except ImportError:
+            print("uvloop: barred")
+        print("zavvi:", loop.run_until_complete(loop.getaddrinfo("www.zavvi.com", 443))[0][4][0])
+        """,
+        tmp_path,
+        LOCAL,
+    )
+    assert done.returncode == 0, done.stderr
+    assert "uvloop: barred" in done.stdout
+    assert "loop: asyncio" in done.stdout
+    assert "zavvi: 93.184.216.34" in done.stdout, "the fake's public address, not a real lookup"
+
+
 def test_recorded_model_tool_ids_are_unique_across_requests(tmp_path: Path) -> None:
     """Two chats must not collide on the real database's unique tool-use constraint."""
     (tmp_path / "scenario.json").write_text(
