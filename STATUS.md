@@ -2,6 +2,17 @@
 
 ## Now
 
+**19 Nov, 20:49 GMT: AG11 shipped, a want's question clears once the want is the film its answer
+names (PR 169, `25c1870`, #390); Group AG sitting 5 continues with AG8.** A want's "which film?"
+question reads resolved when its recorded answer is the year of the want's film now, and leaves
+Needs you; an answer naming another film stays the admin's, "unsure" never resolves, and the row
+is kept so its shared-title hiding holds. No migration, no stored flag, no live write. CI's seven
+jobs green on the PR, end-to-end included (its first run failed only on the pre-existing red fixed
+in PR 170); `main` green on the merge. Production API and web on `25c1870`, `db: ok`, every
+readiness field `configured`. **Read back, read-only:** *Dead Man's Shoes* meets the rule (answer
+1940, its want's film 1940), so it has left Needs you and its owner action is struck; its 56
+no-year listings stay hidden. *Bad Lieutenant*'s owner action now says what each answer does.
+
 **19 Nov, 20:08 GMT: a pre-existing red on `main` fixed on its own branch before Group AG sitting 5
 went on (PR 170, `3bf3fca`).** Since 19 Nov the end-to-end job failed one case in all three browsers,
 "price alert from a shop", on `main` as on every branch: the shop run read 0 shops. The real
@@ -788,6 +799,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **19 Nov, 20:49 GMT — AG11 shipped (PR 169, `25c1870`, #390).** A want's question clears once the
+  want is the film its answer names; *Dead Man's Shoes* read back as resolved, nothing written.
 - **19 Nov, 20:08 GMT — a pre-existing red on `main` fixed (PR 170, `3bf3fca`).** The fake outside
   world bars uvloop, whose resolver bypassed its name-lookup backstop; the real `www.zavvi.com`
   stopped resolving on 19 Nov and failed the shop price-alert case in all three browsers.

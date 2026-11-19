@@ -8596,3 +8596,43 @@ contemporaneous.
      - **Unverified:** the 03:00 pass on live rows, the 08:00 check's row for *Bad Lieutenant*, and
        the admin's question on a real phone.
 
+390. **AG11: a want's question clears once the want is the film its answer names (19 Nov).** Group AG's
+     seventh batch, opening sitting 5 at the owner's word on 19 Nov ("Go, with the fix"), after seeing
+     the plan; not from the wave 2 review. PR 169, `25c1870`. Amends #351.
+     - **What was wrong:** a want question could never resolve. #351's contract set `resolved = False`
+       for it ("a changed wanted identity is not proof its price history was repaired"), and nothing in
+       the app applies or closes a review. *Dead Man's Shoes*, answered 1940 on 15 Nov while its want
+       already named the 1940 film, sat on the admin's Needs you for good as "Apply …'s answer ·
+       awaiting correction", and every AG5 "which film?" question would have done the same.
+     - **The rule:** a want question reads `resolved` when its recorded answer is the year of the
+       want's film now (an answer is always a year or "unsure", by the table's check). It leaves Needs
+       you, whose endpoint already drops `resolved`, and is nobody's move on the web. An answer naming
+       another film stays `answered`; a changed record that does not name the answer's film stays
+       `changed`; "unsure" or no answer never resolves. The status is worked out as it is read: no
+       stored flag, no migration, no live write.
+     - **Why this is safe now, where #351 held it was not:** since AG5 (#389) the nightly shop job's
+       `rejudge_stored` judges every stored listing by the want's film as it is now, at the start of
+       each run. Whatever the want's price history held before is judged afresh, so nothing is left
+       to repair by hand once the want is the film the answer names, whether it was corrected to it or
+       already was.
+     - **An answer still records judgement only** (#351, #389): it moves no want, changes no film and
+       rewrites no price. A want whose answer names another film stays the admin's until the want is
+       that film; the app has no control yet to change a want's film without moving the owned copies
+       of the film it is on, which waits for the owner's word.
+     - **The question row is kept,** never deleted or soft-deleted: it is what makes a want's title
+       two films' for the shared-title hiding (`wants_asked()`) and what keeps the daily check's
+       another-film row clear. A test proves a resolved question still hides a listing naming no year.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **A resolved want question reads "Resolved — the want is the film the answer names",** not
+         "Resolved through the catalogue", which stays for the Titanic and Shetland questions it is
+         true of. *Dead Man's Shoes* needed no correction.
+       - **The answer endpoint is unchanged.** A resolved question offers no form, as any resolved
+         review does, so the viewer cannot change the answer in the app; a different answer sent to
+         the API would make it `answered` again, by the same rule.
+       - **Needs you rows drop a resolved review on the web too,** should one ever arrive.
+     - **No test expectation changed.** Five API tests (four fail on the old rule) and four web tests
+       are new.
+     - **Proved from live data after deploy, read-only:** on 19 Nov at 20:50 UTC the one want question
+       live, *Dead Man's Shoes*, has answer 1940 and its want's film 1940, so it reads `resolved`; its
+       row is kept (`deleted_at` null). Its 56 no-year listings stay hidden as another film's
+       (`shared_title`), as before deploy. Nothing was written. *Bad Lieutenant* is not yet asked.

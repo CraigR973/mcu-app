@@ -26,9 +26,9 @@ order. No agent does these.
       ```
       gh api -X PATCH repos/{owner}/{repo} -f 'security_and_analysis[secret_scanning][status]=enabled' -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
       ```
-- [ ] **Apply the *Dead Man's Shoes* answer in Needs you.** The app's own question, answered on
-      15 Nov, confirmed the 1940 film, which the want already holds. It supersedes the 14 Nov item
-      below; AG5 then hides the other film's prices. 2 minutes.
+- [x] ~~**Apply the *Dead Man's Shoes* answer in Needs you.**~~ **Nothing to apply (19 Nov, AG11,
+      #390):** the answer (1940) is the film the want already holds, so the question now clears
+      itself and has left Needs you. Proved from live data, read-only, on 19 Nov.
 - [ ] **Delete the phantom *King Kong* copy** (import row 878): a second 4K copy on the 2005 film
       that is really the 1976 disc counted twice, since that disc was added by hand on 16 Oct. A
       soft delete, restorable from Trash. **Then check the shelf for two *Hitchcock* (2012)
@@ -117,6 +117,11 @@ and no agent changes this want or copy.
       **AG5 shipped 18 Nov (#389): after the 03:00 shop run on 18 Nov, open Administration →
       "Which film each want is" → Check wants → Ask the viewer.** 1 minute. The shelf copy's film
       is a separate question, still to ask in person.
+      **What the answer does (19 Nov, AG11, #390):** if the viewer answers 2009, the question
+      clears itself; nothing else to do. If the viewer answers 1992, the app cannot apply it yet:
+      the want's edit takes no film, and re-identifying the film on its film page would also move
+      the owned 2009 Blu-ray copy (one copy on 19 Nov). So **do not re-identify the film or remove
+      the want; tell an agent.** A "change a want's film" control waits for the owner's word.
 
 ## Mark username saved — 9 Nov, 18:33 GMT (#354)
 
