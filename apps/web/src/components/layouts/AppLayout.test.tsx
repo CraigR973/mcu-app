@@ -206,6 +206,18 @@ describe('AppLayout assistant — Batch U3', () => {
     expect(you.previousElementSibling).toBe(links[0])
   })
 
+  it('labels the icon with a word both people can read (AG8, UX54-06)', () => {
+    renderShell('/movies')
+    const [phone, desktop] = within(screen.getByRole('banner', { name: 'Top bar' })).getAllByRole('link', { name: 'Ask the assistant' })
+    // Visible text, not only the accessible name: an unlabelled robot went unused.
+    expect(phone.textContent).toBe('Ask')
+    expect(desktop.textContent).toBe('Assistant')
+    for (const link of [phone, desktop]) {
+      const label = link.querySelector('span')
+      expect(label?.className ?? '').not.toMatch(/(^|\s)hidden(\s|$)/)
+    }
+  })
+
   it('has no floating button: the top bar is the only way in from the shell', () => {
     renderShell('/settings')
     const topBar = screen.getByRole('banner', { name: 'Top bar' })

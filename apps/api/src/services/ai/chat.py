@@ -30,6 +30,14 @@ stored as the SDK's full dump of the response, and a streamed text block carries
 past its first answer from 10 Sep to 13 Oct. :func:`request_block` keeps only the fields the
 SDK's request type for that block declares, on write and again on read, so the stored chats
 continue as they are.
+
+**A refusal says so** (AG8, AI51-01). A model that declines answers 200 with
+`stop_reason: "refusal"`, sometimes after part of an answer, sometimes after nothing
+or only an empty thinking block. Its content is discarded: the turn is stored as
+:data:`~src.services.ai.client.DECLINED` (an empty assistant turn would make every
+later message in the chat fail), the browser is told to show that sentence in place of
+anything it streamed, and the call's usage row, `stop_reason` "refusal", is what the
+daily check counts.
 """
 
 from __future__ import annotations
@@ -58,7 +66,7 @@ from src.config import settings
 from src.models.ai import AiConversation, AiMessage, AiToolCall, AiUsageLogEntry
 from src.models.profile import Profile
 from src.services.ai.caps import person_today, reserve_call
-from src.services.ai.client import ClaudeClient, TurnEvent, system_prompt
+from src.services.ai.client import DECLINED, ClaudeClient, TurnEvent, system_prompt
 from src.services.ai.tools import execute_tool, is_write_tool, prepare_write, tools_for
 
 logger = structlog.get_logger(__name__)
@@ -108,7 +116,8 @@ class ChatEvent:
     """What the browser is told, as it happens.
 
     ``text`` many times, then exactly one terminal event: ``done``, ``confirm`` (a write
-    tool is waiting) or ``error``.
+    tool is waiting), ``declined`` (the model refused: show its text in place of what
+    streamed, AG8) or ``error``.
     """
 
     kind: str
@@ -217,6 +226,23 @@ async def _record_usage(
             stop_reason=reply.stop_reason,
             latency_ms=reply.latency_ms,
             error=reply.error,
+            created_at_utc=now,
+        )
+    )
+    await db.flush()
+
+
+async def _record_give_up(db: AsyncSession, user: Profile, *, now: datetime) -> None:
+    """The loop gave up after :data:`MAX_TOOL_ROUNDS` rounds: a row the daily check counts
+    (AG8, AI51-01). It costs nothing; each round's own call already has its row."""
+    logger.warning("ai_chat_gave_up", user_id=str(user.id), rounds=MAX_TOOL_ROUNDS)
+    db.add(
+        AiUsageLogEntry(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            model=settings.ai_model,
+            stop_reason="gave_up",
+            error=f"gave up: no answer after {MAX_TOOL_ROUNDS} tool rounds",
             created_at_utc=now,
         )
     )
@@ -381,6 +407,26 @@ async def run_turn(
             yield ChatEvent(kind="error", text="The assistant stopped unexpectedly.")
             return
 
+        if getattr(final, "stop_reason", None) == "refusal":
+            # AG8 (AI51-01): what streamed, if anything, is discarded. The usage row the
+            # daily check counts was written above, with its stop reason.
+            logger.warning(
+                "ai_chat_declined",
+                user_id=str(user.id),
+                round=round_number,
+                streamed=sum(map(len, assistant_text)),
+            )
+            await append_message(
+                db,
+                conversation,
+                role="assistant",
+                content=[{"type": "text", "text": DECLINED}],
+                text=DECLINED,
+            )
+            await db.flush()
+            yield ChatEvent(kind="declined", text=DECLINED)
+            return
+
         blocks = [block.model_dump() for block in final.content]
         await append_message(
             db,
@@ -445,6 +491,7 @@ async def run_turn(
 
         await _append_tool_results(db, conversation, [str(b["id"]) for b in tool_uses])
 
+    await _record_give_up(db, user, now=utcnow())
     yield ChatEvent(
         kind="error",
         text="The assistant went round in circles on that one. Try asking it differently.",

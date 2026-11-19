@@ -127,6 +127,19 @@ describe('describeToolCall', () => {
     expect(sentence).toBe('Record that you watched Halloween (2018) on 12 Oct 2026.')
   })
 
+  it('prints every value in the form the server stores it (AG8, AI51-03)', () => {
+    // The server sends a rating as a number and a price as text with pence, so neither is
+    // left off the card while the write stores it.
+    expect(describeToolCall({
+      toolName: 'log_watch',
+      input: { title: 'Heat', rating: 4, watchedAt: '2026-11-18', resolved: { movieId: 'x', tmdbId: null, label: 'Heat (1995)' } },
+    })).toBe('Record that you watched Heat (1995) on 18 Nov 2026, rated 4/5.')
+    expect(describeToolCall({
+      toolName: 'add_to_wanted',
+      input: { title: 'Nosferatu', maxPrice: '20.00', preferredFormat: '4k_uhd', resolved: { movieId: 'y', tmdbId: null, label: 'Nosferatu (1922)' } },
+    })).toContain('alerting below £20.00')
+  })
+
   it('falls back to naming the tool for one it does not know', () => {
     expect(describeToolCall({ toolName: 'future_tool', input: { a: 1 } })).toContain(
       'future_tool',

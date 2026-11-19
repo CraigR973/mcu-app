@@ -2349,9 +2349,10 @@ export async function deleteAiConversation(id: string): Promise<void> {
   if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
-/** One frame from the chat stream. `text` many times, then exactly one terminal event. */
+/** One frame from the chat stream. `text` many times, then exactly one terminal event.
+ *  `declined` (AG8, AI51-01): the model refused; its text replaces whatever streamed. */
 export interface ChatStreamEvent {
-  kind: 'text' | 'done' | 'confirm' | 'error'
+  kind: 'text' | 'done' | 'confirm' | 'declined' | 'error'
   text: string
   toolCalls?: Array<{ id: string; toolName: string; input: Record<string, unknown> }>
 }

@@ -107,6 +107,11 @@ SYSTEM_PROMPT = BASE_PROMPT
 #: true; rephrasing would fail the same way, so the old advice to rephrase is gone.
 CRAIG_HAS_BEEN_TOLD = "The assistant isn't working right now; Craig has been told."
 
+#: What a person reads when the model declines (`stop_reason: "refusal"`), in the
+#: single-turn ask and, since AG8 (AI51-01), the chat. It is also what the chat stores
+#: for that turn, so the conversation replays and carries on.
+DECLINED = "The assistant declined to answer that one. Try rephrasing the question."
+
 
 class Usage(Protocol):
     """The subset of the SDK's usage object this module reads."""
@@ -283,7 +288,7 @@ class ClaudeClient:
         # A safety decline arrives as a **200** with `stop_reason: "refusal"`, so reading
         # `content` without checking would hand the person an empty answer and no reason.
         if reply.stop_reason == "refusal":
-            reply.text = "The assistant declined to answer that one. Try rephrasing the question."
+            reply.text = DECLINED
         elif not reply.text:
             reply.text = "The assistant returned an empty answer. Try asking again."
 

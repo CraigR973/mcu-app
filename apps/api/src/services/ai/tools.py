@@ -641,6 +641,81 @@ async def _tmdb_match(db: AsyncSession, title: str, year: int | None) -> Proposa
     }
 
 
+def checked_arguments(
+    name: str, tool_input: dict[str, Any], today: date
+) -> dict[str, Any] | Proposal:
+    """The write tool's arguments checked against their schema's types, as they will be stored.
+
+    AG8 (AI51-03). `strict` asks the API for schema-valid arguments; this is the app's own
+    check, so a wrong type is a refusal the model reads, never an exception out of the chat
+    loop, and never a value the card leaves out while the write stores it. Each value is kept
+    in the one form the write stores and the card prints: a rating as a number, a price as
+    text with two decimals, a date as YYYY-MM-DD. Arguments the schema does not name are
+    dropped. A bool is not a number here, though Python counts it as one.
+    """
+
+    def number(value: Any) -> bool:
+        return isinstance(value, int | float) and not isinstance(value, bool)
+
+    out: dict[str, Any] = {}
+    title = tool_input.get("title")
+    if title is not None and not isinstance(title, str):
+        return Proposal(refusal="title must be the film's title, as text.")
+    out["title"] = (title or "").strip()
+    year = tool_input.get("year")
+    if year is not None:
+        if not number(year) or int(year) != year:
+            return Proposal(refusal="year must be a whole number, like 1979.")
+        out["year"] = int(year)
+    movie_id = tool_input.get("movieId")
+    if movie_id not in (None, ""):
+        if not isinstance(movie_id, str):
+            return Proposal(refusal="movieId must be the film's id from an earlier result.")
+        out["movieId"] = movie_id
+
+    if name == "log_watch":
+        rating = tool_input.get("rating")
+        if rating is not None:
+            if not number(rating) or not (0.5 <= rating <= 5 and rating * 2 == int(rating * 2)):
+                return Proposal(refusal="A rating is out of 5 in half stars, from 0.5 to 5.")
+            out["rating"] = float(rating)
+        watched_at = tool_input.get("watchedAt")
+        if watched_at in (None, ""):
+            watched = today
+        else:
+            if not isinstance(watched_at, str):
+                return Proposal(refusal="watchedAt must be a date written YYYY-MM-DD.")
+            try:
+                watched = date.fromisoformat(watched_at)
+            except ValueError:
+                return Proposal(refusal="watchedAt must be a date written YYYY-MM-DD.")
+        if watched > today:
+            return Proposal(
+                refusal=f"{watched:%-d %b %Y} is in the future; today is {today:%-d %b %Y}."
+            )
+        out["watchedAt"] = watched.isoformat()
+    if name == "add_to_wanted":
+        preferred = tool_input.get("preferredFormat")
+        if preferred is not None:
+            if preferred not in FORMATS:
+                return Proposal(refusal=f"preferredFormat must be one of {', '.join(FORMATS)}.")
+            out["preferredFormat"] = preferred
+        max_price = tool_input.get("maxPrice")
+        if max_price not in (None, ""):
+            if not isinstance(max_price, str):
+                return Proposal(refusal="maxPrice must be a price in pounds, like '19.99'.")
+            try:
+                price = Decimal(max_price.strip().lstrip("£"))
+            except InvalidOperation:
+                return Proposal(refusal="maxPrice must be a price in pounds, like '19.99'.")
+            if not price.is_finite() or price <= 0:
+                return Proposal(refusal="maxPrice must be more than £0.")
+            if price != price.quantize(Decimal("0.01")):
+                return Proposal(refusal="maxPrice must be in pounds and pence, like '19.99'.")
+            out["maxPrice"] = f"{price:.2f}"
+    return out
+
+
 async def prepare_write(
     name: str, tool_input: dict[str, Any], *, user: Profile, db: AsyncSession, today: date
 ) -> Proposal:
@@ -654,40 +729,14 @@ async def prepare_write(
     if name in ADMIN_ONLY and user.role is not UserRole.admin:
         return Proposal(refusal="Only an admin can do that.")
 
-    title = str(tool_input.get("title", "")).strip()
-    year = tool_input.get("year")
-    year = int(year) if isinstance(year, int | float) else None
-    extra: dict[str, Any] = {}
+    checked = checked_arguments(name, tool_input, today)
+    if isinstance(checked, Proposal):
+        return checked
+    title = checked.get("title", "")
+    year = checked.get("year")
 
-    if name == "log_watch":
-        rating = tool_input.get("rating")
-        if rating is not None and not (
-            0.5 <= float(rating) <= 5 and float(rating) * 2 == int(float(rating) * 2)
-        ):
-            return Proposal(refusal="A rating is out of 5 in half stars, from 0.5 to 5.")
-        try:
-            watched = (
-                date.fromisoformat(str(tool_input["watchedAt"]))
-                if tool_input.get("watchedAt")
-                else today
-            )
-        except ValueError:
-            return Proposal(refusal="watchedAt must be a date written YYYY-MM-DD.")
-        if watched > today:
-            return Proposal(
-                refusal=f"{watched:%-d %b %Y} is in the future; today is {today:%-d %b %Y}."
-            )
-        extra["watchedAt"] = watched.isoformat()
-    if name == "add_to_wanted" and tool_input.get("maxPrice") not in (None, ""):
-        try:
-            price = Decimal(str(tool_input["maxPrice"]))
-        except InvalidOperation:
-            return Proposal(refusal="maxPrice must be a price in pounds, like '19.99'.")
-        if not price.is_finite() or price <= 0:
-            return Proposal(refusal="maxPrice must be more than £0.")
-
-    if tool_input.get("movieId"):
-        film = await _film_by_id(db, tool_input["movieId"])
+    if checked.get("movieId"):
+        film = await _film_by_id(db, checked["movieId"])
         if film is None:
             return Proposal(refusal="No film in the catalogue has that movieId.")
         resolved: dict[str, Any] = {
@@ -719,7 +768,7 @@ async def prepare_write(
                 return match
             resolved = match
 
-    return Proposal(input={**tool_input, **extra, "resolved": resolved})
+    return Proposal(input={**checked, "resolved": resolved})
 
 
 async def _run_write(

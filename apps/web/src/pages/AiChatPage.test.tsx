@@ -177,6 +177,25 @@ describe('AiChatPage', () => {
     expect((screen.getByLabelText('Message to the assistant') as HTMLTextAreaElement).value).toBe('Recommend one.')
   })
 
+  it('replaces a half answer with the declined sentence when the model refuses (AG8, AI51-01)', async () => {
+    const declined = 'The assistant declined to answer that one. Try rephrasing the question.'
+    mocks.streamAiMessage.mockImplementationOnce(() => (async function* refusedStream() {
+      yield { kind: 'text' as const, text: 'Heat is on shelf A3 and the' }
+      yield { kind: 'declined' as const, text: declined }
+    })())
+    renderPage()
+
+    expect(await screen.findByText('Jaws is on shelf B4.')).not.toBeNull()
+    fireEvent.change(screen.getByLabelText('Message to the assistant'), { target: { value: 'Where is Heat?' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
+
+    expect(await screen.findByText(declined)).not.toBeNull()
+    expect(screen.queryByText('Heat is on shelf A3 and the')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    // Not a failure: the message box is free for the next question.
+    expect((screen.getByLabelText('Message to the assistant') as HTMLTextAreaElement).value).toBe('')
+  })
+
   it('locks the message box while a card waits, and unlocks it once the card is answered', async () => {
     // Batch X7 (AI45-02): typing instead of tapping broke the conversation for good.
     const waiting = {

@@ -484,13 +484,25 @@ async def check_deal_freshness(db: AsyncSession, now: datetime) -> list[Result]:
 
 
 async def check_assistant(db: AsyncSession, now: datetime) -> list[Result]:
-    """Assistant calls that failed in the last day (Batch X7, AI45-04).
+    """Assistant calls that failed, or that the model declined, in the last day (Batch X7,
+    AI45-04; AG8, AI51-01).
 
     Each failed call leaves a usage row with its error since X7; before it, a failure left
     one log line Railway did not keep, and the person was told to rephrase. This is what
-    makes "Craig has been told" true.
+    makes "Craig has been told" true. A refusal is a paid call that succeeded, so its row has
+    no error and counts against the allowance; it is counted here by its stop reason.
     """
     since = now - timedelta(days=1)
+    declined = int(
+        await db.scalar(
+            select(func.count(AiUsageLogEntry.id)).where(
+                AiUsageLogEntry.stop_reason == "refusal",
+                AiUsageLogEntry.error.is_(None),
+                AiUsageLogEntry.created_at_utc >= since,
+            )
+        )
+        or 0
+    )
     failed = (
         await db.execute(
             select(func.count(AiUsageLogEntry.id), func.max(AiUsageLogEntry.created_at_utc)).where(
@@ -499,7 +511,10 @@ async def check_assistant(db: AsyncSession, now: datetime) -> list[Result]:
         )
     ).one()
     count, latest = int(failed[0] or 0), failed[1]
+    refusals = f"declined to answer {'once' if declined == 1 else f'{declined} times'}"
     if not count:
+        if declined:
+            return [("assistant:failures", f"The assistant {refusals} in the last day.")]
         return [("assistant:failures", None)]
     last_error = await db.scalar(
         select(AiUsageLogEntry.error)
@@ -511,7 +526,9 @@ async def check_assistant(db: AsyncSession, now: datetime) -> list[Result]:
         (
             "assistant:failures",
             f"The assistant failed {'once' if count == 1 else f'{count} times'} in the last day, "
-            f"last at {moment(latest)} UTC" + (f" ({what})." if what else "."),
+            f"last at {moment(latest)} UTC"
+            + (f" ({what})" if what else "")
+            + (f"; it {refusals}." if declined else "."),
         )
     ]
 

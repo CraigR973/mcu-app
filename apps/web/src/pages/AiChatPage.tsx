@@ -185,6 +185,18 @@ export default function AiChatPage() {
           update(target, value => ({ ...value, pending: event.toolCalls ?? [] }))
         } else if (event.kind === 'done') {
           terminal = true
+        } else if (event.kind === 'declined') {
+          // AG8 (AI51-01): a refusal discards any half answer that streamed; the
+          // declined sentence takes its place, as the server stored it. Not a failure:
+          // the chat carries on.
+          terminal = true
+          const replace = started
+          started = true
+          assistant = event.text
+          const text = event.text
+          update(target, value => ({ ...value, turns: replace
+            ? [...value.turns.slice(0, -1), { role: 'assistant', text }]
+            : [...value.turns, { role: 'assistant', text }] }))
         } else if (event.kind === 'error') {
           terminal = true
           failed = true

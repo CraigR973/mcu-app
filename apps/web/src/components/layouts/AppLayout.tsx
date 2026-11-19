@@ -38,8 +38,11 @@ const ASSISTANT_PATH = '/assistant'
  * Settings, a button on Price alerts. A sixth bottom tab would break the five Craig chose
  * (#201), so the way in moved up here, beside the person's initial, where nothing scrolls
  * under it. It shows on every page of the shell, the chat itself included, and marks it.
+ *
+ * **A word beside the icon** (AG8, UX54-06): an unlabelled robot was passed on every
+ * screen and never used, so the phone's bar says "Ask" and the desktop's "Assistant".
  */
-function AssistantLink({ className }: { className: string }) {
+function AssistantLink({ className, label }: { className: string; label: string }) {
   const { pathname } = useLocation()
   const here = pathname === ASSISTANT_PATH || pathname.startsWith(`${ASSISTANT_PATH}/`)
   return (
@@ -50,7 +53,7 @@ function AssistantLink({ className }: { className: string }) {
       className={className}
     >
       <Bot className="h-5 w-5 shrink-0" aria-hidden />
-      <span className="hidden xl:inline">Assistant</span>
+      <span>{label}</span>
     </Link>
   )
 }
@@ -105,7 +108,7 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
       >
         <Command className="h-4 w-4" aria-hidden />
       </button>
-      <AssistantLink className="touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
+      <AssistantLink label="Ask" className="touch-target flex h-11 shrink-0 items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
       <Link
         to={YOU_ITEM.path}
         aria-label="You: every other page, and your account"
@@ -185,7 +188,7 @@ export default function AppLayout({ children }: Props) {
             </button>
             {/* Batch U3. The floating button floated here too, over the page's corner; its
                 replacement is the same top-bar link at every width. */}
-            <AssistantLink className="touch-target flex items-center gap-2 rounded-md border border-input bg-card px-3 py-0.5 text-sm font-semibold text-muted-foreground hover:border-ring hover:text-foreground aria-[current=page]:border-primary/30 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
+            <AssistantLink label="Assistant" className="touch-target flex items-center gap-2 rounded-md border border-input bg-card px-3 py-0.5 text-sm font-semibold text-muted-foreground hover:border-ring hover:text-foreground aria-[current=page]:border-primary/30 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
             {/* Batch S4. The `isAdmin &&` is gone with #155, and `hidden sm:inline-flex`
                 stays on purpose: below 640px the bottom bar carries the add slot, so a
                 second one here would be two controls for one job in the scarcest space
