@@ -20,6 +20,13 @@ const STATUS = {
   resolved: 'Resolved through the catalogue',
 }
 
+/** AG11 (#390): a want's question resolves once Wanted names the film its answer names, whether
+ *  the want was corrected or already was, so its words claim no catalogue work. */
+function statusLabel(review: AssignedReview): string {
+  if (review.status === 'resolved' && review.kind === 'wanted_identity') return 'Resolved — the want is the film the answer names'
+  return STATUS[review.status]
+}
+
 function ReviewCard({ review, selected }: { review: AssignedReview; selected: boolean }) {
   const client = useQueryClient()
   const section = useRef<HTMLElement>(null)
@@ -38,7 +45,7 @@ function ReviewCard({ review, selected }: { review: AssignedReview; selected: bo
     <section ref={section} id={`review-${review.id}`} aria-labelledby={`title-${review.id}`}
       className={`archive-panel scroll-mt-24 space-y-3 p-4 ${selected ? 'ring-2 ring-primary' : ''}`}>
       <h2 id={`title-${review.id}`} className="font-display text-lg font-semibold">{review.title}</h2>
-      <p className="text-xs text-muted-foreground">For {review.assigneeName} · {STATUS[review.status]}</p>
+      <p className="text-xs text-muted-foreground">For {review.assigneeName} · {statusLabel(review)}</p>
       <p>{review.question}</p>
       <p className="text-sm text-muted-foreground">{review.evidence}</p>
       {review.movieId ? <Link to={`/movies/${review.movieId}`} className="inline-block text-sm text-primary hover:underline">Inspect the film and copies</Link> : <p className="text-sm">The film is no longer available. Craig needs to check this review.</p>}

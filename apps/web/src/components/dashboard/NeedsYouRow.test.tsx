@@ -452,3 +452,29 @@ describe('AF1 (#372): Mark puts every disc back, and Craig’s Needs attention i
     expect(screen.queryByText('App')).toBeNull()
   })
 })
+
+describe('AG11 (#390): a resolved want question is nobody’s move', () => {
+  const MARK = '3f2504e0-4f89-41d3-9a0c-0305e82c3999'
+  const shoes = { id: 'review-s', title: "Check Dead Man's Shoes on Wanted", question: 'Which film?', assignedTo: MARK, assigneeName: 'Mark' }
+
+  it('drops a resolved review where an answered one is the admin’s "Apply the answer"', async () => {
+    auth.craig = true
+    api.fetchAttention.mockResolvedValue({ items: [], checkedAt: null })
+    api.fetchNeedsYou.mockResolvedValue({ items: [], trips: [], reviews: [{ ...shoes, status: 'resolved' }, { ...shoes, id: 'review-b', title: 'Check Bad Lieutenant on Wanted', status: 'answered' }] })
+    renderRow()
+    const card = await screen.findByRole('region', { name: /Needs you/ })
+    const rows = within(card).getAllByRole('listitem').map((li) => li.textContent ?? '')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Check Bad Lieutenant on Wanted')
+    expect(rows[0]).toContain('Apply Mark’s answer')
+    expect(within(card).queryByText(/Dead Man's Shoes/)).toBeNull()
+  })
+
+  it('leaves the viewer nothing to do on it either', async () => {
+    auth.craig = false
+    api.fetchNeedsYou.mockResolvedValue({ items: [], trips: [], reviews: [{ ...shoes, assignedTo: 'p-mark', status: 'resolved' }] })
+    renderRow()
+    await vi.waitFor(() => expect(api.fetchNeedsYou).toHaveBeenCalled())
+    expect(screen.queryByText(/Dead Man's Shoes/)).toBeNull()
+  })
+})

@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AssignedReview } from '@mcu/shared'
 
 const auth = vi.hoisted(() => ({ role: 'viewer' }))
@@ -97,3 +97,33 @@ it('lists everything waiting for both, labelled, the reader’s own first (AE8)'
   expect(rows[1]).toMatch(/Craig$/)
 })
 
+
+describe('AG11 (#390): a want’s question clears once the want is the film its answer names', () => {
+  const want: AssignedReview = {
+    ...review, kind: 'wanted_identity', title: "Check Dead Man's Shoes on Wanted",
+    question: "Is the wanted film Dead Man's Shoes (2004) or Dead Man's Shoes (1940)?",
+    choices: [{ value: '2004', label: "Dead Man's Shoes (2004)" }, { value: '1940', label: "Dead Man's Shoes (1940)" }, { value: 'unsure', label: 'Not sure yet' }],
+    revision: 2, answer: '1940', status: 'resolved', canAnswer: false,
+  }
+
+  it('says it is resolved without claiming any catalogue work, for either person', async () => {
+    for (const role of ['admin', 'viewer']) {
+      auth.role = role
+      api.fetchAssignedReviews.mockResolvedValue([want])
+      api.fetchNeedsYou.mockResolvedValue({ items: [], trips: [], reviews: [] })
+      show()
+      const card = await screen.findByRole('region', { name: "Check Dead Man's Shoes on Wanted" })
+      expect(within(card).getByText('For Mark · Resolved — the want is the film the answer names')).not.toBeNull()
+      expect(within(card).queryByText(/through the catalogue|awaiting correction/)).toBeNull()
+      expect(within(card).getByText("Recorded answer: Dead Man's Shoes (1940)")).not.toBeNull()
+      expect(within(card).queryByRole('radio')).toBeNull()
+      cleanup()
+    }
+  })
+
+  it('keeps the catalogue wording for the other questions it is true of', async () => {
+    api.fetchAssignedReviews.mockResolvedValue([{ ...review, status: 'resolved', canAnswer: false }])
+    show()
+    expect(await screen.findByText('For Mark · Resolved through the catalogue')).not.toBeNull()
+  })
+})

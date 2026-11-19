@@ -4,6 +4,10 @@ AG5 (amends #351): **any want can ask "which film?"** when its shop listings nam
 year (``services/scraping/another_film.py``). Its words are written from those listings when the
 admin assigns it and kept on the row; its choices are the want's film and each other year. The
 Dead Man's Shoes question keeps the words it was asked with.
+
+AG11 (#390, amends #351): **a want question clears once the want is the film its answer
+names.** It reads ``resolved`` when its recorded answer is the year of the want's film now
+(:func:`answers_its_film`); the row is kept, so the shared-title hiding still reads it.
 """
 
 from __future__ import annotations
@@ -214,8 +218,25 @@ async def context(
         snapshot.update(
             preferredFormat=want.preferred_format, preferredEdition=want.preferred_edition
         )
-        resolved = False  # A changed wanted identity is not proof its price history was repaired.
+        # The want's film alone settles nothing: only an answer naming it does (AG11,
+        # :func:`answers_its_film`), and a target has no answer when it is assigned.
+        resolved = False
     return snapshot, resolved
+
+
+def answers_its_film(row: AssignedReview, current: dict[str, Any]) -> bool:
+    """AG11 (#390): a want question whose recorded answer is the year of the want's film now.
+
+    Its answer is always a year or "unsure" (the table's check). It does not matter whether the
+    want was corrected to that film or already was (Dead Man's Shoes): either way nothing is left
+    to apply, and since AG5 the nightly shop job judges every stored listing by the want's film
+    as it is now. An answer that does not match, "unsure" or none never resolves.
+    """
+    return (
+        row.kind == WANT_QUESTION
+        and row.answer not in (None, "unsure")
+        and row.answer == str(current["year"])
+    )
 
 
 async def describe(
@@ -227,7 +248,7 @@ async def describe(
     try:
         current, resolved = await context(db, row.kind, row.target_id)
         movie_id = uuid.UUID(current["movieId"])
-        if resolved:
+        if resolved or answers_its_film(row, current):
             status = "resolved"
         elif current != row.snapshot:
             status = "changed"
