@@ -2,6 +2,18 @@
 
 ## Now
 
+**20 Nov, 00:41 GMT: AG9 shipped, security and records (PR 172, `cbc43a4`, #392); Group AG sitting 5
+stops before AG10 for the owner's word.** A wrong current PIN on PIN change now counts toward the
+login lockout, with the login's limit, and a locked profile cannot change its PIN. The monthly
+backup drill encrypts and decrypts the copy with a throwaway key pair, and CI runs the same round
+trip on a test copy. The records that said the repo is private are corrected, and wave 1's
+scorecard left the tree by an ordinary commit. CI's seven jobs green on the PR, end-to-end
+included; `main` green on AG8's close-out. Production API and web on `cbc43a4`, `db: ok`, every
+readiness field `configured`. **AG10 waits:** its "split the two large chunks by route (charts,
+the assistant, the scanner)" is already true (the scanner, the assistant and every page are their
+own chunks); the 760 kB entry (232 kB compressed) is Sentry (its session replay alone 126 kB),
+zod, the router and React, so shrinking it is a choice the ledger does not make.
+
 **19 Nov, 23:58 GMT: AG8 shipped, the assistant kept (PR 171, `6b0320b`, #391); Group AG sitting 5
 continues with AG9.** A refused chat turn now shows and stores the "declined" sentence instead of a
 blank or cut-off answer that broke the chat, and the daily check counts refusals; the five-round
@@ -808,6 +820,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **20 Nov, 00:41 GMT — AG9 shipped (PR 172, `cbc43a4`, #392).** PIN-change guesses count toward
+  the lockout; the drill opens the copy with a throwaway key; private-repo records corrected;
+  wave 1's scorecard removed by an ordinary commit. AG10 stops for the owner's word.
 - **19 Nov, 23:58 GMT — AG8 shipped (PR 171, `6b0320b`, #391).** The assistant says when it declines
   and the chat carries on; arguments type-checked; prompt lines guarded; the header icon labelled.
 - **19 Nov, 20:49 GMT — AG11 shipped (PR 169, `25c1870`, #390).** A want's question clears once the

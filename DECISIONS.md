@@ -8637,7 +8637,7 @@ contemporaneous.
        row is kept (`deleted_at` null). Its 56 no-year listings stay hidden as another film's
        (`shared_title`), as before deploy. Nothing was written. *Bad Lieutenant* is not yet asked.
 
-391. **AG8: the assistant, kept (20 Nov, AI51-01, AI51-03, AI51-04, UX54-06).** Group AG's eighth
+391. **AG8: the assistant, kept (19 Nov, AI51-01, AI51-03, AI51-04, UX54-06).** Group AG's eighth
      batch, sitting 5 (#383). PR 171, `6b0320b`.
      - **A refusal says so (AI51-01).** A model that declines answers 200 with `stop_reason:
        "refusal"`, before any output, mid-answer, or after only an empty thinking block. The chat
@@ -8671,4 +8671,37 @@ contemporaneous.
      - **No test expectation changed.** The model stays `claude-sonnet-5` (AI51-05). The paid
        canary was not run: not a criterion, and it waits for a working Railway token.
      - **Unverified:** a real refusal from the live model (none can be asked for), and the label on
+       a real phone.
+
+392. **AG9: security and records (20 Nov, DS50-02, DS50-03, DS50-04).** Group AG's ninth batch,
+     sitting 5 (#383). PR 172, `cbc43a4`.
+     - **A guess of the current PIN is a login attempt (DS50-02).** `POST /auth/pin` took unlimited
+       guesses, so a stolen access token (24 hours, in the browser) could find the PIN, set a new one
+       and sign the owner out for good, unseen by the daily check. When a PIN exists the route now
+       carries the login's durable limit (5 per 15 minutes, keyed on the profile and address),
+       refuses with 423 while the profile is locked, and charges a wrong current PIN to the same
+       count as a wrong login PIN, so the fifth wrong guess across both locks the profile for the
+       usual stepped window and the daily check names it. A first PIN is unchanged.
+     - **The drill proves the copy opens (DS50-04).** The encryption command lives in
+       `.github/backup-age.sh`; the Backup workflow encrypts with it, and its monthly drill runs a
+       round trip with a throwaway key pair on the real copy (encrypt, decrypt, compare file by file,
+       and check age accepts the real recipient). CI's pytest job installs age and runs the round trip
+       on a test copy taken through the backup role. The real private key never reaches a runner, and
+       its second copy is still the owner's (`OWNER-ACTIONS.md`). Neither workflow was run by hand.
+     - **The records that said the repo is private are corrected (DS50-03, #382)**: three passages in
+       `OWNER-ACTIONS.md`, one in `STATUS.md`, one in the ledger and two in wave 1's scope note, each
+       saying it was private then and public since 10 Nov.
+     - **Wave 1's scorecard left the tree** (`docs/reviews/BATCH_48_SCORECARD.md`) by an ordinary
+       commit, no history rewrite (#383); the scope note and the R6 report that named it are reworded.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **The PIN route's limit has its own bucket** (`pin:<profile>:<address>`), the login's limit
+         and window, so guessing on one route does not spend the other's allowance; the lockout
+         count is shared.
+       - **A locked profile cannot change its PIN even with the right one**, as it cannot log in;
+         the lock runs out or an admin clears it (`set_pin` script), as before.
+       - **The drill's round trip runs on the real copy only on the monthly drill**, not weekly, as
+         the restore does.
+     - **Test expectations changed:** `packages/shared/openapi.json` is regenerated for the PIN
+       route's new description; nothing else.
+     - **Unverified:** the first monthly drill with the round trip (1 Dec, 04:30 UTC) and a lockout on
        a real phone.

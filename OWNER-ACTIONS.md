@@ -20,7 +20,8 @@ order. No agent does these.
 
 - [ ] **Copy the backup key into your password manager** (open since 14 Oct, under Checkpoint
       detail). `~/.mcu-secrets/backup-age-key.txt` is the only key that opens the weekly copies,
-      and it exists only on the Mac (DS50-04). 2 minutes.
+      and it exists only on the Mac (DS50-04). 2 minutes. *Since AG9 (20 Nov, #392) the monthly drill
+      proves the encryption opens with a throwaway key, but only this key opens the real copies.*
 - [ ] **Switch on secret scanning and push protection** (both off on 16 Nov, #382). 1 minute, from
       the repo folder:
       ```
