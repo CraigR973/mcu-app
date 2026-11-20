@@ -6397,7 +6397,10 @@ UX54-04 and UX54-05 (Low).
 
 - Settings' switches, Needs you's tabs and its "Inspect the film and copies" links are 44 px tall.
 - The two large script chunks are split by route (charts, the assistant, the scanner), and the build
-  holds the entry chunk under a budget.
+  holds the entry chunk under a budget. **The owner's word, 20 Nov: "Just cap it".** The split was
+  already true (the scanner's decoder, the assistant, the charts and every page are their own
+  chunks), so the entry chunk is capped at about today's size (757 kB, 231 kB gzipped) with nothing
+  moved out of it; loading Sentry's session replay later was the choice not taken (#393).
 - First open is measured on a throttled phone profile in the end-to-end suite.
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
 

@@ -8705,3 +8705,34 @@ contemporaneous.
        route's new description; nothing else.
      - **Unverified:** the first monthly drill with the round trip (1 Dec, 04:30 UTC) and a lockout on
        a real phone.
+
+393. **AG10: polish (20 Nov, UX54-04, UX54-05).** Group AG's tenth batch, sitting 5 (#383). PR
+     PR_NUMBER, `MERGE_SHORT`.
+     - **The entry chunk is capped at about its size, nothing moved out of it: the owner's word, 20
+       Nov, "Just cap it".** The ledger's "split by route (charts, the assistant, the scanner)" was
+       already true: every page, the assistant, the charts and the scanner's decoder (the second
+       large chunk, 416 kB) load as their own chunks, so a first open fetches one large script, the
+       entry (757 kB, 231 kB gzipped: React, the router, zod, Sentry and the shell). Shrinking it
+       meant a choice the ledger did not make; the owner was offered loading Sentry's session
+       replay after first paint (about −17%) or a cap at today's size, and chose the cap. The build
+       now fails when the entry chunk passes 780,000 bytes or 240,000 gzipped (`ENTRY_BUDGET`,
+       `apps/web/src/lib/entry-budget.ts`, checked by a Vite plugin), and says to load new code with
+       the page that needs it or raise the budget as a decision.
+     - **Settings' switches, Needs you's "Loans" and "Cinema trips" links and its "Inspect the film
+       and copies" links are 44 px tall (UX54-04).** The switch's button is now 44 px, its 24 px track
+       drawn inside, in place of the invisible `touch-hit` hit area, which a measure of the control
+       did not see; the utility, used nowhere else, is gone.
+     - **First open is measured on a throttled phone profile in the end-to-end suite (UX54-05):**
+       Lighthouse's mobile profile (150 ms, 1.6 Mbit/s down, CPU four times slower), Chromium only,
+       since only Chromium can be throttled from Playwright. Home drew in 4.9–6.4 s on the owner's
+       Mac with the bundle served uncompressed, so production is faster. Every browser holds the
+       entry script inside its budget and no other first-open script over 100 kB.
+     - **Choices made on the owner's behalf, open to overrule:**
+       - **The budget leaves 3–4% room** over the size measured at `32cc3ce` (756,905 bytes, 230,768
+         gzipped at level 9).
+       - **The first-open ceiling is 15 s**, for a gross regression (a waterfall of chunks, a
+         blocking request); the entry's growth is the budget's to catch, not the timer's.
+       - **The switch's 44 px is the button's own box**, not a larger hit area around a smaller one.
+     - **No test expectation changed.** One web test found the knob as the button's first child; it
+       now finds it inside the track, with the same assertions and a new one that the track anchors it.
+     - **Unverified:** the targets on a real phone.

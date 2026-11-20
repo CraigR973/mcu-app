@@ -101,17 +101,24 @@ export function Toggle({
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn(
-        'touch-hit relative h-6 w-11 shrink-0 rounded-full border transition-colors disabled:opacity-50',
-        checked ? 'border-success bg-success' : 'border-input bg-muted',
-      )}
+      // AG10 (UX54-04): the button itself is 44 px tall, so the target is the box a measure
+      // reads; the 24 px track is drawn inside it, so the switch still looks like a switch.
+      className="inline-flex h-11 shrink-0 items-center disabled:opacity-50"
     >
       <span
+        aria-hidden
         className={cn(
-          'absolute left-0 top-0.5 h-5 w-5 rounded-full border border-input bg-background shadow transition-transform',
-          checked ? 'translate-x-5' : 'translate-x-0.5',
+          'relative h-6 w-11 rounded-full border transition-colors',
+          checked ? 'border-success bg-success' : 'border-input bg-muted',
         )}
-      />
+      >
+        <span
+          className={cn(
+            'absolute left-0 top-0.5 h-5 w-5 rounded-full border border-input bg-background shadow transition-transform',
+            checked ? 'translate-x-5' : 'translate-x-0.5',
+          )}
+        />
+      </span>
     </button>
   )
 }

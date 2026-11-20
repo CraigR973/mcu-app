@@ -48,7 +48,7 @@ function ReviewCard({ review, selected }: { review: AssignedReview; selected: bo
       <p className="text-xs text-muted-foreground">For {review.assigneeName} · {statusLabel(review)}</p>
       <p>{review.question}</p>
       <p className="text-sm text-muted-foreground">{review.evidence}</p>
-      {review.movieId ? <Link to={`/movies/${review.movieId}`} className="inline-block text-sm text-primary hover:underline">Inspect the film and copies</Link> : <p className="text-sm">The film is no longer available. Craig needs to check this review.</p>}
+      {review.movieId ? <Link to={`/movies/${review.movieId}`} className="inline-flex min-h-11 items-center text-sm text-primary hover:underline">Inspect the film and copies</Link> : <p className="text-sm">The film is no longer available. Craig needs to check this review.</p>}
       {review.answer ? <p role="status" className="text-sm">Recorded answer: {review.choices.find(option => option.value === review.answer)?.label}</p> : null}
       {review.canAnswer ? (
         <form onSubmit={(event) => { event.preventDefault(); save.mutate() }} className="space-y-3">
@@ -113,7 +113,9 @@ export default function AssignedReviewsPage() {
           ? 'Loans, cinema trips and reviews waiting, yours first, with the app’s problems. Only the person an item is for can act on it, except loans, which either of you can.'
           : 'Loans, cinema trips and reviews waiting, yours first. Only the person an item is for can act on it, except loans, which either of you can.'} />
       <nav aria-label="Other Needs you actions" className="flex gap-4 text-sm text-primary">
-        <Link to="/loans">Loans</Link><Link to="/movie-night">Cinema trips</Link>
+        {/* AG10 (UX54-04): 44 px tall, as every other target on the main screens. */}
+        <Link to="/loans" className="inline-flex min-h-11 items-center">Loans</Link>
+        <Link to="/movie-night" className="inline-flex min-h-11 items-center">Cinema trips</Link>
       </nav>
       <EverythingWaiting />
       {state === 'loading' ? <StatePanel tone="loading" title="Loading your reviews" /> : null}

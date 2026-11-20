@@ -5,7 +5,9 @@ import path from 'path'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
+import { gzipSync } from 'node:zlib'
 import type { Plugin } from 'vite'
+import { entryBudgetBreach } from './src/lib/entry-budget'
 
 /**
  * `version.json`: the commit this build was made from — Batch X8 (DS44-04).
@@ -37,6 +39,33 @@ function buildVersion(): Plugin {
   }
 }
 
+/**
+ * The entry chunk's budget — AG10 (UX54-05, #393): the build fails if the one script a first
+ * open must download grows past `ENTRY_BUDGET` (`src/lib/entry-budget.ts`).
+ */
+function entryBudget(): Plugin {
+  return {
+    name: 'mcu-entry-budget',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).flatMap((item) =>
+        item.type === 'chunk'
+          ? [
+              {
+                fileName: item.fileName,
+                isEntry: item.isEntry,
+                raw: Buffer.byteLength(item.code),
+                gzip: gzipSync(item.code, { level: 9 }).length,
+              },
+            ]
+          : [],
+      )
+      const breach = entryBudgetBreach(chunks)
+      if (breach) this.error(breach)
+    },
+  }
+}
+
 export default defineConfig({
   build: {
     sourcemap: 'hidden',
@@ -44,6 +73,7 @@ export default defineConfig({
   plugins: [
     react(),
     buildVersion(),
+    entryBudget(),
     VitePWA({
       // `injectManifest`, not `generateSW`: the routing rules in `src/sw.ts` are the
       // batch — a generated worker could not express the poster cache or the API

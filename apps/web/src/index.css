@@ -239,25 +239,6 @@
       min-height: 44px;
       min-width: 44px;
     }
-
-    /* For a control whose drawn size carries meaning — a 24px switch track reads as a
-       switch, a 44px one reads as a bar — grow the hit area instead of the control.
-       The pseudo-element is centred, transparent and out of flow, so nothing moves. */
-    .touch-hit {
-      position: relative;
-    }
-
-    .touch-hit::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100%;
-      height: 100%;
-      min-width: 44px;
-      min-height: 44px;
-      transform: translate(-50%, -50%);
-    }
   }
 }
 
