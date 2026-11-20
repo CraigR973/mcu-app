@@ -8707,7 +8707,7 @@ contemporaneous.
        a real phone.
 
 393. **AG10: polish (20 Nov, UX54-04, UX54-05).** Group AG's tenth batch, sitting 5 (#383). PR
-     PR_NUMBER, `MERGE_SHORT`.
+     174, `d33f70f`.
      - **The entry chunk is capped at about its size, nothing moved out of it: the owner's word, 20
        Nov, "Just cap it".** The ledger's "split by route (charts, the assistant, the scanner)" was
        already true: every page, the assistant, the charts and the scanner's decoder (the second
@@ -8725,7 +8725,7 @@ contemporaneous.
      - **First open is measured on a throttled phone profile in the end-to-end suite (UX54-05):**
        Lighthouse's mobile profile (150 ms, 1.6 Mbit/s down, CPU four times slower), Chromium only,
        since only Chromium can be throttled from Playwright. Home drew in 4.9–6.4 s on the owner's
-       Mac with the bundle served uncompressed, so production is faster. Every browser holds the
+       Mac and 3.3 s in CI, with the bundle served uncompressed, so production is faster. Every browser holds the
        entry script inside its budget and no other first-open script over 100 kB.
      - **Choices made on the owner's behalf, open to overrule:**
        - **The budget leaves 3–4% room** over the size measured at `32cc3ce` (756,905 bytes, 230,768

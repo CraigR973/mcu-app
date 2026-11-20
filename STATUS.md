@@ -2,6 +2,14 @@
 
 ## Now
 
+**20 Nov, 09:55 GMT: AG10 shipped, polish (PR 174, `d33f70f`, #393); Group AG sitting 5 is done.**
+Settings' switches, Needs you's "Loans" and "Cinema trips" links and its "Inspect the film and
+copies" links are 44 px tall. The entry chunk is capped at about its size, nothing moved out of it,
+at the owner's word ("Just cap it"): the build fails past 780,000 bytes or 240,000 gzipped. The
+end-to-end suite opens Home fresh on a throttled phone profile (3.3 s in CI, Chromium; 15 s
+ceiling). CI's seven jobs green on the PR, end-to-end included; `main` green on the fix's
+close-out. Production API and web on `d33f70f`, `db: ok`, every readiness field `configured`.
+
 **20 Nov, 01:16 GMT: a second pre-existing red fixed on its own branch (PR 173, `7b44185`).**
 `main`'s CI on AG8's merge (`6b0320b`) failed four Needs you loan tests because the suite crossed
 midnight UTC: the test module fixes `TODAY` when it loads, the route read its own clock. The route
@@ -407,7 +415,7 @@ remain unchanged.
 ## Next
 
 **Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2
-is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is done: AG4 (`fec8628`, #388) and AG5 (`fd9286f`, #389).** AG6 from 25 Nov. Sitting 1's
+is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is done: AG4 (`fec8628`, #388) and AG5 (`fd9286f`, #389); sitting 5 is done: AG11 (`25c1870`, #390), AG8 (`6b0320b`, #391), AG9 (`cbc43a4`, #392) and AG10 (`d33f70f`, #393).** AG6 from 25 Nov. Sitting 1's
 first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
 TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
 the valuation job's first beat with a failure count (1 Dec).
@@ -828,6 +836,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **20 Nov, 09:55 GMT — AG10 shipped (PR 174, `d33f70f`, #393); sitting 5 done.** 44 px targets on
+  Settings and Needs you; the entry chunk capped ("Just cap it"); first open measured throttled.
 - **20 Nov, 01:16 GMT — a midnight-crossing test defect fixed (PR 173, `7b44185`).** Needs you's
   loan tests and their route now read one day; it had failed `main`'s run on AG8's merge.
 - **20 Nov, 00:41 GMT — AG9 shipped (PR 172, `cbc43a4`, #392).** PIN-change guesses count toward
