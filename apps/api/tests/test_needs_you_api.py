@@ -33,6 +33,17 @@ ACTOR_HEADER = "x-test-actor"
 TODAY = utc_today()
 
 
+@pytest.fixture(autouse=True)
+def _one_today(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The route reads the day the tests built their loans for, not its own clock.
+
+    ``TODAY`` is fixed when this module loads; the route asked ``utc_today()`` per request. A
+    run that crossed midnight UTC (main's CI on 20 Nov, 00:00:30) built a loan due three days
+    ago on 19 Nov and was asked about it on 20 Nov: four tests read one day too many.
+    """
+    monkeypatch.setattr(needs_you_router, "utc_today", lambda: TODAY)
+
+
 @pytest_asyncio.fixture
 async def api_session(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:
     session = AsyncSession(
