@@ -2542,7 +2542,7 @@ GPT-5.6 Terra · Medium.
   `VITE_SKIP_AUTH` is compiled out.
 - **The brand assets are in the repo after all** (`OWNER-ACTIONS.md` 15, corrected 26 Sep):
   all 195 files, 56 MB, since `fb6ecbd` on 10 Sep, third-party stills and posters included;
-  the repository is private. **Proposed: stop tracking the third-party images and ignore
+  the repository was private then (public since 10 Nov, #382; corrected in AG9). **Proposed: stop tracking the third-party images and ignore
   their folders (B).** Rewriting history to remove them (C) is Craig's to run.
 
 **Acceptance:**

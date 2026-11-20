@@ -19592,7 +19592,7 @@
   },
   "/api/v1/auth/pin": {
    "post": {
-    "description": "Set or change the caller's own PIN. Never anybody else's.\n\nReachable only with a valid access token, which for a profile in the seeded\n``pin_hash = NULL`` state means the first PIN is set through an admin-minted token\nrather than by anyone who knows the display name.",
+    "description": "Set or change the caller's own PIN. Never anybody else's.\n\nReachable only with a valid access token, which for a profile in the seeded\n``pin_hash = NULL`` state means the first PIN is set through an admin-minted token\nrather than by anyone who knows the display name.\n\n**A guess of the current PIN is a login attempt** (AG9, DS50-02). Before, this route took\nunlimited guesses: whoever held a stolen access token (24 hours, in the browser's\nstorage) could try every PIN, set a new one and sign the owner out for good, with no\nlock on the daily check's list. Now it carries the login's durable limit, keyed on the\nprofile and address, refuses while the profile is locked, and a wrong current PIN is\ncharged to the same count as a wrong login PIN, locking at the same threshold.",
     "operationId": "set_pin_api_v1_auth_pin_post",
     "requestBody": {
      "content": {

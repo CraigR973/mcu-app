@@ -25,7 +25,7 @@ changed under `apps/` and `packages/` (+125,625 −6,156 lines). The procedure i
   link. No money moves; no email (Batches 33–34 parked). Paid accounts: Anthropic, Brave.
 - **Data and how sensitive.** PIN hashes, two watch histories, assistant chats, eBay OAuth
   tokens (encrypted at rest; none connected yet), photos in Postgres (none yet), loans with
-  borrowers' names (none yet). Personal, not special-category. The repo is private.
+  borrowers' names (none yet). Personal, not special-category. The repo was private when this was written (public since 10 Nov, #382; corrected in AG9).
 - **AI.** One assistant: Claude through the Anthropic SDK (`claude-sonnet-5` in every logged
   call), five read tools and two write tools (add to wanted, log a watch) that wait for the
   person's confirmation; caps of 50 messages and $2 a person a day. Used 8 times in all, last on
@@ -54,7 +54,7 @@ changed under `apps/` and `packages/` (+125,625 −6,156 lines). The procedure i
 | 45 | R3 | AI and LLM engineering | `BATCH_45_AI_ENGINEERING_REVIEW.md` | AI | Opus 5.5 · high; paid probe |
 | 46 | R4 | Catalogue integrity | `BATCH_46_CATALOGUE_INTEGRITY_REVIEW.md` | CT | Opus 5.5 · high |
 | 47 | R5 | Prices, value and deals | `BATCH_47_PRICES_VALUE_DEALS_REVIEW.md` | MK | Opus 5.5 · high |
-| 48 | R6 | Product and UX, two-person scorecard | `BATCH_48_UX_LIVE_APP_REVIEW.md`, `BATCH_48_SCORECARD.md` | UX | Sonnet 5.5 · high (walk); Opus 5.5 (scorecard) |
+| 48 | R6 | Product and UX, two-person scorecard | `BATCH_48_UX_LIVE_APP_REVIEW.md`; its per-person scorecard left the tree in AG9 (#383) | UX | Sonnet 5.5 · high (walk); Opus 5.5 (scorecard) |
 
 Order: R1 with R2; then R3 with R4; then R5 alone; then R6 last. The pack runs on Sonnet 5.5 at
 high and the synthesis on Opus 5.5 at xhigh. Nothing at max. Finding IDs take the batch:
@@ -132,7 +132,7 @@ rounds).
   worktree; the scratch folder is the main checkout's `scratchpad/wave-1/`.
 - **Quotas:** Brave (paid credit; none spent by the review); eBay Browse (shared with
   `cron-ebay`'s budget of 500 calls a day); Anthropic ($2 cap); Neon at 91 MB.
-- **Private repo, personal data:** no extracts, screenshots, chats or borrowers' names
+- **Personal data** (the repo was private then; public since 10 Nov, #382; corrected in AG9): no extracts, screenshots, chats or borrowers' names
   committed; they stay in scratch and reports describe them.
 
 ## Guardrails

@@ -42,7 +42,7 @@ from src.models.profile import (
     RefreshToken,
     UserRole,
 )
-from src.rate_limit import DurableLoginLimit
+from src.rate_limit import LOGIN_LIMIT, DurableLoginLimit, client_address, enforce_durable_limit
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -137,6 +137,13 @@ async def _issue_tokens(db: AsyncSession, profile: Profile) -> TokenPair:
     )
 
 
+def _wait_words(remaining: int) -> str:
+    """How long a lock has left, in words. A lock can last a day since Batch X2, and
+    "1441 minutes" is not an answer."""
+    minutes = remaining // 60 + 1
+    return f"{minutes} minutes" if minutes <= 90 else f"{-(-minutes // 60)} hours"
+
+
 async def _record_failed_attempt(limiter_db: AsyncSession, profile_id: uuid.UUID) -> None:
     """Charge a failed attempt against the profile and lock it at the threshold.
 
@@ -199,12 +206,9 @@ async def login(
     now = _utcnow()
     if profile.locked_until_utc is not None and profile.locked_until_utc > now:
         remaining = int((profile.locked_until_utc - now).total_seconds())
-        minutes = remaining // 60 + 1
-        # A lock can last a day since Batch X2, and "1441 minutes" is not an answer.
-        wait = f"{minutes} minutes" if minutes <= 90 else f"{-(-minutes // 60)} hours"
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
-            detail=f"Account locked. Try again in {wait}.",
+            detail=f"Account locked. Try again in {_wait_words(remaining)}.",
             headers={"Retry-After": str(remaining)},
         )
 
@@ -341,22 +345,42 @@ async def complete_onboarding(
 
 @router.post("/pin", status_code=status.HTTP_204_NO_CONTENT)
 async def set_pin(
+    request: Request,
     payload: SetPinRequest,
     user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
+    limiter_db: Annotated[AsyncSession, Depends(get_limiter_db)],
 ) -> None:
     """Set or change the caller's own PIN. Never anybody else's.
 
     Reachable only with a valid access token, which for a profile in the seeded
     ``pin_hash = NULL`` state means the first PIN is set through an admin-minted token
     rather than by anyone who knows the display name.
+
+    **A guess of the current PIN is a login attempt** (AG9, DS50-02). Before, this route took
+    unlimited guesses: whoever held a stolen access token (24 hours, in the browser's
+    storage) could try every PIN, set a new one and sign the owner out for good, with no
+    lock on the daily check's list. Now it carries the login's durable limit, keyed on the
+    profile and address, refuses while the profile is locked, and a wrong current PIN is
+    charged to the same count as a wrong login PIN, locking at the same threshold.
     """
-    if user.pin_hash is not None and (
-        payload.currentPin is None or not verify_pin(payload.currentPin, user.pin_hash)
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Current PIN is incorrect"
+    if user.pin_hash is not None:
+        await enforce_durable_limit(
+            request, limiter_db, f"pin:{user.id}:{client_address(request)}", LOGIN_LIMIT
         )
+        now = _utcnow()
+        if user.locked_until_utc is not None and user.locked_until_utc > now:
+            remaining = int((user.locked_until_utc - now).total_seconds())
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail=f"Account locked. Try again in {_wait_words(remaining)}.",
+                headers={"Retry-After": str(remaining)},
+            )
+        if payload.currentPin is None or not verify_pin(payload.currentPin, user.pin_hash):
+            await _record_failed_attempt(limiter_db, user.id)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Current PIN is incorrect"
+            )
 
     profile = await db.get(Profile, user.id)
     if profile is None:  # pragma: no cover - the dependency just loaded it

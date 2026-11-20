@@ -1,8 +1,8 @@
 # Batch 48 — Product and UX review of the live app (wave 1, pass R6)
 
 **Pass R6** · reviewed SHA `527522d` · lens: product designer (UX) · read-only · paid calls: none.
-Walked 11 Oct 2026 (19:50–21:45 UTC), written 11–12 Oct. The per-person scorecard and Craig's 41 snags
-are in `BATCH_48_SCORECARD.md` (never published).
+Walked 11 Oct 2026 (19:50–21:45 UTC), written 11–12 Oct. The per-person scorecard and the owner's 41 snags
+were kept in a separate scorecard, which left the tree in AG9 (#383), by an ordinary commit.
 
 **How the app was seen.** The bundle built at `527522d`, served locally, driven headless in Chromium at
 375×812 in both themes, as each person (Craig with an iPhone's agent, Mark with an Android's), with the

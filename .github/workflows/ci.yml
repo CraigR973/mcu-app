@@ -70,7 +70,10 @@ jobs:
           cache-dependency-path: apps/api/requirements-dev.lock
 
       - name: Install dependencies
-        run: pip install --require-hashes -r requirements-dev.lock
+        # age: the backup drill's round trip with a throwaway key runs in pytest (AG9).
+        run: |
+          pip install --require-hashes -r requirements-dev.lock
+          sudo apt-get update -qq && sudo apt-get install -y -qq age
 
       - name: Apply migrations
         run: alembic upgrade head

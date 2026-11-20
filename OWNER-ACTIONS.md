@@ -1399,14 +1399,14 @@ gained a `web-dist` entry, which serves the built bundle rather than the dev ser
 
 > **Corrected 26 Sep, evening: these files are already in git.** All 195 files under
 > `docs/brand/` (56 MB) went into history on 10 Sep in `fb6ecbd` and are on GitHub; the
-> repository is private. That includes the third-party images: 18 photographs and film stills
+> repository was private then (public since 10 Nov, #382; corrected in AG9). That includes the third-party images: 18 photographs and film stills
 > in `source-images/`, and film posters and stills in `logo-system/concepts/*/sources/` and
 > `concepts/catalogue-frame-v2/poster-source-grid.png`. The generator's edits are committed
 > too. So the three ways out below no longer apply. The choice is now: **(A)** leave it;
 > **(B)** stop tracking the third-party images from the next commit and ignore their folders,
 > which leaves them in history and on disk; or **(C)** B, and also rewrite history to remove
 > them, a force push to every branch that only you can run. **Proposed: B**, because the
-> repository is private and a rewrite touches every branch and clone.
+> repository was private then (public since 10 Nov, #382; corrected in AG9) and a rewrite touches every branch and clone.
 >
 > **26 Sep: then part of Group U's batch U3, waiting for your pick.** (The earlier proposal,
 > option 1 below, assumed the files were untracked.)
@@ -2059,8 +2059,8 @@ not recommended.
 
 Classic PAT, 40 chars, `ghp_3gLc…`, committed **in full** in `0bfb672` (2026-04-25) and
 referenced truncated in `4768da8`. It is dead (returns 401) but was never formally revoked.
-**A history rewrite is not recommended** — the repo is private and the token is already
-invalid, so a rewrite would cost more than it buys.
+**A history rewrite is not recommended** — the repo was private then (public since 10 Nov, #382; corrected in AG9) and the token is
+already invalid, so a rewrite would cost more than it buys.
 
 ### 10. `VITE_API_URL` for Vercel preview deploys
 

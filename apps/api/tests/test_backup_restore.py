@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import contextlib
 import os
+import shutil
+import subprocess
 import uuid
 from collections.abc import Iterator
 from pathlib import Path
@@ -35,6 +37,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 pytestmark = pytest.mark.skipif(
     not DATABASE_URL, reason="DATABASE_URL not set — Postgres-backed tests skipped"
 )
+REPO = Path(__file__).resolve().parents[3]
 ROLE_PASSWORD = "x4-test-" + uuid.uuid4().hex
 
 
@@ -170,6 +173,54 @@ def test_a_copy_restores_whole_and_holds_no_credential(
     # Triggers were off while it loaded, so the copy's timestamps are the source's.
     stamp = "SELECT updated_at FROM collection_items"
     assert _one(target, stamp) == _one(source, stamp)
+
+
+SCRIPT = REPO / ".github" / "backup-age.sh"
+RECIPIENT = REPO / ".github" / "backup-age-recipient.txt"
+
+
+def _age_or_skip() -> None:
+    """CI installs age for this; only a machine without it may skip, never CI."""
+    if shutil.which("age") and shutil.which("age-keygen"):
+        return
+    if os.environ.get("CI"):
+        pytest.fail("age is not installed in CI, so the drill's round trip went unproved")
+    pytest.skip("age is not installed on this machine")
+
+
+def test_the_copy_opens_again_with_a_throwaway_key(
+    scratch: tuple[str, str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """AG9 (DS50-04): the copy, encrypted with the weekly run's own command to a throwaway key
+    pair, decrypts to the same files, and age accepts the real recipient. No run had ever
+    proved an artifact opens: the drill restored the copy before it was encrypted."""
+    _age_or_skip()
+    source_name, _target = scratch
+    source = _url(source_name)
+    migrate(source, "head")
+    _seed(source)
+    copy = tmp_path / "copy"
+    monkeypatch.setenv("BACKUP_DATABASE_URL", _url(source_name, user="mcu_backup"))
+    assert run_dump(copy) == 0
+
+    done = subprocess.run(  # noqa: S603 - a fixed script from this repository
+        ["bash", str(SCRIPT), "roundtrip", str(copy), str(RECIPIENT)],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "encrypted, decrypted and identical" in done.stdout
+
+
+def test_the_weekly_run_encrypts_and_drills_with_the_one_script() -> None:
+    """AG9: the Encrypt step and the drill use .github/backup-age.sh, so the round trip CI
+    proves is the command the weekly copy is made with."""
+    workflow = (REPO / ".github" / "workflows" / "backup.yml").read_text()
+    assert 'backup-age.sh" encrypt "$RUNNER_TEMP/copy"' in workflow
+    assert 'backup-age.sh" roundtrip "$RUNNER_TEMP/copy"' in workflow
+    assert "age -R" not in workflow, "one encryption command, in the script"
 
 
 def test_a_role_that_can_read_a_pin_hash_stops_the_copy(

@@ -10,6 +10,11 @@ name: Backup
 # encrypted (the runner never holds the private key), and fails the run when any table's
 # rows differ from the manifest. A failed run emails the repository's owner.
 #
+# AG9 (DS50-04): the drill also proves the encryption opens. It encrypts the copy with the
+# same command the Encrypt step uses (.github/backup-age.sh) to a throwaway key pair made for
+# the run, decrypts it and compares it file by file, and checks age accepts the real recipient.
+# The real private key is still never on a runner. CI runs the same round trip on a test copy.
+#
 # AG2 (DS50-01): the last step records every run, ok or failed, as the `backup` heartbeat,
 # through the one function the role may call (migration 079), so the app's daily check names
 # a backup that failed or has not run in 8 days.
@@ -89,15 +94,18 @@ jobs:
           RESTORE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mcu_drill
           JWT_ACCESS_SECRET: drill-access-secret-with-at-least-32-characters
           JWT_REFRESH_SECRET: drill-refresh-secret-with-at-least-32-characters
-        run: python -m src.scripts.backup restore --from "$RUNNER_TEMP/copy" --expect-head
+        run: |
+          python -m src.scripts.backup restore --from "$RUNNER_TEMP/copy" --expect-head
+          bash "$GITHUB_WORKSPACE/.github/backup-age.sh" roundtrip "$RUNNER_TEMP/copy" \
+            "$GITHUB_WORKSPACE/.github/backup-age-recipient.txt"
 
       - name: Encrypt
         run: |
           stamp="$(date -u +%Y-%m-%d)-${GITHUB_RUN_ID}"
           echo "STAMP=$stamp" >> "$GITHUB_ENV"
-          tar -C "$RUNNER_TEMP/copy" -czf - . \
-            | age -R "$GITHUB_WORKSPACE/.github/backup-age-recipient.txt" \
-                -o "$RUNNER_TEMP/db-backup-$stamp.tar.gz.age"
+          bash "$GITHUB_WORKSPACE/.github/backup-age.sh" encrypt "$RUNNER_TEMP/copy" \
+            "$GITHUB_WORKSPACE/.github/backup-age-recipient.txt" \
+            "$RUNNER_TEMP/db-backup-$stamp.tar.gz.age"
           rm -rf "$RUNNER_TEMP/copy"
           ls -l "$RUNNER_TEMP/db-backup-$stamp.tar.gz.age"
 
