@@ -2,6 +2,14 @@
 
 ## Now
 
+**20 Nov, 01:16 GMT: a second pre-existing red fixed on its own branch (PR 173, `7b44185`).**
+`main`'s CI on AG8's merge (`6b0320b`) failed four Needs you loan tests because the suite crossed
+midnight UTC: the test module fixes `TODAY` when it loads, the route read its own clock. The route
+now reads the tests' day; a simulated crossing fails the four on the old code and passes on the
+new. Tests only. The same run's one WebKit failure (the lazy-chunk drift case) was re-run. The red
+went unseen until after AG9 had begun (#377's lesson, missed); `main`'s next runs were green.
+Production API and web on `7b44185`, `db: ok`, every readiness field `configured`.
+
 **20 Nov, 00:41 GMT: AG9 shipped, security and records (PR 172, `cbc43a4`, #392); Group AG sitting 5
 stops before AG10 for the owner's word.** A wrong current PIN on PIN change now counts toward the
 login lockout, with the login's limit, and a locked profile cannot change its PIN. The monthly
@@ -820,6 +828,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **20 Nov, 01:16 GMT — a midnight-crossing test defect fixed (PR 173, `7b44185`).** Needs you's
+  loan tests and their route now read one day; it had failed `main`'s run on AG8's merge.
 - **20 Nov, 00:41 GMT — AG9 shipped (PR 172, `cbc43a4`, #392).** PIN-change guesses count toward
   the lockout; the drill opens the copy with a throwaway key; private-repo records corrected;
   wave 1's scorecard removed by an ordinary commit. AG10 stops for the owner's word.
