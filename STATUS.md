@@ -11,8 +11,10 @@ gotcha 29 and the cloud setup: Node 22.23.2 is gone from the Mac (24.21.0 replac
 launching the CLI through `env` makes the IaC library check `/usr/bin/env`'s version instead of the
 CLI's. The plan's at-rest reading changed: since 26 Sep it had shown the API's restart policy
 (applied on 28 Sep, still reported) and since 2 Nov AB6's TMDB reference for `cron-reminders`; it
-now shows neither, and no apply after 2 Nov is recorded. Live, the API restarts on failure up to 3
-times, as `.railway/railway.ts` says. Read-backs on 21 and 22 Nov: the daily check's 39 rows have
+now shows neither, and both are live: the API restarts on failure up to 3 times, as
+`.railway/railway.ts` says, and `cron-reminders`' TMDB lookups have succeeded on every daily run
+since 4 Nov (508 of 508 requests). No apply after 2 Nov is recorded, and the owner is not sure
+whether one ran. Read-backs on 21 and 22 Nov: the daily check's 39 rows have
 the same 3 failing since 18 Nov (two duplicate-copy rows and the wanted *Bad Lieutenant*'s
 other-film listings), each pushed once, and every job's last beat has 0 failures. The weekly backup
 had not started by 08:18 UTC (GitHub started the last two Sunday runs 7–8 hours late), so its first
@@ -859,6 +861,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **22 Nov, 09:30 GMT — the 2 Nov Railway change is live.** `cron-reminders`' TMDB lookups have
+  worked on every daily run since 4 Nov, so the plan's "already up to date" is right.
 - **22 Nov, 08:50 GMT — two owner steps done; the Railway CLI's docs corrected.** Secret scanning
   on; a new Railway token tested read-only; Node 24 and no `env` wrapper for the CLI; the plan now
   reads "already up to date". The weekly backup's first heartbeat is not in yet (GitHub runs late).

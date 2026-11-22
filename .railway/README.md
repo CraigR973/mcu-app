@@ -127,6 +127,8 @@ old for railway/iac 3.11.0; an isolated CLI 5.42.1 under Node 22 produced the pl
 a global upgrade. Never assume `config plan` authorises `config apply`.
 
 **22 Nov:** the installed CLI is now 5.74.0, so the isolated one is no longer needed, and
-`config plan` reads "already up to date": neither of the two changes above shows. No apply
-after 2 Nov is recorded, so either one ran unrecorded or the newer CLI compares differently.
-Live, the API restarts on failure up to 3 times, as this file says (`STATUS.md`, 22 Nov).
+`config plan` reads "already up to date": neither of the two changes above shows, and both
+are live. The API restarts on failure up to 3 times, as this file says, and `cron-reminders`'
+TMDB lookups have succeeded on every daily run since 4 Nov (508 of 508 requests by 22 Nov), so
+the plan is right. No apply after 2 Nov is recorded, and the owner is not sure whether one ran
+(`STATUS.md`, 22 Nov).
