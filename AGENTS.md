@@ -75,8 +75,10 @@ Hosting: Neon (Postgres) + Railway (API) + Vercel (web) — live since Batch 2.
   read, and any credential it can; a restore is `docs/restore-runbook.md`.
 - **Railway:** with `RAILWAY_TOKEN` set (or `RAILWAY_API_TOKEN`, after `railway link -p
   "$RAILWAY_PROJECT_ID" -e production`), `railway config plan` runs from the repo root.
-  `config apply` still waits for Craig's word in the chat ("Still explicit", below). At rest
-  the plan has read `0 to add, 1 to change, 0 to destroy` since 26 Sep: the API's restart policy.
+  `config apply` still waits for Craig's word in the chat ("Still explicit", below). On 22 Nov
+  (CLI 5.74.0) the plan read "already up to date", where since 26 Sep it had shown the API's
+  restart policy, and since 2 Nov AB6's TMDB reference too (`STATUS.md`, 22 Nov). Launch the CLI
+  directly, never through `env` (`.railway/README.md`).
 - **A cron job's logs belong to the deployment that ran it.** Every merge to `main` redeploys
   each job, so `railway logs --service cron-scrape` often shows an empty deployment. Find the
   one live at the run's time with `railway deployment list --service <job>`, then

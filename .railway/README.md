@@ -35,25 +35,36 @@ prices about half the collection, and the whole of it falls due together.
 
 ## Two things that will bite
 
-1. **Run the Railway CLI on Node 22+, and call it by its full path.** Two separate
-   traps that look like one.
+1. **Run the Railway CLI on Node 22+, call it by its full path, and launch it directly.**
+   Three separate traps that look like one.
 
    Its IaC engine invokes Node's type-stripping flag, which Node 20 does not support, so
    `plan` fails before touching any infrastructure. But **the CLI itself is installed under
    Node 20's nvm bin** (`nvm alias default` is 20) and is an `#!/usr/bin/env node` script —
-   so putting Node 22 first on `PATH` makes `node` correct and makes `railway` *disappear*,
-   because it was never in Node 22's bin. The result is `bash: railway: command not found`,
-   which reads like a missing install rather than a `PATH` order problem.
+   so putting a newer Node first on `PATH` makes `node` correct and makes `railway`
+   *disappear*, because it was never in that Node's bin. The result is `bash: railway:
+   command not found`, which reads like a missing install rather than a `PATH` order problem.
 
-   Both at once — Node 22 for the engine, absolute path for the binary:
+   **The newer Node's folder must exist.** On 22 Nov the Mac had Node 24.21.0 and no longer
+   the 22.23.2 these docs used to name. A `PATH` entry for a removed version is skipped
+   silently, Node 20 runs the engine, and `plan` fails with `node: bad option:
+   --experimental-strip-types`. `ls ~/.nvm/versions/node/` lists what is there.
+
+   **Never launch it through `env`** (`env -u NAME …/railway config plan`). The IaC library
+   checks the CLI's version by running whatever the shell's `$_` names, which is then
+   `/usr/bin/env`, so `plan` fails with "requires Railway CLI 5.42.1 or newer" even on 5.74.0.
+   To drop a variable, `unset` it first.
+
+   All three at once — Node 24 for the engine, absolute path for the binary, no wrapper:
 
    ```
-   PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" \
+   PATH="$HOME/.nvm/versions/node/v24.21.0/bin:$PATH" \
      "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config plan
    ```
 
    This works from a shell with no nvm loaded at all, which the bare-`railway` form does
-   not. The app's own build stays on Node 20.
+   not. The app's own build stays on Node 20. Checked on 22 Nov with CLI 5.74.0 and a
+   project token in `RAILWAY_TOKEN`.
 
 2. **The domain must target Railway's injected `PORT` (8080), not the Dockerfile's
    `EXPOSE 8000`** — see `DECISIONS.md` #20. Getting this wrong returns a public 502 while
@@ -114,3 +125,8 @@ deletions. Exact apply remains an owner checkpoint. Evidence and compatible isol
 command: `docs/reviews/ab6-metadata-railway-plan-2026-11-02.json`. The installed CLI was too
 old for railway/iac 3.11.0; an isolated CLI 5.42.1 under Node 22 produced the plan without
 a global upgrade. Never assume `config plan` authorises `config apply`.
+
+**22 Nov:** the installed CLI is now 5.74.0, so the isolated one is no longer needed, and
+`config plan` reads "already up to date": neither of the two changes above shows. No apply
+after 2 Nov is recorded, so either one ran unrecorded or the newer CLI compares differently.
+Live, the API restarts on failure up to 3 times, as this file says (`STATUS.md`, 22 Nov).

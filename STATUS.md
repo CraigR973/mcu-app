@@ -2,6 +2,23 @@
 
 ## Now
 
+**22 Nov, 08:50 GMT: two owner steps done; the Railway CLI's docs corrected.** Secret scanning and
+push protection are on (21 Nov) and raised one alert, for the April token, dead (401) since before
+16 Nov (`OWNER-ACTIONS.md` item 9). A new Railway token is saved on the Mac and tested read-only:
+`railway status` reads the production project, a made-up token is refused, and `config plan` reads
+"already up to date". Reaching the CLI had broken twice over, now corrected in `.railway/README.md`,
+gotcha 29 and the cloud setup: Node 22.23.2 is gone from the Mac (24.21.0 replaced it), and
+launching the CLI through `env` makes the IaC library check `/usr/bin/env`'s version instead of the
+CLI's. The plan's at-rest reading changed: since 26 Sep it had shown the API's restart policy
+(applied on 28 Sep, still reported) and since 2 Nov AB6's TMDB reference for `cron-reminders`; it
+now shows neither, and no apply after 2 Nov is recorded. Live, the API restarts on failure up to 3
+times, as `.railway/railway.ts` says. Read-backs on 21 and 22 Nov: the daily check's 39 rows have
+the same 3 failing since 18 Nov (two duplicate-copy rows and the wanted *Bad Lieutenant*'s
+other-film listings), each pushed once, and every job's last beat has 0 failures. The weekly backup
+had not started by 08:18 UTC (GitHub started the last two Sunday runs 7–8 hours late), so its first
+heartbeat is not yet read. Still the owner's: the token in the cloud environment, the backup key,
+the duplicate copies and the viewer's answers.
+
 **20 Nov, 09:55 GMT: AG10 shipped, polish (PR 174, `d33f70f`, #393); Group AG sitting 5 is done.**
 Settings' switches, Needs you's "Loans" and "Cinema trips" links and its "Inspect the film and
 copies" links are 44 px tall. The entry chunk is capped at about its size, nothing moved out of it,
@@ -800,9 +817,15 @@ it renders — and report what was observed rather than what passed.
     Both halves, and it works from a shell with no nvm loaded:
 
     ```
-    PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" \
+    PATH="$HOME/.nvm/versions/node/v24.21.0/bin:$PATH" \
       "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config plan
     ```
+
+    **22 Nov:** Node 22.23.2 is gone from the Mac and 24.21.0 is there instead. A `PATH` entry
+    naming a removed version is skipped silently, so Node 20 runs the engine and `plan` fails
+    with `node: bad option: --experimental-strip-types`. Launch it directly, too, never through
+    `env`: the IaC library asks whatever the shell's `$_` names for its version
+    (`.railway/README.md`).
 
     The general rule this is an instance of: **a command that only works because of the
     ambient shell is not a command worth writing into a doc.** Test it under
@@ -836,6 +859,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **22 Nov, 08:50 GMT — two owner steps done; the Railway CLI's docs corrected.** Secret scanning
+  on; a new Railway token tested read-only; Node 24 and no `env` wrapper for the CLI; the plan now
+  reads "already up to date". The weekly backup's first heartbeat is not in yet (GitHub runs late).
 - **20 Nov, 09:55 GMT — AG10 shipped (PR 174, `d33f70f`, #393); sitting 5 done.** 44 px targets on
   Settings and Needs you; the entry chunk capped ("Just cap it"); first open measured throttled.
 - **20 Nov, 01:16 GMT — a midnight-crossing test defect fixed (PR 173, `7b44185`).** Needs you's

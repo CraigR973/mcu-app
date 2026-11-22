@@ -79,13 +79,14 @@ is Neon reading the request, not the proxy refusing it.
 ## Step 2 — a Railway token (Craig makes it, the session tests it)
 
 1. The session reports `railway --version` and runs `railway status` in the repo, with Node 22
-   first on `PATH` and the CLI by its full path (`.railway/README.md`, "Two things that will
-   bite"), and reports the project and environment names.
+   or later first on `PATH` (on 22 Nov the Mac had 24) and the CLI by its full path, launched
+   directly (`.railway/README.md`, "Two things that will bite"), and reports the project and
+   environment names.
 2. **Craig:** Railway → project `mcu-app` → Settings → Tokens → create a **project token**
    for the `production` environment, and copy it. Then tell the session, which saves it with
    `pbpaste > ~/.mcu-secrets/railway_token` and `chmod 600`, without displaying it.
 3. The session runs a **plan**, read-only, with the token from the file:
-   `RAILWAY_TOKEN="$(cat ~/.mcu-secrets/railway_token)"` before the same Node 22 + full-path
+   `RAILWAY_TOKEN="$(cat ~/.mcu-secrets/railway_token)"` before the same Node 24 + full-path
    `railway config plan`.
    - **Plan succeeds** → the cloud variable is `RAILWAY_TOKEN`.
    - **Refused for permissions** → Craig creates an **account token** instead (Account

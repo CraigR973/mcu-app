@@ -22,10 +22,12 @@ order. No agent does these.
       detail). `~/.mcu-secrets/backup-age-key.txt` is the only key that opens the weekly copies,
       and it exists only on the Mac (DS50-04). 2 minutes. *Since AG9 (20 Nov, #392) the monthly drill
       proves the encryption opens with a throwaway key, but only this key opens the real copies.*
-- [ ] **Switch on secret scanning and push protection** (both off on 16 Nov, #382). 1 minute, from
-      the repo folder:
+- [x] ~~**Switch on secret scanning and push protection**~~ **Done 21 Nov:** both on, read back from
+      GitHub on 21 and 22 Nov. They raised one alert at once, for the April token (item 9, under
+      Housekeeping), which was already dead. Still off, and yours to choose: GitHub's detection of
+      generic secrets, such as connection strings and private keys. 1 minute, from the repo folder:
       ```
-      gh api -X PATCH repos/{owner}/{repo} -f 'security_and_analysis[secret_scanning][status]=enabled' -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+      gh api -X PATCH repos/{owner}/{repo} -f 'security_and_analysis[secret_scanning_non_provider_patterns][status]=enabled'
       ```
 - [x] ~~**Apply the *Dead Man's Shoes* answer in Needs you.**~~ **Nothing to apply (19 Nov, AG11,
       #390):** the answer (1940) is the film the want already holds, so the question now clears
@@ -34,13 +36,12 @@ order. No agent does these.
       that is really the 1976 disc counted twice, since that disc was added by hand on 16 Oct. A
       soft delete, restorable from Trash. **Then check the shelf for two *Hitchcock* (2012)
       Blu-rays,** and delete one copy if there is only one (CT52-03). 7 minutes.
-- [ ] **A new Railway token** (the saved one, dated 1 Oct, is rejected). The kept assistant's canary
-      needs it, and so do the jobs' logs and the restart-policy plan. Create it in Railway, copy it,
-      then save it without showing it:
-      ```
-      pbpaste > ~/.mcu-secrets/railway_token
-      ```
-      5 minutes.
+- [x] ~~**A new Railway token**~~ **Saved and tested on the Mac, 22 Nov:** with it `railway status`
+      reads the production project, a made-up token is refused, and `config plan` reads "already up
+      to date". The kept assistant's canary and the jobs' logs can use it now.
+      - [ ] **The same token in the cloud environment:** `RAILWAY_TOKEN`, as in
+            `docs/mac-cloud-setup.md` step 3. Then delete the old token in Railway and clear the
+            clipboard (`pbcopy < /dev/null`). A new cloud session's startup hook says what it found.
 - [ ] **Ask the viewer about pushes before AG6 (from 25 Nov):** Wanted finds and finds of 40% or more
       at once, upgrades as one 18:00 summary, quiet hours 22:00–07:00, and Wanted-only for anyone who
       prefers it (#383).
@@ -2056,7 +2057,11 @@ lives only in a Railway variable has no test.
 too. It is still dead (401), so revoking it is still the whole job, and a history rewrite is still
 not recommended.
 
-- [ ] Revoke it
+- [ ] Revoke it. **21 Nov:** secret scanning raised alert 1 for it. Once it is revoked, or if it is
+      no longer listed at github.com/settings/tokens, close the alert from the repo folder:
+      ```
+      gh api -X PATCH repos/{owner}/{repo}/secret-scanning/alerts/1 -f state=resolved -f resolution=revoked
+      ```
 
 Classic PAT, 40 chars, `ghp_3gLc…`, committed **in full** in `0bfb672` (2026-04-25) and
 referenced truncated in `4768da8`. It is dead (returns 401) but was never formally revoked.
