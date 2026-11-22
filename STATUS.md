@@ -2,6 +2,20 @@
 
 ## Now
 
+**22 Nov, 11:50 GMT: AA10c shipped, the stand-in settled from recorded sales (PR 175, `b677735`, #394); Group
+AA sitting 6 is done, and with it Group AA.** Started 22 Nov rather than 25 Nov at the owner's go
+(four weeks of sales were complete on 19 Nov; #394 amends #290's date). On 187 discs with 3 or more
+recorded sales (786 sales), the lower-quartile stand-in's typical miss is 15.9% against today's used
+median's 16.9%, so **the lower quartile stays, at the owner's word ("Keep lower quartile")**, and no
+stored value changes: no re-price, nothing for the 1 Dec `cron-values` run to do differently. Home
+stays £14,782.41 (1,473 discs, 1,312 priced, 194 sales-backed). The stand-in reads about 5% high per
+disc, not the 9% low #290 expected. The read-back's deal check (MK53-04): 6 of 14 checkable live eBay
+deals sit at or above their disc's sales median; since 23 Oct 77 of 213 (36%), against 16 Nov's 35%,
+so AG6's fix is still needed, and its precondition, AA10c's read-back, is met. `src.scripts.stand_in_check`
+repeats the comparison read-only. CI's seven jobs green on the PR, end-to-end included; `main` green
+before the batch. Production API and web on `b677735`, `db: ok`, every readiness field `configured`.
+Report: `docs/reviews/aa10c-stand-in-2026-11-22.md`.
+
 **22 Nov, 08:50 GMT: two owner steps done; the Railway CLI's docs corrected.** Secret scanning and
 push protection are on (21 Nov) and raised one alert, for the April token, dead (401) since before
 16 Nov (`OWNER-ACTIONS.md` item 9). A new Railway token is saved on the Mac and tested read-only:
@@ -411,7 +425,7 @@ cinema identity review. AC5's first real trip and phone observations remain sepa
 8 Nov Home read-back was £14,739.54 across 1,473 physical copies: 1,309 priced,
 162 checked-unpriced, 2 unchecked, 61 sales-backed. The two due pairs were later additions.
 Before £16,867.11 covered 1,469 copies; the comparison includes scope and sales-evidence
-changes. No extra Home press is needed. AA10c remains from 25 Nov and evidence-gated.
+changes. No extra Home press is needed. AA10c settled it on 22 Nov: the lower quartile stays (#394).
 
 **Genuine older work:** both weekly Letterboxd syncs run (Craig's last on 8 Nov, Mark's first
 on 10 Nov). The X5 backfill and its seven corrections were written on 12 Nov (#369). What
@@ -451,7 +465,7 @@ another implementation batch. Onboarding more people still needs its own plan, a
 judgements, and real-device observations in
 `OWNER-ACTIONS.md`. Group X's implementation, Batch 38, V9 and Z1 are already shipped/built;
 the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
-with the scope caveat in Now. AA10c stays at its separate 25 Nov evidence gate.
+with the scope caveat in Now. AA10c shipped 22 Nov (#394): the lower quartile stays.
 
 **Build backlog:** Batch 21 waits for AG5: two of its three films are wrong-film wants carrying
 another film's shop prices (#383). Sale pagination (22c) and email (33–34) stay
@@ -861,6 +875,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **22 Nov, 11:50 GMT — AA10c shipped (PR 175, `b677735`, #394); Group AA sitting 6 done.** The
+  lower quartile stays the stand-in (typical miss 15.9% against 16.9% on 187 discs); no value changed.
 - **22 Nov, 09:30 GMT — the 2 Nov Railway change is live.** `cron-reminders`' TMDB lookups have
   worked on every daily run since 4 Nov, so the plan's "already up to date" is right.
 - **22 Nov, 08:50 GMT — two owner steps done; the Railway CLI's docs corrected.** Secret scanning

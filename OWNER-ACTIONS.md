@@ -176,7 +176,7 @@ The documentation handoff is committed locally without another deployment or bat
   your phone receipt and its tap remain open. AC3's eight future Rocky reruns are now read back.
   AC5's first real trip, genuine Mark-addition/loan pushes and remaining device observations
   stay separate. Craig's accepted iPhone launch/header/Search checks are complete.
-- **Future/deferred:** AA10c from 25 Nov with sufficient sales evidence; 22c and email
+- **Future/deferred:** AA10c shipped 22 Nov (#394, the lower quartile stays); 22c and email
   remain parked. Backup-key safekeeping and credential/hosting housekeeping remain owner
   records, not freshly proved failures. No extra AA10b Update values press is needed.
 
