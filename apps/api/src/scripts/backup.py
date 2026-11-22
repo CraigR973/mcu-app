@@ -42,6 +42,12 @@ def _connect(url: str, *, readonly: bool) -> psycopg2.extensions.connection:
     connection = psycopg2.connect(url)
     if readonly:
         connection.set_session(isolation_level="REPEATABLE READ", readonly=True)
+    else:
+        # Asked for, never assumed: production's backup role is read-only by default
+        # (`default_transaction_read_only`), and a definer function does not lift that, so on
+        # 22 Nov the heartbeat's insert was refused. Read-write is not a write grant: the role
+        # still writes nothing but its own heartbeat, through migration 079's function (#395).
+        connection.set_session(readonly=False)
     return connection
 
 

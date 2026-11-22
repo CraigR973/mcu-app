@@ -9,7 +9,8 @@ command the weekly run uses, then restored with the drill's command.
 **What this proves:** the role reads every table it should and no credential; the copy holds
 no PIN hash, token or invite link; the restore migrates the target, loads every row, keeps
 the copy's own timestamps (triggers off), fills a fresh invite link, and its counts match;
-and a role that can read a PIN hash stops the copy.
+a role that can read a PIN hash stops the copy; and the run's heartbeat records through the
+role as production sets it, read-only by default, while the role still writes no table.
 
 **What it does not:** production. The first live copy and drill are a run of
 ``.github/workflows/backup.yml`` after the deploy (X4's close-out).
@@ -30,7 +31,7 @@ import psycopg2
 import pytest
 
 from src.config import Settings, psycopg2_dsn
-from src.scripts.backup import migrate, run_dump, run_restore
+from src.scripts.backup import migrate, run_beat, run_dump, run_restore
 from src.services.backup import BackupPolicyError, Manifest, dump
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -68,6 +69,8 @@ def scratch() -> Iterator[tuple[str, str]]:
         made_role = cur.fetchone() is None
         verb = "CREATE" if made_role else "ALTER"
         cur.execute(f"{verb} ROLE mcu_backup LOGIN PASSWORD %s", (ROLE_PASSWORD,))
+        # As production's role is (`pg_roles`, 22 Nov): every session read-only unless it asks.
+        cur.execute("ALTER ROLE mcu_backup SET default_transaction_read_only = on")
         for name in names:
             cur.execute(f'CREATE DATABASE "{name}"')
     try:
@@ -221,6 +224,39 @@ def test_the_weekly_run_encrypts_and_drills_with_the_one_script() -> None:
     assert 'backup-age.sh" encrypt "$RUNNER_TEMP/copy"' in workflow
     assert 'backup-age.sh" roundtrip "$RUNNER_TEMP/copy"' in workflow
     assert "age -R" not in workflow, "one encryption command, in the script"
+
+
+def test_the_heartbeat_records_through_the_role_as_production_sets_it(
+    scratch: tuple[str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """22 Nov: the first weekly run since AG2 made its copy, then failed its last step.
+    Production's backup role is read-only by default, a definer function does not lift that,
+    and the heartbeat's insert was refused ("cannot execute INSERT in a read-only
+    transaction"). The beat asks for read-write itself; the role still writes no table (#395)."""
+    source_name, _ = scratch
+    source = _url(source_name)
+    migrate(source, "head")
+    as_role = _url(source_name, user="mcu_backup")
+    assert _one(as_role, "SHOW default_transaction_read_only") == "on"
+
+    monkeypatch.setenv("BACKUP_DATABASE_URL", as_role)
+    monkeypatch.setenv("GITHUB_RUN_ID", "45018902339")
+    assert run_beat("ok", drill=False) == 0
+    assert _one(source, "SELECT outcome FROM job_heartbeats WHERE job = 'backup'") == "ok"
+    assert _one(source, "SELECT detail->>'run' FROM job_heartbeats WHERE job = 'backup'") == (
+        "45018902339"
+    )
+
+    # Read-write is not a write grant: the role still cannot touch a table itself.
+    conn = psycopg2.connect(as_role)
+    conn.set_session(readonly=False)
+    try:
+        with conn.cursor() as cur, pytest.raises(psycopg2.errors.InsufficientPrivilege):
+            cur.execute(
+                "INSERT INTO job_heartbeats (job, beat_utc, outcome) VALUES ('forged', now(), 'ok')"
+            )
+    finally:
+        conn.close()
 
 
 def test_a_role_that_can_read_a_pin_hash_stops_the_copy(
