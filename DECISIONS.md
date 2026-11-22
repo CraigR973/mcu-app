@@ -8736,3 +8736,39 @@ contemporaneous.
      - **No test expectation changed.** One web test found the knob as the button's first child; it
        now finds it inside the track, with the same assertions and a new one that the track anchors it.
      - **Unverified:** the targets on a real phone.
+
+394. **AA10c: the stand-in settled from recorded sales — the lower quartile stays (22 Nov; amends
+     #290's date).** Group AA's sixth sitting, its one batch. Report:
+     `docs/reviews/aa10c-stand-in-2026-11-22.md`.
+     - **Started 22 Nov, not 25 Nov, at the owner's go ("Yes, start AA10c").** #290 set "from 25
+       Nov" so AA10a would have about four weeks of sales; recording began 22 Oct, so four weeks
+       were complete on 19 Nov. The owner accepted the smaller last week (251 sales for the week of
+       16 Nov, still filling, against 416–517 in the full weeks). This amends #290's date only.
+     - **How the two figures were judged: the owner's word, 22 Nov, "Keep lower quartile", given
+       on three recommendations together.** A disc's error is (figure − sales median) / sales
+       median, the sales median taken as the valuation takes it (one sold listing once, postage
+       in, 90 days, #291). The closer figure has the smaller **median absolute error** across the
+       discs, the typical miss on one disc. Only discs with **3 or more sales** count, the
+       valuation's own bar. **"Today's used median" is the stored one**, used asks with postage
+       left out, #289's "today" rule. A tie keeps the lower quartile. Rejected: judging on the
+       bias (median signed error), which would have picked the median (+2.0% against +4.8%) while
+       its typical miss is wider and Home's total would read about 9% over what the discs sold for.
+     - **The result, read-only on live data:** 187 of 913 discs with sales compared (786 of 1,824
+       sales). Lower quartile: typical miss 15.9%, bias +4.8%, middle half −10.0% to +18.7%,
+       summed 1.014 of sales. Used median: 16.9%, +2.0%, −14.6% to +20.4%, 1.093. Nearer on 92
+       discs against 83. The lower quartile is also closer at minimums of 1, 2 and 5 sales.
+       Left out: 172 with no stored value (eBay-tracked films not owned), 92 valued from New, 38
+       not priced, 424 with fewer than 3 sales.
+     - **So no stored value changes and no re-price runs.** Home stays £14,782.41 (1,473 discs,
+       1,312 priced, 194 sales-backed, 22 Nov). #290's expected cost, values "up to about 9% low",
+       did not happen: the stand-in reads about 5% high per disc and 1.4% high in total. Sales are
+       last advertised prices (#291), so real sales are likely a little lower still.
+     - **The deals check (MK53-04, #383):** 6 of the 14 checkable live eBay deals (of 32) cost at
+       or above their disc's sales median; across every eBay deal since 23 Oct, 77 of 213 (36%),
+       and 19 of 80 (24%) with 2 or more sales, against 16 Nov's 35% and 21%. Unchanged, so AG6's
+       fix is still needed; its precondition "after AA10c's read-back" is met.
+     - **What shipped:** `services/stand_in_check.py`, the comparison and the two selects it reads
+       (each disc's sales beside its stored figures; live eBay deals by the feed's own `live_deal`);
+       `src.scripts.stand_in_check`, which sends those same selects to the live database through the
+       read-only role and prints the report. It writes nothing. A test runs both selects through
+       the session and as the literal SQL the script sends, and requires the same rows.
