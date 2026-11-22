@@ -8772,3 +8772,30 @@ contemporaneous.
        `src.scripts.stand_in_check`, which sends those same selects to the live database through the
        read-only role and prints the report. It writes nothing. A test runs both selects through
        the session and as the literal SQL the script sends, and requires the same rows.
+
+395. **The backup's heartbeat asks for read-write; the backup role stays read-only by default
+     (22 Nov, PR 176, `3609593`).** The first weekly run since AG2 (run 45018902339, 22 Nov, 11:45
+     UTC) made its copy, then failed its last step, "Record the run for the daily check": `cannot
+     execute INSERT in a read-only transaction`, in `record_backup_heartbeat`. Production's
+     `mcu_backup` is read-only by default (`default_transaction_read_only = on` in `pg_roles`), and
+     a `SECURITY DEFINER` function does not lift a read-only transaction. No `backup` beat had ever
+     been recorded, so from 25 Nov 08:00 the daily check would have called the weekly backup never
+     run.
+     - **What changed:** the beat's connection asks for read-write itself (`set_session(readonly=
+       False)`, which psycopg2 issues as `BEGIN READ WRITE`). The dump's read-only snapshot is as
+       it was.
+     - **Why that is safe:** read-write is not a write grant. The role holds no INSERT, UPDATE,
+       DELETE or TRUNCATE on any of production's 77 tables (`has_table_privilege`, 22 Nov) and may
+       call one function, migration 079's, which writes only the `backup` row.
+     - **Rejected:** removing the role's read-only default on Neon. That is a credential change,
+       and it loosens a safeguard for no gain; a refused write is not fixed by loosening the role.
+     - **Why CI missed it:** the test fixture made `mcu_backup` without that default, and the daily
+       check's test called the function as the suite's own read-write user. The fixture now copies
+       production's setting, and a test runs the beat through the role: it failed on the old code
+       with production's error and passes now, and it proves the role still cannot insert into a
+       table in a read-write transaction.
+     - **Proved in production:** a backup run by hand at the owner's word ("Yes, run it"), run
+       45033426383 at 14:33 UTC on `3609593`, with the drill: it copied revision 081 (70 tables,
+       166,023 rows, credentials withheld), restored and checked it, passed "Round trip with a
+       throwaway key: 71 files encrypted, decrypted and identical", and recorded the heartbeat at
+       14:34 UTC (`ok`, 0 failures). Eight copies are kept; the oldest is now 25 Oct's.

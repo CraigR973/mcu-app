@@ -2,6 +2,17 @@
 
 ## Now
 
+**22 Nov, 14:40 GMT: the backup records its runs, fixed on its own branch (PR 176, `3609593`,
+#395).** This week's scheduled backup (run 45018902339, 11:45 UTC) made its copy, then failed its
+last step: the backup role is read-only by default and the heartbeat's insert was refused, so no
+backup beat had ever been recorded, and the daily check would have raised a false alarm from 25 Nov.
+The beat now asks for read-write; the role still writes no table (0 of 77). A test runs it through a
+role that is read-only by default, as production's is: it failed on the old code with production's
+error, and passes. A backup run by hand at the owner's word (run 45033426383, with the drill)
+recorded the heartbeat at 14:34 UTC: `ok`, 0 failures, with the restore and the throwaway-key round
+trip (71 files) passing. CI's seven jobs green on the PR; production API and web on `3609593`,
+`db: ok`.
+
 **22 Nov, 11:50 GMT: AA10c shipped, the stand-in settled from recorded sales (PR 175, `b677735`, #394); Group
 AA sitting 6 is done, and with it Group AA.** Started 22 Nov rather than 25 Nov at the owner's go
 (four weeks of sales were complete on 19 Nov; #394 amends #290's date). On 187 discs with 3 or more
@@ -875,6 +886,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **22 Nov, 14:40 GMT — the backup's heartbeat fixed (PR 176, `3609593`, #395).** The record step
+  asks for read-write; the backup role stays read-only by default and writes no table. A hand-run
+  backup recorded its beat: `ok`, 0 failures.
 - **22 Nov, 11:50 GMT — AA10c shipped (PR 175, `b677735`, #394); Group AA sitting 6 done.** The
   lower quartile stays the stand-in (typical miss 15.9% against 16.9% on 187 discs); no value changed.
 - **22 Nov, 09:30 GMT — the 2 Nov Railway change is live.** `cron-reminders`' TMDB lookups have
