@@ -336,7 +336,8 @@ describe('WantedPage — both people add (AH1, #397)', () => {
     expect(screen.queryByText(/Craig has not added/)).toBeNull()
   })
 
-  it("gives a viewer the controls on his own want and none on the admin's", async () => {
+  // #398: until the owner's word on 24 Nov this was "his own want and none on the admin's".
+  it("gives a viewer the controls on every want, the admin's included, and says whose each is", async () => {
     auth.profile = VIEWER
     stubList([CRAIGS, MARKS])
     renderPage()
@@ -344,8 +345,8 @@ describe('WantedPage — both people add (AH1, #397)', () => {
     expect(await screen.findByText('Added by you')).not.toBeNull()
     expect(screen.getByText('Added by Craig')).not.toBeNull()
     expect(screen.getByRole('button', { name: 'Remove Dog Soldiers' })).not.toBeNull()
-    expect(screen.queryByRole('button', { name: 'Remove The Fall Guy' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Set a maximum price for The Fall Guy' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Remove The Fall Guy' })).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Set a maximum price for The Fall Guy' })).not.toBeNull()
   })
 
   it("gives the admin the controls on everyone's wants and says who added each", async () => {

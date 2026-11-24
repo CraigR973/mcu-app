@@ -1322,9 +1322,9 @@ export const wantedItemSchema = z.object({
   /** Wanting a film you own is not an error — a DVD-to-4K upgrade is exactly that. */
   ownedAlready: z.boolean(),
   addedAt: z.string(),
-  /** AH1 (#397): who added the want. Anyone may add one; only its adder or the admin may
-   *  change it, so the page offers its controls by this. Null for a want with no adder, and
-   *  defaulted, so the page parses an API without it yet. */
+  /** AH1 (#397): who added the want, for the page to say whose it is. Either person adds,
+   *  changes and removes any want (#398), so it is not a permission. Null for a want with no
+   *  adder, and defaulted, so the page parses an API without it yet. */
   addedById: z.string().uuid().nullable().default(null),
   addedByName: z.string().nullable().default(null),
   /** Batch V9: one review per site, of the want's format where found. Defaulted, so the

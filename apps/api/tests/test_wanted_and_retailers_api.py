@@ -381,11 +381,14 @@ async def test_a_removed_entry_appears_in_the_trash_tab_batch_15_could_not_fill(
 
 
 # ---------------------------------------------------------------------------
-# AH1 (#397) — both people add; a viewer changes only the wants he added
+# AH1 (#397, #398) — both people add, change and remove any want
 # ---------------------------------------------------------------------------
 # Until AH1 a viewer's add was refused (`test_a_viewer_can_read_the_wanted_list_but_not_change_it`
 # asserted a 403). The owner opened the list to Mark on 24 Nov (#396), so that expectation
-# is replaced by the four below, named in #397.
+# is replaced by the tests below, named in #397. AH1 first let a viewer change only his own
+# wants; the owner's word the same evening (#398) let him change any, so the two tests of that
+# rule (`..._cannot_change_or_remove_the_admins_want_...`, `..._no_adder_is_the_admins_alone`)
+# became the two that follow them, named in #398.
 
 
 async def test_a_viewer_adds_a_want_and_it_is_recorded_and_audited_as_his(
@@ -431,24 +434,39 @@ async def test_a_viewer_changes_and_removes_his_own_want(
     assert row is not None and row.deleted_at is not None
 
 
-async def test_a_viewer_cannot_change_or_remove_the_admins_want_and_is_told_whose_it_is(
-    client: AsyncClient, viewer_client: AsyncClient, api_session: AsyncSession, admin: Profile
+async def test_a_viewer_changes_and_removes_the_admins_want_and_it_is_audited_to_him(
+    client: AsyncClient,
+    viewer_client: AsyncClient,
+    api_session: AsyncSession,
+    admin: Profile,
+    viewer: Profile,
 ) -> None:
-    admin_name = admin.display_name
+    """#398: the list is shared, so Mark changes and removes Craig's wants too. The want stays
+    Craig's, each change is audited to Mark, and the removed want goes to the Trash."""
+    admin_name, viewer_id = admin.display_name, viewer.id
     movie = await _film(api_session, "Craig Wants This")
     item_id = (await client.post("/api/v1/wanted", json={"movieId": str(movie.id)})).json()["id"]
 
     edit = await viewer_client.put(
         f"/api/v1/wanted/{item_id}", json={"isActive": False, "currency": "GBP"}
     )
-    assert edit.status_code == 403
-    assert admin_name in edit.json()["detail"]
+    assert edit.status_code == 200, edit.text
+    assert edit.json()["isActive"] is False
+    assert edit.json()["addedByName"] == admin_name, "a change does not change whose it is"
     removal = await viewer_client.delete(f"/api/v1/wanted/{item_id}")
-    assert removal.status_code == 403
-    assert admin_name in removal.json()["detail"]
+    assert removal.status_code == 204
 
     row = await api_session.get(WantedItem, uuid.UUID(item_id))
-    assert row is not None and row.is_active is True and row.deleted_at is None
+    assert row is not None and row.deleted_at is not None
+    audits = (
+        (await api_session.execute(select(AdminAction).where(AdminAction.target_id == item_id)))
+        .scalars()
+        .all()
+    )
+    assert {(audit.action_type, audit.user_id) for audit in audits} >= {
+        ("update", viewer_id),
+        ("delete", viewer_id),
+    }
 
 
 async def test_the_admin_changes_and_removes_a_viewers_want(
@@ -472,8 +490,8 @@ async def test_the_admin_changes_and_removes_a_viewers_want(
     assert (await client.delete(f"/api/v1/wanted/{item_id}")).status_code == 204
 
 
-async def test_a_want_with_no_adder_is_the_admins_alone(
-    client: AsyncClient, viewer_client: AsyncClient, api_session: AsyncSession
+async def test_a_want_with_no_adder_is_listed_as_nobodys_and_either_person_removes_it(
+    viewer_client: AsyncClient, api_session: AsyncSession
 ) -> None:
     movie = await _film(api_session, "Nobody's Want")
     item = WantedItem(id=uuid.uuid4(), movie_id=movie.id, currency="GBP", added_by=None)
@@ -481,10 +499,10 @@ async def test_a_want_with_no_adder_is_the_admins_alone(
     await api_session.flush()
     item_id = item.id
 
-    refused = await viewer_client.delete(f"/api/v1/wanted/{item_id}")
-    assert refused.status_code == 403
-    assert refused.json()["detail"] == "Only an admin can change this want."
-    assert (await client.delete(f"/api/v1/wanted/{item_id}")).status_code == 204
+    listed = await viewer_client.get("/api/v1/wanted")
+    nobodys = next(i for i in listed.json()["items"] if i["id"] == str(item_id))
+    assert (nobodys["addedById"], nobodys["addedByName"]) == (None, None)
+    assert (await viewer_client.delete(f"/api/v1/wanted/{item_id}")).status_code == 204
 
 
 # ---------------------------------------------------------------------------

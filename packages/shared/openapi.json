@@ -28567,7 +28567,7 @@
   },
   "/api/v1/wanted/{item_id}": {
    "delete": {
-    "description": "Soft-delete, so §13.5's Trash can restore it — the tab Batch 15 built and could not\nfill. Its adder's to remove, or the admin's (AH1, #397); restoring stays the admin's.",
+    "description": "Soft-delete, so §13.5's Trash can restore it — the tab Batch 15 built and could not\nfill. Either person removes any want (#398); restoring stays the admin's.",
     "operationId": "remove_wanted_api_v1_wanted__item_id__delete",
     "parameters": [
      {
@@ -28608,7 +28608,7 @@
     ]
    },
    "put": {
-    "description": "A full replace of the want's choices: its adder's, or the admin's (AH1, #397).",
+    "description": "A full replace of the want's choices, by either person, whoever added it (#398).",
     "operationId": "update_wanted_api_v1_wanted__item_id__put",
     "parameters": [
      {

@@ -8868,3 +8868,22 @@ contemporaneous.
      - **The guard:** `test_admin_routes.py` pins the 63 method and path pairs that take
        `AdminUser` and sends a viewer to each, with no database; opening one route by hand failed
        both halves of it before it was restored.
+
+398. **Either person changes and removes any want (24 Nov, the owner's word: "Mark should also be
+     able to change or remove mine"); amends #397.** AH1's rule that a viewer changes only his own
+     wants is gone: `PUT` and `DELETE /api/v1/wanted/{id}` take any signed-in person, whoever added
+     the want, and the Wanted page gives both people every want's controls. Who added a want stays
+     on its card, every change is audited to whoever made it, and a removed want goes to the
+     Trash, whose restore stays the admin's.
+     - **Rejected:** keeping AH1's ownership rule (the owner overruled it), and letting Mark
+       restore from the Trash (not asked for; the Trash stays the admin's).
+     - **What could go wrong:** a want removed by mistake, which the Trash restores; the audit
+       names who removed it.
+     - **Test expectations changed with the owner's word, each named:** the API's
+       `test_a_viewer_cannot_change_or_remove_the_admins_want_and_is_told_whose_it_is` and
+       `test_a_want_with_no_adder_is_the_admins_alone` became
+       `test_a_viewer_changes_and_removes_the_admins_want_and_it_is_audited_to_him` and
+       `test_a_want_with_no_adder_is_listed_as_nobodys_and_either_person_removes_it`; the web's
+       "his own want and none on the admin's" became "every want, the admin's included"; and the
+       end-to-end AH1 case now has Mark remove Craig's want, and reads the audit naming him. The
+       admin-route guard is unchanged: the three wanted routes were already open.

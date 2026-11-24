@@ -243,9 +243,9 @@ function ShopPrices({ prices }: { prices: ShopPrice[] }) {
 
 function Card({ item }: { item: WantedItem }) {
   const { profile } = useAuth()
-  // AH1 (#397): anyone adds a want; its adder, or the admin, changes or removes it.
+  // AH1 (#397, #398): either person adds, changes and removes any want; the card says whose.
   const mine = item.addedById !== null && item.addedById === profile?.id
-  const canChange = profile?.role === 'admin' || mine
+  const canChange = Boolean(profile)
   const queryClient = useQueryClient()
   const [editingBudget, setEditingBudget] = useState(false)
   const [budget, setBudget] = useState(item.maxPrice ?? '')

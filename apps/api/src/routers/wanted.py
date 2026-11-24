@@ -9,10 +9,12 @@ because §3.5 had no table. The first three are wired up by this batch.
 Retailers are **admin-only for writes**, matching Batch 7's collection surface: §3.16 says
 "admin can add, edit, or disable retailers". Reads of both are open to both people.
 
-**The wanted list is both people's since AH1 (#396, #397).** Batch 18 made it admin-only, as
-§5.1 calls it "movies the admin wants to purchase"; Mark then asked how to add to it. Anyone
-signed in adds a want; a viewer edits and removes only the wants they added, and the admin
-any. It stays one shared list: its alerts reach both people, as before.
+**The wanted list is both people's since AH1 (#396, #397, #398).** Batch 18 made it
+admin-only, as §5.1 calls it "movies the admin wants to purchase"; Mark then asked how to add to
+it. Anyone signed in adds, changes and removes any want, whoever added it: the owner's word on
+24 Nov (#398) replaced AH1's first rule, that a viewer changes only his own. Each want keeps who
+added it, every change is audited to whoever made it, and a removed want goes to the Trash,
+whose restore stays the admin's. It stays one shared list: its alerts reach both people.
 """
 
 from __future__ import annotations
@@ -32,7 +34,7 @@ from src.clock import utcnow
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.price_check import PRICED, PriceCheck
-from src.models.profile import Profile, UserRole
+from src.models.profile import Profile
 from src.models.reviews import FilmReview
 from src.models.wanted import (
     DEFAULT_RETAILERS,
@@ -129,30 +131,12 @@ async def _shop_prices(
 
 
 async def _adder_names(db: AsyncSession, items: list[WantedItem]) -> dict[uuid.UUID, str]:
-    """Who added each want, by profile id (AH1): the page says so, and a refusal names them."""
+    """Who added each want, by profile id (AH1): the page says so."""
     ids = {item.added_by for item in items if item.added_by is not None}
     if not ids:
         return {}
     rows = await db.execute(select(Profile.id, Profile.display_name).where(Profile.id.in_(ids)))
     return {profile_id: name for profile_id, name in rows.tuples()}
-
-
-async def _require_changeable(db: AsyncSession, item: WantedItem, user: Profile) -> None:
-    """AH1 (#397): a viewer changes only the wants they added; the admin changes any.
-
-    The list is shared, so anyone may add to it, but nobody's want is edited or removed
-    without them. A want with no adder (none on 24 Nov) is the admin's alone.
-    """
-    if user.role == UserRole.admin or (item.added_by is not None and item.added_by == user.id):
-        return
-    owner = await db.get(Profile, item.added_by) if item.added_by is not None else None
-    detail = (
-        f"This is {owner.display_name}'s want, so only {owner.display_name} or an admin can "
-        "change it."
-        if owner is not None
-        else "Only an admin can change this want."
-    )
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
 def _wanted_response(
@@ -354,11 +338,10 @@ async def add_wanted(
 async def update_wanted(
     item_id: uuid.UUID, payload: WantedUpdateRequest, user: CurrentUser, db: Database
 ) -> WantedItemResponse:
-    """A full replace of the want's choices: its adder's, or the admin's (AH1, #397)."""
+    """A full replace of the want's choices, by either person, whoever added it (#398)."""
     item = await db.get(WantedItem, item_id)
     if item is None or item.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    await _require_changeable(db, item, user)
 
     before = {
         "preferred_format": item.preferred_format,
@@ -407,11 +390,10 @@ async def update_wanted(
 @router.delete("/wanted/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_wanted(item_id: uuid.UUID, user: CurrentUser, db: Database) -> None:
     """Soft-delete, so §13.5's Trash can restore it — the tab Batch 15 built and could not
-    fill. Its adder's to remove, or the admin's (AH1, #397); restoring stays the admin's."""
+    fill. Either person removes any want (#398); restoring stays the admin's."""
     item = await db.get(WantedItem, item_id)
     if item is None or item.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    await _require_changeable(db, item, user)
     item.deleted_at = utcnow()
     record_action(
         db,

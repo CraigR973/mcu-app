@@ -1,9 +1,10 @@
 import { expect, test } from '../support/test.ts'
 
-// AH1 (#396, #397): both people add to the shared wanted list. Mark finds a film on the Wanted
-// page and adds it; its card reads "Added by you", and he removes it. Craig's want reads "Added
-// by Craig" with nothing for Mark to press, and the API refuses Mark's remove, naming Craig.
-test("AH1 Mark adds a want and removes it, and cannot remove Craig's", async ({ signedIn, api }) => {
+// AH1 (#396, #397, #398): both people add, change and remove any want on the shared list. Mark
+// finds a film on the Wanted page and adds it; its card reads "Added by you". Craig's want reads
+// "Added by Craig" and gives Mark the same controls: he removes both, and the API records Craig's
+// removal as Mark's. Until the owner's word on 24 Nov (#398), Mark could not touch Craig's.
+test("AH1 Mark adds a want, and removes his own and Craig's", async ({ signedIn, api }) => {
   const craig = await api('Craig')
   const craigs = await craig.post<{ id: string }>('/wanted', { tmdbId: 1802 }) // Tidewater Almanac
   try {
@@ -19,17 +20,19 @@ test("AH1 Mark adds a want and removes it, and cannot remove Craig's", async ({ 
     const card = (title: string) => page.getByRole('listitem').filter({ has: page.getByRole('link', { name: title, exact: true }) })
     await expect(card('Ninefold Kestrel')).toContainText('Added by you')
     await expect(card('Tidewater Almanac')).toContainText('Added by Craig')
-    await expect(card('Tidewater Almanac').getByRole('button')).toHaveCount(0)
 
-    const mark = await api('Mark')
-    const refused = await mark.call<{ detail: string }>('DELETE', `/wanted/${craigs.id}`, undefined, [403])
-    expect(refused.detail).toContain('Craig')
-
+    await card('Tidewater Almanac').getByRole('button', { name: 'Remove Tidewater Almanac' }).click()
+    await expect(page.getByRole('link', { name: 'Tidewater Almanac', exact: true })).toHaveCount(0)
     await card('Ninefold Kestrel').getByRole('button', { name: 'Remove Ninefold Kestrel' }).click()
     await expect(page.getByRole('link', { name: 'Ninefold Kestrel', exact: true })).toHaveCount(0)
-    await expect(card('Tidewater Almanac')).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+
+    const audit = await craig.get<{ items: { actorName: string | null }[] }>(
+      `/admin/audit?targetTable=wanted_list&targetId=${craigs.id}&actionType=delete`,
+    )
+    expect(audit.items.map((entry) => entry.actorName)).toEqual(['Mark'])
   } finally {
-    await craig.delete(`/wanted/${craigs.id}`)
+    // Mark removed it in the case; if the case stopped first, Craig tidies it.
+    await craig.call('DELETE', `/wanted/${craigs.id}`, undefined, [204, 404])
   }
 })

@@ -33,8 +33,8 @@ About 10 minutes, in any order. No agent does these.
 - [x] ~~**AH1's go** (Mark adds to Wanted), after its brief: it changes who may write.~~ **Given and
       shipped 24 Nov** (`b9b85d8`, #397).
 - [ ] **Tell Mark he can add to Wanted now:** the Wanted page's Add a film, Add to Wanted on a set's
-      missing films, or by asking the assistant. He edits and removes the wants he added; yours
-      stay yours. 1 minute.
+      missing films, or by asking the assistant. Since #398 he changes and removes any want, yours
+      included; a removed want goes to the Trash, where you can restore it. 1 minute.
 - Nothing to do: *Titanic* (Mark kept it as 1953 on 15 Nov), *Contagion* (its Blu-ray has been in
   Trash since 5 Nov) and *Bad Lieutenant* (both discs are the 2009 film, as catalogued).
 
