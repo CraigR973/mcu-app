@@ -5516,7 +5516,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
 | **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (go 24 Nov; starts 25 Nov, #396) · 5: ~~AG11~~ (`25c1870`) → ~~AG8~~ (`6b0320b`) → ~~AG9~~ (`cbc43a4`) → ~~AG10~~ (`d33f70f`) | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done. Sitting 5 started at the owner's word on 19 Nov ("Go, with the fix"); AG11 shipped 19 Nov (`25c1870`, #390); AG8 shipped 19 Nov (`6b0320b`, #391); AG9 shipped 20 Nov (`cbc43a4`, #392); AG10 shipped 20 Nov (`d33f70f`, #393) after the owner's word on its entry chunk ("Just cap it"). Sitting 5 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
-| **AH** | ~~AH1~~ (`b9b85d8`, PR 177) · AH2 (only if Mark wants Shetland Series 5 kept separate) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396). AH1 shipped 24 Nov at the owner's go ("Yes, build it"; `b9b85d8`, #397).** AH2 waits on Mark's Shetland answer. AH1 and AG6 share the checkout, so the two never run at once. |
+| **AH** | ~~AH1~~ (`b9b85d8`, PR 177) → ~~AH1 follow-up~~ (`8970c66`, PR 178) · AH2 (only if Mark wants Shetland Series 5 kept separate) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396). AH1 shipped 24 Nov at the owner's go ("Yes, build it"; `b9b85d8`, #397); its follow-up the same evening at the owner's word ("Mark should also be able to change or remove mine"; `8970c66`, #398).** AH2 waits on Mark's Shetland answer. AH1 and AG6 share the checkout, so the two never run at once. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6459,6 +6459,7 @@ does share the checkout: the two never run at once.
 | Batch | Covers | Size | Claude Code | Codex |
 |---|---|---|---|---|
 | ~~AH1~~ | ~~Mark adds to Wanted~~ | ~~🟡 ~½ day~~ | ~~Opus 5.5 `high`~~ | **shipped** 24 Nov: PR 177, merge `b9b85d8cd93ecd0595d9a1c5080590a614aa2295` |
+| ~~AH1 follow-up~~ | ~~Either person changes and removes any want~~ | ~~🟢 ~¼ day~~ | ~~Opus 5.5 `high`~~ | **shipped** 24 Nov: PR 178, merge `8970c667aaff0faf8a6908c4df1664cc1bd1a598` |
 | AH2 | *Only if Mark wants Shetland kept separate:* an answer that asks for no change closes its question | 🟢 ~¼ day | Opus 5.5 `high` | GPT-5.6 Sol High |
 
 *Why those settings.* AH1 opens a write path to a role that never had one: Deep, as for any
@@ -6499,6 +6500,19 @@ button he sees and which fails.
   another's, refused), the assistant's tool for a viewer, and the web gates for both roles. E2E: a
   viewer adds a want and removes it, and cannot remove the admin's.
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### ~~AH1 follow-up — either person changes and removes any want~~ 🟢 **shipped 24 Nov (`8970c66`, [PR 178](https://github.com/CraigR973/mcu-app/pull/178), #398)**
+
+**The owner's word, 24 Nov evening: "Mark should also be able to change or remove mine."** It
+replaces AH1's second criterion (a viewer changes only his own wants; #398 amends #397).
+`PUT` and `DELETE /api/v1/wanted/{id}` take any signed-in person, whoever added the want, and the
+Wanted page gives both people every want's controls. Who added a want stays on its card; every
+change is audited to whoever made it; a removed want goes to the Trash, whose restore stays the
+admin's. The four test expectations that changed are named in #398; the admin-route guard is
+unchanged. CI's seven jobs green on PR 178, end-to-end included (the README's three skips), where
+the AH1 case now has Mark remove Craig's want and reads the audit naming him. Locally: ruff, mypy,
+the API suite against a throwaway Postgres (3,066 passed; 9 local-only skips), shared 213 and web
+1,040 tests, web lint, typecheck and build. Production API and web on `8970c66`, `db: ok`.
 
 ### AH2 — An answer that asks for no change closes its question 🟢
 

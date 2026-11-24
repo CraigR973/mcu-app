@@ -18,14 +18,19 @@ conversation still maps onto this file.*
 Mark answered all seven questions and is happy with the push plan, so AG6 starts on 25 Nov.
 About 10 minutes, in any order. No agent does these.
 
-- [ ] **Remove the test wants on the Wanted page, keeping any you or Mark want,** before AG6
+- [x] ~~**Remove the test wants on the Wanted page, keeping any you or Mark want,** before AG6
       deploys (about 26 Nov). All 10 were added under your name by agents testing the shop checks
       (8 on 9 Sep, 2 on 30 Sep); once AG6 ships, a Wanted find pushes at once. Removing *Bad
-      Lieutenant* also clears its daily-check row. 3 minutes.
-- [ ] **The copy fixes, unless Mark makes them:** delete one of the two *King Kong* (2005) 4K
+      Lieutenant* also clears its daily-check row. 3 minutes.~~ **Done 24 Nov, 18:47 GMT:** all 10
+      removed by you, read back from the audit; the Wanted list is empty. The *Bad Lieutenant* row
+      leaves Needs you at the next 08:00 check.
+- [x] ~~**The copy fixes, unless Mark makes them:** delete one of the two *King Kong* (2005) 4K
       copies and one of the two *Hitchcock* (2012) Blu-rays; untick Blu-ray on *King Arthur: Legend
       of the Sword*; untick Blu-ray on *Silent Running*, then Add a copy for its Blu-ray steelbook.
-      The daily check's two duplicate-copy rows clear with the deletes. 5 minutes.
+      The daily check's two duplicate-copy rows clear with the deletes. 5 minutes.~~ **Done by Mark,
+      24 Nov, 13:04–13:07 GMT,** read back from the audit: the *Silent Running* Blu-ray is its own
+      copy, a Masters of Cinema steelbook on the 6th shelf. The two duplicate-copy rows leave Needs
+      you at the next 08:00 check.
 - [ ] **Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
       Shetland (the series) → confirm the merge. Both boxes stay separate copies; his question
       clears itself, and the merge can be undone. If he wants it kept separate, tell an agent (AH2).

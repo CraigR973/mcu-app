@@ -2,6 +2,19 @@
 
 ## Now
 
+**24 Nov, 19:15 GMT: either person changes and removes any want (PR 178, `8970c66`, #398); the
+test wants are gone and Mark's copy fixes are in.** At the owner's word ("Mark should also be able
+to change or remove mine"), AH1's rule that a viewer changes only his own wants is gone: who added a
+want stays on its card, every change is audited to whoever made it, and a removed want goes to the
+Trash, whose restore stays the admin's. CI's seven jobs green on the PR, end-to-end included;
+`main` green before it (both AH1 runs). Production API and web on `8970c66`, `db: ok`, every
+readiness field `configured`. **Read back, read-only:** the owner removed all 10 agent test wants
+at 18:47 GMT (the Wanted list is empty), and Mark made every copy fix at 13:04–13:07 GMT: one
+*King Kong* (2005) 4K and one *Hitchcock* Blu-ray deleted, *King Arthur* 4K only, and *Silent
+Running* split into a 4K copy and a Masters of Cinema steelbook. The three daily-check rows
+(the two duplicates, *Bad Lieutenant*) leave Needs you at the 25 Nov 08:00 check; Shetland's
+question stays until Series 5 joins the Shetland series, once Mark agrees. AG6 starts at 08:37 GMT.
+
 **24 Nov, 18:20 GMT: AH1 shipped, Mark adds to Wanted (PR 177, `b9b85d8`, #397).** Anyone signed
 in adds a want, from the Wanted page, a set's missing films, the outside-film page or the
 assistant (`add_to_wanted` left `ADMIN_ONLY`, now empty). A viewer edits and removes only the
@@ -494,8 +507,10 @@ clean on 17 Nov (Now). Still to read back: the valuation job's first beat with a
 (1 Dec). Since read back: the TMDB refresh on its own beat (18 Nov) and the backup's beat
 (22 Nov); Zavvi switched itself off on 20 Nov, so its weekly ask will not come.
 
-**Group AH (24 Nov, #396): AH1 shipped 24 Nov (`b9b85d8`, #397).** AH2 only if Mark wants
-Shetland Series 5 kept separate.
+**Group AH (24 Nov, #396): AH1 shipped 24 Nov (`b9b85d8`, #397), and its follow-up the same
+evening (`8970c66`, #398): either person changes and removes any want.** AH2 only if Mark wants
+Shetland Series 5 kept separate. **To read back at the 25 Nov 08:00 check:** the two
+duplicate-copy rows and *Bad Lieutenant*'s row gone from Needs you.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
@@ -919,6 +934,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **24 Nov, 19:15 GMT — either person changes any want (PR 178, `8970c66`, #398).** The test wants
+  are gone (the owner, 18:47) and Mark's copy fixes are in (13:04–13:07). Production on `8970c66`.
 - **24 Nov, 18:20 GMT — AH1 shipped (PR 177, `b9b85d8`, #397).** Mark adds to Wanted and changes
   only his own wants; a guard pins the 63 admin-only routes. Production on `b9b85d8`, `db: ok`.
 - **24 Nov, 14:00 GMT — Mark's answers in; the owner's four decisions (#396).** AG6 starts 25 Nov
