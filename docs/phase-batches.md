@@ -5515,7 +5515,8 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Implementation deployed through AC6 and the separate calendar repair, 7 Nov; reconciled 8 Nov.** AC3 positive production rerun read-back is complete (eight future Rocky showings). AC6's scheduled digest sent for real on 9–12 Nov (read back 12 Nov), so only Craig's phone receipt/tap stays open; AC5 real trip/phone observations remain separate. Original owner checkpoints were answered before their builds; no new batch is authorised by this summary. |
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
-| **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (from 25 Nov) · 5: ~~AG11~~ (`25c1870`) → ~~AG8~~ (`6b0320b`) → ~~AG9~~ (`cbc43a4`) → ~~AG10~~ (`d33f70f`) | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done. Sitting 5 started at the owner's word on 19 Nov ("Go, with the fix"); AG11 shipped 19 Nov (`25c1870`, #390); AG8 shipped 19 Nov (`6b0320b`, #391); AG9 shipped 20 Nov (`cbc43a4`, #392); AG10 shipped 20 Nov (`d33f70f`, #393) after the owner's word on its entry chunk ("Just cap it"). Sitting 5 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
+| **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (go 24 Nov; starts 25 Nov, #396) · 5: ~~AG11~~ (`25c1870`) → ~~AG8~~ (`6b0320b`) → ~~AG9~~ (`cbc43a4`) → ~~AG10~~ (`d33f70f`) | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done. Sitting 5 started at the owner's word on 19 Nov ("Go, with the fix"); AG11 shipped 19 Nov (`25c1870`, #390); AG8 shipped 19 Nov (`6b0320b`, #391); AG9 shipped 20 Nov (`cbc43a4`, #392); AG10 shipped 20 Nov (`d33f70f`, #393) after the owner's word on its entry chunk ("Just cap it"). Sitting 5 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
+| **AH** | AH1 (at the owner's go, after its brief) · AH2 (only if Mark wants Shetland Series 5 kept separate) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396).** AH1 lets Mark add to Wanted; it opens an admin-only write to the viewer, so it waits for the owner's go after its brief. It shares no files with AG6 but the same checkout, so the two never run at once. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6158,7 +6159,7 @@ Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
 | 1 | AG1 the 08:00 job survives → AG2 every scheduled thing watched | The owner's go; first. AG2 by 5 Feb 2027 at the latest | Opus 5.5 `high` | GPT-5.6 Sol High |
 | 2 | AG3 say it where people look → AG7 one title fold | The owner's go | Sonnet 5.5 `high` | GPT-5.6 Terra High |
 | 3 | AG4 found for the film it is → AG5 wants know their film | The owner's go; their live data steps at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
-| 4 | AG6 deals: the right disc, a fair figure, sensible pushes | From 25 Nov, after AA10c's read-back, and once the viewer has been asked about pushes; its live data step at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| 4 | AG6 deals: the right disc, a fair figure, sensible pushes | From 25 Nov, after AA10c's read-back, and once the viewer has been asked about pushes; its live data step at the owner's word. **Met 24 Nov; the owner's go for 25 Nov (#396)** | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
 | 5 | AG11 a want's question clears → AG8 the assistant, kept → AG9 security and records → AG10 polish | The owner's go (19 Nov, "Go, with the fix") | Opus 5.5 `high` (from AG11, AG8 and AG9) | GPT-5.6 Sol High |
 
 **Each batch on its own:**
@@ -6336,6 +6337,10 @@ people, 121 of 124 of them upgrades, about a quarter at night. 502 stored push r
 words.
 
 - From 25 Nov, after AA10c's read-back, once the viewer has been asked about the push plan.
+  **Met 24 Nov (#396):** AA10c was read back on 22 Nov, and Mark agreed the plan; the owner's go
+  for 25 Nov. The owner removes the agents' test wants before AG6 deploys, since Wanted finds will
+  push at once. The dark shop is Zavvi, switched off since 20 Nov: re-check its search before
+  repairing it (on 18 Nov its own site had no working search address).
 - **The wrong disc is refused:** "Mastered in 4K" and "ONLY" rules; a listing that names cast absent
   from the filed film but present in a same-title film's is refused; the seven titles join the
   wrong-product tests (a CI guard).
@@ -6442,3 +6447,52 @@ on 15 Nov, its want already names the 1940 film, and still it sits on the admin'
   itself; 1992 cannot be applied yet: do not re-identify the film or remove the want, tell an
   agent). A "change a want's film" control is not part of AG11; it waits for the owner's word.
 - Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+## Group AH — Mark's 24 Nov answers, drafted 24 Nov
+
+**Drafted 24 Nov from Mark's answers to Craig's message (#396).** AH1 at the owner's yes ("yes to
+all 3"). It changes who may write, so it starts at the owner's go after its brief, as the owner
+asks of any change to auth. AH2 exists only if Mark wants Shetland Series 5 kept separate.
+Criteria authored 24 Nov, so `DECISIONS.md` #54 does not apply. AH1 shares no files with AG6 but
+does share the checkout: the two never run at once.
+
+| Batch | Covers | Size | Claude Code | Codex |
+|---|---|---|---|---|
+| AH1 | Mark adds to Wanted | 🟡 ~½ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AH2 | *Only if Mark wants Shetland kept separate:* an answer that asks for no change closes its question | 🟢 ~¼ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+
+*Why those settings.* AH1 opens a write path to a role that never had one: Deep, as for any
+change touching auth. AH2 changes when a person's question leaves Needs you.
+
+### AH1 — Mark adds to Wanted 🟡
+
+`observed` (24 Nov, #396): Mark asked how to add to the wanted list. He cannot: `POST`, `PUT` and
+`DELETE /api/v1/wanted` take `AdminUser` (Batch 18), the assistant's `add_to_wanted` is in
+`ADMIN_ONLY`, and the web app hides Add from him, except on the outside-film page, whose Want
+button he sees and which fails.
+
+- **Mark can add a want** from the Wanted page, a set's missing films, a film's page and the
+  outside-film page, and through the assistant (`add_to_wanted` leaves `ADMIN_ONLY`; its Yes/No
+  card is unchanged). Each add records him as `added_by` and is audited to him.
+- **He edits and removes the wants he added; only the admin edits or removes another person's.**
+  A refusal says whose want it is. The Wanted page says who added each want.
+- **The list stays one shared list.** Alerts and pushes for any want reach both people, as now;
+  AG6 gives each person a Wanted-only choice.
+- **The words that say Wanted is Craig's are reworded:** the empty state, onboarding, the
+  assistant page's opening line, and the comment on `WantFilm`.
+- **No other door opens:** a test walks every route that takes `AdminUser` and fails if a viewer
+  gets past any but the three opened here (a CI guard).
+- **The test expectations that a viewer is refused on these three routes change** with the
+  owner's decision; each is named in the batch's decision entry, never changed quietly.
+- No migration (`wanted_list.added_by` exists) and no live write.
+- Tests: the API for both roles (add; edit own; edit another's, refused; remove own; remove
+  another's, refused), the assistant's tool for a viewer, and the web gates for both roles. E2E: a
+  viewer adds a want and removes it, and cannot remove the admin's.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AH2 — An answer that asks for no change closes its question 🟢
+
+Only if Mark wants Shetland Series 5 kept separate (#396). `observed`: the Shetland question
+resolves only when the copy's film holds the Shetland series (`context()` in
+`services/assigned_reviews.py`), so "keep separate" leaves it on both people's Needs you for good.
+Its criteria are written at the owner's word, if it is needed.

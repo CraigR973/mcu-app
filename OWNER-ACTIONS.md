@@ -13,6 +13,27 @@ Older dated sections retain historical instructions; the current summary below t
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
+## Mark's answers — 24 Nov (#396)
+
+Mark answered all seven questions and is happy with the push plan, so AG6 starts on 25 Nov.
+About 10 minutes, in any order. No agent does these.
+
+- [ ] **Remove the test wants on the Wanted page, keeping any you or Mark want,** before AG6
+      deploys (about 26 Nov). All 10 were added under your name by agents testing the shop checks
+      (8 on 9 Sep, 2 on 30 Sep); once AG6 ships, a Wanted find pushes at once. Removing *Bad
+      Lieutenant* also clears its daily-check row. 3 minutes.
+- [ ] **The copy fixes, unless Mark makes them:** delete one of the two *King Kong* (2005) 4K
+      copies and one of the two *Hitchcock* (2012) Blu-rays; untick Blu-ray on *King Arthur: Legend
+      of the Sword*; untick Blu-ray on *Silent Running*, then Add a copy for its Blu-ray steelbook.
+      The daily check's two duplicate-copy rows clear with the deletes. 5 minutes.
+- [ ] **Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
+      Shetland (the series) → confirm the merge. Both boxes stay separate copies; his question
+      clears itself, and the merge can be undone. If he wants it kept separate, tell an agent (AH2).
+      1 minute.
+- [ ] **AH1's go** (Mark adds to Wanted), after its brief: it changes who may write.
+- Nothing to do: *Titanic* (Mark kept it as 1953 on 15 Nov), *Contagion* (its Blu-ray has been in
+  Trash since 5 Nov) and *Bad Lieutenant* (both discs are the 2009 film, as catalogued).
+
 ## Wave 2's jobs for you — 16 Nov (#383)
 
 From the wave 2 review (`docs/reviews/BATCH_49-54_ROADMAP.md`, section f). About 20 minutes, in any
@@ -32,19 +53,20 @@ order. No agent does these.
 - [x] ~~**Apply the *Dead Man's Shoes* answer in Needs you.**~~ **Nothing to apply (19 Nov, AG11,
       #390):** the answer (1940) is the film the want already holds, so the question now clears
       itself and has left Needs you. Proved from live data, read-only, on 19 Nov.
-- [ ] **Delete the phantom *King Kong* copy** (import row 878): a second 4K copy on the 2005 film
+- [x] ~~**Delete the phantom *King Kong* copy** (import row 878): a second 4K copy on the 2005 film
       that is really the 1976 disc counted twice, since that disc was added by hand on 16 Oct. A
       soft delete, restorable from Trash. **Then check the shelf for two *Hitchcock* (2012)
-      Blu-rays,** and delete one copy if there is only one (CT52-03). 7 minutes.
+      Blu-rays,** and delete one copy if there is only one (CT52-03). 7 minutes.~~ **Mark confirmed
+      24 Nov** (one 1976 and one 2005 4K; one *Hitchcock*): now the copy fixes in 24 Nov's section.
 - [x] ~~**A new Railway token**~~ **Saved and tested on the Mac, 22 Nov:** with it `railway status`
       reads the production project, a made-up token is refused, and `config plan` reads "already up
       to date". The kept assistant's canary and the jobs' logs can use it now.
       - [ ] **The same token in the cloud environment:** `RAILWAY_TOKEN`, as in
             `docs/mac-cloud-setup.md` step 3. Then delete the old token in Railway and clear the
             clipboard (`pbcopy < /dev/null`). A new cloud session's startup hook says what it found.
-- [ ] **Ask the viewer about pushes before AG6 (from 25 Nov):** Wanted finds and finds of 40% or more
+- [x] ~~**Ask the viewer about pushes before AG6 (from 25 Nov):** Wanted finds and finds of 40% or more
       at once, upgrades as one 18:00 summary, quiet hours 22:00–07:00, and Wanted-only for anyone who
-      prefers it (#383).
+      prefers it (#383).~~ **Done 24 Nov:** Mark is happy with the plan (#396).
 - [ ] **Re-check Zavvi from mid-December.** On 18 Nov its own site sent every visitor with no
       cookies, a browser as much as the app, from its search and its home page to a dead October
       page (404). There was nothing to fix in the app, and the shop switches itself off after its
@@ -93,18 +115,24 @@ once AE7 (search) merges; CI runs it either way.
       checksum) and build just those two extensions into pgserver. Undone by reinstalling
       pgserver; nothing else is installed. Reply "yes, build them" or "no, CI only".
 
-## Ask Mark about three copies — 9 Nov (#355)
+## ~~Ask Mark about three copies — 9 Nov (#355)~~ — answered 24 Nov (#396)
 
 From point 10 of the 8 Nov feedback (`docs/reviews/feedback-reconciliation-2026-11-08.md`).
 Nothing is blocked on it, and no agent changes these copies.
 
-- [ ] **Contagion.** Mark added the 4K on 4–5 Nov and deleted the Blu-ray copy on 5 Nov. If he
-      still has the Blu-ray, restore it from Trash; if not, there is nothing to do.
-- [ ] **King Arthur: Legend of the Sword** and **Silent Running** each have one copy carrying
+- [x] ~~**Contagion.** Mark added the 4K on 4–5 Nov and deleted the Blu-ray copy on 5 Nov. If he
+      still has the Blu-ray, restore it from Trash; if not, there is nothing to do.~~ **He hasn't:
+      nothing to do.**
+- [x] ~~**King Arthur: Legend of the Sword** and **Silent Running** each have one copy carrying
       both 4K and Blu-ray. Is each one box holding both discs? If either is two separate boxes,
-      split it into two copies in the app.
+      split it into two copies in the app.~~ **King Arthur is a 4K disc only; Silent Running is
+      two boxes, the Blu-ray a steelbook:** the copy fixes in 24 Nov's section.
 
-## Ask the viewer which *Bad Lieutenant* — 16 Nov (wave 2 roadmap, decision 1)
+## ~~Ask the viewer which *Bad Lieutenant* — 16 Nov (wave 2 roadmap, decision 1)~~ — answered 24 Nov (#396)
+
+**Both the 4K want and the shelf Blu-ray are the 2009 film, as catalogued: nothing to apply.** The
+want is one of the agents' test wants, removed with the others, so its question is not assigned.
+The record below is kept as it was.
 
 From the wave 2 review (`docs/reviews/BATCH_49-54_ROADMAP.md`, MK53-03). Nothing is blocked on it,
 and no agent changes this want or copy.
@@ -158,6 +186,8 @@ The documentation handoff is committed locally without another deployment or bat
 
 - **Mark review cards deployed (9 Nov, PR 138, #353):** three exact assignments/audits
   are live, no notification. Mark's real answers and phone acceptance remain open.
+  **24 Nov (#396):** all three answered or settled by 15 Nov; Shetland's cannot close on
+  "keep separate" (24 Nov's section).
   The bounded preflight succeeded and Craig explicitly authorised the username save,
   completed 9 Nov18:33 UTC (#354). His first natural sync followed on 10 Nov; no historical
   apply or further build.
@@ -168,6 +198,8 @@ The documentation handoff is committed locally without another deployment or bat
 - **Small catalogue choices:** Shetland - Series 5 is the sole unmatched owned title;
   Titanic (1953) is the sole visible doubt, against a 1997 disc page. Disc specs has
   419 choices. The three Y5 TV-copy moves are already done and must not be repeated.
+  **24 Nov (#396):** Mark kept Titanic as 1953 on 15 Nov, so no doubt is visible; Shetland
+  Series 5 joins the Shetland series if he agrees.
 - **Price charts:** 46 cron days and three numerical history qualifiers now exist; the
   documented Dead Man's Shoes 1940/2004 association still needs review. No chart build,
   identity correction or history rewrite is authorised by this read-back.

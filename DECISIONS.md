@@ -8799,3 +8799,48 @@ contemporaneous.
        166,023 rows, credentials withheld), restored and checked it, passed "Round trip with a
        throwaway key: 71 files encrypted, decrypted and identical", and recorded the heartbeat at
        14:34 UTC (`ok`, 0 failures). Eight copies are kept; the oldest is now 25 Oct's.
+
+396. **Mark's answers of 24 Nov, and the owner's four decisions (24 Nov).** Craig asked Mark seven
+     catalogue questions and the push plan by message, and Mark answered all of them. Craig then
+     said "Yes, from 25 Nov" to AG6 and "yes to all 3" to the three decisions below.
+     - **Mark's answers.** The *Titanic* Blu-ray (front 6th shelf) is the 1953 film; the 1997 is
+       the 4K. *Bad Lieutenant*: the 4K want and the shelf Blu-ray (front 3rd) are both the 2009
+       film. *King Kong* on 4K: one 1976 and one 2005, so one of the two live 2005 copies is a
+       duplicate. *Hitchcock* (2012): one Blu-ray, not two. *Contagion*: no Blu-ray. *King Arthur:
+       Legend of the Sword*: a 4K disc only. *Silent Running*: two boxes, the Blu-ray a steelbook.
+       Pushes: "happy with both", so #383's plan stands for him.
+     - **Read back, read-only, 24 Nov.** Mark had kept the *Titanic* doubt as 1953 on its film page
+       on 15 Nov (20:58 UTC), which resolved his assigned question, so it was not on his Home.
+       *Bad Lieutenant*'s want question was never assigned. *Contagion*'s Blu-ray has been in Trash
+       since 5 Nov. *Shetland - Series 5*'s question, answered "keep separate" on 15 Nov, reads
+       "You answered · waiting for the admin" to him and "Apply Mark's answer" to Craig, and cannot
+       close: `context()` resolves it only when the copy's film holds the Shetland series (TMDB
+       46923), and the answer asks for no change. **Every want on the Wanted list is agent test
+       data under Craig's profile:** 8 added between 21:39 and 21:54 UTC on 9 Sep for #111's
+       acceptance run, chosen from what the shops sell (3 more were removed the same day), and
+       *Bad Lieutenant* and *Dog Soldiers* in 4K on 30 Sep for Batch 21 (#227). Nobody chose them
+       as a wish. Mark cannot add one: `POST`, `PUT` and `DELETE /api/v1/wanted` and the
+       assistant's `add_to_wanted` are admin-only (Batch 18), though the outside-film page shows
+       him a Want button that fails.
+     - **AG6: go, from 25 Nov.** Both its gates are met: AA10c's read-back (22 Nov) and the viewer
+       asked (today). A one-off scheduled task on Craig's Mac (`mcu-ag6-start-2026-11-25`) starts
+       it at 08:37 GMT on 25 Nov, and stops before building if the checkout is not clean on an
+       up-to-date `main` or another batch is in flight. Its "dark shop" (MK53-02's search half) is
+       Zavvi, whose own site had no working search address on 18 Nov; the batch re-checks it
+       before repairing anything.
+     - **The test wants go,** removed by Craig on the Wanted page, keeping any either person
+       wants, before AG6 deploys: AG6 sends Wanted finds at once, so a test want left in place
+       would push at once. Removing *Bad Lieutenant* also clears its daily-check row, so its
+       question is not assigned. Batch 21 loses the price history it was to be built on, and
+       waits for real wants.
+     - **Mark may add to Wanted: AH1** (Group AH in the ledger). It opens an admin-only write to
+       the viewer, so it is consequential and starts at the owner's go after its brief.
+     - **Shetland Series 5 joins the Shetland series if Mark agrees:** Identify films →
+       *Shetland - Series 5* → the Shetland series → confirm the merge. The two boxes stay separate
+       copies on one entry, as the three Y5 TV copies were filed on 17 Oct; the question then
+       resolves itself, and the merge can be undone. If he wants it kept separate, AH2 lets an
+       answer that asks for no change close its question.
+     - **No agent makes the copy fixes.** They are Mark's, who edits, adds and deletes copies
+       (Y1), or Craig's: delete one *King Kong* (2005) 4K and one *Hitchcock* Blu-ray, untick
+       *King Arthur*'s Blu-ray, and split *Silent Running* into a 4K copy and a Blu-ray steelbook
+       copy. No production data was written for this decision.

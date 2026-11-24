@@ -2,6 +2,24 @@
 
 ## Now
 
+**24 Nov, 14:00 GMT: Mark's answers are in, and the owner's four decisions follow (#396). AG6
+starts on 25 Nov; AH1, letting Mark add to Wanted, waits for the owner's go after its brief.**
+Mark answered all seven questions in Craig's message: the *Titanic* Blu-ray is the 1953 film;
+*Bad Lieutenant*'s 4K want and shelf Blu-ray are both the 2009 film, as catalogued; one 1976 and
+one 2005 *King Kong* 4K, so the second 2005 copy is a duplicate; one *Hitchcock* Blu-ray;
+*Contagion*'s Blu-ray is gone; *King Arthur* is a 4K disc only; *Silent Running* is two boxes, the
+Blu-ray a steelbook. He is happy with the push plan, AG6's last condition. Read back, read-only:
+he had kept *Titanic* as 1953 on its film page on 15 Nov, which settled his question; his
+*Shetland - Series 5* answer ("keep separate") cannot close, because the app resolves that
+question only when Series 5 joins the Shetland series; and all 10 wants on the Wanted list are
+agent test data under Craig's name (9 and 30 Sep, #111, #227), which Mark cannot add to (the write
+routes are admin-only). At the owner's word: AG6 starts at 08:37 GMT on 25 Nov (a one-off
+scheduled task on the Mac, `mcu-ag6-start-2026-11-25`); Craig removes the test wants neither
+person wants before AG6 deploys; AH1 lets Mark add to Wanted; Shetland Series 5 joins the
+Shetland series if Mark agrees. The copy fixes are Mark's or Craig's (`OWNER-ACTIONS.md`). No
+production data was written. Production API and web were on `4cdf702`, `db: ok`, before this
+commit.
+
 **22 Nov, 14:40 GMT: the backup records its runs, fixed on its own branch (PR 176, `3609593`,
 #395).** This week's scheduled backup (run 45018902339, 11:45 UTC) made its copy, then failed its
 last step: the backup role is read-only by default and the heartbeat's insert was refused, so no
@@ -459,10 +477,15 @@ remain unchanged.
 ## Next
 
 **Group AG continues (#383): sitting 1 is done (AG1 `1e14283`, AG2 `efa5f9b`, #384, #385); sitting 2
-is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is done: AG4 (`fec8628`, #388) and AG5 (`fd9286f`, #389); sitting 5 is done: AG11 (`25c1870`, #390), AG8 (`6b0320b`, #391), AG9 (`cbc43a4`, #392) and AG10 (`d33f70f`, #393).** AG6 from 25 Nov. Sitting 1's
-first 08:00 run read back clean on 17 Nov (Now). Still to read back: 18 Nov's check judging the
-TMDB refresh on its own beat, Sunday 22 Nov's backup beat, Zavvi's weekly ask (about 24 Nov) and
-the valuation job's first beat with a failure count (1 Dec).
+is done: AG3 (`879860e`, #386) and AG7 (`8a4b337`, #387); sitting 3 is done: AG4 (`fec8628`, #388) and AG5 (`fd9286f`, #389); sitting 5 is done: AG11 (`25c1870`, #390), AG8 (`6b0320b`, #391), AG9 (`cbc43a4`, #392) and AG10 (`d33f70f`, #393).** **AG6: the owner's go on 24 Nov; a
+scheduled task starts it at 08:37 GMT on 25 Nov (#396).** Sitting 1's first 08:00 run read back
+clean on 17 Nov (Now). Still to read back: the valuation job's first beat with a failure count
+(1 Dec). Since read back: the TMDB refresh on its own beat (18 Nov) and the backup's beat
+(22 Nov); Zavvi switched itself off on 20 Nov, so its weekly ask will not come.
+
+**Group AH (24 Nov, #396):** AH1, Mark adds to Wanted, waits for the owner's go after its brief;
+AH2 only if Mark wants Shetland Series 5 kept separate. AH1 and AG6 share the checkout, so they
+never run at once.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
@@ -478,8 +501,8 @@ judgements, and real-device observations in
 the old queue forecast is superseded. AA10b's scheduled campaign/read-back are complete,
 with the scope caveat in Now. AA10c shipped 22 Nov (#394): the lower quartile stays.
 
-**Build backlog:** Batch 21 waits for AG5: two of its three films are wrong-film wants carrying
-another film's shop prices (#383). Sale pagination (22c) and email (33–34) stay
+**Build backlog:** Batch 21 waits for real wants: the wants it was to chart are the agents' test
+wants, which go before AG6 deploys (#396). Sale pagination (22c) and email (33–34) stay
 parked/deprioritised. A new build or multi-batch review needs its own scope and go.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -886,6 +909,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **24 Nov, 14:00 GMT — Mark's answers in; the owner's four decisions (#396).** AG6 starts 25 Nov
+  (scheduled, 08:37 GMT); the test wants go before it deploys; AH1 (Mark adds to Wanted) waits
+  for its go; Shetland Series 5 joins the series if Mark agrees. No production write.
 - **22 Nov, 14:40 GMT — the backup's heartbeat fixed (PR 176, `3609593`, #395).** The record step
   asks for read-write; the backup role stays read-only by default and writes no table. A hand-run
   backup recorded its beat: `ok`, 0 failures.
