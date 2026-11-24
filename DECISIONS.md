@@ -8862,7 +8862,9 @@ contemporaneous.
        `test_the_two_lists_actually_differ` became one that the lists are equal and still differ
        by whatever `ADMIN_ONLY` holds, and `test_a_viewer_cannot_reach_an_admin_only_tool` keeps
        the boundary with `add_to_wanted` patched back in; the web assistant page's viewer line;
-       and the end-to-end AE3 case, where Mark's row now has Add to Wanted.
+       the end-to-end AE3 case, where Mark's row now has Add to Wanted; and the end-to-end AA9
+       case, where Mark now reads "You can also add to the shared wanted list" (missed at
+       first, and caught by the PR's end-to-end job in all three browsers).
      - **The guard:** `test_admin_routes.py` pins the 63 method and path pairs that take
        `AdminUser` and sends a viewer to each, with no database; opening one route by hand failed
        both halves of it before it was restored.

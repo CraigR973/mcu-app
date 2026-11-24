@@ -15,8 +15,9 @@ for (const person of ['Craig', 'Mark'] as const) {
         await expect(page.getByRole('heading', { name: 'Ask about your collection' })).toBeVisible()
         await expect(page.getByRole('heading', { name: 'Assistant', exact: true })).toHaveCount(1)
         await expect(page.getByText(/AI calls: \d+ of \d+ left today/)).toBeVisible()
-        await expect(page.getByText(person === 'Craig' ? /You can also add to the shared wanted list/ : /You can read the shared wanted list/)).toBeVisible()
-        if (person === 'Mark') await expect(page.getByText(/You can also add/)).toHaveCount(0)
+        // AH1 (#397): both people add to the shared wanted list, so both read the same line.
+        await expect(page.getByText(/You can also add to the shared wanted list/)).toBeVisible()
+        await expect(page.getByText(/You can read the shared wanted list/)).toHaveCount(0)
         await page.getByRole('button', { name: 'Unwatched 4Ks', exact: true }).click()
         const draft = page.getByRole('textbox', { name: 'Message to the assistant' })
         await expect(draft).toHaveValue('Which 4Ks have I not watched?')
