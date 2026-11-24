@@ -2,6 +2,17 @@
 
 ## Now
 
+**24 Nov, 18:20 GMT: AH1 shipped, Mark adds to Wanted (PR 177, `b9b85d8`, #397).** Anyone signed
+in adds a want, from the Wanted page, a set's missing films, the outside-film page or the
+assistant (`add_to_wanted` left `ADMIN_ONLY`, now empty). A viewer edits and removes only the
+wants he added, the admin any, and a refusal names whose want it is; each want says who added it.
+A guard pins the 63 admin-only routes and sends a viewer to each, with no database. No migration,
+no live write. CI's seven jobs green on the PR, end-to-end included (the README's three skips),
+after one fix: AA9 still expected Mark's old assistant line, which AH1 replaced (#397 names it).
+`main` green before the batch. Production API and web on `b9b85d8` at 18:17 GMT, `db: ok`, every
+readiness field `configured`. AG6's scheduled start (25 Nov, 08:37 GMT) is clear of it. Still the
+owner's: telling Mark he can add, and removing the test wants before AG6 deploys.
+
 **24 Nov, 14:00 GMT: Mark's answers are in, and the owner's four decisions follow (#396). AG6
 starts on 25 Nov; AH1, letting Mark add to Wanted, waits for the owner's go after its brief.**
 Mark answered all seven questions in Craig's message: the *Titanic* Blu-ray is the 1953 film;
@@ -483,9 +494,8 @@ clean on 17 Nov (Now). Still to read back: the valuation job's first beat with a
 (1 Dec). Since read back: the TMDB refresh on its own beat (18 Nov) and the backup's beat
 (22 Nov); Zavvi switched itself off on 20 Nov, so its weekly ask will not come.
 
-**Group AH (24 Nov, #396):** AH1, Mark adds to Wanted, waits for the owner's go after its brief;
-AH2 only if Mark wants Shetland Series 5 kept separate. AH1 and AG6 share the checkout, so they
-never run at once.
+**Group AH (24 Nov, #396): AH1 shipped 24 Nov (`b9b85d8`, #397).** AH2 only if Mark wants
+Shetland Series 5 kept separate.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
@@ -909,6 +919,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **24 Nov, 18:20 GMT — AH1 shipped (PR 177, `b9b85d8`, #397).** Mark adds to Wanted and changes
+  only his own wants; a guard pins the 63 admin-only routes. Production on `b9b85d8`, `db: ok`.
 - **24 Nov, 14:00 GMT — Mark's answers in; the owner's four decisions (#396).** AG6 starts 25 Nov
   (scheduled, 08:37 GMT); the test wants go before it deploys; AH1 (Mark adds to Wanted) waits
   for its go; Shetland Series 5 joins the series if Mark agrees. No production write.
