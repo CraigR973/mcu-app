@@ -268,7 +268,9 @@ WRITE_TOOLS: list[ToolParam] = [
 
 #: Tools only an admin may use. **Not the same question as "is it a write":** watch history
 #: is personal and a viewer keeps their own, so `log_watch` is a write that both people get.
-ADMIN_ONLY = frozenset({"add_to_wanted"})
+#: Empty since AH1 (#397): the wanted list is both people's, so `add_to_wanted` left it. The
+#: filter and the execution-time check stay, for the next tool that is the admin's alone.
+ADMIN_ONLY: frozenset[str] = frozenset()
 
 _WRITE_NAMES = frozenset(tool["name"] for tool in WRITE_TOOLS)
 

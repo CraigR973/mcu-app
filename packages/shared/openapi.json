@@ -17700,6 +17700,29 @@
       "title": "Addedat",
       "type": "string"
      },
+     "addedById": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Addedbyid"
+     },
+     "addedByName": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Addedbyname"
+     },
      "currency": {
       "title": "Currency",
       "type": "string"
@@ -28496,7 +28519,7 @@
     ]
    },
    "post": {
-    "description": "§5.1's acceptance: \"adding to wanted list from detail page ... works\".\n\nBatch V9: once the response has gone, Brave is searched for the film's reviews on\nBlu-ray.com and AVForums, so the links are there when the list is next opened.",
+    "description": "§5.1's acceptance: \"adding to wanted list from detail page ... works\".\n\nAnyone signed in adds a want since AH1 (#397), and it is recorded and audited as theirs.\n\nBatch V9: once the response has gone, Brave is searched for the film's reviews on\nBlu-ray.com and AVForums, so the links are there when the list is next opened.",
     "operationId": "add_wanted_api_v1_wanted_post",
     "requestBody": {
      "content": {
@@ -28544,7 +28567,7 @@
   },
   "/api/v1/wanted/{item_id}": {
    "delete": {
-    "description": "Soft-delete, so §13.5's Trash can restore it — the tab Batch 15 built and could not\nfill.",
+    "description": "Soft-delete, so §13.5's Trash can restore it — the tab Batch 15 built and could not\nfill. Its adder's to remove, or the admin's (AH1, #397); restoring stays the admin's.",
     "operationId": "remove_wanted_api_v1_wanted__item_id__delete",
     "parameters": [
      {
@@ -28585,6 +28608,7 @@
     ]
    },
    "put": {
+    "description": "A full replace of the want's choices: its adder's, or the admin's (AH1, #397).",
     "operationId": "update_wanted_api_v1_wanted__item_id__put",
     "parameters": [
      {

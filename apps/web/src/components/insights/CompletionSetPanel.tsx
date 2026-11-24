@@ -167,7 +167,7 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
                       TMDB <ExternalLink className="h-3 w-3" aria-hidden />
                     </a>
                     <div className="flex flex-wrap items-center gap-2">
-                      <WantFilm tmdbId={film.tmdbId} wanted={film.wanted} canAdd={profile?.role === 'admin'} label="Add to Wanted" />
+                      <WantFilm tmdbId={film.tmdbId} wanted={film.wanted} canAdd={Boolean(profile)} label="Add to Wanted" />
                       {/* AE3: lost films, TV episodes and other versions, in this set only. */}
                       <DoesNotCount setId={set.id} film={film} />
                     </div>

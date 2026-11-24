@@ -18,9 +18,8 @@ function useRefresh(): () => void {
 }
 
 /**
- * Want a missing film, through the existing Wanted path — AE3 (#355, point 3). Adding to
- * Wanted is Craig's (the route is admin-only), so `canAdd` is false for Mark, who still sees
- * that a film is wanted: Wanted is shared.
+ * Want a missing film, through the existing Wanted path — AE3 (#355, point 3). Wanted is
+ * shared, and since AH1 (#397) both people add to it, so `canAdd` is true for anyone signed in.
  */
 export function WantFilm({ tmdbId, wanted, canAdd, label = 'Want' }: { tmdbId: number; wanted: boolean; canAdd: boolean; label?: string }) {
   const refresh = useRefresh()

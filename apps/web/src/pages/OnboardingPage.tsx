@@ -54,7 +54,7 @@ function Welcome({ isAdmin, name }: { isAdmin: boolean; name: string }) {
       title={`Good to see you, ${name}`}
     >
       <p>Every film, owned copy and shelf location is catalogued here for Craig and Mark.</p>
-      <p>{isAdmin ? 'You can maintain the collection, its wanted titles and lending record. Every change is recorded.' : 'You can explore the full archive, plan film nights and keep your own watch history.'}</p>
+      <p>{isAdmin ? 'You can maintain the collection, its wanted titles and lending record. Every change is recorded.' : 'You can explore the full archive, plan film nights, add to the wanted list and keep your own watch history.'}</p>
     </StepIntro>
   )
 }

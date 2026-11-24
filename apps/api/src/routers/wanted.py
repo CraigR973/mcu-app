@@ -6,10 +6,13 @@ ownership enum where §7.2 asked for three, and Batch 17 created
 `release_calendar.is_wishlist_match` and wrote nothing to it. Each was deferred here
 because §3.5 had no table. The first three are wired up by this batch.
 
-Both surfaces are **admin-only for writes**, matching Batch 7's collection surface: §5.1
-calls it "movies the admin wants to purchase", and §3.16 says "admin can add, edit, or
-disable retailers". Reads are open to both people — Mark can reasonably want to see what
-is being looked for.
+Retailers are **admin-only for writes**, matching Batch 7's collection surface: §3.16 says
+"admin can add, edit, or disable retailers". Reads of both are open to both people.
+
+**The wanted list is both people's since AH1 (#396, #397).** Batch 18 made it admin-only, as
+§5.1 calls it "movies the admin wants to purchase"; Mark then asked how to add to it. Anyone
+signed in adds a want; a viewer edits and removes only the wants they added, and the admin
+any. It stays one shared list: its alerts reach both people, as before.
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ from src.clock import utcnow
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.price_check import PRICED, PriceCheck
+from src.models.profile import Profile, UserRole
 from src.models.reviews import FilmReview
 from src.models.wanted import (
     DEFAULT_RETAILERS,
@@ -124,6 +128,33 @@ async def _shop_prices(
     return by_want
 
 
+async def _adder_names(db: AsyncSession, items: list[WantedItem]) -> dict[uuid.UUID, str]:
+    """Who added each want, by profile id (AH1): the page says so, and a refusal names them."""
+    ids = {item.added_by for item in items if item.added_by is not None}
+    if not ids:
+        return {}
+    rows = await db.execute(select(Profile.id, Profile.display_name).where(Profile.id.in_(ids)))
+    return {profile_id: name for profile_id, name in rows.tuples()}
+
+
+async def _require_changeable(db: AsyncSession, item: WantedItem, user: Profile) -> None:
+    """AH1 (#397): a viewer changes only the wants they added; the admin changes any.
+
+    The list is shared, so anyone may add to it, but nobody's want is edited or removed
+    without them. A want with no adder (none on 24 Nov) is the admin's alone.
+    """
+    if user.role == UserRole.admin or (item.added_by is not None and item.added_by == user.id):
+        return
+    owner = await db.get(Profile, item.added_by) if item.added_by is not None else None
+    detail = (
+        f"This is {owner.display_name}'s want, so only {owner.display_name} or an admin can "
+        "change it."
+        if owner is not None
+        else "Only an admin can change this want."
+    )
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+
+
 def _wanted_response(
     item: WantedItem,
     movie: Movie,
@@ -131,6 +162,7 @@ def _wanted_response(
     owned: bool,
     reviews: list[FilmReview] | None = None,
     shop_prices: list[ShopPriceResponse] | None = None,
+    adder: str | None = None,
 ) -> WantedItemResponse:
     return WantedItemResponse(
         id=item.id,
@@ -148,6 +180,8 @@ def _wanted_response(
         notes=item.notes,
         ownedAlready=owned,
         addedAt=item.added_at,
+        addedById=item.added_by,
+        addedByName=adder,
         reviews=[review_response(row) for row in for_want(reviews or [], item.preferred_format)],
         shopPrices=shop_prices or [],
     )
@@ -175,6 +209,7 @@ async def list_wanted(
     owned = await _owned_movie_ids(db, [item.movie_id for item, _ in rows])
     reviews = await reviews_by_movie(db, [item.movie_id for item, _ in rows])
     prices = await _shop_prices(db, [item.id for item, _ in rows])
+    adders = await _adder_names(db, [item for item, _ in rows])
     items = [
         _wanted_response(
             item,
@@ -182,6 +217,7 @@ async def list_wanted(
             owned=item.movie_id in owned,
             reviews=reviews.get(item.movie_id, []),
             shop_prices=prices.get(item.id, []),
+            adder=adders.get(item.added_by) if item.added_by is not None else None,
         )
         for item, movie in rows
     ]
@@ -252,12 +288,14 @@ async def _movie_for_wanted(
 @router.post("/wanted", response_model=WantedItemResponse, status_code=status.HTTP_201_CREATED)
 async def add_wanted(
     payload: WantedCreateRequest,
-    user: AdminUser,
+    user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
     background_tasks: BackgroundTasks,
 ) -> WantedItemResponse:
     """§5.1's acceptance: "adding to wanted list from detail page ... works".
+
+    Anyone signed in adds a want since AH1 (#397), and it is recorded and audited as theirs.
 
     Batch V9: once the response has gone, Brave is searched for the film's reviews on
     Blu-ray.com and AVForums, so the links are there when the list is next opened.
@@ -307,16 +345,20 @@ async def add_wanted(
     owned = await _owned_movie_ids(db, [movie.id])
     background_tasks.add_task(search_for_want_in_background, movie.id)
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
-    return _wanted_response(item, movie, owned=movie.id in owned, reviews=reviews)
+    return _wanted_response(
+        item, movie, owned=movie.id in owned, reviews=reviews, adder=user.display_name
+    )
 
 
 @router.put("/wanted/{item_id}", response_model=WantedItemResponse)
 async def update_wanted(
-    item_id: uuid.UUID, payload: WantedUpdateRequest, user: AdminUser, db: Database
+    item_id: uuid.UUID, payload: WantedUpdateRequest, user: CurrentUser, db: Database
 ) -> WantedItemResponse:
+    """A full replace of the want's choices: its adder's, or the admin's (AH1, #397)."""
     item = await db.get(WantedItem, item_id)
     if item is None or item.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _require_changeable(db, item, user)
 
     before = {
         "preferred_format": item.preferred_format,
@@ -351,22 +393,25 @@ async def update_wanted(
     owned = await _owned_movie_ids(db, [movie.id])
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
     prices = await _shop_prices(db, [item.id])
+    adders = await _adder_names(db, [item])
     return _wanted_response(
         item,
         movie,
         owned=movie.id in owned,
         reviews=reviews,
         shop_prices=prices.get(item.id, []),
+        adder=adders.get(item.added_by) if item.added_by is not None else None,
     )
 
 
 @router.delete("/wanted/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_wanted(item_id: uuid.UUID, user: AdminUser, db: Database) -> None:
+async def remove_wanted(item_id: uuid.UUID, user: CurrentUser, db: Database) -> None:
     """Soft-delete, so §13.5's Trash can restore it — the tab Batch 15 built and could not
-    fill."""
+    fill. Its adder's to remove, or the admin's (AH1, #397); restoring stays the admin's."""
     item = await db.get(WantedItem, item_id)
     if item is None or item.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _require_changeable(db, item, user)
     item.deleted_at = utcnow()
     record_action(
         db,

@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
+from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.price_check import PriceCheck
@@ -379,13 +380,111 @@ async def test_a_removed_entry_appears_in_the_trash_tab_batch_15_could_not_fill(
     assert any(i["id"] == item_id for i in (await client.get("/api/v1/wanted")).json()["items"])
 
 
-async def test_a_viewer_can_read_the_wanted_list_but_not_change_it(
+# ---------------------------------------------------------------------------
+# AH1 (#397) — both people add; a viewer changes only the wants he added
+# ---------------------------------------------------------------------------
+# Until AH1 a viewer's add was refused (`test_a_viewer_can_read_the_wanted_list_but_not_change_it`
+# asserted a 403). The owner opened the list to Mark on 24 Nov (#396), so that expectation
+# is replaced by the four below, named in #397.
+
+
+async def test_a_viewer_adds_a_want_and_it_is_recorded_and_audited_as_his(
+    viewer_client: AsyncClient, api_session: AsyncSession, viewer: Profile
+) -> None:
+    viewer_id, viewer_name = viewer.id, viewer.display_name
+    movie = await _film(api_session, "Mark Wants This")
+
+    added = await viewer_client.post(
+        "/api/v1/wanted", json={"movieId": str(movie.id), "preferredFormat": "4k_uhd"}
+    )
+
+    assert added.status_code == 201, added.text
+    assert added.json()["addedById"] == str(viewer_id)
+    assert added.json()["addedByName"] == viewer_name
+    row = await api_session.get(WantedItem, uuid.UUID(added.json()["id"]))
+    assert row is not None and row.added_by == viewer_id
+    audit = (
+        (await api_session.execute(select(AdminAction).where(AdminAction.target_id == str(row.id))))
+        .scalars()
+        .one()
+    )
+    assert (audit.user_id, audit.action_type) == (viewer_id, "create")
+
+
+async def test_a_viewer_changes_and_removes_his_own_want(
     viewer_client: AsyncClient, api_session: AsyncSession
 ) -> None:
-    movie = await _film(api_session, "Mark Can Look")
-    assert (await viewer_client.get("/api/v1/wanted")).status_code == 200
-    refused = await viewer_client.post("/api/v1/wanted", json={"movieId": str(movie.id)})
+    movie = await _film(api_session, "Mark Changes His Mind")
+    item_id = (await viewer_client.post("/api/v1/wanted", json={"movieId": str(movie.id)})).json()[
+        "id"
+    ]
+
+    changed = await viewer_client.put(
+        f"/api/v1/wanted/{item_id}", json={"maxPrice": "12.50", "currency": "GBP"}
+    )
+    assert changed.status_code == 200, changed.text
+    assert changed.json()["maxPrice"] == "12.50"
+
+    removed = await viewer_client.delete(f"/api/v1/wanted/{item_id}")
+    assert removed.status_code == 204
+    row = await api_session.get(WantedItem, uuid.UUID(item_id))
+    assert row is not None and row.deleted_at is not None
+
+
+async def test_a_viewer_cannot_change_or_remove_the_admins_want_and_is_told_whose_it_is(
+    client: AsyncClient, viewer_client: AsyncClient, api_session: AsyncSession, admin: Profile
+) -> None:
+    admin_name = admin.display_name
+    movie = await _film(api_session, "Craig Wants This")
+    item_id = (await client.post("/api/v1/wanted", json={"movieId": str(movie.id)})).json()["id"]
+
+    edit = await viewer_client.put(
+        f"/api/v1/wanted/{item_id}", json={"isActive": False, "currency": "GBP"}
+    )
+    assert edit.status_code == 403
+    assert admin_name in edit.json()["detail"]
+    removal = await viewer_client.delete(f"/api/v1/wanted/{item_id}")
+    assert removal.status_code == 403
+    assert admin_name in removal.json()["detail"]
+
+    row = await api_session.get(WantedItem, uuid.UUID(item_id))
+    assert row is not None and row.is_active is True and row.deleted_at is None
+
+
+async def test_the_admin_changes_and_removes_a_viewers_want(
+    client: AsyncClient, viewer_client: AsyncClient, api_session: AsyncSession, viewer: Profile
+) -> None:
+    viewer_name = viewer.display_name
+    movie = await _film(api_session, "Mark Wanted, Craig Tidies")
+    item_id = (await viewer_client.post("/api/v1/wanted", json={"movieId": str(movie.id)})).json()[
+        "id"
+    ]
+
+    listed = await client.get("/api/v1/wanted")
+    marks = next(i for i in listed.json()["items"] if i["id"] == item_id)
+    assert marks["addedByName"] == viewer_name
+
+    edit = await client.put(
+        f"/api/v1/wanted/{item_id}", json={"isActive": False, "currency": "GBP"}
+    )
+    assert edit.status_code == 200
+    assert edit.json()["addedByName"] == viewer_name, "an edit does not change whose it is"
+    assert (await client.delete(f"/api/v1/wanted/{item_id}")).status_code == 204
+
+
+async def test_a_want_with_no_adder_is_the_admins_alone(
+    client: AsyncClient, viewer_client: AsyncClient, api_session: AsyncSession
+) -> None:
+    movie = await _film(api_session, "Nobody's Want")
+    item = WantedItem(id=uuid.uuid4(), movie_id=movie.id, currency="GBP", added_by=None)
+    api_session.add(item)
+    await api_session.flush()
+    item_id = item.id
+
+    refused = await viewer_client.delete(f"/api/v1/wanted/{item_id}")
     assert refused.status_code == 403
+    assert refused.json()["detail"] == "Only an admin can change this want."
+    assert (await client.delete(f"/api/v1/wanted/{item_id}")).status_code == 204
 
 
 # ---------------------------------------------------------------------------

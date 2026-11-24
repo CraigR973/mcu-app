@@ -1170,6 +1170,16 @@ describe('wantedItemSchema', () => {
     // `isActive` is a decision; deletion is an accident. Only the second goes to Trash.
     expect(wantedItemSchema.parse({ ...base, isActive: false }).isActive).toBe(false)
   })
+
+  it('says who added the want, and reads an API without it as nobody (AH1)', () => {
+    const marks = wantedItemSchema.parse({ ...base, addedById: UUID_A, addedByName: 'Mark' })
+    expect(marks.addedById).toBe(UUID_A)
+    expect(marks.addedByName).toBe('Mark')
+    const older = wantedItemSchema.parse(base)
+    expect(older.addedById).toBeNull()
+    expect(older.addedByName).toBeNull()
+    expect(() => wantedItemSchema.parse({ ...base, addedById: 'not-a-uuid' })).toThrow()
+  })
 })
 
 describe('ownershipStateSchema', () => {

@@ -8844,3 +8844,25 @@ contemporaneous.
        (Y1), or Craig's: delete one *King Kong* (2005) 4K and one *Hitchcock* Blu-ray, untick
        *King Arthur*'s Blu-ray, and split *Silent Running* into a 4K copy and a Blu-ray steelbook
        copy. No production data was written for this decision.
+
+397. **AH1: Mark adds to Wanted (24 Nov, the owner's go: "Yes, build it").** Anyone signed in adds a
+     want (`POST /api/v1/wanted` takes `CurrentUser`); a viewer edits and removes only the wants he
+     added, the admin any, and a refusal names whose want it is. A want with no adder is the
+     admin's. The response carries `addedById` and `addedByName`; the Wanted page says who added
+     each want and offers its controls by that. The assistant's `add_to_wanted` left `ADMIN_ONLY`,
+     which is now empty but kept, with its filter and execution-time check. Restoring from Trash
+     stays the admin's. No migration, no live write. The owned film's page has no Want control
+     (it never had one), so the ledger's "a film's page" is met by the outside-film page, whose
+     button Mark saw and which failed until now.
+     - **Test expectations changed with the owner's decision, each named:** the API's
+       `test_a_viewer_can_read_the_wanted_list_but_not_change_it` (a viewer's add was 403) is
+       replaced by five tests of the new rule; in `test_ai_chat.py`,
+       `test_a_viewer_does_not_get_the_admin_only_ones` proves the filter on a stand-in tool,
+       `test_a_viewers_turn_is_offered_fewer_tools` became one offering `add_to_wanted`,
+       `test_the_two_lists_actually_differ` became one that the lists are equal and still differ
+       by whatever `ADMIN_ONLY` holds, and `test_a_viewer_cannot_reach_an_admin_only_tool` keeps
+       the boundary with `add_to_wanted` patched back in; the web assistant page's viewer line;
+       and the end-to-end AE3 case, where Mark's row now has Add to Wanted.
+     - **The guard:** `test_admin_routes.py` pins the 63 method and path pairs that take
+       `AdminUser` and sends a viewer to each, with no database; opening one route by hand failed
+       both halves of it before it was restored.

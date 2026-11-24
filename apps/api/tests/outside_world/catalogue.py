@@ -53,6 +53,9 @@ NAMED: tuple[Film, ...] = (
     Film(1601, "The Copper Lantern", 1931, "Lina Reed", 84, ("Drama",)),
     # AA3 owns this mixed-format copy; it must not collide with another case's add.
     Film(1701, "Canal At Dusk", 1997, "Ada North", 102, ("Drama",)),
+    # AH1 owns these: Mark adds the first from the Wanted page; Craig wants the second.
+    Film(1801, "Ninefold Kestrel", 2015, "Rhea Lomax", 101, ("Drama",)),
+    Film(1802, "Tidewater Almanac", 1984, "Owen Pike", 95, ("Drama",)),
     # The movie-night shortlist and match.
     Film(1201, "Rooftop Opera", 2014, "Yan Zhou", 112, ("Comedy", "Music")),
     Film(1202, "The Salt Road", 1991, "Kit Marlowe", 127, ("Adventure",)),

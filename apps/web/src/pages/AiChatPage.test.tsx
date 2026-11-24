@@ -351,12 +351,13 @@ function ask(text: string) {
 }
 
 describe('AA9 selected layout and recovery', () => {
-  it.each(['viewer', 'admin'] as const)('offers role-aware starters on a blank landing for %s without creating a chat', async role => {
+  it.each(['viewer', 'admin'] as const)('offers the starters on a blank landing for %s without creating a chat', async role => {
     mocks.role = role
     await ready('/assistant')
     expect(screen.getByRole('heading', { name: 'Ask about your collection' })).not.toBeNull()
-    expect(screen.getByText(role === 'admin' ? /You can also add to the shared wanted list/ : /You can read the shared wanted list/)).not.toBeNull()
-    if (role === 'viewer') expect(screen.queryByText(/You can also add/)).toBeNull()
+    // AH1 (#397): both people add to the shared wanted list, so both read the same line.
+    expect(screen.getByText(/You can also add to the shared wanted list/)).not.toBeNull()
+    expect(screen.queryByText(/You can read the shared wanted list/)).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Unwatched 4Ks' }))
     expect(draft().value).toBe('Which 4Ks have I not watched?')
     expect(draft().tagName).toBe('TEXTAREA')

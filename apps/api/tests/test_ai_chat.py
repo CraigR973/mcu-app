@@ -29,6 +29,7 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.wanted import WantedItem
 from src.routers.ai import set_ai_client
+from src.services.ai import tools as tools_module
 from src.services.ai.chat import ChatEvent, resolve_tool_call, run_turn
 from src.services.ai.client import AiReply, ClaudeClient, TurnEvent
 from src.services.ai.tools import ADMIN_ONLY, is_write_tool, tools_for
@@ -159,11 +160,22 @@ class TestToolFiltering:
         assert "search_collection" in names
         assert "add_to_wanted" in names
 
-    def test_a_viewer_does_not_get_the_admin_only_ones(self) -> None:
+    def test_a_viewer_does_not_get_the_admin_only_ones(self, monkeypatch: Any) -> None:
+        # AH1 (#397) emptied ADMIN_ONLY, so the filter is proved on a stand-in member.
+        monkeypatch.setattr(tools_module, "ADMIN_ONLY", frozenset({"collection_stats"}))
+        names = {tool["name"] for tool in tools_module.tools_for(UserRole.viewer)}
+
+        assert "collection_stats" not in names
+        assert "collection_stats" in {
+            tool["name"] for tool in tools_module.tools_for(UserRole.admin)
+        }
+
+    def test_a_viewer_gets_add_to_wanted_since_ah1(self) -> None:
+        """Until AH1 this asserted the opposite: the owner opened Wanted to Mark (#396, #397)."""
         names = {tool["name"] for tool in tools_for(UserRole.viewer)}
 
         assert ADMIN_ONLY.isdisjoint(names)
-        assert "add_to_wanted" not in names
+        assert "add_to_wanted" in names
 
     def test_a_viewer_still_gets_the_reads(self) -> None:
         names = {tool["name"] for tool in tools_for(UserRole.viewer)}
@@ -183,8 +195,15 @@ class TestToolFiltering:
         assert "log_watch" in names
         assert is_write_tool("log_watch")
 
-    def test_the_two_lists_actually_differ(self) -> None:
-        assert len(tools_for(UserRole.admin)) > len(tools_for(UserRole.viewer))
+    def test_the_two_lists_differ_only_by_the_admin_only_tools(self, monkeypatch: Any) -> None:
+        """Until AH1 this asserted the admin's list was longer. Since #397 ADMIN_ONLY is empty
+        and both lists are the same; the filter still removes whatever ADMIN_ONLY holds."""
+        assert tools_for(UserRole.admin) == tools_for(UserRole.viewer)
+
+        monkeypatch.setattr(tools_module, "ADMIN_ONLY", frozenset({"collection_stats"}))
+        assert len(tools_module.tools_for(UserRole.admin)) == (
+            len(tools_module.tools_for(UserRole.viewer)) + 1
+        )
 
     async def test_the_browse_tool_names_every_section_the_collection_has(self) -> None:
         """Batch V4: "Craig's house" and the cabinets, spelt as the filter expects them."""
@@ -276,9 +295,10 @@ class TestStreaming:
         assert len(client.histories[0]) == 1
         assert len(client.histories[1]) == 3, "user, assistant, user"
 
-    async def test_a_viewers_turn_is_offered_fewer_tools(
+    async def test_a_viewers_turn_is_offered_the_wanted_add_since_ah1(
         self, db: AsyncSession, admin: Profile
     ) -> None:
+        """Until AH1 a viewer was offered fewer tools; since #397 both get the same list."""
         viewer = await _profile(db, UserRole.viewer)
         row = AiConversation(id=uuid.uuid4(), user_id=viewer.id)
         db.add(row)
@@ -288,7 +308,8 @@ class TestStreaming:
         await _drain(run_turn(db, conversation=row, user=viewer, client=client, prompt="hi"))
 
         offered = {tool["name"] for tool in client.tool_lists[0]}
-        assert "add_to_wanted" not in offered
+        assert "add_to_wanted" in offered
+        assert offered == {tool["name"] for tool in tools_for(UserRole.admin)}
 
     async def test_an_sse_event_ends_with_a_blank_line(self) -> None:
         """The record separator. Without it the browser holds the last event for ever."""
@@ -430,12 +451,16 @@ class TestWriteConfirmation:
         wanted = (await db.execute(select(WantedItem))).scalars().all()
         assert len(list(wanted)) == 1, "the second resolve is a no-op"
 
-    async def test_a_viewer_cannot_reach_an_admin_only_tool(self, db: AsyncSession) -> None:
+    async def test_a_viewer_cannot_reach_an_admin_only_tool(
+        self, db: AsyncSession, monkeypatch: Any
+    ) -> None:
         """The tool list is a hint to the model; this is the boundary that holds.
 
         A model can name a tool it was never offered, so the execution-time check stays
-        even though the filtering already removed it.
+        even though the filtering already removed it. AH1 (#397) emptied ADMIN_ONLY, so the
+        boundary is proved with `add_to_wanted` put back in it for this test.
         """
+        monkeypatch.setattr(tools_module, "ADMIN_ONLY", frozenset({"add_to_wanted"}))
         viewer = await _profile(db, UserRole.viewer)
         row = AiConversation(id=uuid.uuid4(), user_id=viewer.id)
         db.add(row)
@@ -460,6 +485,31 @@ class TestWriteConfirmation:
         wanted = (await db.execute(select(WantedItem))).scalars().all()
         assert list(wanted) == []
         assert call.result is not None and "admin" in call.result.lower()
+
+    async def test_a_viewers_add_goes_through_the_card_and_the_want_is_his(
+        self, db: AsyncSession
+    ) -> None:
+        """AH1 (#397): Mark adds through the assistant as through the page, after the card."""
+        viewer = await _profile(db, UserRole.viewer)
+        viewer_id = viewer.id
+        row = AiConversation(id=uuid.uuid4(), user_id=viewer_id)
+        db.add(row)
+        movie = await _movie(db, "Nosferatu")
+        await db.flush()
+        client = ScriptedClaude([tool_turn("add_to_wanted", {"title": "Nosferatu"})])
+
+        events = await _drain(
+            run_turn(db, conversation=row, user=viewer, client=client, prompt="add it")
+        )
+        assert events[-1].kind == "confirm"
+        assert list((await db.execute(select(WantedItem))).scalars().all()) == []
+        call = (await db.execute(select(AiToolCall))).scalars().one()
+
+        await resolve_tool_call(db, conversation=row, call=call, user=viewer, confirm=True)
+
+        assert call.status == "confirmed"
+        wanted = list((await db.execute(select(WantedItem))).scalars().all())
+        assert [(want.movie_id, want.added_by) for want in wanted] == [(movie.id, viewer_id)]
 
 
 class TestConversationApi:

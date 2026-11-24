@@ -37,10 +37,10 @@ test('AE3 Piano Blues set not to count moves Eastwood off the row, and Count it 
       await row.scrollIntoViewIfNeeded()
       await mark.page.screenshot({ path: testInfo.outputPath(`ae3-row-mark-${theme}-375.png`) })
       await set.click()
-      // Wanted is Craig's to add to; Mark has Doesn't count, on the set's page.
+      // Since AH1 (#397) Mark adds to Wanted too, so his row has both buttons; it was Craig's alone.
       const film = mark.page.getByRole('region', { name: 'Missing films' }).getByRole('listitem', { name: 'Piano Blues' })
       await expect(film).toContainText('Piano Blues (2003)')
-      await expect(film.getByRole('button', { name: 'Add to Wanted' })).toHaveCount(0)
+      await expect(film.getByRole('button', { name: 'Add to Wanted' })).toBeVisible()
       await film.getByRole('button', { name: /Doesn’t count/ }).click()
       await expect(mark.page.getByRole('region', { name: 'Not counted' })).toContainText('Piano Blues (2003)')
       await mark.page.getByRole('button', { name: 'Home', exact: true }).click()

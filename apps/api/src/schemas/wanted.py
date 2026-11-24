@@ -128,6 +128,10 @@ class WantedItemResponse(BaseModel):
     #: surfaced rather than refused.
     ownedAlready: bool
     addedAt: UtcDatetime
+    #: AH1 (#397): who added the want. Since anyone may add one and only its adder or the
+    #: admin may change it, the page says whose it is and offers its controls by this.
+    addedById: uuid.UUID | None = None
+    addedByName: str | None = None
     #: Batch V9: one review per site, Blu-ray.com's first, of the want's format where found.
     reviews: list[FilmReviewResponse] = []
     #: Batch X11: each shop's latest price for this want, cheapest first. Empty until a

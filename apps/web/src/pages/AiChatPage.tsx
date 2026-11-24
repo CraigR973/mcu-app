@@ -11,7 +11,6 @@ import { usePageTitle } from '@/components/layouts/page-chrome'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { StatePanel } from '@/components/ui/state-panel'
-import { useAuth } from '@/context/auth'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import {
   createAiConversation, deleteAiConversation, describeToolCall, fetchAiConversation,
@@ -41,7 +40,6 @@ const STARTERS = [
 /** Conversation first (#300). Streams and recovery belong to a chat, never the current URL. */
 export default function AiChatPage() {
   usePageTitle('Assistant')
-  const { profile } = useAuth()
   const online = useOnlineStatus()
   const queryClient = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -300,7 +298,7 @@ export default function AiChatPage() {
           {detail.data ? <h2 className="break-words text-sm font-medium [overflow-wrap:anywhere]">Chat: {detail.data.title}</h2> : null}
           {opening ? <StatePanel compact tone="loading" title="Opening conversation" /> : null}
           {readFailed ? <StatePanel compact tone="error" title="Conversation unavailable" description={queryErrorMessage(detail.error, 'That conversation could not be loaded.')} action={!local.recovery ? <Button type="button" variant="outline" onClick={() => void reloadConversation()} disabled={busy}>Reload conversation</Button> : undefined} /> : null}
-          {!opening && !readFailed && transcript.length === 0 && !ownReply ? <div className="space-y-4 py-2"><div><h2 className="font-display text-2xl font-semibold">Ask about your collection</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Find films and shelves, check what you have watched, or log your own viewing. {profile?.role === 'admin' ? 'You can also add to the shared wanted list.' : 'You can read the shared wanted list.'} Changes always ask for your confirmation.</p></div><div className="grid gap-2" aria-label="Example questions">{STARTERS.map(starter => <Button key={starter.label} type="button" variant="outline" className="justify-start" disabled={inputLocked} onClick={() => fillStarter(starter.prompt)}>{starter.label}</Button>)}</div></div> : null}
+          {!opening && !readFailed && transcript.length === 0 && !ownReply ? <div className="space-y-4 py-2"><div><h2 className="font-display text-2xl font-semibold">Ask about your collection</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Find films and shelves, check what you have watched, or log your own viewing. You can also add to the shared wanted list. Changes always ask for your confirmation.</p></div><div className="grid gap-2" aria-label="Example questions">{STARTERS.map(starter => <Button key={starter.label} type="button" variant="outline" className="justify-start" disabled={inputLocked} onClick={() => fillStarter(starter.prompt)}>{starter.label}</Button>)}</div></div> : null}
           {transcript.map((turn, index) => <div key={index} className={cn('min-w-0 rounded-lg text-sm', turn.role === 'user' ? 'ml-auto max-w-[92%] whitespace-pre-wrap break-words bg-primary px-3 py-2 text-primary-foreground [overflow-wrap:anywhere]' : 'mr-auto w-full py-1')}>
             {turn.role === 'assistant' ? <AssistantText text={turn.text} /> : turn.text}
           </div>)}

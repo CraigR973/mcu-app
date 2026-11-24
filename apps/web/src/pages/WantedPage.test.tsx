@@ -6,8 +6,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import WantedPage from './WantedPage'
 
+const CRAIG_ID = '3f2504e0-4f89-11d3-9a0c-0305e82c3310'
+const MARK_ID = '3f2504e0-4f89-11d3-9a0c-0305e82c3311'
+const ADMIN = { id: CRAIG_ID, displayName: 'Craig', role: 'admin' }
+const VIEWER = { id: MARK_ID, displayName: 'Mark', role: 'viewer' }
+
+/** Who is signed in. The admin unless a case says otherwise (AH1, #397). */
+const auth = vi.hoisted(() => ({ profile: null as null | { id: string; displayName: string; role: string } }))
+
 vi.mock('@/context/auth', () => ({
-  useAuth: () => ({ profile: { role: 'admin' } }),
+  useAuth: () => ({ profile: auth.profile ?? { id: '3f2504e0-4f89-11d3-9a0c-0305e82c3310', displayName: 'Craig', role: 'admin' } }),
 }))
 
 const MOVIE_ID = '3f2504e0-4f89-11d3-9a0c-0305e82c3301'
@@ -59,6 +67,7 @@ afterEach(() => {
   cleanup()
   localStorage.clear()
   vi.unstubAllGlobals()
+  auth.profile = null
 })
 
 describe('WantedPage', () => {
@@ -291,5 +300,62 @@ describe('WantedPage — shop prices (Batch X11)', () => {
     renderPage()
 
     expect(await screen.findByText('No shop price found yet')).not.toBeNull()
+  })
+})
+
+describe('WantedPage — both people add (AH1, #397)', () => {
+  const CRAIGS = { ...EXISTING, addedById: CRAIG_ID, addedByName: 'Craig' }
+  const MARKS = {
+    ...EXISTING,
+    id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+    movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3304',
+    movieTitle: 'Dog Soldiers',
+    addedById: MARK_ID,
+    addedByName: 'Mark',
+  }
+
+  function stubList(items: unknown[]) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input).includes('/wanted')) {
+          return new Response(JSON.stringify({ items, total: items.length, activeCount: items.length }))
+        }
+        return new Response(JSON.stringify({ items: [], total: 0, activeCount: 0 }))
+      }),
+    )
+  }
+
+  it('offers a viewer the add form', async () => {
+    auth.profile = VIEWER
+    stubList([])
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Close add form' })).not.toBeNull()
+    expect(screen.getByPlaceholderText(/Edition, e\.g\. Steelbook/)).not.toBeNull()
+    expect(screen.queryByText(/Craig has not added/)).toBeNull()
+  })
+
+  it("gives a viewer the controls on his own want and none on the admin's", async () => {
+    auth.profile = VIEWER
+    stubList([CRAIGS, MARKS])
+    renderPage()
+
+    expect(await screen.findByText('Added by you')).not.toBeNull()
+    expect(screen.getByText('Added by Craig')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Remove Dog Soldiers' })).not.toBeNull()
+    expect(screen.queryByRole('button', { name: 'Remove The Fall Guy' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Set a maximum price for The Fall Guy' })).toBeNull()
+  })
+
+  it("gives the admin the controls on everyone's wants and says who added each", async () => {
+    auth.profile = ADMIN
+    stubList([CRAIGS, MARKS])
+    renderPage()
+
+    expect(await screen.findByText('Added by Mark')).not.toBeNull()
+    expect(screen.getByText('Added by you')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Remove Dog Soldiers' })).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Remove The Fall Guy' })).not.toBeNull()
   })
 })

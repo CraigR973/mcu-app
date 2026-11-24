@@ -243,6 +243,9 @@ function ShopPrices({ prices }: { prices: ShopPrice[] }) {
 
 function Card({ item }: { item: WantedItem }) {
   const { profile } = useAuth()
+  // AH1 (#397): anyone adds a want; its adder, or the admin, changes or removes it.
+  const mine = item.addedById !== null && item.addedById === profile?.id
+  const canChange = profile?.role === 'admin' || mine
   const queryClient = useQueryClient()
   const [editingBudget, setEditingBudget] = useState(false)
   const [budget, setBudget] = useState(item.maxPrice ?? '')
@@ -293,6 +296,9 @@ function Card({ item }: { item: WantedItem }) {
           {item.maxPrice && <Badge tone="primary">Up to £{item.maxPrice}</Badge>}
           {!item.preferredFormat && !item.preferredEdition && !item.maxPrice && <span>Any format or edition</span>}
         </div>
+        {item.addedByName ? (
+          <p className="mt-1 text-xs text-muted-foreground">Added by {mine ? 'you' : item.addedByName}</p>
+        ) : null}
         {/* Wanting a film you own is not an error — a DVD-to-4K upgrade is exactly that —
             so it is said plainly rather than refused. */}
         {item.ownedAlready ? (
@@ -315,7 +321,7 @@ function Card({ item }: { item: WantedItem }) {
       </div>
       </div>
 
-      {profile?.role === 'admin' && editingBudget ? (
+      {canChange && editingBudget ? (
         <form
           className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-0 sm:pt-0"
           onSubmit={(event) => {
@@ -357,7 +363,7 @@ function Card({ item }: { item: WantedItem }) {
         </form>
       ) : null}
 
-      {profile?.role === 'admin' && !editingBudget ? (
+      {canChange && !editingBudget ? (
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-0 sm:pt-0">
           <Button
             type="button"
@@ -410,8 +416,8 @@ function Card({ item }: { item: WantedItem }) {
  */
 export default function WantedPage() {
   const [activeOnly, setActiveOnly] = useState(false)
-  // Keep the established one-step admin workflow: the form begins open, while the
-  // header control lets it be folded away during routine list review.
+  // Keep the established one-step workflow: the form begins open, while the header control
+  // lets it be folded away during routine list review. Both people add since AH1 (#397).
   const [adding, setAdding] = useState(true)
   const { profile } = useAuth()
 
@@ -429,10 +435,10 @@ export default function WantedPage() {
         title="Wanted"
         description="Titles and editions worth looking out for, with a clear ceiling before a tempting listing appears."
         meta={wantedQuery.data ? <span>{wantedQuery.data.activeCount} still being sought</span> : undefined}
-        actions={profile?.role === 'admin' ? <Button type="button" onClick={() => setAdding((value) => !value)} aria-expanded={adding}><Plus aria-hidden />{adding ? 'Close add form' : 'Add a film'}</Button> : undefined}
+        actions={profile ? <Button type="button" onClick={() => setAdding((value) => !value)} aria-expanded={adding}><Plus aria-hidden />{adding ? 'Close add form' : 'Add a film'}</Button> : undefined}
       />
 
-      {profile?.role === 'admin' && adding ? <AddWantedPanel /> : null}
+      {profile && adding ? <AddWantedPanel /> : null}
 
       <div className="inline-flex overflow-hidden rounded-md border border-input bg-card" role="group" aria-label="Wanted-list view">
         {[
@@ -463,7 +469,7 @@ export default function WantedPage() {
       ) : state === 'error' ? (
         <StatePanel tone="error" title="The wanted list could not be opened" description={queryErrorMessage(wantedQuery.error, 'The server did not answer.')} />
       ) : state === 'empty' ? (
-        <StatePanel tone="empty" icon={Bookmark} title={activeOnly ? 'Nothing is actively being sought' : 'Nothing on the wanted list yet'} description={profile?.role === 'admin' ? <>Add a title here, or add a set’s missing films from <Link to="/dashboard" className="font-semibold text-primary hover:underline">Home</Link>.</> : 'Craig has not added any wanted titles yet.'} />
+        <StatePanel tone="empty" icon={Bookmark} title={activeOnly ? 'Nothing is actively being sought' : 'Nothing on the wanted list yet'} description={<>Add a title here, or add a set’s missing films from <Link to="/dashboard" className="font-semibold text-primary hover:underline">Home</Link>.</>} />
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
