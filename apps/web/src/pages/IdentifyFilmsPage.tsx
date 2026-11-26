@@ -307,7 +307,7 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
   const onMove = copyId ? (candidate: IdentifyCandidate) => move.mutate(candidate) : undefined
   const busy = pick.isPending || keep.isPending || move.isPending
   const failure = pick.error ?? keep.error ?? move.error
-  // The film it already is is not an alternative to itself. AH3 (#399): a search that finds
+  // The film it already is is not an alternative to itself. AH3 (#400): a search that finds
   // it says so, with this card's "It's right", rather than looking as if it found nothing.
   const others = (candidates: IdentifyCandidate[]) => candidates.filter((c) => c.tmdbId !== doubt.tmdbId)
   const offered = others(doubt.candidates)

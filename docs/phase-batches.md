@@ -5516,7 +5516,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
 | **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (go 24 Nov; starts 25 Nov, #396) · 5: ~~AG11~~ (`25c1870`) → ~~AG8~~ (`6b0320b`) → ~~AG9~~ (`cbc43a4`) → ~~AG10~~ (`d33f70f`) | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done. Sitting 5 started at the owner's word on 19 Nov ("Go, with the fix"); AG11 shipped 19 Nov (`25c1870`, #390); AG8 shipped 19 Nov (`6b0320b`, #391); AG9 shipped 20 Nov (`cbc43a4`, #392); AG10 shipped 20 Nov (`d33f70f`, #393) after the owner's word on its entry chunk ("Just cap it"). Sitting 5 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
-| **AH** | ~~AH1~~ (`b9b85d8`, PR 177) → ~~AH1 follow-up~~ (`8970c66`, PR 178) · AH3 (built 25 Nov; merges after AG6) · AH2 (at the owner's go after its brief; after AG6) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396). AH1 shipped 24 Nov at the owner's go ("Yes, build it"; `b9b85d8`, #397); its follow-up the same evening at the owner's word ("Mark should also be able to change or remove mine"; `8970c66`, #398). AH2 and AH3 at the owner's yes, 25 Nov (#399).** While AG6 holds the main checkout they are built in a separate worktree, and they merge only after AG6 has, so its unattended close-out is undisturbed. |
+| **AH** | ~~AH1~~ (`b9b85d8`, PR 177) → ~~AH1 follow-up~~ (`8970c66`, PR 178) · AH3 (built 25 Nov; merges after AG6) · AH2 (at the owner's go after its brief; after AG6) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396). AH1 shipped 24 Nov at the owner's go ("Yes, build it"; `b9b85d8`, #397); its follow-up the same evening at the owner's word ("Mark should also be able to change or remove mine"; `8970c66`, #398). AH2 and AH3 at the owner's yes, 25 Nov (#400).** While AG6 holds the main checkout they are built in a separate worktree, and they merge only after AG6 has, so its unattended close-out is undisturbed. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6517,13 +6517,13 @@ the API suite against a throwaway Postgres (3,066 passed; 9 local-only skips), s
 
 ### AH2 — The admin closes a question 🟡
 
-**At the owner's yes, 25 Nov (#399); it changes a table's shape, so it starts at the owner's go
+**At the owner's yes, 25 Nov (#400); it changes a table's shape, so it starts at the owner's go
 after its brief, and after AG6.** `observed` (25 Nov): two questions stayed on both people's Needs
 you with nothing in the app to clear them. *Shetland - Series 5* was answered "keep separate", and
 `context()` in `services/assigned_reviews.py` resolves it only when the copy's film holds the
 Shetland series. *Dead Man's Shoes*' want was removed with the agents' test wants, so its question
 read "changed" for good. Both were closed at the owner's word by a guarded, audited database
-change (12:07 UTC, 25 Nov, #399), which reused `deleted_at`. This replaces the conditional AH2 of
+change (12:07 UTC, 25 Nov, #400), which reused `deleted_at`. This replaces the conditional AH2 of
 24 Nov.
 
 - **A question gets a closed state of its own:** `closed_at_utc` and `closed_by` on
@@ -6542,7 +6542,7 @@ change (12:07 UTC, 25 Nov, #399), which reused `deleted_at`. This replaces the c
 
 ### AH3 — The identify search shows the film a copy is already on 🟢
 
-**At the owner's yes, 25 Nov (#399).** `observed` (25 Nov): searching for the 1967 *Quatermass and
+**At the owner's yes, 25 Nov (#400).** `observed` (25 Nov): searching for the 1967 *Quatermass and
 the Pit*, the film its new Blu-ray was already on, found nothing. The doubt card on Identify films
 and "Move only this copy" both leave out the film the copy is already on, then say "No other films
 found", so the right film looked missing.

@@ -48,7 +48,7 @@ About 10 minutes, in any order. No agent does these.
 - [x] ~~**Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
       Shetland (the series) → confirm the merge. Both boxes stay separate copies; his question
       clears itself, and the merge can be undone. If he wants it kept separate, tell an agent (AH2).
-      1 minute.~~ **Closed 25 Nov, 12:07 UTC, at your word ("go with Marks answer", #399):**
+      1 minute.~~ **Closed 25 Nov, 12:07 UTC, at your word ("go with Marks answer", #400):**
       Series 5 stays its own title. The *Dead Man's Shoes* question, whose want you removed, was
       closed with it.
 - [ ] **AH2's go** (you close a question yourself), after its brief: it changes a table's shape.

@@ -20,7 +20,7 @@ rows of finds that ended before AG6 (277 finds, read-only 26 Nov) and both peopl
 run first (`OWNER-ACTIONS.md`). The Wanted list is still empty, so no Wanted find can push yet.
 
 **25 Nov, 12:45 GMT: Needs you is empty for both people; AH3 is built, and AH2 waits for its go
-(#399).** The 25 Nov 08:00 check cleared the two duplicate copies and *Bad Lieutenant*. The owner
+(#400).** The 25 Nov 08:00 check cleared the two duplicate copies and *Bad Lieutenant*. The owner
 kept *Quatermass and the Pit* (1967) at 11:59 UTC, after the nightly specs batch matched its new
 Vintage Classics Blu-ray to the 1958 BBC serial's page. At the owner's word, the *Dead Man's
 Shoes* question (its want removed) and the *Shetland - Series 5* question (Mark's "keep
@@ -538,7 +538,7 @@ clean on 17 Nov (Now). Still to read back: the valuation job's first beat with a
 **Group AH (24 Nov, #396): AH1 shipped 24 Nov (`b9b85d8`, #397), and its follow-up the same
 evening (`8970c66`, #398): either person changes and removes any want.** AH3 (the identify search
 shows the film a copy is already on) built 25 Nov in a worktree; it and AH2 (the admin closes a
-question, at the owner's go after its brief) merge after AG6 (#399). The 25 Nov 08:00 check
+question, at the owner's go after its brief) merge after AG6 (#400). The 25 Nov 08:00 check
 cleared the two duplicate-copy rows and *Bad Lieutenant*'s.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
@@ -967,7 +967,7 @@ it renders — and report what was observed rather than what passed.
   4K" and "Cut ONLY" rules; percentages only when backed; at-once/18:00-summary/Wanted-only
   pushes; ended pushes rewritten. The stored-row pass and both people's quiet hours wait for the
   owner's word. Zavvi has no DNS address. Production on `40fb147`, `db: ok`.
-- **25 Nov, 12:45 GMT — Needs you empty for both; AH3 built in a worktree; AH2 waits (#399).** Two
+- **25 Nov, 12:45 GMT — Needs you empty for both; AH3 built in a worktree; AH2 waits (#400).** Two
   stuck questions closed by an audited database change at the owner's word; *Quatermass* kept.
 - **24 Nov, 19:15 GMT — either person changes any want (PR 178, `8970c66`, #398).** The test wants
   are gone (the owner, 18:47) and Mark's copy fixes are in (13:04–13:07). Production on `8970c66`.

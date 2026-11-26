@@ -16,7 +16,7 @@ interface Props {
   startOpen?: boolean
   /** Closing it, where the caller holds the button that opened it. */
   onCancel?: () => void
-  /** AH3 (#399): opened from a doubt, the film the copy is already on is that doubt's "It's
+  /** AH3 (#400): opened from a doubt, the film the copy is already on is that doubt's "It's
    *  right", so a search that finds it can settle the doubt from here. */
   onKeep?: () => void
   keeping?: boolean
@@ -47,7 +47,7 @@ export function MoveCopyPanel({ itemId, movieId, filmTitle, onMoved, startOpen =
       target.mediaType === 'tv' ? moveCopy(itemId, target.tmdbId, undefined, 'tv') : moveCopy(itemId, target.tmdbId),
     onSuccess: onMoved,
   })
-  // The film the copy is on now is never offered as a move. AH3 (#399): it is shown apart,
+  // The film the copy is on now is never offered as a move. AH3 (#400): it is shown apart,
   // so a search for it does not look as if it found nothing.
   const elsewhere = (candidate: IdentifyCandidate) => candidate.inCollection?.movieId !== movieId
   const allFound = [...(search.data?.candidates ?? []), ...(search.data?.seriesCandidates ?? [])]

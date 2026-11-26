@@ -541,7 +541,7 @@ function DoubtRow({
             setMoving(false)
             settled()
           }}
-          // AH3 (#399): a search that finds the film it is already on can settle the doubt.
+          // AH3 (#400): a search that finds the film it is already on can settle the doubt.
           onKeep={doubtId ? () => keep.mutate() : undefined}
           keeping={keep.isPending}
         />
