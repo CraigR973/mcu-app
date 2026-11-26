@@ -3,6 +3,11 @@
 usage: seed_people.py        (reads DATABASE_URL, a throwaway database)
 Migration 002 seeds both people with no PIN; there is no sign-up route, so a PIN is the one
 thing a database row has to carry for a browser to sign in.
+
+**Both start with quiet hours cleared** (AG6). Since AG6 a new person's quiet hours are
+22:00–07:00 (#383), and the suite runs at whatever hour CI starts it, so a push a case waits for
+would be held overnight and the case would fail by the clock. Quiet hours themselves are proved
+by pytest at fixed instants (``test_notification_policy.py``, ``test_price_alerts_and_history.py``).
 """
 
 import os
@@ -32,6 +37,12 @@ def main() -> None:
             )
             if cur.rowcount != 1:
                 sys.exit(f"expected one profile named {name}, updated {cur.rowcount}")
+            cur.execute(
+                "INSERT INTO notification_preferences (id, user_id, quiet_hours_start, quiet_hours_end) "
+                "SELECT gen_random_uuid(), id, NULL, NULL FROM profiles WHERE lower(display_name) = lower(%s) "
+                "ON CONFLICT (user_id) DO UPDATE SET quiet_hours_start = NULL, quiet_hours_end = NULL",
+                (name,),
+            )
     conn.close()
 
 

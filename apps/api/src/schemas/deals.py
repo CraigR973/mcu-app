@@ -39,6 +39,10 @@ class DealResponse(BaseModel):
     wasPrice: str | None = None
     currency: str
     discountPercent: int | None = None
+    #: AG6 (MK53-04): whether ``discountPercent`` may be shown. An eBay find's figure must rest
+    #: on 5 or more asks or 3 or more sales; below that the card reads "under the few asks
+    #: seen". Always true for a shop's deal, whose figure is the shop's own "was" price.
+    discountBacked: bool = True
     #: Null when the title matched no catalogued film. An unmatched deal is **kept** —
     #: it is the evidence the matcher needs work, and hiding it would make a broken
     #: matcher look like a quiet sale page.

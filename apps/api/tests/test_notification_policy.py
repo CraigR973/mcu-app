@@ -41,16 +41,22 @@ _DEFAULTS: dict[str, object] = {
     "movie_night_enabled": True,
     "digest_mode": False,
     "digest_hour_local": 9,
-    "quiet_hours_start": None,
-    "quiet_hours_end": None,
+    # AG6 (#383): a new person starts with quiet hours of 22:00–07:00.
+    "quiet_hours_start": time(22, 0),
+    "quiet_hours_end": time(7, 0),
     "quiet_hours_timezone": "Europe/London",
+    "deals_wanted_only": False,
 }
+
+#: The tests below start from a person who has cleared quiet hours, as either person can in
+#: Settings, unless a test sets them: each is about one rule, and quiet hours are their own.
+_QUIET_HOURS_CLEARED: dict[str, object] = {"quiet_hours_start": None, "quiet_hours_end": None}
 
 
 def _preference(**overrides: object) -> NotificationPreference:
     """A preference row as constructed, never flushed."""
     preference = NotificationPreference(user_id=uuid.uuid4())
-    for name, value in {**_DEFAULTS, **overrides}.items():
+    for name, value in {**_DEFAULTS, **_QUIET_HOURS_CLEARED, **overrides}.items():
         setattr(preference, name, value)
     return preference
 

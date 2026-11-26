@@ -39,6 +39,7 @@ const deal: Deal = {
   wasPrice: '24.99',
   currency: 'GBP',
   discountPercent: 48,
+  discountBacked: true,
   movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3304',
   tmdbId: 11234,
   posterPath: '/cross.jpg',
@@ -107,6 +108,24 @@ describe('DealsPage', () => {
 
     expect(html).toContain('Not matched to a film in the archive')
     expect(html).toContain('Cross Of Iron')
+  })
+
+  it('puts a percentage only on a figure of five or more asks — AG6', () => {
+    const thin = markup(<DealsPage />, [
+      {
+        ...ebayFind,
+        discountBacked: false,
+        usualListings: 3,
+        usualSources: [{ source: 'Lower quartile of used asks, postage in', price: '12.00' }],
+      },
+    ])
+    expect(thin).not.toContain('−60%')
+    expect(thin).toContain('Under the few asks seen')
+    expect(thin).toContain('with postage · judged against £12.00')
+
+    const firm = markup(<DealsPage />, [ebayFind])
+    expect(firm).toContain('−60%')
+    expect(firm).not.toContain('Under the few asks seen')
   })
 
   it('says what an eBay find was judged against, and links to sold listings', () => {

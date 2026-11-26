@@ -18,6 +18,10 @@ products the scan found between 26 Sep and 9 Oct were another film of the same n
 
 **Two films named alike make no match.** If a listing opens with a title two catalogue films
 share, it is skipped rather than filed under either.
+
+**A listing naming someone else's cast is another film's** (AG6, MK53-01): "The Invisible Man
+(4K UHD Blu-ray) Nash Edgerton Michael Dorman" is the 2020 film, not the 1933 one filed. The
+people are the app's own credits (`matching.other_cast_named`).
 """
 
 from __future__ import annotations
@@ -28,9 +32,18 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.ebay.matching import MAX_LEADING_WORDS, Listing, match, opening_run, tokens
+from src.ebay.matching import (
+    MAX_LEADING_WORDS,
+    Listing,
+    PeopleIndex,
+    match,
+    name_key,
+    opening_run,
+    other_cast_named,
+    tokens,
+)
 from src.models.collection_item import FORMAT_RANK, CollectionItem, owned_copy
-from src.models.movie import Movie
+from src.models.movie import Movie, MovieCredit
 from src.models.wanted import WantedItem
 
 #: The formats a deal can be for. A DVD is never an upgrade worth a push.
@@ -55,6 +68,8 @@ class CatalogueFilm:
     #: The best format owned, as an index into ``FORMAT_RANK``; ``None`` when nothing is
     #: owned. Owned with no readable format is ``len(FORMAT_RANK)``, which nothing improves.
     best_owned: int | None
+    #: Everyone the film's credits name, as :func:`~src.ebay.matching.name_key` keys (AG6).
+    people: frozenset[tuple[str, ...]] = frozenset()
 
     @property
     def owned(self) -> bool:
@@ -75,6 +90,8 @@ class Catalogue:
     """The films, indexed by the first word of each way their title is written."""
 
     films: list[CatalogueFilm] = field(default_factory=list)
+    #: AG6: the people a listing may name that make it another film's. ``None`` reads no cast.
+    people: PeopleIndex | None = None
     _by_first: dict[str, list[tuple[CatalogueFilm, list[str]]]] = field(default_factory=dict)
 
     def add(self, film: CatalogueFilm) -> None:
@@ -98,6 +115,13 @@ class Catalogue:
                     listing, film_title=" ".join(title_words), country="GB", film_year=film.year
                 )
                 if not verdict.ok or verdict.format_code not in SCAN_FORMATS:
+                    continue
+                if self.people is not None and other_cast_named(
+                    listing.title,
+                    film_title=" ".join(title_words),
+                    film_people=film.people,
+                    people=self.people,
+                ):
                     continue
                 best = found.get(film.movie_id)
                 if best is None or len(title_words) > best[1]:
@@ -146,6 +170,12 @@ async def load_catalogue(db: AsyncSession) -> Catalogue:
     catalogue = Catalogue()
     if not ids:
         return catalogue
+    catalogue.people = await load_people(db)
+    credits: dict[uuid.UUID, set[tuple[str, ...]]] = {}
+    for movie_id, person in await db.execute(
+        select(MovieCredit.movie_id, MovieCredit.person_name).where(MovieCredit.movie_id.in_(ids))
+    ):
+        credits.setdefault(movie_id, set()).add(name_key(person))
     films = await db.execute(
         select(Movie.id, Movie.tmdb_id, Movie.title, Movie.year).where(
             Movie.id.in_(ids), Movie.deleted_at.is_(None), Movie.tmdb_id.is_not(None)
@@ -161,6 +191,24 @@ async def load_catalogue(db: AsyncSession) -> Catalogue:
                 wanted=movie_id in wanted,
                 preferred_format=wanted.get(movie_id),
                 best_owned=best.get(movie_id),
+                people=frozenset(credits.get(movie_id, ())),
             )
         )
     return catalogue
+
+
+async def load_people(db: AsyncSession) -> PeopleIndex:
+    """Everyone the app holds as cast on some film, leaving out anyone credited as a writer.
+
+    A writer is named for the book as often as for the film: "IT 2017 4K … Stephen King" is
+    the 2017 film, and Stephen King, who has two cameo cast credits here, is not in its
+    credits. Leaving writers out cost none of the five MK53-01 films and refused none of the
+    290 listings pushed from 26 Sep to 25 Nov wrongly (DECISIONS.md, AG6).
+    """
+    writers = select(MovieCredit.person_name).where(MovieCredit.role == "writer")
+    rows = await db.scalars(
+        select(MovieCredit.person_name)
+        .where(MovieCredit.role == "cast", MovieCredit.person_name.not_in(writers))
+        .distinct()
+    )
+    return PeopleIndex.of(rows.all())

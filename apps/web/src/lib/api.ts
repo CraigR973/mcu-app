@@ -2141,6 +2141,7 @@ export async function fetchNotificationPreferences(): Promise<NotificationPrefer
 export interface NotificationPreferenceInput {
   cinemasEnabled?: boolean
   cinemasOlderOnly?: boolean
+  dealsWantedOnly?: boolean
   collectionAdditionsEnabled?: boolean
   dealsEnabled?: boolean
   saleEventsEnabled?: boolean

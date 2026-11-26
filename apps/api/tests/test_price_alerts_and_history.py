@@ -846,19 +846,33 @@ class TestDailyRun:
         )
         assert list(checks) == []
 
-    async def test_a_run_end_to_end_alerts_and_pushes(self, db: AsyncSession) -> None:
-        """The whole §5.6 path: scrape a £19.99 listing against a £25 threshold."""
+    async def _person_with_a_phone(self, db: AsyncSession, *, quiet_hours: bool) -> Profile:
         person = await _profile(db)
         db.add(
             PushSubscription(
                 id=uuid.uuid4(),
                 user_id=person.id,
-                endpoint="https://fcm.googleapis.com/fcm/send/batch20",
+                endpoint=f"https://fcm.googleapis.com/fcm/send/batch20-{uuid.uuid4().hex[:6]}",
                 p256dh="B" + "A" * 86,
                 auth="A" * 22,
                 device_label="phone",
             )
         )
+        if not quiet_hours:
+            # The run is at 03:00 UTC. Since AG6 a new person's quiet hours are 22:00–07:00
+            # (#383), so this one has cleared them, as either person can in Settings.
+            # Cleared by an update, as Settings clears them: on an insert the column's own
+            # default would fill a None in.
+            preference = NotificationPreference(id=uuid.uuid4(), user_id=person.id)
+            db.add(preference)
+            await db.flush()
+            preference.quiet_hours_start = preference.quiet_hours_end = None
+        await db.flush()
+        return person
+
+    async def test_a_run_end_to_end_alerts_and_pushes(self, db: AsyncSession) -> None:
+        """The whole §5.6 path: scrape a £19.99 listing against a £25 threshold."""
+        await self._person_with_a_phone(db, quiet_hours=False)
         await _want(db, await _movie(db), max_price="25.00")
         await _retailer(db)
         await db.flush()
@@ -868,6 +882,27 @@ class TestDailyRun:
         assert summary.alerts_queued >= 1  # type: ignore[attr-defined]
         assert summary.pushes_sent >= 1  # type: ignore[attr-defined]
         assert sender.sent, "a price drop reached the device"
+
+    async def test_the_03_00_run_holds_a_wanted_alert_to_07_00_by_default(
+        self, db: AsyncSession
+    ) -> None:
+        """AG6 (#383): quiet hours 22:00–07:00 by default, so the night's find waits."""
+        person = await self._person_with_a_phone(db, quiet_hours=True)
+        await _want(db, await _movie(db), max_price="25.00")
+        await _retailer(db)
+        await db.flush()
+
+        summary, sender = await self._run(db, SHOP_PAGE)
+
+        assert summary.alerts_queued >= 1  # type: ignore[attr-defined]
+        assert sender.sent == []
+        held = (
+            await db.scalars(select(Notification).where(Notification.user_id == person.id))
+        ).all()
+        # 03:00 UTC on 1 Apr is 04:00 in London; 07:00 there is 06:00 UTC.
+        assert [(n.status, n.deferred_reason, n.deliver_after_utc) for n in held] == [
+            ("queued", "quiet_hours", datetime(2026, 4, 1, 6, 0))
+        ]
 
 
 NOW = datetime(2026, 10, 18, 3, 0)

@@ -8888,7 +8888,66 @@ contemporaneous.
        end-to-end AH1 case now has Mark remove Craig's want, and reads the audit naming him. The
        admin-route guard is unchanged: the three wanted routes were already open.
 
-399. **Two stuck questions closed by hand, and two batches for after AG6 (25 Nov, the owner's
+399. **AG6: deals — the right disc, a fair figure, sensible pushes (25 Nov; MK53-01, -02's
+     search half, -04, -05, -06; amends #129).** Group AG's eleventh batch, sitting 4, at the
+     owner's go of 24 Nov (#396), with the push plan both people agreed (#383).
+     - **The wrong disc is refused.** "Mastered in 4K" (Sony's Blu-ray line) joins the not-4K
+       rule; "cut only" joins the incomplete rule ("The Exorcist 4K Extended Director's Cut
+       ONLY"). **A listing naming someone the app holds as cast on another film, who is not in
+       the filed film's own credits, is another film's** (`matching.other_cast_named`, read by
+       the deal scan's catalogue). The review proposed the cast of *same-title* films; the app
+       holds none of the five (read-only, 25 Nov), so any film's cast stands in. **Writers are
+       left out of the index**: on the 290 listings pushed from 26 Sep to 25 Nov, cast plus
+       writers refused *It* (2017) and *Misery* for naming Stephen King, the novelist; cast
+       without writers refused 5, all genuinely another film (*The Invisible Man*, *Road House*,
+       *The Letter*, *Deception*, and *The Time of Their Lives*, the 2017 film, which the review
+       had not counted) and none wrongly. **Missed:** Don Bluth's *Anastasia*, named only by its
+       directors, whom the app holds as writers or not at all; its push still names the
+       listing's own title (X1). The titles join `test_ebay_wrong_products.py`.
+     - **A percentage only on 5 or more asks or 3 or more sales (amends #129).** Below that the
+       push says "under the few asks seen, £X" and the Deals card "Under the few asks seen";
+       the deal itself still counts. **Read literally, a figure scaled from 5 or more New asks
+       is backed**: MK53-04 found those the least reliable (19 of 43 checkable sat at or above
+       recorded sales), so whether to exclude them is the owner's call, not taken here.
+     - **Pushes per #383.** At once: Wanted-list finds, and finds 40% or more under a backed
+       figure, still at most 5 a person a day. Every other find waits for **one summary a day,
+       sent by the first pass at or after 18:00 in the person's own time**, naming up to 5 of
+       the day's finds not already pushed, best backed percentage first, each re-checked first
+       (one that sold leaves the Deals page), in the films' words, never a listing's. The pass
+       runs at twenty past every second UTC hour, so the summary comes at 18:20 in winter and
+       **19:20 in British Summer Time** (from 28 Mar 2027); an 18:00 arrival all year needs a
+       pass at 17:05 UTC, a Railway change and so the owner's. **Wanted-only per person**
+       (`notification_preferences.deals_wanted_only`, migration 082; Settings → Wanted list
+       only): no upgrades and no summary. **Quiet hours 22:00–07:00 are the default for a new
+       person** (the column defaults). **Both people's rows hold none, and setting them is a
+       live write: it waits for the owner's word** with the push-row step below. Until then
+       their pushes are not held at night.
+     - **The dark shop is not repaired: there is nothing to point it at.** Re-checked 25 Nov,
+       11:45 UTC: `www.zavvi.com` has no address on Cloudflare's or Google's resolvers
+       (NOERROR, no A record), and `zavvi.com` only redirects to it, so every search address
+       fails before a page is fetched. Zavvi has been switched off since 20 Nov by its own
+       failure limit; the owner's re-check from mid-December stands (`OWNER-ACTIONS.md`). No
+       address was guessed.
+     - **Ended finds' pushes lose the listing's words (MK53-06).** When the pass clears an
+       expired find (#254), each push about it is rewritten as "Heat (1995) on 4K, on eBay",
+       with its price and film, and one still held by quiet hours is not sent
+       (`deal_ended`). Only finds ending from now on are reached, so **the 544 push rows of
+       finds that ended before AG6 (of 580, read-only 25 Nov) wait for the owner's word**:
+       `src.scripts.deal_pushes_owner_step` (a dry run first; `--apply --expect-pushes N
+       --expect-people M`) rewrites them and gives both people 22:00–07:00, in one
+       transaction. Target pushes (`ebay-target:`) also name a listing; there are none.
+     - **Test expectations changed with the owner's decision, each named:**
+       `test_preferences_default_to_everything_on` now expects 22:00–07:00 and
+       `dealsWantedOnly` false; `test_notification_policy.py`'s `_DEFAULTS` mirrors the new
+       column defaults, and its rows start from cleared quiet hours, so no other case there
+       changes; `test_a_run_end_to_end_alerts_and_pushes` runs at 03:00 UTC, so its person
+       clears quiet hours, and a new case proves the default holds that alert to 07:00; the
+       shared deal-schema fixture carries `discountBacked`. **The end-to-end seed gives both
+       people cleared quiet hours**, since the suite runs at whatever hour CI starts and a held
+       push would fail a case by the clock. A preference written with `None` on insert takes
+       the column's new Python default; a clear is an update, as Settings does.
+
+400. **Two stuck questions closed by hand, and two batches for after AG6 (25 Nov, the owner's
      word: "1) close it 2) go with Marks answer 3) yes", and the identify search fix).**
      - **Closed at 12:07 UTC by one guarded transaction:** exact ids, kinds, answers and revision
        2, one row each or roll back, each with an `admin_actions` row attributed to Craig. *Dead
@@ -8906,5 +8965,5 @@ contemporaneous.
        starts after its brief and the owner's go) and AH3 (the identify search shows the film a
        copy is already on). While AG6 holds the main checkout they are built in a separate
        worktree, and they merge only after AG6 has, so its unattended close-out is undisturbed.
-     - **The number:** the two audit rows of 12:07 UTC cite #399, the number free when they were
-       written. If AG6 takes #399 first, this entry is renumbered when it is rebased, and says so.
+     - **The number:** the two audit rows of 12:07 UTC on 25 Nov cite #399, the number free when
+       they were written. AG6 took #399 first (merged 26 Nov), so this entry is #400.

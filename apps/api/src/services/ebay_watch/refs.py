@@ -38,6 +38,18 @@ FRESH_FOR = timedelta(days=14)
 USED_POOL = "used"
 USED_FIGURE = "usedFigure"
 
+#: AG6 (MK53-04, amending #129): a deal's percentage is shown and pushed only when its figure
+#: rests on at least this many asking prices, or :data:`MIN_BACKED_SALES` recorded sales.
+#: Below that it reads "under the few asks seen": 94 of 318 deals rested on exactly three asks,
+#: and a fifth to a third of checkable deals sat at or above what the disc sells for.
+MIN_BACKED_ASKS = 5
+MIN_BACKED_SALES = 3
+
+#: The names :meth:`DealFigure.sources` writes, read back from a stored deal by
+#: :func:`basis_of_source`. Before AA10b a figure was named "the usual … (asking prices, N
+#: listings)"; it is asks too.
+_SALES_SOURCE = "observed sales"
+
 
 @dataclass(frozen=True)
 class Yardstick:
@@ -55,6 +67,11 @@ class DealFigure:
     sample_size: int
     basis: str
 
+    @property
+    def backed(self) -> bool:
+        """Whether the figure is firm enough to put a percentage on (AG6)."""
+        return figure_backed(self.basis, self.sample_size)
+
     def sources(self) -> list[dict[str, str]]:
         if self.basis == "sales":
             name = f"{self.sample_size} observed sales, postage in"
@@ -63,6 +80,19 @@ class DealFigure:
         else:
             name = "New asking median scaled to used"
         return [{"source": name, "price": str(self.amount)}]
+
+
+def figure_backed(basis: str | None, sample_size: int | None) -> bool:
+    """5 or more asks, or 3 or more recorded sales (AG6, amending #129)."""
+    count = sample_size or 0
+    if basis == "sales":
+        return count >= MIN_BACKED_SALES
+    return count >= MIN_BACKED_ASKS
+
+
+def basis_of_source(name: str | None) -> str:
+    """``sales`` or ``asks``: what a stored deal's figure was taken from, by its own name."""
+    return "sales" if name and _SALES_SOURCE in name else "asks"
 
 
 def deal_figure(ref: EbayPriceRef) -> DealFigure | None:

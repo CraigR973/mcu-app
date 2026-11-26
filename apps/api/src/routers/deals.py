@@ -37,7 +37,7 @@ from src.schemas.deals import (
     UsualSourceResponse,
 )
 from src.services.audit import record_action
-from src.services.ebay_watch.scan import EBAY
+from src.services.ebay_watch.scan import EBAY, deal_backed
 from src.services.scraping.deals_runner import run_deals_scrape
 
 router = APIRouter(prefix="/api/v1", tags=["deals"])
@@ -93,6 +93,7 @@ def _to_response(deal: Deal, movie: Movie | None) -> DealResponse:
         wasPrice=str(deal.was_price) if deal.was_price is not None else None,
         currency=deal.currency,
         discountPercent=deal.discount_percent,
+        discountBacked=deal_backed(deal),
         movieId=deal.movie_id,
         tmdbId=deal.tmdb_id,
         posterPath=movie.poster_path if movie else None,

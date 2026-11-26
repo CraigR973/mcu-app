@@ -2,6 +2,23 @@
 
 ## Now
 
+**26 Nov, 14:20 GMT: AG6 shipped, deals — the right disc, a fair figure, sensible pushes (PR 180,
+`40fb147`, #399); Group AG sitting 4 is done, and with it Group AG.** The deal scan refuses
+"Mastered in 4K" as a 4K, "Cut ONLY" as the set, and a listing naming someone the app holds as cast
+on another film but not in the filed film's credits (writers left out): on the 290 listings pushed
+since 26 Sep it refused 5, all genuinely another film, and none wrongly; Don Bluth's *Anastasia*
+stays a miss. A percentage only on 5+ asks or 3+ sales, otherwise "under the few asks seen".
+Pushes per #383: Wanted finds and finds 40%+ under a backed figure at once (still 5 a day at
+most); the rest in one summary after 18:00 local (18:20 GMT, 19:20 in BST); Wanted-only per
+person in Settings (migration 082 ran at deploy); quiet hours 22:00–07:00 for a new person. An
+ended find's pushes are rewritten in the film's words from now on. **Zavvi not repaired:**
+`www.zavvi.com` has no DNS address (25 Nov), and nothing was guessed. CI's seven jobs green on the
+PR, end-to-end included; `main` green before the batch. Production API and web on `40fb147`,
+`db: ok`, every readiness field `configured`. **Waiting on the owner's word:** the 554 stored push
+rows of finds that ended before AG6 (277 finds, read-only 26 Nov) and both people's quiet hours
+(neither has any, so night pushes are not yet held): `src.scripts.deal_pushes_owner_step`, a dry
+run first (`OWNER-ACTIONS.md`). The Wanted list is still empty, so no Wanted find can push yet.
+
 **25 Nov, 12:45 GMT: Needs you is empty for both people; AH3 is built, and AH2 waits for its go
 (#399).** The 25 Nov 08:00 check cleared the two duplicate copies and *Bad Lieutenant*. The owner
 kept *Quatermass and the Pit* (1967) at 11:59 UTC, after the nightly specs batch matched its new
@@ -946,6 +963,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **26 Nov, 14:20 GMT — AG6 shipped (PR 180, `40fb147`, #399); Group AG done.** Cast, "Mastered in
+  4K" and "Cut ONLY" rules; percentages only when backed; at-once/18:00-summary/Wanted-only
+  pushes; ended pushes rewritten. The stored-row pass and both people's quiet hours wait for the
+  owner's word. Zavvi has no DNS address. Production on `40fb147`, `db: ok`.
 - **25 Nov, 12:45 GMT — Needs you empty for both; AH3 built in a worktree; AH2 waits (#399).** Two
   stuck questions closed by an audited database change at the owner's word; *Quatermass* kept.
 - **24 Nov, 19:15 GMT — either person changes any want (PR 178, `8970c66`, #398).** The test wants

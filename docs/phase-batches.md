@@ -6159,7 +6159,7 @@ Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
 | 1 | AG1 the 08:00 job survives → AG2 every scheduled thing watched | The owner's go; first. AG2 by 5 Feb 2027 at the latest | Opus 5.5 `high` | GPT-5.6 Sol High |
 | 2 | AG3 say it where people look → AG7 one title fold | The owner's go | Sonnet 5.5 `high` | GPT-5.6 Terra High |
 | 3 | AG4 found for the film it is → AG5 wants know their film | The owner's go; their live data steps at the owner's word | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
-| 4 | AG6 deals: the right disc, a fair figure, sensible pushes | From 25 Nov, after AA10c's read-back, and once the viewer has been asked about pushes; its live data step at the owner's word. **Met 24 Nov; the owner's go for 25 Nov (#396)** | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| 4 | ~~AG6 deals: the right disc, a fair figure, sensible pushes~~ **shipped 26 Nov (`40fb147`)** | From 25 Nov, after AA10c's read-back, and once the viewer has been asked about pushes; its live data step at the owner's word. **Met 24 Nov; the owner's go for 25 Nov (#396)** | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
 | 5 | AG11 a want's question clears → AG8 the assistant, kept → AG9 security and records → AG10 polish | The owner's go (19 Nov, "Go, with the fix") | Opus 5.5 `high` (from AG11, AG8 and AG9) | GPT-5.6 Sol High |
 
 **Each batch on its own:**
@@ -6171,7 +6171,7 @@ Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra.
 | ~~AG3~~ | ~~CT52-01, UX54-01, UX54-02, UX54-03~~ | ~~🟡 ~1 day~~ | ~~Sonnet 5.5 `high`~~ | **shipped** 17 Nov: PR 165, merge `879860e48d150d4558c461b7f36a4a991b27939f` |
 | ~~AG4~~ | ~~CR49-02, CR49-05, CT52-02, CT52-03~~ | ~~🔴 ~2½ days~~ | ~~Opus 5.5 `xhigh`~~ | **shipped** 17 Nov: PR 167, merge `fec86286e54dd516f047d5eacf2a4de7acce2db8` |
 | ~~AG5~~ | ~~CT52-04, MK53-03~~ | ~~🟡 ~1 day~~ | ~~Opus 5.5 `xhigh`~~ | **shipped** 18 Nov: PR 168, merge `fd9286fd0f17066a13e86a44c8036942b398bf7f` |
-| AG6 | MK53-01, MK53-02's search half, MK53-04, MK53-05, MK53-06 | 🟡 ~1½ days | Opus 5.5 `xhigh` | GPT-5.6 Sol Extra High |
+| ~~AG6~~ | ~~MK53-01, MK53-02's search half, MK53-04, MK53-05, MK53-06~~ | ~~🟡 ~1½ days~~ | ~~Opus 5.5 `xhigh`~~ | **shipped** 26 Nov: PR 180, merge `40fb147c6b10e1c085cccab1fc4c234077b4a072`; its live step waits for the owner's word; Zavvi not repairable (no DNS address) |
 | ~~AG7~~ | ~~CR49-03, CT52-05~~ | ~~🟢 ~½ day~~ | ~~Sonnet 5.5 `high`~~ | **shipped** 17 Nov: PR 166, merge `8a4b33751f6657e81f72183d7414f61f3289f48b` |
 | ~~AG8~~ | ~~AI51-01, AI51-03, AI51-04; UX54-06's label~~ | ~~🟡 ~¾ day~~ | ~~Opus 5.5 `high`~~ | **shipped** 19 Nov: PR 171, merge `6b0320b254f0c955e6394586cda0a1978482cbfe` |
 | ~~AG9~~ | ~~DS50-02, DS50-03, DS50-04~~ | ~~🟢 ~½ day~~ | ~~Opus 5.5 `high`~~ | **shipped** 20 Nov: PR 172, merge `cbc43a4dde4a1aaadecf9ef5ad3bc28dabcb6e2d` |

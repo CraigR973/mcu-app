@@ -104,8 +104,12 @@ function DealCard({ deal }: { deal: Deal }) {
                 .join(' · ')}
             </p>
           </div>
-          {deal.discountPercent ? (
+          {/* AG6 (MK53-04): a percentage only on a figure of 5+ asks or 3+ sales. */}
+          {deal.discountPercent && deal.discountBacked ? (
             <Badge tone="success">−{deal.discountPercent}%</Badge>
+          ) : null}
+          {deal.discountPercent && !deal.discountBacked ? (
+            <Badge tone="neutral">Under the few asks seen</Badge>
           ) : null}
         </div>
 

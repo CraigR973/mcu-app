@@ -2335,6 +2335,7 @@ describe('Batch V8 — where an eBay find\'s "usually" comes from', () => {
     wasPrice: '18.00',
     currency: 'GBP',
     discountPercent: 74,
+    discountBacked: true,
     movieId: '00000000-0000-4000-8000-000000000082',
     tmdbId: 181808,
     posterPath: null,
@@ -2369,6 +2370,12 @@ describe('Batch V8 — where an eBay find\'s "usually" comes from', () => {
     expect(() =>
       dealSchema.parse({ ...find, usualSources: [{ source: 'eBay', price: 16 }] }),
     ).toThrow()
+  })
+
+  it('reads whether the percentage is backed, and an API before AG6 as backed', () => {
+    expect(dealSchema.parse({ ...find, discountBacked: false }).discountBacked).toBe(false)
+    const { discountBacked: _backed, ...before } = find
+    expect(dealSchema.parse(before).discountBacked).toBe(true)
   })
 })
 

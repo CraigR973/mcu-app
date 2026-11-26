@@ -78,6 +78,14 @@ SUPPRESSED_NO_SUBSCRIPTIONS = "no_subscriptions"
 #: AC5 (#345): a push only worth having by a time — a cinema trip's morning reminder — that
 #: quiet hours or digest mode would have held past it. Written down rather than delivered late.
 SUPPRESSED_TOO_LATE = "too_late"
+#: AG6 (MK53-06): a deal push still waiting (quiet hours) when its eBay listing ended. It
+#: would have named a listing that has gone, and the app no longer keeps the listing's words.
+SUPPRESSED_DEAL_ENDED = "deal_ended"
+
+#: AG6 (#383): quiet hours every new person starts with, in their own time. Both people agreed
+#: to 22:00–07:00 on 24 Nov; either may change or clear them in Settings.
+DEFAULT_QUIET_HOURS_START = time(22, 0)
+DEFAULT_QUIET_HOURS_END = time(7, 0)
 
 #: How a held notification is released. Both are *delays*, not refusals.
 DEFERRED_QUIET_HOURS = "quiet_hours"
@@ -197,6 +205,10 @@ class NotificationPreference(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     cinemas_older_only: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    #: AG6 (#383): only Wanted-list finds, pushed at once; no upgrades and no daily summary.
+    deals_wanted_only: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
     #: When on, nothing is delivered as it happens; everything waits for
     #: :attr:`digest_hour_local` and arrives as one push.
@@ -211,9 +223,13 @@ class NotificationPreference(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     )
 
     #: Quiet hours, in local time, or ``NULL`` for none. Both or neither: a start with no
-    #: end is a window that never closes.
-    quiet_hours_start: Mapped[time | None] = mapped_column(Time, nullable=True)
-    quiet_hours_end: Mapped[time | None] = mapped_column(Time, nullable=True)
+    #: end is a window that never closes. 22:00–07:00 for a new person since AG6 (#383).
+    quiet_hours_start: Mapped[time | None] = mapped_column(
+        Time, nullable=True, default=DEFAULT_QUIET_HOURS_START, server_default="22:00"
+    )
+    quiet_hours_end: Mapped[time | None] = mapped_column(
+        Time, nullable=True, default=DEFAULT_QUIET_HOURS_END, server_default="07:00"
+    )
 
     #: **The one place this app is deliberately not UTC.** "Quiet hours 22:00–07:00" is a
     #: statement about the person's evening, and gotcha 26 is the standing record of what
