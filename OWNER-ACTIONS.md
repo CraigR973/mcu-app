@@ -15,12 +15,9 @@ conversation still maps onto this file.*
 
 ## AG6's live step — 26 Nov (#399)
 
-- [ ] **Say yes (or no) to AG6's one live write.** It rewrites the stored deal pushes of finds
-      that ended before AG6, so none keeps an eBay listing's words (554 rows from 277 finds on 26
-      Nov, read-only), and gives both of you quiet hours 22:00–07:00, as you both agreed (neither
-      of you has any now, so night pushes still arrive). Either of you can change them in
-      Settings afterwards. An agent runs a dry run first and quotes its counts; the write refuses
-      unless they match. Nothing is deleted. 1 minute of yours: "yes, run the AG6 step".
+- [x] ~~**Say yes (or no) to AG6's one live write.**~~ **Done 26 Nov, 15:00 GMT** at your word
+      ("Yes, run it"): 554 stored push rows rewritten in the films' words, and both of you given
+      quiet hours 22:00–07:00; read back, and a second dry run reads 0. Change yours in Settings.
 - [ ] **Optional, yours to choose:** deal percentages now need 5+ asks or 3+ sales. A figure
       scaled from New asks counts as asks; the review found those the least reliable. Say if
       you want them never to carry a percentage.
