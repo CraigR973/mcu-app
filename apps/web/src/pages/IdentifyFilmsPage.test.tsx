@@ -284,6 +284,30 @@ describe('IdentifyFilmsPage', () => {
       await vi.waitFor(() => expect(correctMock).toHaveBeenCalledWith(DOUBT_ID, 826, { merge: false, searched: true }))
     })
 
+    it('says when a search finds the film it already is, and keeps it from there (AH3)', async () => {
+      // 25 Nov: a search for the 1967 Quatermass and the Pit, the film the copy was already
+      // matched to, read "No other films found", so the right film looked missing.
+      searchMock.mockResolvedValue({
+        query: 'The Bridge on the River Kwai 2007',
+        candidates: [
+          { tmdbId: 501, title: 'The Bridge on the River Kwai', year: 2007, posterPath: null, overview: '', votes: 3, notes: [], inCollection: null },
+        ],
+      })
+      renderPage()
+      const card = await screen.findByRole('article', { name: 'The Bridge on the River Kwai (2007)' })
+      fireEvent.change(within(card).getByRole('textbox'), { target: { value: 'The Bridge on the River Kwai 2007' } })
+      fireEvent.click(within(card).getByRole('button', { name: /Search/ }))
+
+      const itself = await within(card).findByRole('group', { name: 'The Bridge on the River Kwai, the film it is already matched to' })
+      expect(within(itself).getByText(/Already matched to this film/)).toBeTruthy()
+      expect(within(card).queryByText(/No other films found/)).toBeNull()
+      expect(within(card).queryByRole('list', { name: 'Search results for The Bridge on the River Kwai' })).toBeNull()
+      fireEvent.click(within(itself).getByRole('button', { name: /It’s right/ }))
+
+      await vi.waitFor(() => expect(keepMock).toHaveBeenCalledWith(DOUBT_ID))
+      expect(correctMock).not.toHaveBeenCalled()
+    })
+
     it('moves only the copy in doubt when the film has others, and offers no move when it has one', async () => {
       const COPY = '00000000-0000-4000-8000-000000000037'
       const offered = { tmdbId: 1051, title: 'The French Connection', year: 1971, posterPath: null, overview: '', votes: 2400, notes: [], inCollection: null }

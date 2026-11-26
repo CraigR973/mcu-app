@@ -129,3 +129,63 @@ describe('MoveCopyPanel (Batch Y5)', () => {
     expect(screen.getByText('TV series')).toBeTruthy()
   })
 })
+
+describe('MoveCopyPanel (AH3)', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  // 25 Nov: searching for the 1967 Quatermass and the Pit, the film the copy was already on,
+  // read "No other films or series found", so the right film looked missing.
+  const ITSELF = { tmdbId: 26912, title: 'Quatermass and the Pit', year: 1967, posterPath: null, overview: '', votes: 300, notes: [], inCollection: { movieId: FILM, title: 'Quatermass and the Pit', year: 1967, discs: 2, watches: 1 } }
+
+  function renderOpen(onKeep?: () => void) {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <MoveCopyPanel itemId={ITEM} movieId={FILM} filmTitle="Quatermass and the Pit 1967" onMoved={vi.fn()} startOpen onKeep={onKeep} />
+      </QueryClientProvider>,
+    )
+  }
+
+  it('shows the film the copy is already on apart, and from a doubt settles it with It’s right', async () => {
+    searchMock.mockResolvedValue({ query: 'Quatermass and the Pit 1967', candidates: [ITSELF] })
+    const onKeep = vi.fn()
+    renderOpen(onKeep)
+
+    const here = await screen.findByRole('group', { name: 'The film this copy is already on' })
+    expect(within(here).getByText(/Already matched to this film/)).toBeTruthy()
+    expect(within(here).queryByRole('button', { name: 'Move this copy here' })).toBeNull()
+    expect(screen.queryByText(/No other films or series found/)).toBeNull()
+    fireEvent.click(within(here).getByRole('button', { name: /It’s right/ }))
+
+    expect(onKeep).toHaveBeenCalledTimes(1)
+    expect(moveMock).not.toHaveBeenCalled()
+  })
+
+  it('from a copy card, says the copy is already on that film, with nothing to press', async () => {
+    searchMock.mockResolvedValue({ query: 'Quatermass and the Pit 1967', candidates: [ITSELF] })
+    renderOpen()
+
+    const here = await screen.findByRole('group', { name: 'The film this copy is already on' })
+    expect(within(here).getByText('This copy is already on this film.')).toBeTruthy()
+    expect(within(here).queryByRole('button')).toBeNull()
+  })
+
+  it('still offers the other films beside it, and says nothing was found only when nothing was', async () => {
+    const other = { tmdbId: 9999, title: 'Quatermass and the Pit', year: 1958, posterPath: null, overview: '', votes: 20, notes: [], inCollection: null }
+    searchMock.mockResolvedValueOnce({ query: 'Quatermass', candidates: [ITSELF, other] })
+    renderOpen(vi.fn())
+
+    const offered = await screen.findByRole('list', { name: 'Films this copy may be' })
+    expect(within(offered).getAllByRole('listitem')).toHaveLength(1)
+    expect(screen.getByRole('group', { name: 'The film this copy is already on' })).toBeTruthy()
+
+    searchMock.mockResolvedValueOnce({ query: 'Nothing like it', candidates: [] })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search TMDB for the film this copy is' }), { target: { value: 'Nothing like it' } })
+    fireEvent.click(screen.getByRole('button', { name: /Search/ }))
+    expect(await screen.findByText(/No other films or series found for “Nothing like it”/)).toBeTruthy()
+    expect(screen.queryByRole('group', { name: 'The film this copy is already on' })).toBeNull()
+  })
+})

@@ -15,12 +15,9 @@ conversation still maps onto this file.*
 
 ## AG6's live step — 26 Nov (#399)
 
-- [ ] **Say yes (or no) to AG6's one live write.** It rewrites the stored deal pushes of finds
-      that ended before AG6, so none keeps an eBay listing's words (554 rows from 277 finds on 26
-      Nov, read-only), and gives both of you quiet hours 22:00–07:00, as you both agreed (neither
-      of you has any now, so night pushes still arrive). Either of you can change them in
-      Settings afterwards. An agent runs a dry run first and quotes its counts; the write refuses
-      unless they match. Nothing is deleted. 1 minute of yours: "yes, run the AG6 step".
+- [x] ~~**Say yes (or no) to AG6's one live write.**~~ **Done 26 Nov, 15:00 GMT** at your word
+      ("Yes, run it"): 554 stored push rows rewritten in the films' words, and both of you given
+      quiet hours 22:00–07:00; read back, and a second dry run reads 0. Change yours in Settings.
 - [ ] **Optional, yours to choose:** deal percentages now need 5+ asks or 3+ sales. A figure
       scaled from New asks counts as asks; the review found those the least reliable. Say if
       you want them never to carry a percentage.
@@ -45,10 +42,13 @@ About 10 minutes, in any order. No agent does these.
       24 Nov, 13:04–13:07 GMT,** read back from the audit: the *Silent Running* Blu-ray is its own
       copy, a Masters of Cinema steelbook on the 6th shelf. The two duplicate-copy rows leave Needs
       you at the next 08:00 check.
-- [ ] **Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
+- [x] ~~**Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
       Shetland (the series) → confirm the merge. Both boxes stay separate copies; his question
       clears itself, and the merge can be undone. If he wants it kept separate, tell an agent (AH2).
-      1 minute.
+      1 minute.~~ **Closed 25 Nov, 12:07 UTC, at your word ("go with Marks answer", #400):**
+      Series 5 stays its own title. The *Dead Man's Shoes* question, whose want you removed, was
+      closed with it.
+- [ ] **AH2's go** (you close a question yourself), after its brief: it changes a table's shape.
 - [x] ~~**AH1's go** (Mark adds to Wanted), after its brief: it changes who may write.~~ **Given and
       shipped 24 Nov** (`b9b85d8`, #397).
 - [ ] **Tell Mark he can add to Wanted now:** the Wanted page's Add a film, Add to Wanted on a set's

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ArrowRightLeft, Search } from 'lucide-react'
+import { ArrowRightLeft, Check, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { moveCopy, searchIdentify, type IdentifyCandidate, type MoveCopy } from '@/lib/api'
@@ -16,6 +16,10 @@ interface Props {
   startOpen?: boolean
   /** Closing it, where the caller holds the button that opened it. */
   onCancel?: () => void
+  /** AH3 (#400): opened from a doubt, the film the copy is already on is that doubt's "It's
+   *  right", so a search that finds it can settle the doubt from here. */
+  onKeep?: () => void
+  keeping?: boolean
 }
 
 /**
@@ -28,7 +32,7 @@ interface Props {
  * recent list. Since Batch Y5 (#277) it offers TMDB's series too, listed apart: BBC's *Life*,
  * the 1979 *Tinker Tailor* and the 2019 *Name of the Rose* are series discs on films.
  */
-export function MoveCopyPanel({ itemId, movieId, filmTitle, onMoved, startOpen = false, onCancel }: Props) {
+export function MoveCopyPanel({ itemId, movieId, filmTitle, onMoved, startOpen = false, onCancel, onKeep, keeping = false }: Props) {
   const [open, setOpen] = useState(startOpen)
   const [query, setQuery] = useState(filmTitle)
   const [searched, setSearched] = useState<string | null>(startOpen && filmTitle.trim() ? filmTitle.trim() : null)
@@ -43,8 +47,11 @@ export function MoveCopyPanel({ itemId, movieId, filmTitle, onMoved, startOpen =
       target.mediaType === 'tv' ? moveCopy(itemId, target.tmdbId, undefined, 'tv') : moveCopy(itemId, target.tmdbId),
     onSuccess: onMoved,
   })
-  // The film the copy is on now is never offered.
+  // The film the copy is on now is never offered as a move. AH3 (#400): it is shown apart,
+  // so a search for it does not look as if it found nothing.
   const elsewhere = (candidate: IdentifyCandidate) => candidate.inCollection?.movieId !== movieId
+  const allFound = [...(search.data?.candidates ?? []), ...(search.data?.seriesCandidates ?? [])]
+  const here = allFound.find((candidate) => !elsewhere(candidate)) ?? null
   const films = (search.data?.candidates ?? []).filter(elsewhere)
   const series = (search.data?.seriesCandidates ?? []).filter(elsewhere)
   const found = films.length + series.length
@@ -98,7 +105,27 @@ export function MoveCopyPanel({ itemId, movieId, filmTitle, onMoved, startOpen =
           {queryErrorMessage(search.error, 'TMDB search is unavailable.')}
         </p>
       ) : null}
-      {search.data && found === 0 ? (
+      {here ? (
+        <div
+          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+          aria-label="The film this copy is already on"
+          role="group"
+        >
+          <span className="min-w-0 flex-1 text-sm text-foreground">
+            {here.title}
+            {here.year ? <span className="text-muted-foreground"> ({here.year})</span> : null}
+            <span className="block text-xs text-muted-foreground">
+              {onKeep ? 'Already matched to this film. If that is right, say so.' : 'This copy is already on this film.'}
+            </span>
+          </span>
+          {onKeep ? (
+            <Button type="button" size="sm" variant="secondary" disabled={keeping || move.isPending} onClick={onKeep}>
+              <Check aria-hidden /> It’s right
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {search.data && found === 0 && !here ? (
         <p className="text-xs text-muted-foreground">No other films or series found for “{search.data.query}”.</p>
       ) : null}
       {films.length > 0 ? (
