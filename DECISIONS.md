@@ -8967,3 +8967,23 @@ contemporaneous.
        worktree, and they merge only after AG6 has, so its unattended close-out is undisturbed.
      - **The number:** the two audit rows of 12:07 UTC on 25 Nov cite #399, the number free when
        they were written. AG6 took #399 first (merged 26 Nov), so this entry is #400.
+
+401. **AH2: the admin closes a question, which is not deleting it (26 Nov, the owner's go:
+     "After AG6 is built", after its brief).**
+     - **The closed state:** migration 083 adds `assigned_reviews.closed_at_utc` and `closed_by`
+       (a profile, set null if it is removed), both null. Grants are untouched: table-level
+       SELECT covers new columns.
+     - **What the admin may close:** an answered or changed question. Never an open one, still
+       its person's to answer, nor a resolved one, already off Needs you. Close and reopen are
+       revision-guarded, audited (`{"closed": {"from", "to"}}`) and idempotent.
+     - **What closing does:** the question leaves both people's Needs you (the API leaves it
+       off, as a resolved one, and the web does too), stays on record as "Closed by <name> ·
+       <day>", refuses an answer until it is reopened, and reopens as it read before.
+     - **Closing is not deleting:** `wants_asked` and the daily check's another-film rule read
+       `deleted_at` alone, so a closed want question still hides its other film's listings.
+       **Rejected:** reusing `deleted_at`, as the 25 Nov closes by hand did (#400).
+     - **Pinned, not changed:** the admin-route guard (65 pairs) and the route-surface list each
+       gained the two routes. The end-to-end AD1 case gained a close-and-reopen step.
+     - **Not done here:** the two questions closed by hand on 25 Nov move to the closed state at
+       the owner's word, with the count (2 rows): `deleted_at` to null, `closed_at_utc` to their
+       `deleted_at`, `closed_by` to Craig.

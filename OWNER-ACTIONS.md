@@ -48,7 +48,11 @@ About 10 minutes, in any order. No agent does these.
       1 minute.~~ **Closed 25 Nov, 12:07 UTC, at your word ("go with Marks answer", #400):**
       Series 5 stays its own title. The *Dead Man's Shoes* question, whose want you removed, was
       closed with it.
-- [ ] **AH2's go** (you close a question yourself), after its brief: it changes a table's shape.
+- [x] ~~**AH2's go** (you close a question yourself), after its brief: it changes a table's shape.~~
+      **Given 26 Nov ("After AG6 is built", #401).**
+- [ ] **Once AH2 is live, your word to move the two questions closed by hand on 25 Nov into the
+      closed state** (2 rows): they then read "Closed by Craig · 25 Nov" with Reopen, instead of
+      being hidden as deleted.
 - [x] ~~**AH1's go** (Mark adds to Wanted), after its brief: it changes who may write.~~ **Given and
       shipped 24 Nov** (`b9b85d8`, #397).
 - [ ] **Tell Mark he can add to Wanted now:** the Wanted page's Add a film, Add to Wanted on a set's

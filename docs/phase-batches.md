@@ -6517,8 +6517,9 @@ the API suite against a throwaway Postgres (3,066 passed; 9 local-only skips), s
 
 ### AH2 — The admin closes a question 🟡
 
-**At the owner's yes, 25 Nov (#400); it changes a table's shape, so it starts at the owner's go
-after its brief, and after AG6.** `observed` (25 Nov): two questions stayed on both people's Needs
+**Built 26 Nov (PR 181, #401), at the owner's go after its brief ("After AG6 is built"); it merges
+after AH3.** **At the owner's yes, 25 Nov (#400); it changes a table's shape, so it starts at the
+owner's go after its brief, and after AG6.** `observed` (25 Nov): two questions stayed on both people's Needs
 you with nothing in the app to clear them. *Shetland - Series 5* was answered "keep separate", and
 `context()` in `services/assigned_reviews.py` resolves it only when the copy's film holds the
 Shetland series. *Dead Man's Shoes*' want was removed with the agents' test wants, so its question
