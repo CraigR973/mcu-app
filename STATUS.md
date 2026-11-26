@@ -2,6 +2,13 @@
 
 ## Now
 
+**26 Nov, 15:00 GMT: AG6's live step run at the owner's word ("Yes, run it", #399).** The dry run
+read 554 stored deal push rows from 279 ended finds and 2 people with no quiet hours; the write
+ran with those counts and changed exactly them, in one transaction. Read back read-only: 558 of
+586 deal push rows are in the film's words (the 554, and 4 the pass rewrote since deploy), none
+of an ended find still names its listing, none is queued; Craig and Mark both have quiet hours
+22:00–07:00 and Wanted-only off. A second dry run reads 0 and 0. Nothing was deleted.
+
 **26 Nov, 14:20 GMT: AG6 shipped, deals — the right disc, a fair figure, sensible pushes (PR 180,
 `40fb147`, #399); Group AG sitting 4 is done, and with it Group AG.** The deal scan refuses
 "Mastered in 4K" as a 4K, "Cut ONLY" as the set, and a listing naming someone the app holds as cast
@@ -950,6 +957,9 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Nov, 15:00 GMT — AG6's live step run at the owner's word.** 554 push rows rewritten in the
+  films' words; both people given quiet hours 22:00–07:00. Read back clean; a second dry run reads 0.
 
 - **26 Nov, 14:20 GMT — AG6 shipped (PR 180, `40fb147`, #399); Group AG done.** Cast, "Mastered in
   4K" and "Cut ONLY" rules; percentages only when backed; at-once/18:00-summary/Wanted-only
