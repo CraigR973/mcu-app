@@ -51,7 +51,8 @@ const CATEGORIES: Array<{
   {
     key: 'dealsEnabled',
     label: 'Deals',
-    description: 'A disc on your wanted list drops below the price you set.',
+    description:
+      'Wanted-list finds and finds of 40% or more come at once. Other eBay upgrades come in one summary at 18:00.',
   },
   {
     key: 'saleEventsEnabled',
@@ -385,6 +386,12 @@ export function PreferencesSection() {
       </ul>
 
       <div className="mt-3 space-y-3 border-t border-border pt-3">
+        {current.dealsWantedOnly === undefined ? null : (
+          <div className="flex items-center gap-4">
+            <div className="min-w-0 flex-1"><p className="font-medium">Wanted list only</p><p className="text-sm text-muted-foreground">Only deals on films on the Wanted list. No upgrades and no 18:00 summary.</p></div>
+            <Toggle label="Wanted list only" checked={current.dealsWantedOnly === true} disabled={save.isPending || current.dealsEnabled !== true} onChange={(next) => save.mutate({ dealsWantedOnly: next })} />
+          </div>
+        )}
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1"><p className="font-medium">Cinemas</p><p className="text-sm text-muted-foreground">One daily summary of films newly listed at your cinemas. No new films means no notification.</p></div>
           <Toggle label="Cinemas" checked={current.cinemasEnabled === true} disabled={save.isPending || current.cinemasEnabled === undefined || current.cinemasOlderOnly === undefined} onChange={(next) => save.mutate({ cinemasEnabled: next })} />

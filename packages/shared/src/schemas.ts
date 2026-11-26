@@ -1534,6 +1534,9 @@ export const notificationPreferenceSchema = z.object({
   collectionAdditionsEnabled: z.boolean().optional(),
   cinemasEnabled: z.boolean().optional(),
   cinemasOlderOnly: z.boolean().optional(),
+  /** AG6 (#383): only Wanted-list deals, at once; no upgrades and no daily summary.
+   *  Optional so the page parses an API a deploy behind. */
+  dealsWantedOnly: z.boolean().optional(),
   digestMode: z.boolean(),
   digestHourLocal: z.number().int().min(0).max(23),
   quietHoursStart: z.string().nullable(),
@@ -2518,6 +2521,11 @@ export const dealSchema = z.object({
   wasPrice: z.string().nullable(),
   currency: z.string().min(1),
   discountPercent: z.number().int().nullable(),
+  /** AG6 (MK53-04): whether `discountPercent` may be shown. An eBay find's figure must rest
+   *  on 5 or more asks or 3 or more sales; below that the card says "under the few asks
+   *  seen". Always true for a shop's deal. Defaulted so the page parses an API a deploy
+   *  behind, as before AG6. */
+  discountBacked: z.boolean().default(true),
   /** Null when the title matched no catalogued film. Such a deal is still shown — it is
    *  the evidence the matcher needs work, and hiding it would make a broken matcher look
    *  like a quiet sale page. */

@@ -199,6 +199,11 @@ def _zone(preference: NotificationPreference) -> ZoneInfo:
         return ZoneInfo("Europe/London")
 
 
+def person_zone(preference: NotificationPreference) -> ZoneInfo:
+    """The person's own timezone, as quiet hours and the deal summary read it (AG6)."""
+    return _zone(preference)
+
+
 def _to_local(instant_utc: datetime, zone: ZoneInfo) -> datetime:
     """A naive-UTC column value as an aware local time."""
     return instant_utc.replace(tzinfo=ZoneInfo("UTC")).astimezone(zone)

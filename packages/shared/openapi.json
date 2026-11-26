@@ -5499,6 +5499,11 @@
       "title": "Currency",
       "type": "string"
      },
+     "discountBacked": {
+      "default": true,
+      "title": "Discountbacked",
+      "type": "boolean"
+     },
      "discountPercent": {
       "anyOf": [
        {
@@ -10006,6 +10011,10 @@
       "title": "Dealsenabled",
       "type": "boolean"
      },
+     "dealsWantedOnly": {
+      "title": "Dealswantedonly",
+      "type": "boolean"
+     },
      "digestHourLocal": {
       "maximum": 23.0,
       "minimum": 0.0,
@@ -10070,6 +10079,7 @@
      "collectionAdditionsEnabled",
      "cinemasEnabled",
      "cinemasOlderOnly",
+     "dealsWantedOnly",
      "digestMode",
      "digestHourLocal",
      "quietHoursTimezone"
@@ -10128,6 +10138,17 @@
        }
       ],
       "title": "Dealsenabled"
+     },
+     "dealsWantedOnly": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dealswantedonly"
      },
      "digestHourLocal": {
       "anyOf": [

@@ -476,8 +476,30 @@ class TestPreferences:
 
         assert preferences["dealsEnabled"] is True
         assert preferences["digestMode"] is False
-        assert preferences["quietHoursStart"] is None
+        # AG6 (#383): quiet hours of 22:00–07:00 for a new person, and every deal pushed.
+        assert (preferences["quietHoursStart"], preferences["quietHoursEnd"]) == (
+            "22:00:00",
+            "07:00:00",
+        )
         assert preferences["quietHoursTimezone"] == "Europe/London"
+        assert preferences["dealsWantedOnly"] is False
+
+    async def test_wanted_only_is_saved_and_leaves_the_rest_alone(
+        self, client: AsyncClient
+    ) -> None:
+        """AG6 (#383): each person may hear only of Wanted-list deals."""
+        saved = await client.put(
+            "/api/v1/notifications/preferences", json={"dealsWantedOnly": True}
+        )
+        assert saved.status_code == 200
+        body = saved.json()
+        assert (body["dealsWantedOnly"], body["dealsEnabled"]) == (True, True)
+        read = (await client.get("/api/v1/notifications/preferences")).json()
+        assert read["dealsWantedOnly"] is True
+        cleared = await client.put(
+            "/api/v1/notifications/preferences", json={"dealsWantedOnly": False}
+        )
+        assert cleared.json()["dealsWantedOnly"] is False
 
     async def test_disabling_deals_stops_deal_pushes(
         self,

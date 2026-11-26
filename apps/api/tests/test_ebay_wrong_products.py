@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from src.ebay.matching import Listing, match
+from src.ebay.matching import Listing, PeopleIndex, match, name_key
 from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm
 from src.services.ebay_watch.listings import ScanListing
 from src.services.ebay_watch.refs import DealFigure
@@ -205,3 +205,105 @@ def test_a_wrong_product_no_rule_can_see_is_pushed_under_its_own_title(
     assert alert.title == title
     assert alert.body.startswith("Very good, £6.50 with postage on eBay")
     assert f"Filed as {film_title} ({year})" in alert.body
+
+
+# ---------------------------------------------------------------------------
+# AG6 (MK53-01): the seven pushes of 23 Oct–16 Nov that named another film or product
+# ---------------------------------------------------------------------------
+
+#: The people the crafted titles name, as the app holds them: cast of some film it has. Each
+#: of the five same-title films is told apart by someone in this list (25 Nov, read-only).
+OTHER_CAST = [
+    "Nash Edgerton",
+    "Michael Dorman",
+    "Benedict Hardie",
+    "Sam Elliott",
+    "James Franco",
+    "Ewan McGregor",
+    "Michelle Williams",
+    "Hugh Jackman",
+    "Ronald Pickup",
+    "Tom Hanks",
+    "Claude Rains",
+]
+
+
+def _cast(film_title: str, year: int, *people: str) -> CatalogueFilm:
+    film = _film(film_title, year)
+    return CatalogueFilm(
+        **{**film.__dict__, "people": frozenset(name_key(person) for person in people)}
+    )
+
+
+def _named_with_cast(film: CatalogueFilm, title: str) -> tuple[CatalogueFilm, str] | None:
+    catalogue = Catalogue(people=PeopleIndex.of(OTHER_CAST))
+    catalogue.add(film)
+    return catalogue.named_in(_listing(title))
+
+
+# (filed under, its year, its own cast, a crafted title carrying the push's tell, the film it is)
+OTHER_FILMS = [
+    (
+        "The Invisible Man",
+        1933,
+        ["Claude Rains"],
+        "The Invisible Man 4K UHD Blu-ray Nash Edgerton Michael Dorman",
+        "2020",
+    ),
+    ("Road House", 1948, [], "Road House 4K UHD Blu-ray Patrick Swayze Sam Elliott", "1989"),
+    ("The Letter", 1940, [], "The Letter Blu-ray Italian import Winona Rider James Franco", "2012"),
+    ("Deception", 1946, [], "Deception Blu-ray EWAN MCGREGOR Michelle Williams", "2008"),
+    # Found by the rule's own measurement (25 Nov), not in the review's seven.
+    ("The Time of Their Lives", 1946, [], "The Time of Their Lives Blu-ray Ronald Pickup", "2017"),
+]
+
+
+@pytest.mark.parametrize(("film_title", "year", "own", "title", "really"), OTHER_FILMS)
+def test_a_listing_naming_another_films_cast_is_refused(
+    film_title: str, year: int, own: list[str], title: str, really: str
+) -> None:
+    film = _cast(film_title, year, *own)
+    assert _named_with_cast(film, title) is None, f"the {really} film"
+    # The cast is the only tell: without the people the matcher passes it as the filed film.
+    assert _named(film, title) is not None
+
+
+def test_the_films_own_cast_and_unknown_names_are_the_film() -> None:
+    phillips = _cast("Captain Phillips", 2013, "Tom Hanks")
+    assert _named_with_cast(phillips, "Captain Phillips 4K UHD Tom Hanks") == (phillips, "4k_uhd")
+    # Nobody the app holds a credit for: a seller's own words are never a person.
+    rains = _cast("The Invisible Man", 1933, "Claude Rains")
+    assert _named_with_cast(rains, "The Invisible Man Blu-ray Universal Classic Monsters") == (
+        rains,
+        "blu_ray",
+    )
+    # A name in the film's own title is the title, not cast ("Hugh Jackman" stands in).
+    jackman = _cast("Hugh Jackman Live", 2020)
+    assert _named_with_cast(jackman, "Hugh Jackman Live Blu-ray") == (jackman, "blu_ray")
+
+
+def test_mastered_in_4k_is_sonys_blu_ray_line() -> None:
+    """ "Captain Phillips (2013) Blu-ray Mastered in 4K" was pushed as a 4K, 67% under."""
+    film = _film("Captain Phillips", 2013)
+    title = "Captain Phillips (2013) Blu-ray Mastered in 4K Tom Hanks Region B"
+    assert _named(film, title) == (film, "blu_ray")
+    assert not match(_listing(title), film_title="Captain Phillips", format_code="4k_uhd").ok
+    # "Remastered in 4K" was already the same rule.
+    assert _named(film, "Captain Phillips Blu-ray Remastered in 4K") == (film, "blu_ray")
+
+
+def test_one_cut_only_is_one_disc_of_a_set() -> None:
+    """ "The Exorcist 4K Extended Director's Cut ONLY …" was pushed as 62% under the set."""
+    film = _film("The Exorcist", 1973)
+    assert (
+        _named(film, "The Exorcist 4K Extended Director’s Cut ONLY, No Theatrical Copies") is None
+    )
+    # The cut itself, sold whole, is still the film.
+    assert _named(film, "The Exorcist 4K UHD Extended Director's Cut") == (film, "4k_uhd")
+
+
+def test_anastasia_is_the_one_the_rule_cannot_see() -> None:
+    """Named only by its directors, whom the app holds as writers or not at all, Don Bluth's
+    *Anastasia* still reads as the 1956 film: its push names the listing's own title."""
+    film = _cast("Anastasia", 1956)
+    assert _named_with_cast(film, "Anastasia Blu-ray Gary Goldman Don Bluth") is not None

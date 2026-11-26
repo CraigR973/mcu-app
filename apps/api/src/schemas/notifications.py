@@ -121,6 +121,8 @@ class NotificationPreferenceResponse(BaseModel):
     collectionAdditionsEnabled: bool
     cinemasEnabled: bool
     cinemasOlderOnly: bool
+    #: AG6 (#383): only Wanted-list deals, at once; no upgrades and no daily summary.
+    dealsWantedOnly: bool
     digestMode: bool
     digestHourLocal: int = Field(ge=0, le=23)
     quietHoursStart: time | None = None
@@ -144,6 +146,7 @@ class NotificationPreferenceUpdateRequest(BaseModel):
     collectionAdditionsEnabled: bool | None = None
     cinemasEnabled: bool | None = None
     cinemasOlderOnly: bool | None = None
+    dealsWantedOnly: bool | None = None
     digestMode: bool | None = None
     digestHourLocal: int | None = Field(default=None, ge=0, le=23)
     quietHoursStart: time | None = None

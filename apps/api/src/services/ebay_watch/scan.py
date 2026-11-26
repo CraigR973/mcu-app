@@ -49,7 +49,14 @@ from src.models.valuation import DiscValuation
 from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm, load_catalogue
 from src.services.ebay_watch.client import WatchClient
 from src.services.ebay_watch.listings import ScanListing, scan_listing
-from src.services.ebay_watch.refs import DealFigure, deal_figure, fetch_ref, stored_ref
+from src.services.ebay_watch.refs import (
+    DealFigure,
+    basis_of_source,
+    deal_figure,
+    fetch_ref,
+    figure_backed,
+    stored_ref,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -111,12 +118,28 @@ class Find:
     def condition(self) -> str:
         return condition_label(self.listing.listing.condition_id)
 
+    @property
+    def backed(self) -> bool:
+        """5 or more asks, or 3 or more sales, behind the figure: a percentage may be shown
+        (AG6, MK53-04)."""
+        return self.usual.backed
+
 
 @dataclass
 class ScanEnd:
     finds: list[Find]
     #: ``budget`` or ``failed`` when the pass stopped early.
     stopped: str | None = None
+
+
+def deal_backed(deal: Deal) -> bool:
+    """A stored eBay find's figure is firm enough for a percentage (AG6); a shop's own
+    "was" price always is, being the shop's."""
+    if deal.retailer_id is not None or deal.retailer_name_snapshot != EBAY:
+        return True
+    sources = deal.usual_sources or []
+    name = sources[0].get("source") if sources else None
+    return figure_backed(basis_of_source(name), deal.usual_listings)
 
 
 def _discount(usual: Decimal, price: Decimal) -> int:

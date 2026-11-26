@@ -44,10 +44,12 @@ Blu-ray and a contains-"dvd" test would file it as a DVD.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 
 from src.services.scraping.extract import TITLE_NOISE, YEAR_PATTERN, primary_format
+from src.services.title_key import fold
 
 #: eBay UK leaf categories that hold **discs**. ``617`` is "DVDs & Blu-rays" and covers
 #: every disc format; ``2312`` is the "Other Formats" sibling a handful of listings use.
@@ -172,6 +174,10 @@ _INCOMPLETE_PHRASES: tuple[str, ...] = (
     "no disc",
     "no discs",
     "empty",
+    # AG6 (MK53-01): "The Exorcist 4K Extended Director's Cut ONLY, No Theatrical Or Blu-ray
+    # Copies" is one disc of a set, pushed as 62% under the set. "Only" after a cut's name.
+    "cut only",
+    "cuts only",
 )
 
 #: Phrases that say "this is television, not the film": "The Complete Series", "Season 2",
@@ -196,10 +202,11 @@ _TV_SERIES_NUMBER = re.compile(r"\bseries \d")
 #: 4K, because the highest format named wins (`extract.primary_format`). Removed from the
 #: title before the format is read, so what remains decides. **"Not 4K UHD" goes whole**
 #: (Batch X6): removing only "Not 4K" left "UHD", and a Blu-ray "… BTTF Not 4K UHD" was
-#: still read as a 4K and priced among them.
+#: still read as a 4K and priced among them. **"Mastered in 4K"** (AG6, MK53-01) is Sony's
+#: own Blu-ray line: "Captain Phillips (2013) Blu-ray Mastered in 4K" was pushed as a 4K.
 _NOT_A_4K = re.compile(
     r"\bnot\s+(?:a\s+)?4\s*k(?:\s+(?:uhd|ultra\s*hd))?\b"
-    r"|\b(?:remastered|restored|scanned|restoration|remaster)\s+(?:in|from)\s+(?:a\s+)?4\s*k\b"
+    r"|\b(?:remastered|mastered|restored|scanned|restoration|remaster)\s+(?:in|from)\s+(?:a\s+)?4\s*k\b"
     r"|\b4\s*k\s+(?:restoration|remaster|remastered|restored|scan)\b",
     re.IGNORECASE,
 )
@@ -705,6 +712,75 @@ def _region_locked_out(listing_tokens: list[str]) -> str | None:
     if codes & _REGION_PLAYABLE or not codes & _REGION_LOCKED_OUT:
         return None
     return "Region A" if "a" in codes else "Region 1"
+
+
+#: A name is a person's only when it has at least this many words: "Cher" or "Prince" alone
+#: is a word in thousands of listings.
+MIN_NAME_WORDS = 2
+
+
+def name_key(name: str) -> tuple[str, ...]:
+    """A person's name as the words both a credit and a listing reduce it to."""
+    return tuple(_TOKEN.findall(fold(name)))
+
+
+@dataclass(frozen=True)
+class PeopleIndex:
+    """Every person the app holds a credit for, by the first word of their name — AG6.
+
+    Built from ``movie_credits``: 53,271 people across 2,363 films on 25 Nov. Words a seller
+    writes about the disc can never open a name here (a format word, a label), so a crew
+    member called "Ultra" cannot make "4K Ultra HD" a person.
+    """
+
+    by_first: dict[str, tuple[tuple[str, ...], ...]]
+
+    @classmethod
+    def of(cls, names: Iterable[str]) -> PeopleIndex:
+        grouped: dict[str, set[tuple[str, ...]]] = {}
+        for name in names:
+            key = name_key(name)
+            if len(key) < MIN_NAME_WORDS or key[0] in FORMAT_TOKENS:
+                continue
+            grouped.setdefault(key[0], set()).add(key)
+        return cls({first: tuple(sorted(keys)) for first, keys in grouped.items()})
+
+
+def other_cast_named(
+    listing_title: str,
+    *,
+    film_title: str,
+    film_people: frozenset[tuple[str, ...]],
+    people: PeopleIndex,
+) -> str | None:
+    """A person the listing names who is not in the filed film's credits, or ``None`` — AG6.
+
+    Five of the 124 deal pushes of 23 Oct–16 Nov were another film of the same title, told
+    apart only by the cast the seller named (MK53-01): *The Invisible Man* (2020) with Michael
+    Dorman filed as the 1933 film, *Road House* (1989) with Sam Elliott as the 1948, Don
+    Bluth's *Anastasia* as the 1956, *The Letter* with James Franco as the 1940, and
+    *Deception* with Ewan McGregor as the 1946. A listing that names someone the app holds a
+    credit for, on some film, who is not in this film's own credits, is another film's.
+
+    The review proposed looking only at the cast of same-title films. The app does not hold
+    those films (none of the five was in ``movies`` on 25 Nov), so any film's credits stand
+    in for them; measured on the 297 listings pushed since 26 Sep before this rule landed.
+    The film's own title is skipped, so a person named in it ("Hitchcock") is never read.
+    """
+    words = list(_TOKEN.findall(fold(listing_title)))
+    title = list(_TOKEN.findall(fold(film_title)))
+    starts = _run_starts(words, title)
+    skip = set(range(starts[0], starts[0] + len(title))) if starts else set()
+    for index, word in enumerate(words):
+        if index in skip:
+            continue
+        for name in people.by_first.get(word, ()):
+            end = index + len(name)
+            if tuple(words[index:end]) != name or skip.intersection(range(index, end)):
+                continue
+            if name not in film_people:
+                return " ".join(name)
+    return None
 
 
 def classify_edition(title: str) -> str:
