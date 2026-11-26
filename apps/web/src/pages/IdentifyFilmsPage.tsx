@@ -307,10 +307,12 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
   const onMove = copyId ? (candidate: IdentifyCandidate) => move.mutate(candidate) : undefined
   const busy = pick.isPending || keep.isPending || move.isPending
   const failure = pick.error ?? keep.error ?? move.error
-  // The film it already is is not an alternative to itself.
+  // The film it already is is not an alternative to itself. AH3 (#399): a search that finds
+  // it says so, with this card's "It's right", rather than looking as if it found nothing.
   const others = (candidates: IdentifyCandidate[]) => candidates.filter((c) => c.tmdbId !== doubt.tmdbId)
   const offered = others(doubt.candidates)
   const found = search.data ? others(search.data.candidates) : []
+  const itself = search.data?.candidates.find((c) => c.tmdbId === doubt.tmdbId) ?? null
   // Batch Y5: a series the doubt's copy may be, which only a move can reach from here.
   const foundSeries = onMove ? (search.data?.seriesCandidates ?? []) : []
   const evidence = doubt.evidence.filter((line) => line !== doubt.note)
@@ -385,7 +387,23 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
             {queryErrorMessage(search.error, 'TMDB search is unavailable.')}
           </p>
         ) : null}
-        {search.data && found.length === 0 && foundSeries.length === 0 ? (
+        {itself ? (
+          <div
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+            role="group"
+            aria-label={`${doubt.title}, the film it is already matched to`}
+          >
+            <span className="min-w-0 flex-1 text-sm text-foreground">
+              {itself.title}
+              {itself.year ? <span className="text-muted-foreground"> ({itself.year})</span> : null}
+              <span className="block text-xs text-muted-foreground">Already matched to this film. If that is right, say so.</span>
+            </span>
+            <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => keep.mutate()}>
+              <Check aria-hidden /> It’s right
+            </Button>
+          </div>
+        ) : null}
+        {search.data && found.length === 0 && foundSeries.length === 0 && !itself ? (
           <p className="text-xs text-muted-foreground">No other films found for “{search.data.query}”.</p>
         ) : null}
         {found.length > 0 ? (

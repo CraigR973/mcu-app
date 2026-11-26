@@ -2,6 +2,17 @@
 
 ## Now
 
+**25 Nov, 12:45 GMT: Needs you is empty for both people; AH3 is built, and AH2 waits for its go
+(#399).** The 25 Nov 08:00 check cleared the two duplicate copies and *Bad Lieutenant*. The owner
+kept *Quatermass and the Pit* (1967) at 11:59 UTC, after the nightly specs batch matched its new
+Vintage Classics Blu-ray to the 1958 BBC serial's page. At the owner's word, the *Dead Man's
+Shoes* question (its want removed) and the *Shetland - Series 5* question (Mark's "keep
+separate" stands) were closed at 12:07 UTC by one guarded, audited database change. The app's own
+Needs you read for both people, in a READ ONLY transaction, then showed nothing. AG6 began at
+11:41 GMT, its scheduled 08:37 start held until the Claude app opened, and holds the main checkout.
+So AH3 (the identify search shows the film a copy is already on) is built in a separate worktree,
+and it and AH2 (the admin closes a question) merge only after AG6 has.
+
 **24 Nov, 19:15 GMT: either person changes and removes any want (PR 178, `8970c66`, #398); the
 test wants are gone and Mark's copy fixes are in.** At the owner's word ("Mark should also be able
 to change or remove mine"), AH1's rule that a viewer changes only his own wants is gone: who added a
@@ -508,9 +519,10 @@ clean on 17 Nov (Now). Still to read back: the valuation job's first beat with a
 (22 Nov); Zavvi switched itself off on 20 Nov, so its weekly ask will not come.
 
 **Group AH (24 Nov, #396): AH1 shipped 24 Nov (`b9b85d8`, #397), and its follow-up the same
-evening (`8970c66`, #398): either person changes and removes any want.** AH2 only if Mark wants
-Shetland Series 5 kept separate. **To read back at the 25 Nov 08:00 check:** the two
-duplicate-copy rows and *Bad Lieutenant*'s row gone from Needs you.
+evening (`8970c66`, #398): either person changes and removes any want.** AH3 (the identify search
+shows the film a copy is already on) built 25 Nov in a worktree; it and AH2 (the admin closes a
+question, at the owner's go after its brief) merge after AG6 (#399). The 25 Nov 08:00 check
+cleared the two duplicate-copy rows and *Bad Lieutenant*'s.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
 (`OWNER-ACTIONS.md`).
@@ -934,6 +946,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **25 Nov, 12:45 GMT — Needs you empty for both; AH3 built in a worktree; AH2 waits (#399).** Two
+  stuck questions closed by an audited database change at the owner's word; *Quatermass* kept.
 - **24 Nov, 19:15 GMT — either person changes any want (PR 178, `8970c66`, #398).** The test wants
   are gone (the owner, 18:47) and Mark's copy fixes are in (13:04–13:07). Production on `8970c66`.
 - **24 Nov, 18:20 GMT — AH1 shipped (PR 177, `b9b85d8`, #397).** Mark adds to Wanted and changes

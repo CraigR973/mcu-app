@@ -5516,7 +5516,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **AE** | 1: ~~AE1~~ (`aa4242e`) → ~~AE2~~ (`f0827ff`) → ~~AE3~~ (`1b19579`) · 2: ~~AE4~~ (`ae36c41`) → ~~AE5~~ (`8641036`) → ~~AE6~~ (`4b93f06`) · 3: ~~AE7~~ (`9eeee8f`) · 4: ~~AE8~~ (`d3fbaf6`) → ~~AE9~~ (`ce4b73a`) · 5: Craig's picks (11 Nov) → ~~AE10~~ (`6c62136`) | By sitting: Group AE table | By sitting: Group AE table | **Drafted 9 Nov from Craig's 8 Nov feedback (#355); go given 9 Nov. Done 11 Nov: all ten batches shipped, AE10 last (`6c62136`).** The sittings do not depend on each other and run in order of value; within each the order is fixed. The checkout must be clean before sitting 1. |
 | **AF** | ~~AF1~~ (`057086f`) → ~~AF2~~ (`06eb330`) → ~~AF3~~ (`aeb2dbb`) → ~~AF4~~ (`c2f080e`), one sitting | By batch: Group AF table | By batch: Group AF table | **Drafted 13 Nov from Craig's 13 Nov snags (#372); go given 13 Nov. Done 13 Nov: all four batches shipped, AF4 last (`c2f080e`).** The phone checks are Craig's (`OWNER-ACTIONS.md`). |
 | **AG** | 1: ~~AG1~~ (`1e14283`) → ~~AG2~~ (`efa5f9b`) · 2: ~~AG3~~ (`879860e`) → ~~AG7~~ (`8a4b337`) · 3: ~~AG4~~ (`fec8628`) → ~~AG5~~ (`fd9286f`) · 4: AG6 (go 24 Nov; starts 25 Nov, #396) · 5: ~~AG11~~ (`25c1870`) → ~~AG8~~ (`6b0320b`) → ~~AG9~~ (`cbc43a4`) → ~~AG10~~ (`d33f70f`) | By sitting: Group AG table | By sitting: Group AG table | **Planned 16 Nov from the wave 2 review (#383), written at the owner's go; each sitting starts at the owner's go. Sitting 1 started at the owner's go on 16 Nov, 23:15 GMT; AG1 shipped 17 Nov (`1e14283`, #384); AG2 shipped 17 Nov (`efa5f9b`, #385). Sitting 1 is done. Sitting 2 started at the owner's go on 17 Nov, about 09:05 GMT; AG3 shipped 17 Nov (`879860e`, #386); AG7 shipped 17 Nov (`8a4b337`, #387). Sitting 2 is done. Sitting 3 started at the owner's go on 17 Nov; AG4 shipped 17 Nov (`fec8628`, #388); AG5 shipped 18 Nov (`fd9286f`, #389). Sitting 3 is done. Sitting 5 started at the owner's word on 19 Nov ("Go, with the fix"); AG11 shipped 19 Nov (`25c1870`, #390); AG8 shipped 19 Nov (`6b0320b`, #391); AG9 shipped 20 Nov (`cbc43a4`, #392); AG10 shipped 20 Nov (`d33f70f`, #393) after the owner's word on its entry chunk ("Just cap it"). Sitting 5 is done.** The order is the roadmap's: the two Med-High code fixes first, AG4 before onboarding a third person, AG6 after AA10c's read-back. Run one sitting at a time, `/group-start AG · <sitting>`: the sittings differ in model and effort. |
-| **AH** | ~~AH1~~ (`b9b85d8`, PR 177) → ~~AH1 follow-up~~ (`8970c66`, PR 178) · AH2 (only if Mark wants Shetland Series 5 kept separate) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396). AH1 shipped 24 Nov at the owner's go ("Yes, build it"; `b9b85d8`, #397); its follow-up the same evening at the owner's word ("Mark should also be able to change or remove mine"; `8970c66`, #398).** AH2 waits on Mark's Shetland answer. AH1 and AG6 share the checkout, so the two never run at once. |
+| **AH** | ~~AH1~~ (`b9b85d8`, PR 177) → ~~AH1 follow-up~~ (`8970c66`, PR 178) · AH3 (built 25 Nov; merges after AG6) · AH2 (at the owner's go after its brief; after AG6) | By batch: Group AH table | By batch: Group AH table | **Drafted 24 Nov from Mark's answers (#396). AH1 shipped 24 Nov at the owner's go ("Yes, build it"; `b9b85d8`, #397); its follow-up the same evening at the owner's word ("Mark should also be able to change or remove mine"; `8970c66`, #398). AH2 and AH3 at the owner's yes, 25 Nov (#399).** While AG6 holds the main checkout they are built in a separate worktree, and they merge only after AG6 has, so its unattended close-out is undisturbed. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
@@ -6460,7 +6460,8 @@ does share the checkout: the two never run at once.
 |---|---|---|---|---|
 | ~~AH1~~ | ~~Mark adds to Wanted~~ | ~~🟡 ~½ day~~ | ~~Opus 5.5 `high`~~ | **shipped** 24 Nov: PR 177, merge `b9b85d8cd93ecd0595d9a1c5080590a614aa2295` |
 | ~~AH1 follow-up~~ | ~~Either person changes and removes any want~~ | ~~🟢 ~¼ day~~ | ~~Opus 5.5 `high`~~ | **shipped** 24 Nov: PR 178, merge `8970c667aaff0faf8a6908c4df1664cc1bd1a598` |
-| AH2 | *Only if Mark wants Shetland kept separate:* an answer that asks for no change closes its question | 🟢 ~¼ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AH2 | The admin closes a question | 🟡 ~½ day | Opus 5.5 `high` | GPT-5.6 Sol High |
+| AH3 | The identify search shows the film a copy is already on | 🟢 ~¼ day | Sonnet 5.5 `high` | GPT-5.6 Terra High |
 
 *Why those settings.* AH1 opens a write path to a role that never had one: Deep, as for any
 change touching auth. AH2 changes when a person's question leaves Needs you.
@@ -6514,9 +6515,45 @@ the AH1 case now has Mark remove Craig's want and reads the audit naming him. Lo
 the API suite against a throwaway Postgres (3,066 passed; 9 local-only skips), shared 213 and web
 1,040 tests, web lint, typecheck and build. Production API and web on `8970c66`, `db: ok`.
 
-### AH2 — An answer that asks for no change closes its question 🟢
+### AH2 — The admin closes a question 🟡
 
-Only if Mark wants Shetland Series 5 kept separate (#396). `observed`: the Shetland question
-resolves only when the copy's film holds the Shetland series (`context()` in
-`services/assigned_reviews.py`), so "keep separate" leaves it on both people's Needs you for good.
-Its criteria are written at the owner's word, if it is needed.
+**At the owner's yes, 25 Nov (#399); it changes a table's shape, so it starts at the owner's go
+after its brief, and after AG6.** `observed` (25 Nov): two questions stayed on both people's Needs
+you with nothing in the app to clear them. *Shetland - Series 5* was answered "keep separate", and
+`context()` in `services/assigned_reviews.py` resolves it only when the copy's film holds the
+Shetland series. *Dead Man's Shoes*' want was removed with the agents' test wants, so its question
+read "changed" for good. Both were closed at the owner's word by a guarded, audited database
+change (12:07 UTC, 25 Nov, #399), which reused `deleted_at`. This replaces the conditional AH2 of
+24 Nov.
+
+- **A question gets a closed state of its own:** `closed_at_utc` and `closed_by` on
+  `assigned_reviews`, an additive migration granted to the read-only and backup roles. Closing is
+  not deleting: a closed want question still hides its other film's listings (`wants_asked`).
+- **The admin closes any question that is answered or whose record changed,** from Needs you and
+  from the question's page. It leaves both people's Needs you at once and is audited.
+- **A closed question says so on its page** ("Closed by Craig · 25 Nov"), and the admin can
+  reopen it.
+- **The two questions closed by hand on 25 Nov move to the closed state** (2 rows), at the owner's
+  word with the count.
+- Tests: the API (close, reopen, a viewer refused, the audit, a closed want question still hiding
+  listings), the web (the Close control for the admin alone, the closed label), and the
+  migration's grants. E2E: the admin closes a question, and both Needs yous empty.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.
+
+### AH3 — The identify search shows the film a copy is already on 🟢
+
+**At the owner's yes, 25 Nov (#399).** `observed` (25 Nov): searching for the 1967 *Quatermass and
+the Pit*, the film its new Blu-ray was already on, found nothing. The doubt card on Identify films
+and "Move only this copy" both leave out the film the copy is already on, then say "No other films
+found", so the right film looked missing.
+
+- **When a search finds the film the copy is already on, it is shown apart** as "Already matched to
+  this film", never as a move or a correction.
+- **From a doubt** (Identify films' card, or "Move only this copy" in a film page's doubt) that row
+  offers "It's right", which keeps the identification as the doubt's own button does.
+- **From a copy card, with no doubt,** the row says the copy is already on that film, with nothing
+  to press.
+- **Other films and series are offered as before;** "No other films found" shows only when the
+  search found neither another film nor the one it is on.
+- Tests: the web, both panels, with and without a doubt. No API change.
+- Full gate and E2E; after deploy, health and readiness on the merged SHA.

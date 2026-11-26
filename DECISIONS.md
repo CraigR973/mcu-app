@@ -8887,3 +8887,24 @@ contemporaneous.
        "his own want and none on the admin's" became "every want, the admin's included"; and the
        end-to-end AH1 case now has Mark remove Craig's want, and reads the audit naming him. The
        admin-route guard is unchanged: the three wanted routes were already open.
+
+399. **Two stuck questions closed by hand, and two batches for after AG6 (25 Nov, the owner's
+     word: "1) close it 2) go with Marks answer 3) yes", and the identify search fix).**
+     - **Closed at 12:07 UTC by one guarded transaction:** exact ids, kinds, answers and revision
+       2, one row each or roll back, each with an `admin_actions` row attributed to Craig. *Dead
+       Man's Shoes*: its want was removed with the agents' test wants on 24 Nov, so nothing was
+       left to ask. *Shetland - Series 5*: the owner chose Mark's "keep separate" over filing
+       Series 5 under the Shetland series, so it stays its own title. Read back through the app's
+       own Needs you read for both people, in a READ ONLY transaction: nothing on either.
+     - **Why a database change:** nothing in the app closes a question. It reused `deleted_at`,
+       which AH2 replaces with a closed state of its own, and moves these two rows to.
+     - **Also settled on 25 Nov:** *Quatermass and the Pit* (1967), kept by the owner at 11:59 UTC
+       after the nightly specs batch matched its new Vintage Classics Blu-ray to the 1958 BBC
+       serial's disc page. The 25 Nov 08:00 check had already cleared the two duplicate copies
+       and *Bad Lieutenant*.
+     - **Two batches at the owner's yes:** AH2 (the admin closes a question; a migration, so it
+       starts after its brief and the owner's go) and AH3 (the identify search shows the film a
+       copy is already on). While AG6 holds the main checkout they are built in a separate
+       worktree, and they merge only after AG6 has, so its unattended close-out is undisturbed.
+     - **The number:** the two audit rows of 12:07 UTC cite #399, the number free when they were
+       written. If AG6 takes #399 first, this entry is renumbered when it is rebased, and says so.

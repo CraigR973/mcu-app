@@ -31,10 +31,13 @@ About 10 minutes, in any order. No agent does these.
       24 Nov, 13:04–13:07 GMT,** read back from the audit: the *Silent Running* Blu-ray is its own
       copy, a Masters of Cinema steelbook on the 6th shelf. The two duplicate-copy rows leave Needs
       you at the next 08:00 check.
-- [ ] **Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
+- [x] ~~**Shetland Series 5, once Mark agrees:** Identify films → *Shetland - Series 5* → choose
       Shetland (the series) → confirm the merge. Both boxes stay separate copies; his question
       clears itself, and the merge can be undone. If he wants it kept separate, tell an agent (AH2).
-      1 minute.
+      1 minute.~~ **Closed 25 Nov, 12:07 UTC, at your word ("go with Marks answer", #399):**
+      Series 5 stays its own title. The *Dead Man's Shoes* question, whose want you removed, was
+      closed with it.
+- [ ] **AH2's go** (you close a question yourself), after its brief: it changes a table's shape.
 - [x] ~~**AH1's go** (Mark adds to Wanted), after its brief: it changes who may write.~~ **Given and
       shipped 24 Nov** (`b9b85d8`, #397).
 - [ ] **Tell Mark he can add to Wanted now:** the Wanted page's Add a film, Add to Wanted on a set's
