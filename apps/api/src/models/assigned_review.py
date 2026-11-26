@@ -64,3 +64,10 @@ class AssignedReview(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     wording: Mapped[dict[str, Any] | None] = mapped_column(JSONB(none_as_null=True), nullable=True)
     answered_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    #: AH2 (#401): the admin closed the question, which is not deleting it. A closed question
+    #: leaves Needs you and stays on record; a closed want question still hides its other
+    #: film's listings (``wants_asked`` reads ``deleted_at`` alone).
+    closed_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    closed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
+    )

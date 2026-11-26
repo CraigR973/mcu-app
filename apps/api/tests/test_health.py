@@ -198,6 +198,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/needs-you/reviews/{review_id}",
         "/api/v1/needs-you/reviews/{review_id}/answer",
         "/api/v1/needs-you/reviews/{review_id}/assignee",
+        # AH2 (#401): the admin closes an answered or changed question, and reopens it.
+        "/api/v1/needs-you/reviews/{review_id}/close",
+        "/api/v1/needs-you/reviews/{review_id}/reopen",
         # AE9 (#355): a page for each person, read-only.
         "/api/v1/people/{profile_id}",
         "/api/v1/export/collection.csv",

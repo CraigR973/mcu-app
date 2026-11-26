@@ -3004,3 +3004,10 @@ export async function assignReview(proposal: ReviewProposal): Promise<AssignedRe
 export async function answerReview(id: string, revision: number, answer: ReviewAnswer): Promise<AssignedReview> {
   return parseResponse(await authFetch(`/needs-you/reviews/${id}/answer`, { method: 'POST', body: JSON.stringify({ revision, answer }) }), assignedReviewSchema)
 }
+/** AH2 (#401): the admin closes an answered or changed question, which is not deleting it. */
+export async function closeReview(id: string, revision: number): Promise<AssignedReview> {
+  return parseResponse(await authFetch(`/needs-you/reviews/${id}/close`, { method: 'POST', body: JSON.stringify({ revision }) }), assignedReviewSchema)
+}
+export async function reopenReview(id: string, revision: number): Promise<AssignedReview> {
+  return parseResponse(await authFetch(`/needs-you/reviews/${id}/reopen`, { method: 'POST', body: JSON.stringify({ revision }) }), assignedReviewSchema)
+}

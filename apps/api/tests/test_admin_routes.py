@@ -36,7 +36,7 @@ OPENED_BY_AH1 = frozenset(
     }
 )
 
-#: Every route that takes `AdminUser`, as at AH1 (24 Nov): 63 method and path pairs.
+#: Every route that takes `AdminUser`, as at AH2 (26 Nov): 65 method and path pairs.
 ADMIN_ROUTES = frozenset(
     {
         ("GET", "/api/v1/admin/audit"),
@@ -72,6 +72,8 @@ ADMIN_ROUTES = frozenset(
         ("GET", "/api/v1/needs-you/reviews/proposals"),
         ("GET", "/api/v1/needs-you/reviews/want-proposals"),
         ("PATCH", "/api/v1/needs-you/reviews/{review_id}/assignee"),
+        ("POST", "/api/v1/needs-you/reviews/{review_id}/close"),
+        ("POST", "/api/v1/needs-you/reviews/{review_id}/reopen"),
         ("POST", "/api/v1/notifications/deliver"),
         ("POST", "/api/v1/notifications/run-reminders"),
         ("POST", "/api/v1/notifications/seed-sale-seasons"),

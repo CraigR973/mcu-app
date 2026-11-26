@@ -23,6 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.clock import utcnow
 from src.models.admin_action import AdminAction
 from src.models.assigned_review import AssignedReview
 from src.models.collection_item import CollectionItem, owned_copy
@@ -259,6 +260,11 @@ async def describe(
         original = await db.get(Movie, movie_id)
         if original is None or original.deleted_at is not None:
             movie_id = None
+    # AH2 (#401): closed outranks every other reading; reopening shows that reading again.
+    if row.closed_at_utc is not None:
+        status = "closed"
+    closer = await db.get(Profile, row.closed_by) if row.closed_by is not None else None
+    admin = reader.role == UserRole.admin
     assignee = await db.get(Profile, row.assigned_to)
     return AssignedReviewResponse(
         id=row.id,
@@ -277,7 +283,44 @@ async def describe(
         answeredAt=row.answered_at_utc,
         status=status,
         canAnswer=reader.id == row.assigned_to and status in ("open", "answered"),
+        closedAt=row.closed_at_utc,
+        closedByName=closer.display_name if closer else None,
+        canClose=admin and status in CLOSABLE,
+        canReopen=admin and status == "closed",
     )
+
+
+#: AH2 (#401): what the admin may close. An answered question asks for nothing more of its
+#: person; a changed one cannot be answered as asked. An open one is still the person's to
+#: answer, and a resolved one has already left Needs you.
+CLOSABLE = frozenset({"answered", "changed"})
+
+
+async def close(db: AsyncSession, row: AssignedReview, admin: Profile) -> None:
+    """Close a question for good: it leaves both people's Needs you and stays on record.
+
+    Not a deletion (#401): a closed want question still hides its other film's listings, and
+    the row can be reopened. The revision moves on, so a stale answer is refused.
+    """
+    if row.closed_at_utc is not None:
+        return
+    described = await describe(db, row, admin)
+    if described.status not in CLOSABLE:
+        raise HTTPException(409, "Only an answered or changed question can be closed")
+    row.closed_at_utc = utcnow()
+    row.closed_by = admin.id
+    row.revision += 1
+    audit(db, row, admin, {"closed": {"from": None, "to": "closed"}, "revision": row.revision})
+
+
+async def reopen(db: AsyncSession, row: AssignedReview, admin: Profile) -> None:
+    """Open a closed question again, as it was before it was closed (#401)."""
+    if row.closed_at_utc is None:
+        return
+    row.closed_at_utc = None
+    row.closed_by = None
+    row.revision += 1
+    audit(db, row, admin, {"closed": {"from": "closed", "to": None}, "revision": row.revision})
 
 
 async def list_reviews(

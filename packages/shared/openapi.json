@@ -471,12 +471,44 @@
       "title": "Cananswer",
       "type": "boolean"
      },
+     "canClose": {
+      "default": false,
+      "title": "Canclose",
+      "type": "boolean"
+     },
+     "canReopen": {
+      "default": false,
+      "title": "Canreopen",
+      "type": "boolean"
+     },
      "choices": {
       "items": {
        "$ref": "#/components/schemas/ReviewChoice"
       },
       "title": "Choices",
       "type": "array"
+     },
+     "closedAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closedat"
+     },
+     "closedByName": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closedbyname"
      },
      "evidence": {
       "title": "Evidence",
@@ -522,7 +554,8 @@
        "open",
        "answered",
        "changed",
-       "resolved"
+       "resolved",
+       "closed"
       ],
       "title": "Status",
       "type": "string"
@@ -3314,6 +3347,21 @@
      "cancelledAtUtc"
     ],
     "title": "CinemaTripResponse",
+    "type": "object"
+   },
+   "CloseReview": {
+    "description": "AH2 (#401): close or reopen, at the revision the admin was shown.",
+    "properties": {
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "revision"
+    ],
+    "title": "CloseReview",
     "type": "object"
    },
    "CollectionCopyResponse": {
@@ -26057,6 +26105,124 @@
      }
     ],
     "summary": "Reassign",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/{review_id}/close": {
+   "post": {
+    "description": "AH2 (#401): the admin closes an answered or changed question. It leaves both people's\nNeeds you and stays on record, to be reopened. Closing twice is the same as once.",
+    "operationId": "close_api_v1_needs_you_reviews__review_id__close_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "review_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Review Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CloseReview"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AssignedReviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Close",
+    "tags": [
+     "needs-you"
+    ]
+   }
+  },
+  "/api/v1/needs-you/reviews/{review_id}/reopen": {
+   "post": {
+    "description": "AH2 (#401): the admin reopens a closed question, which reads as it did before.",
+    "operationId": "reopen_api_v1_needs_you_reviews__review_id__reopen_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "review_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Review Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CloseReview"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AssignedReviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Reopen",
     "tags": [
      "needs-you"
     ]

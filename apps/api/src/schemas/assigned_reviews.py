@@ -32,6 +32,12 @@ class ReassignReview(BaseModel):
     assignedTo: uuid.UUID
 
 
+class CloseReview(BaseModel):
+    """AH2 (#401): close or reopen, at the revision the admin was shown."""
+
+    revision: Revision
+
+
 class ReviewChoice(BaseModel):
     value: ReviewAnswer
     label: str
@@ -64,5 +70,11 @@ class AssignedReviewResponse(BaseModel):
     revision: Revision
     answer: ReviewAnswer | None
     answeredAt: UtcDatetime | None
-    status: Literal["open", "answered", "changed", "resolved"]
+    status: Literal["open", "answered", "changed", "resolved", "closed"]
     canAnswer: bool
+    #: AH2 (#401): the admin closed it: when, and by whom. Null while it is open.
+    closedAt: UtcDatetime | None = None
+    closedByName: str | None = None
+    #: The admin may close an answered or changed question, and reopen a closed one.
+    canClose: bool = False
+    canReopen: bool = False

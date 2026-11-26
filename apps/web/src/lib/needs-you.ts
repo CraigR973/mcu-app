@@ -109,8 +109,8 @@ export function needsYouRows(
       return { ...copy, key: `${item.kind}:${item.loanId}`, kind: 'loan' as const, poster: item.posterPath, film: item.movieTitle, label: own ? 'You' : item.owner?.name ?? 'You', own, ownerId: item.owner?.profileId ?? reader?.id ?? null }
     }),
     // AG11 (#390): a resolved review is nobody's move. The API leaves it off Needs you; this
-    // keeps it off should one ever arrive.
-    ...(data.reviews ?? []).filter((review) => review.status !== 'resolved').map((review) => {
+    // keeps it off should one ever arrive. AH2 (#401): so is a closed one.
+    ...(data.reviews ?? []).filter((review) => review.status !== 'resolved' && review.status !== 'closed').map((review) => {
       const who = review.assigneeName ?? 'someone else'
       if (adminsMove(review.status)) {
         // AG3 (UX54-03): labelled by whose move it is, not by who answered.

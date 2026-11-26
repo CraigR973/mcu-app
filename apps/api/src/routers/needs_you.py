@@ -277,7 +277,8 @@ async def needs_you(user: CurrentUser, db: Database) -> NeedsYouResponse:
         reviews=[
             review
             for review in await list_reviews(db, user, shared_with=shared)
-            if review.status != "resolved"
+            # AH2 (#401): a closed question is nobody's move either.
+            if review.status not in ("resolved", "closed")
         ],
         items=await needs_you_items(db, user, today=utc_today(), keepers=keepers),
         nextScreening=await next_screening(db, user),

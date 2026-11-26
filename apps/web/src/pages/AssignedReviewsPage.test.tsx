@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AssignedReview } from '@mcu/shared'
 
 const auth = vi.hoisted(() => ({ role: 'viewer' }))
-const api = vi.hoisted(() => ({ fetchAssignedReviews: vi.fn(), answerReview: vi.fn(), fetchReviewProposals: vi.fn(), assignReview: vi.fn(), fetchNeedsYou: vi.fn() }))
+const api = vi.hoisted(() => ({ fetchAssignedReviews: vi.fn(), answerReview: vi.fn(), fetchReviewProposals: vi.fn(), assignReview: vi.fn(), fetchNeedsYou: vi.fn(), closeReview: vi.fn(), reopenReview: vi.fn() }))
 vi.mock('@/context/auth', () => ({ useAuth: () => ({ profile: { id: 'mark', role: auth.role } }) }))
 vi.mock('@/lib/api', async original => ({ ...(await original<typeof import('@/lib/api')>()), ...api }))
 import AssignedReviewsPage from './AssignedReviewsPage'
@@ -18,6 +18,7 @@ const review: AssignedReview = {
   question: 'Is this disc Titanic (1953) or Titanic (1997)?', evidence: 'Inspect this physical disc.',
   choices: [{ value: '1953', label: 'Titanic (1953)' }, { value: '1997', label: 'Titanic (1997)' }, { value: 'unsure', label: 'Not sure yet' }],
   revision: 1, answer: null, answeredAt: null, status: 'open', canAnswer: true,
+  closedAt: null, closedByName: null, canClose: false, canReopen: false,
 }
 
 function show() {
@@ -125,5 +126,42 @@ describe('AG11 (#390): a want’s question clears once the want is the film its 
     api.fetchAssignedReviews.mockResolvedValue([{ ...review, status: 'resolved', canAnswer: false }])
     show()
     expect(await screen.findByText('For Mark · Resolved through the catalogue')).not.toBeNull()
+  })
+})
+
+describe('AH2 (#401): the admin closes a question', () => {
+  const answered = { ...review, status: 'answered' as const, answer: '1953' as const, answeredAt: '2026-11-15T20:57:27Z', canAnswer: false, revision: 2 }
+  const closed = { ...answered, status: 'closed' as const, revision: 3, closedAt: '2026-11-25T12:07:27Z', closedByName: 'Craig', canReopen: true }
+
+  it('offers the admin Close on an answered question, and closes it at the revision shown', async () => {
+    auth.role = 'admin'
+    api.fetchAssignedReviews.mockResolvedValue([{ ...answered, canClose: true }])
+    api.closeReview.mockResolvedValue(closed)
+    show()
+    const card = await screen.findByRole('region', { name: "Check Titanic's Blu-ray" })
+    fireEvent.click(within(card).getByRole('button', { name: 'Close this question' }))
+    await vi.waitFor(() => expect(api.closeReview).toHaveBeenCalledWith(review.id, 2))
+    expect(api.fetchAssignedReviews).toHaveBeenCalledWith(true)
+  })
+
+  it('says who closed it and when, and offers Reopen', async () => {
+    auth.role = 'admin'
+    api.fetchAssignedReviews.mockResolvedValue([closed])
+    api.reopenReview.mockResolvedValue({ ...answered, revision: 4 })
+    show()
+    const card = await screen.findByRole('region', { name: "Check Titanic's Blu-ray" })
+    expect(within(card).getByText('For Mark · Closed by Craig · 25 Nov')).not.toBeNull()
+    expect(within(card).queryByRole('button', { name: 'Close this question' })).toBeNull()
+    fireEvent.click(within(card).getByRole('button', { name: 'Reopen' }))
+    await vi.waitFor(() => expect(api.reopenReview).toHaveBeenCalledWith(review.id, 3))
+  })
+
+  it('offers the person it is for neither control', async () => {
+    api.fetchAssignedReviews.mockResolvedValue([answered, { ...closed, id: '0b6ccc42-9b9c-4e85-8d81-f476772e9971', canReopen: false }])
+    show()
+    await screen.findAllByRole('region', { name: "Check Titanic's Blu-ray" })
+    expect(screen.queryByRole('button', { name: 'Close this question' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Reopen' })).toBeNull()
+    expect(screen.getByText('For Mark · Closed by Craig · 25 Nov')).not.toBeNull()
   })
 })

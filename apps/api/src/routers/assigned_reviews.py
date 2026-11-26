@@ -12,6 +12,7 @@ from src.schemas.assigned_reviews import (
     AnswerReview,
     AssignedReviewResponse,
     AssignReview,
+    CloseReview,
     ReassignReview,
     ReviewProposal,
     WantProposal,
@@ -67,6 +68,9 @@ async def answer(
     # Administrator inspection is not permission to answer on another person's behalf.
     if row.assigned_to != user.id:
         raise HTTPException(403, "Only the assigned person can answer this review")
+    if row.closed_at_utc is not None:
+        # AH2 (#401): a closed question takes no answer until the admin reopens it.
+        raise HTTPException(409, "This question was closed. Ask the admin to reopen it.")
     choices = {value for value, _label in reviews.wording_of(row)[3]} | {"unsure"}
     if payload.answer not in choices:
         raise HTTPException(422, "Choose an answer offered by this review")
@@ -117,5 +121,32 @@ async def reassign(
             "revision": row.revision,
         },
     )
+    await db.commit()
+    return await reviews.describe(db, row, user)
+
+
+@router.post("/{review_id}/close", response_model=AssignedReviewResponse)
+async def close(
+    review_id: uuid.UUID, payload: CloseReview, user: AdminUser, db: Database
+) -> AssignedReviewResponse:
+    """AH2 (#401): the admin closes an answered or changed question. It leaves both people's
+    Needs you and stays on record, to be reopened. Closing twice is the same as once."""
+    row = await reviews.review_for(db, review_id, user, lock=True)
+    if row.closed_at_utc is None and payload.revision != row.revision:
+        raise HTTPException(409, "This question changed. Re-open it before closing it.")
+    await reviews.close(db, row, user)
+    await db.commit()
+    return await reviews.describe(db, row, user)
+
+
+@router.post("/{review_id}/reopen", response_model=AssignedReviewResponse)
+async def reopen(
+    review_id: uuid.UUID, payload: CloseReview, user: AdminUser, db: Database
+) -> AssignedReviewResponse:
+    """AH2 (#401): the admin reopens a closed question, which reads as it did before."""
+    row = await reviews.review_for(db, review_id, user, lock=True)
+    if row.closed_at_utc is not None and payload.revision != row.revision:
+        raise HTTPException(409, "This question changed. Re-open it before reopening it.")
+    await reviews.reopen(db, row, user)
     await db.commit()
     return await reviews.describe(db, row, user)

@@ -83,6 +83,19 @@ test('Mark answers his three reviews; Craig reads them without answering; change
     const wantedReview = reviews.find(row => row.kind === 'wanted_identity')!
     await mark.post(`/needs-you/reviews/${wantedReview.id}/answer`, { revision: 1, answer: '2004' }, [409])
     expect((await mark.get<{ reviews: Review[] }>('/needs-you')).reviews).toHaveLength(2)
+
+    // AH2 (#401): a changed question is nothing more for Mark to do, so Craig closes it from his
+    // Needs you page. It leaves both people's Needs you, stays on record, and reopens as it was.
+    await adminPage.goto('/needs-you')
+    const forCraig = adminPage.getByRole('region', { name: "Check Dead Man's Shoes on Wanted" })
+    await forCraig.getByRole('button', { name: 'Close this question' }).click()
+    await expect(forCraig.getByText(/Closed by Craig/)).toBeVisible()
+    expect((await mark.get<{ reviews: Review[] }>('/needs-you')).reviews).toHaveLength(1)
+    expect((await craig.get<{ reviews: Review[] }>('/needs-you')).reviews).toHaveLength(1)
+    await adminPage.screenshot({ path: info.outputPath('ah2-closed-question-375.png'), fullPage: true })
+    await forCraig.getByRole('button', { name: 'Reopen' }).click()
+    await expect(forCraig.getByText('The record changed — needs another look', { exact: false })).toBeVisible()
+    expect((await mark.get<{ reviews: Review[] }>('/needs-you')).reviews).toHaveLength(2)
   } finally {
     db.sql(`BEGIN; SET LOCAL app.permanent_delete = 'on';
       DELETE FROM admin_actions WHERE target_table='assigned_reviews' AND target_id IN

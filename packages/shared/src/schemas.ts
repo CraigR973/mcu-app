@@ -2933,8 +2933,15 @@ export const assignedReviewSchema = z.object({
   revision: z.number().int().positive(),
   answer: reviewAnswerSchema.nullable(),
   answeredAt: tripUtcSchema.nullable(),
-  status: z.enum(['open', 'answered', 'changed', 'resolved']),
+  status: z.enum(['open', 'answered', 'changed', 'resolved', 'closed']),
   canAnswer: z.boolean(),
+  /** AH2 (#401): the admin closed it, which is not deleting it: when, and by whom. Defaulted,
+   *  so the page parses an API without them yet. */
+  closedAt: tripUtcSchema.nullable().default(null),
+  closedByName: z.string().nullable().default(null),
+  /** The admin may close an answered or changed question, and reopen a closed one. */
+  canClose: z.boolean().default(false),
+  canReopen: z.boolean().default(false),
 })
 export const assignedReviewListSchema = z.array(assignedReviewSchema)
 export const reviewProposalListSchema = z.array(reviewProposalSchema)

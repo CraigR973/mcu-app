@@ -8,22 +8,30 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
-import { answerReview, fetchAssignedReviews, fetchAttention, fetchNeedsYou } from '@/lib/api'
+import { answerReview, closeReview, fetchAssignedReviews, fetchAttention, fetchNeedsYou, reopenReview } from '@/lib/api'
 import { attentionRows } from '@/lib/attention'
 import { needsYouRows } from '@/lib/needs-you'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { formatDayMonth } from '@/lib/utils'
 
 const STATUS = {
   open: 'Needs your observation',
   answered: 'Answered — awaiting correction',
   changed: 'The record changed — needs another look',
   resolved: 'Resolved through the catalogue',
+  closed: 'Closed',
 }
 
 /** AG11 (#390): a want's question resolves once Wanted names the film its answer names, whether
- *  the want was corrected or already was, so its words claim no catalogue work. */
+ *  the want was corrected or already was, so its words claim no catalogue work. AH2 (#401): a
+ *  closed question says who closed it, and when. */
 function statusLabel(review: AssignedReview): string {
   if (review.status === 'resolved' && review.kind === 'wanted_identity') return 'Resolved — the want is the film the answer names'
+  if (review.status === 'closed') {
+    const by = review.closedByName ? ` by ${review.closedByName}` : ''
+    const when = review.closedAt ? ` · ${formatDayMonth(review.closedAt)}` : ''
+    return `Closed${by}${when}`
+  }
   return STATUS[review.status]
 }
 
@@ -40,6 +48,14 @@ function ReviewCard({ review, selected }: { review: AssignedReview; selected: bo
       return answerReview(review.id, review.revision, choice)
     },
     onSuccess: async () => { await client.invalidateQueries({ queryKey: ['assigned-reviews'] }) },
+  })
+  // AH2 (#401): the admin closes a question nothing is left to do about, or reopens it.
+  const settle = useMutation({
+    mutationFn: (to: 'close' | 'reopen') => (to === 'close' ? closeReview : reopenReview)(review.id, review.revision),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['assigned-reviews'] })
+      await client.invalidateQueries({ queryKey: ['needs-you'] })
+    },
   })
   return (
     <section ref={section} id={`review-${review.id}`} aria-labelledby={`title-${review.id}`}
@@ -69,6 +85,16 @@ function ReviewCard({ review, selected }: { review: AssignedReview; selected: bo
         </form>
       ) : null}
       {review.status === 'changed' ? <p className="text-sm">The current record differs from this question. Craig needs to review it before another answer.</p> : null}
+      {review.canClose ? (
+        <div className="space-y-1 border-t border-border pt-3">
+          <p className="text-xs text-muted-foreground">Nothing left to do? Closing takes it off both people’s Needs you. It stays on record, and you can reopen it.</p>
+          <Button type="button" variant="secondary" disabled={settle.isPending} onClick={() => settle.mutate('close')}>{settle.isPending ? 'Closing…' : 'Close this question'}</Button>
+        </div>
+      ) : null}
+      {review.canReopen ? (
+        <Button type="button" variant="ghost" disabled={settle.isPending} onClick={() => settle.mutate('reopen')}>{settle.isPending ? 'Reopening…' : 'Reopen'}</Button>
+      ) : null}
+      {settle.isError ? <p role="alert" className="text-sm text-destructive">{queryErrorMessage(settle.error, 'That could not be saved.')} Re-open the page if the question changed.</p> : null}
     </section>
   )
 }
