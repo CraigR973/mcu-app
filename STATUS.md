@@ -2,6 +2,17 @@
 
 ## Now
 
+**27 Nov, 14:50 GMT: AH2 shipped, the admin closes a question, which is not deleting it (PR 181,
+`e6275c0`, #401); Group AH is done.** Migration 083 gave a question a closed state of its own
+(`closed_at_utc`, `closed_by`), and it ran at deploy. The admin closes an answered or changed
+question from the review page: it leaves both people's Needs you, stays on record as "Closed by
+<name> · <day>", refuses a new answer, and reopens as it read. A closed want question still hides
+its other film's listings. CI's seven jobs green on the PR, end-to-end included; `main` green
+before the merge. Production API and web on `e6275c0`, `db: ok`, every readiness field
+`configured`; read back, read-only: migration 083 and both roles' SELECT on the new columns.
+**Waiting on the owner's word:** moving the two questions closed by hand on 25 Nov into the
+closed state (2 rows; `OWNER-ACTIONS.md`).
+
 **26 Nov, 15:55 GMT: AH3 shipped, the identify search shows the film a copy is already on (PR 179,
 `12c6307`, #400).** Identify films' doubt card and "Move only this copy" show the film a copy is
 already on apart, as "Already matched to this film", instead of leaving it out and saying "No other
@@ -553,8 +564,8 @@ clean on 17 Nov (Now). Still to read back: the valuation job's first beat with a
 
 **Group AH (24 Nov, #396): AH1 shipped 24 Nov (`b9b85d8`, #397), and its follow-up the same
 evening (`8970c66`, #398): either person changes and removes any want.** AH3 (the identify search
-shows the film a copy is already on) shipped 26 Nov (`12c6307`, #400). AH2 (the admin closes a
-question, #401) is built as PR 181 and merges next. The 25 Nov 08:00 check cleared the two
+shows the film a copy is already on) shipped 26 Nov (`12c6307`, #400); AH2 (the admin closes a
+question, #401) shipped 27 Nov (`e6275c0`). Group AH is done but for AH2's owner step. The 25 Nov 08:00 check cleared the two
 duplicate-copy rows and *Bad Lieutenant*'s.
 
 **Group AF is done (13 Nov, #372–#376).** What is left of it is Craig's phone checks
@@ -979,6 +990,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **27 Nov, 14:50 GMT — AH2 shipped (PR 181, `e6275c0`, #401); Group AH done.** The admin closes and
+  reopens a question; migration 083 ran. The two 25 Nov rows wait for the owner's word.
 - **26 Nov, 15:55 GMT — AH3 shipped (PR 179, `12c6307`, #400).** The identify search shows the film a
   copy is already on, with "It's right" from a doubt. Production on `12c6307`, `db: ok`.
 - **26 Nov, 15:00 GMT — AG6's live step run at the owner's word.** 554 push rows rewritten in the
