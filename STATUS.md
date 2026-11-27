@@ -2,6 +2,17 @@
 
 ## Now
 
+**27 Nov, 17:33 GMT: the two questions closed by hand on 25 Nov moved into the closed state, at
+the owner's word ("Yes, move them", #401).** One guarded transaction on exact ids, kinds, answers,
+revision 2 and the 25 Nov `deleted_at`, or roll back; a dry run passed every guard and rolled back
+first. Both rows now have `deleted_at` null, `closed_at_utc` 25 Nov 12:07:26 UTC (their old
+`deleted_at`), `closed_by` Craig and revision 3, each with an `admin_actions` row as Craig. Read
+back through the app's own reads, READ ONLY: *Check Dead Man's Shoes on Wanted* and *Check
+Shetland Series 5* read "Closed by Craig · 25 Nov" for both people, with Reopen for Craig only,
+and Needs you holds nothing for either. The removed *Dead Man's Shoes* want counts as asked again,
+so the nightly rejudge may hide some of its 61 stored listings by the year rule; that want is gone,
+so nothing shows.
+
 **27 Nov, 14:50 GMT: AH2 shipped, the admin closes a question, which is not deleting it (PR 181,
 `e6275c0`, #401); Group AH is done.** Migration 083 gave a question a closed state of its own
 (`closed_at_utc`, `closed_by`), and it ran at deploy. The admin closes an answered or changed
@@ -10,8 +21,7 @@ question from the review page: it leaves both people's Needs you, stays on recor
 its other film's listings. CI's seven jobs green on the PR, end-to-end included; `main` green
 before the merge. Production API and web on `e6275c0`, `db: ok`, every readiness field
 `configured`; read back, read-only: migration 083 and both roles' SELECT on the new columns.
-**Waiting on the owner's word:** moving the two questions closed by hand on 25 Nov into the
-closed state (2 rows; `OWNER-ACTIONS.md`).
+The two questions closed by hand on 25 Nov moved into the closed state at 17:33 GMT (above).
 
 **26 Nov, 15:55 GMT: AH3 shipped, the identify search shows the film a copy is already on (PR 179,
 `12c6307`, #400).** Identify films' doubt card and "Move only this copy" show the film a copy is
@@ -989,6 +999,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **27 Nov, 17:33 GMT — The two 25 Nov questions moved into the closed state, at the owner's word
+  (#401).** 2 rows, revision 3, audited as Craig; both read "Closed by Craig · 25 Nov"; Needs you
+  is empty for both.
 
 - **27 Nov, 14:50 GMT — AH2 shipped (PR 181, `e6275c0`, #401); Group AH done.** The admin closes and
   reopens a question; migration 083 ran. The two 25 Nov rows wait for the owner's word.

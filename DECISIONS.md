@@ -8984,6 +8984,11 @@ contemporaneous.
        **Rejected:** reusing `deleted_at`, as the 25 Nov closes by hand did (#400).
      - **Pinned, not changed:** the admin-route guard (65 pairs) and the route-surface list each
        gained the two routes. The end-to-end AD1 case gained a close-and-reopen step.
-     - **Not done here:** the two questions closed by hand on 25 Nov move to the closed state at
-       the owner's word, with the count (2 rows): `deleted_at` to null, `closed_at_utc` to their
-       `deleted_at`, `closed_by` to Craig.
+     - **Done 27 Nov, 17:33 GMT, at the owner's word ("Yes, move them"):** the two questions closed
+       by hand on 25 Nov moved to the closed state in one guarded transaction (exact ids, kinds,
+       answers, revision 2 and the 25 Nov `deleted_at`, or roll back): `deleted_at` to null,
+       `closed_at_utc` to their `deleted_at`, `closed_by` to Craig, revision 3, each with an
+       `admin_actions` row as Craig. Read back, READ ONLY: both read "Closed by Craig · 25 Nov",
+       and neither is on either person's Needs you. The removed *Dead Man's Shoes* want counts as
+       asked again (`wants_asked`), so the nightly rejudge may hide some of its 61 stored listings
+       by the year rule; the want is gone, so nothing shows.
